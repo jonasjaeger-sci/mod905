@@ -1,8 +1,9 @@
 include CONTRIBUTING.rst
 include COPYING
-include COPYING.LESSER
 include LICENSE 
 include INSTALL
 include README.rst
 include pyretis/inout/plotting/styles/*
 include pyretis/inout/report/templates/*
+include requirements.txt
+include requirements-dev.txt

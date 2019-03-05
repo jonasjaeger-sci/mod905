@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2019, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
-"""A test module for the gromacsio module."""
+"""A test module for the GROMACS in/out module."""
 import logging
 import unittest
 import tempfile
@@ -9,7 +9,7 @@ import os
 import struct
 import numpy as np
 from pyretis.core.box import box_matrix_to_list
-from pyretis.inout.writers.gromacsio import (
+from pyretis.inout.formats.gromacs import (
     _GROMACS_MAGIC,
     _TRR_VERSION_B,
     read_gromacs_lines,
@@ -55,7 +55,7 @@ RAW_FILE = [
     '   2.00000   2.00000   2.00000',
 ]
 
-CORRECT_GRO = {
+CORRECT_GRO_VEL = {
     'x': [0.0, 0.05, 0.05, 0.05, 0.0],
     'y': [0.0, 0.05, 0.05, 0.0, 0.05],
     'z': [0.0, 0.05, 0.0, 0.05, 0.05],
@@ -67,13 +67,61 @@ CORRECT_GRO = {
     'header': RAW_FILE[0],
     'residuname': ['DUM', 'DUM', 'DUM', 'DUM', 'DUM'],
     'atomname': ['Ba', 'Hf', 'O', 'O', 'O'],
-    'box': [2.0, 2.0, 2.0],
+    'box': np.array([2.0, 2.0, 2.0]),
     'xyz': np.transpose(np.array([[0.0, 0.05, 0.05, 0.05, 0.0],
                                   [0.0, 0.05, 0.05, 0.0, 0.05],
                                   [0.0, 0.05, 0.0, 0.05, 0.05]])),
     'vel': np.transpose(np.array([[1.0, -1.0, 2.0, -2.0, 0.0],
                                   [1.0, -1.0, 0.0, 1.0, -1.0],
                                   [1.0, -1.0, -2.0, 2.0, 0.0]])),
+}
+
+
+CORRECT_GRO_NOVEL = {
+    'x': [0.0, 0.05, 0.05, 0.05, 0.0],
+    'y': [0.0, 0.05, 0.05, 0.0, 0.05],
+    'z': [0.0, 0.05, 0.0, 0.05, 0.05],
+    'residunr': [1, 2, 3, 3, 3],
+    'atomnr': [1, 2, 3, 4, 5],
+    'header': RAW_FILE[0],
+    'residuname': ['DUM', 'DUM', 'DUM', 'DUM', 'DUM'],
+    'atomname': ['Ba', 'Hf', 'O', 'O', 'O'],
+    'box': np.array([2.0, 2.0, 2.0]),
+    'xyz': np.transpose(np.array([[0.0, 0.05, 0.05, 0.05, 0.0],
+                                  [0.0, 0.05, 0.05, 0.0, 0.05],
+                                  [0.0, 0.05, 0.0, 0.05, 0.05]])),
+    'vel': np.zeros((5, 3)),
+}
+
+
+CORRECT_GRO_NOVEL1D = {
+    'x': [0.0, 0.05, 0.05, 0.05, 0.0],
+    'residunr': [1, 2, 3, 3, 3],
+    'atomnr': [1, 2, 3, 4, 5],
+    'header': RAW_FILE[0],
+    'residuname': ['DUM', 'DUM', 'DUM', 'DUM', 'DUM'],
+    'atomname': ['Ba', 'Hf', 'O', 'O', 'O'],
+    'box': np.array([2.0, 2.0, 2.0]),
+    'xyz': np.transpose(np.array([[0.0, 0.05, 0.05, 0.05, 0.0],
+                                  [0.0, 0.0, 0.0, 0.0, 0.0],
+                                  [0.0, 0.0, 0.0, 0.0, 0.0]])),
+    'vel': np.zeros((5, 3)),
+}
+
+
+CORRECT_GRO_NOVEL2D = {
+    'x': [0.0, 0.05, 0.05, 0.05, 0.0],
+    'y': [0.0, 0.05, 0.05, 0.0, 0.05],
+    'residunr': [1, 2, 3, 3, 3],
+    'atomnr': [1, 2, 3, 4, 5],
+    'header': RAW_FILE[0],
+    'residuname': ['DUM', 'DUM', 'DUM', 'DUM', 'DUM'],
+    'atomname': ['Ba', 'Hf', 'O', 'O', 'O'],
+    'box': np.array([2.0, 2.0, 2.0]),
+    'xyz': np.transpose(np.array([[0.0, 0.05, 0.05, 0.05, 0.0],
+                                  [0.0, 0.05, 0.05, 0.0, 0.05],
+                                  [0.0, 0.0, 0.0, 0.0, 0.0]])),
+    'vel': np.zeros((5, 3)),
 }
 
 
@@ -109,62 +157,89 @@ def generate_trr_data(output, steps, natoms, double=False, endian=None):
 class TestGromacsIO(unittest.TestCase):
     """Test Gromacs input output."""
 
+    @staticmethod
+    def assert_equal_snapshot(snapi, snapj):
+        """Compare two snapshots."""
+        for key, _ in snapi.items():
+            if key not in snapj:
+                msg = ('Snapshots have different keys'
+                       ' {} is in first but not in second').format(key)
+                raise AssertionError(msg)
+
+        for key, _ in snapj.items():
+            if key not in snapi:
+                msg = ('Snapshots have different keys'
+                       ' {} is in second but not in first').format(key)
+                raise AssertionError(msg)
+
+        for key, val in snapi.items():
+            if key in ('xyz', 'vel'):
+                if not np.allclose(val, snapj[key]):
+                    raise AssertionError(
+                        'Snapshots not equal. "{}" differ'.format(key)
+                    )
+            else:
+                for i, j in zip(val, snapj[key]):
+                    if not i == j:
+                        raise AssertionError(
+                            'Snapshots not equal. "{}" differ'.format(key)
+                        )
+
     def test_read_gromacs_lines(self):
         """Test that we can read GROMACS lines."""
-        for snapshot in (RAW_FILE_VEL, RAW_FILE):
+        for snapshot, correct in ((RAW_FILE_VEL, CORRECT_GRO_VEL),
+                                  (RAW_FILE, CORRECT_GRO_NOVEL)):
             snap = next(read_gromacs_lines(snapshot))
-            for key, val in snap.items():
-                for i, j in zip(val, CORRECT_GRO[key]):
-                    self.assertEqual(i, j)
+            self.assert_equal_snapshot(snap, correct)
         multi = [i for i in RAW_FILE_VEL] * 2
         for snap in read_gromacs_lines(multi):
-            for key, val in snap.items():
-                for i, j in zip(val, CORRECT_GRO[key]):
-                    self.assertEqual(i, j)
+            self.assert_equal_snapshot(snap, CORRECT_GRO_VEL)
 
     def test_read_gromacs_file(self):
         """Test that we can read a GROMACS file."""
         filename = os.path.join(HERE, 'config.gro')
         for snap in read_gromacs_file(filename):
-            for key, val in snap.items():
-                for i, j in zip(val, CORRECT_GRO[key]):
-                    self.assertEqual(i, j)
+            self.assert_equal_snapshot(snap, CORRECT_GRO_VEL)
 
     def test_read_gromacs_file2(self):
         """Test that we can read a single config GROMACS file."""
-        for name in ('config.gro', 'config-novel.gro'):
+        for name, correct in (('config.gro', CORRECT_GRO_VEL),
+                              ('config-novel.gro', CORRECT_GRO_NOVEL)):
             filename = os.path.join(HERE, name)
             frame, xyz, vel, box = read_gromacs_gro_file(filename)
-            self.assertTrue(np.allclose(box, np.array(CORRECT_GRO['box'])))
-            self.assertTrue(np.allclose(xyz, CORRECT_GRO['xyz']))
-            if 'vx' in frame:
-                self.assertTrue(np.allclose(vel, CORRECT_GRO['vel']))
-            else:
-                self.assertTrue(np.allclose(vel, np.zeros_like(vel)))
+            self.assertIsNotNone(xyz)
+            self.assertIsNotNone(vel)
+            self.assertIsNotNone(box)
+            self.assert_equal_snapshot(frame, correct)
+        # Test what we get if we read 1D and 2D files:
+        for dim, correct in ((1, CORRECT_GRO_NOVEL1D),
+                             (2, CORRECT_GRO_NOVEL2D)):
+            filename = os.path.join(HERE, 'config-{}D.gro'.format(dim))
+            frame, xyz, vel, box = read_gromacs_gro_file(filename)
+            self.assertIsNotNone(xyz)
+            self.assertIsNotNone(vel)
+            self.assertIsNotNone(box)
+            self.assert_equal_snapshot(frame, correct)
 
     def test_write_gromacs_gro(self):
         """Test that we can write GROMACS GRO files."""
         filename = os.path.join(HERE, 'config.gro')
-        frame, xyz, vel, box = read_gromacs_gro_file(filename)
+        frame, xyz, vel, _ = read_gromacs_gro_file(filename)
         with tempfile.NamedTemporaryFile() as tmp:
             write_gromacs_gro_file(tmp.name, frame, xyz, vel)
             tmp.flush()
-            frame2, xyz2, vel2, box2 = read_gromacs_gro_file(tmp.name)
-            self.assertTrue(np.allclose(xyz, xyz2))
-            self.assertTrue(np.allclose(vel, vel2))
-            self.assertTrue(np.allclose(box, box2))
-            for key, val in frame.items():
-                self.assertEqual(val, frame2[key])
+            frame2, _, _, _ = read_gromacs_gro_file(tmp.name)
+            self.assert_equal_snapshot(frame, frame2)
 
     def test_read_gromosg96(self):
         """Test that we can read GROMACS g96 files."""
         for name in ('config.g96', 'config-novel.g96'):
             filename = os.path.join(HERE, name)
             frame, xyz, vel, box = read_gromos96_file(filename)
-            self.assertTrue(np.allclose(box, np.array(CORRECT_GRO['box'])))
-            self.assertTrue(np.allclose(xyz, CORRECT_GRO['xyz']))
+            self.assertTrue(np.allclose(box, np.array(CORRECT_GRO_VEL['box'])))
+            self.assertTrue(np.allclose(xyz, CORRECT_GRO_VEL['xyz']))
             if frame['VELOCITY']:
-                self.assertTrue(np.allclose(vel, CORRECT_GRO['vel']))
+                self.assertTrue(np.allclose(vel, CORRECT_GRO_VEL['vel']))
             else:
                 self.assertTrue(np.allclose(vel, np.zeros_like(vel)))
 
@@ -206,7 +281,7 @@ class TestGromacsTRR(unittest.TestCase):
     """Test Gromacs TRR input output."""
 
     def test_swap_integer(self):
-        """Test the gromacsio swap_integer method."""
+        """Test the swap_integer method."""
         test = [(1, 16777216), (2, 33554432), (4, 67108864),
                 (8, 134217728), (16, 268435456)]
         for i, j in test:
@@ -214,7 +289,7 @@ class TestGromacsTRR(unittest.TestCase):
             self.assertEqual(j, swap_integer(i))
 
     def test_swap_endian(self):
-        """Test the gromacsio swap_endian method."""
+        """Test the swap_endian method."""
         test = [('>', '<'), ('<', '>')]
         for i, j in test:
             self.assertEqual(j, swap_endian(i))
@@ -224,7 +299,7 @@ class TestGromacsTRR(unittest.TestCase):
             swap_endian('^')
 
     def test_read_trr(self):
-        """Test the gromacsio reading for TRR files."""
+        """Test the reading of TRR files."""
         filename = os.path.join(HERE, 'traj.trr')
         all_data = []
         for i, (header, data) in enumerate(read_trr_file(filename)):
@@ -251,19 +326,19 @@ class TestGromacsTRR(unittest.TestCase):
         filename = os.path.join(HERE, 'error.trr')
         logging.disable(logging.INFO)
 
-        with self.assertLogs('pyretis.inout.writers.gromacsio',
+        with self.assertLogs('pyretis.inout.formats.gromacs',
                              level='WARNING'):
             for i in read_trr_file(filename):
                 pass
 
-        with self.assertLogs('pyretis.inout.writers.gromacsio',
+        with self.assertLogs('pyretis.inout.formats.gromacs',
                              level='CRITICAL'):
             for i in read_trr_file(filename):
                 pass
         logging.disable(logging.CRITICAL)
 
     def test_reverse_trr(self):
-        """Test that we can reverse a trr file."""
+        """Test that we can reverse a TRR file."""
         filename = os.path.join(HERE, 'traj.trr')
         with tempfile.NamedTemporaryFile() as tmp:
             reverse_trr(filename, tmp.name, print_progress=False)
@@ -287,17 +362,19 @@ class TestGromacsTRR(unittest.TestCase):
 
     def test_trr_to_g96(self):
         """Test that we can extract a GROMOS g96 frame from a TRR."""
-        filename = os.path.join(HERE, 'traj.trr')
-        with tempfile.NamedTemporaryFile() as tmp:
-            trr_frame_to_g96(filename, 2, tmp.name)
-            tmp.flush()
-            _, xyz, vel, box = read_gromos96_file(tmp.name)
-            _, data = read_trr_frame(filename, 2)
-            self.assertTrue(np.allclose(xyz, data['x']))
-            self.assertTrue(np.allclose(vel, data['v']))
-            self.assertTrue(
-                np.allclose(box[:3], box_matrix_to_list(data['box']))
-            )
+        for fname in ('traj.trr', 'traj-tric.trr'):
+            filename = os.path.join(HERE, fname)
+            with tempfile.NamedTemporaryFile() as tmp:
+                trr_frame_to_g96(filename, 2, tmp.name)
+                tmp.flush()
+                _, xyz, vel, box = read_gromos96_file(tmp.name)
+                _, data = read_trr_frame(filename, 2)
+                self.assertTrue(np.allclose(xyz, data['x']))
+                self.assertTrue(np.allclose(vel, data['v']))
+                self.assertTrue(
+                    np.allclose(box,
+                                box_matrix_to_list(data['box'], full=True))
+                )
 
     def test_read_double_trr(self):
         """Test that we can read double precision TRR as well."""
@@ -341,7 +418,7 @@ class TestGromacsTRR(unittest.TestCase):
                         self.assertEqual(header['endian'], header2['endian'])
 
     def test_read_wrong_header(self):
-        """Test that we get an error when reading wrong version of trr."""
+        """Test that we get an error when reading wrong version of TRR."""
         slen = (13, 12)
         fmt = ['1i', '2i', '{}s'.format(slen[0] - 1), '13i']
         with tempfile.NamedTemporaryFile() as tmp:
@@ -393,7 +470,7 @@ class TestGromacsTRR(unittest.TestCase):
                     pass
 
     def test_overwrite_trr(self):
-        """Test that we indeed can turn off the append to trr."""
+        """Test that we indeed can turn off the append to TRR."""
         with tempfile.NamedTemporaryFile() as tmp:
             all_data = []
             for i in range(5):

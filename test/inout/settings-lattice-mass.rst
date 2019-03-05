@@ -1,0 +1,12 @@
+Particles
+---------
+position = {'generate': 'fcc',
+            'repeat': [3, 3, 3],
+            'lcon': 1.0}
+type = [0, 1]
+name = ['Ar', 'Kr']
+mass = {'Ar': 1.0}
+
+System
+------
+units = lj

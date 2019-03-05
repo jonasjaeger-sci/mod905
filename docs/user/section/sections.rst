@@ -4,7 +4,7 @@ Input file sections
 ===================
 
 The |pyretis| input file described in detail
-in :ref:`the user guide <user-guide-input-structure>`. The sort version is:
+in :ref:`the user guide <user-guide-input-structure>`. The short version is:
 
 1. The input file is organised into ``sections`` where ``keywords`` are given values:
 

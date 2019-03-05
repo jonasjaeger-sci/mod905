@@ -3,7 +3,7 @@
 The Potential section
 =====================
 
-The potential section specifies a single
+The ``potential`` section specifies a single
 potential function to add to the force field.
 
 .. pyretis-input-example:: Potential
@@ -43,7 +43,7 @@ field, several ``Potential`` sections can be added:
        parameter types = [(1, 1)]
 
 
-As the different potentials typically requires different
+As the different potentials typically require different
 settings, detailed information can be found below
 for specific potentials:
 
@@ -92,7 +92,7 @@ DoubleWell potential:
 .. _table-keywords-doublewell:
 
 .. table:: Keywords for the DoubleWell potential.
-   :class: table-striped
+   :class: table-striped table-hover
 
    +-------------------+------------------------------------------------------+
    | Keyword           | Description                                          |
@@ -176,7 +176,7 @@ RectangularWell potential:
 .. _table-keywords-rectangularwell:
 
 .. table:: Keywords for the RectangularWell potential.
-   :class: table-striped
+   :class: table-striped table-hover
 
    +-------------------+------------------------------------------------------+
    | Keyword           | Description                                          |
@@ -278,7 +278,7 @@ PairLennardJonesCutnp potential:
 .. _table-pairljnp-keywords:
 
 .. table:: Keywords for the PairLennardJonesCutnp potential.
-   :class: table-striped
+   :class: table-striped table-hover
 
    +------------------+-------------------------------------------------------+
    | Keyword          | Description                                           |
@@ -444,7 +444,7 @@ DoubleWellWCA potential:
 .. _table-keywords-doublewellwca:
 
 .. table:: Keywords for the DoubleWellWCA potential
-   :class: table-striped
+   :class: table-striped table-hover
 
    +------------------+-------------------------------------------------------+
    | Keyword          | Description                                           |
@@ -515,7 +515,7 @@ The following parameters can be set for the DoubleWellWCA potential:
 
    This parameter determines for which pair of particles the interaction should
    act on. If this is not set, it will turn on the interaction for all
-   particles. For example if ``types = [(1,2)]`` the interaction will be
+   particles. For example, if ``types = [(1,2)]`` the interaction will be
    turned on between particles of type ``1`` and type ``2`` only. (See
    the :ref:`particle section <user-section-particles-keyword-type>` for a
    description about the particle type.) Note that several types can be
@@ -526,13 +526,13 @@ The following parameters can be set for the DoubleWellWCA potential:
 
 .. _user-section-potential-custom:
 
-User defined potential functions
+User-defined potential functions
 --------------------------------
 
-User defined potential functions are selected as follows:
+User-defined potential functions are selected as follows:
 
 .. pyretis-input-example:: Potential
-   :class-name: a user defined class
+   :class-name: a user-defined class
 
    .. code-block:: rst
 
@@ -546,11 +546,11 @@ User defined potential functions are selected as follows:
 Here, the user can both define custom keywords and parameters. However,
 the ``class`` and the ``module`` **must** always be specified in this case.
 
-Keywords for user defined potential functions
+Keywords for user-defined potential functions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 At least, the following keywords can be specified for
-user defined potential functions:
+user-defined potential functions:
 
 .. |user_class| replace:: :ref:`class <user-section-potential-user-class>`
 
@@ -558,8 +558,8 @@ user defined potential functions:
 
 .. _table-keywords-user-potential:
 
-.. table:: Keywords for user defined potential functions.
-   :class: table-striped
+.. table:: Keywords for user.defined potential functions.
+   :class: table-striped table-hover
 
    +---------------+----------------------------------------------------------+
    | Keyword       | Description                                              |
@@ -590,7 +590,7 @@ Keyword module
 .. pyretis-keyword:: module string
 
    This keyword specified the location of the file containing the
-   user defined class for the potential function.
+   user-defined class for the potential function.
    This file must be accessible by |pyretis|.
 
    Default

@@ -21,7 +21,7 @@ import logging
 from pyretis.simulation.simulation import Simulation
 from pyretis.core.particlefunctions import calculate_thermo
 from pyretis.core.path import check_crossing
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 
@@ -35,7 +35,7 @@ __all__ = [
 class SimulationMD(Simulation):
     """A generic MD simulation.
 
-    This class is used to define a MD simulation without whistles and bells.
+    This class is used to define a simple MD simulation.
 
     Attributes
     ----------
@@ -43,14 +43,23 @@ class SimulationMD(Simulation):
         This is the system the simulation will act on.
     engine : object like :py:class:`.EngineBase`
         The engine to use for integrating the equations of motion.
-        The engine must have engine.dynamics == 'NVE' in order
-        for it to be usable in this simulation.
+    order_function : object like :py:class:`.OrderParameter`
+        A class that can be used to calculate an order parameter,
+        if needed.
 
     """
 
     simulation_type = 'md'
+    simulation_output = [
+        {'type': 'energy', 'name': 'md-energy-file'},
+        {'type': 'thermo-file', 'name': 'md-thermo-file'},
+        {'type': 'traj-xyz', 'name': 'md-traj-file'},
+        {'type': 'thermo-screen', 'name': 'md-thermo-screen'},
+        {'type': 'order', 'name': 'md-order-file'},
+    ]
 
-    def __init__(self, system, engine, steps=0, startcycle=0):
+    def __init__(self, system, engine, order_function=None,
+                 steps=0, startcycle=0):
         """Initialise the MD simulation.
 
         Here we just add variables and do not do any other setup.
@@ -62,17 +71,51 @@ class SimulationMD(Simulation):
         engine : object like :py:class:`.EngineBase`
             This is the integrator that is used to propagate the system
             in time.
+        order_function : object like :py:class:`.OrderParameter`, optional
+            A class that can be used to calculate an order parameter,
+            if needed.
         steps : int, optional
             The number of simulation steps to perform.
         startcycle : int, optional
-            The cycle we start the simulation on, can be useful if
-            restarting.
+            The cycle we start the simulation on.
 
         """
         super().__init__(steps=steps, startcycle=startcycle)
         self.system = system
-        self.system.potential_and_force()  # make sure forces are defined.
         self.engine = engine
+        self.order_function = order_function
+
+    def run(self):
+        """Run the MD simulation.
+
+        Yields
+        ------
+        results : dict
+            The results from a single step in the simulation.
+
+        """
+        nsteps = 1 + self.cycle['end'] - self.cycle['step']
+        integ = self.engine.integrate(
+            self.system,
+            nsteps,
+            order_function=self.order_function,
+            thermo='full',
+        )
+        for step in integ:
+            if not self.first_step:
+                self.cycle['step'] += 1
+                self.cycle['stepno'] += 1
+            results = {'cycle': self.cycle.copy()}
+            if self.first_step:
+                self.first_step = False
+            results.update(step)
+            for task in self.output_tasks:
+                task.output(results)
+            self.write_restart()
+            if self.soft_exit():
+                yield results
+                break
+            yield results
 
     def __str__(self):
         """Return a string with info about the simulation."""
@@ -80,45 +123,29 @@ class SimulationMD(Simulation):
         nstep = self.cycle['end'] - self.cycle['start']
         msg += ['Number of steps to do: {}'.format(nstep)]
         msg += ['MD engine: {}'.format(self.engine)]
-        msg += ['Time step: {}'.format(self.engine.delta_t)]
+        msg += ['Time step: {}'.format(self.engine.timestep)]
         return '\n'.join(msg)
-
-    def restart_info(self):
-        """Return restart info.
-
-        Here we report the cycle number and the random
-        number generator status.
-        """
-        info = {'cycle': self.cycle,
-                'type': self.simulation_type}
-        try:
-            rgen = self.engine.rgen
-            info['engine'] = {'rgen': rgen.get_state()}
-        except AttributeError:
-            pass
-        return info
 
 
 class SimulationNVE(SimulationMD):
     """A MD NVE simulation class.
 
-    This class is used to define a NVE simulation with some additional
-    additional tasks/calculations.
-
-    Attributes
-    ----------
-    system : object like :py:class:`.System`
-        This is the system the simulation will act on.
-    engine : object like :py:class:`.EngineBase`
-        The engine to use for integrating the equations of motion.
-        The engine must have engine.dynamics == 'NVE' in order
-        for it to be usable in this simulation.
-
+    This class is used to define a NVE simulation. Compared with
+    the :py:class:`.SimulationMD` we here require that the engine
+    supports NVE dynamics.
     """
 
     simulation_type = 'md-nve'
+    simulation_output = [
+        {'type': 'energy', 'name': 'nve-energy-file'},
+        {'type': 'thermo-file', 'name': 'nve-thermo-file'},
+        {'type': 'traj-xyz', 'name': 'nve-traj-file'},
+        {'type': 'thermo-screen', 'name': 'nve-thermo-screen'},
+        {'type': 'order', 'name': 'nve-order-file'},
+    ]
 
-    def __init__(self, system, engine, steps=0, startcycle=0):
+    def __init__(self, system, engine, order_function=None,
+                 steps=0, startcycle=0):
         """Initialise the NVE simulation object.
 
         Here we will set up the tasks that are to be performed in the
@@ -132,33 +159,42 @@ class SimulationNVE(SimulationMD):
         engine : object like :py:class:`.EngineBase`
             This is the integrator that is used to propagate the system
             in time.
+        order_function : object like :py:class:`.OrderParameter`, optional
+            A class that can be used to calculate an order parameter,
+            if needed.
         steps : int, optional
             The number of simulation steps to perform.
         startcycle : int, optional
-            The cycle we start the simulation on, can be useful if
-            restarting.
+            The cycle we start the simulation on.
 
         """
-        super().__init__(system, engine, steps=steps, startcycle=startcycle)
+        super().__init__(system, engine, order_function=order_function,
+                         steps=steps, startcycle=startcycle)
         if self.engine.dynamics.lower() != 'nve':
-            msg = 'Inconsistent MD integrator {} for NVE dynamics!'
-            msg = msg.format(engine.description)
-            logger.warning(msg)
+            logger.warning(
+                'Inconsistent MD integrator %s (%s) for NVE dynamics!',
+                engine.__class__,
+                engine.description
+            )
 
-        # Create integration task:
-        task_integrate = {'func': self.engine.integration_step,
-                          'args': [self.system]}
-        self.add_task(task_integrate)
-
-        task_thermo = {'func': calculate_thermo,
-                       'args': [system],
-                       'kwargs': {'dof': system.temperature['dof'],
-                                  'dim': system.get_dim(),
-                                  'volume': system.box.calculate_volume()},
-                       'first': True,
-                       'result': 'thermo'}
-        # task_thermo is set up to execute at all steps
-        self.add_task(task_thermo)
+    def step(self):
+        """Run a single simulation step."""
+        if self.first_step:
+            self.system.potential_and_force()
+            self.first_step = False
+        else:
+            self.cycle['step'] += 1
+            self.cycle['stepno'] += 1
+            self.engine.integration_step(self.system)
+        results = {'cycle': self.cycle.copy(),
+                   'thermo': calculate_thermo(self.system),
+                   'system': self.system}
+        if self.order_function:
+            results['order'] = self.engine.calculate_order(
+                self.order_function,
+                self.system
+            )
+        return results
 
     def __str__(self):
         """Return a string with info about the simulation."""
@@ -166,7 +202,7 @@ class SimulationNVE(SimulationMD):
         nstep = self.cycle['end'] - self.cycle['start']
         msg += ['Number of steps to do: {}'.format(nstep)]
         msg += ['MD engine: {}'.format(self.engine)]
-        msg += ['Time step: {}'.format(self.engine.delta_t)]
+        msg += ['Time step: {}'.format(self.engine.timestep)]
         return '\n'.join(msg)
 
 
@@ -179,13 +215,8 @@ class SimulationMDFlux(SimulationMD):
 
     Attributes
     ----------
-    system : object like :py:class:`.System`
-        This is the system the simulation will act on.
-    engine : object like :py:class:`.EngineBase`
-        This is the integrator that is used to propagate the system
-        in time.
     interfaces : list of floats
-        These floats defines the interfaces used in the crossing
+        These floats define the interfaces used in the crossing
         calculation.
     leftside_prev : list of booleans or None
         These are used to store the previous positions with respect
@@ -194,8 +225,15 @@ class SimulationMDFlux(SimulationMD):
     """
 
     simulation_type = 'md-flux'
+    simulation_output = [
+        {'type': 'energy', 'name': 'flux-energy-file'},
+        {'type': 'traj-xyz', 'name': 'flux-traj-file'},
+        {'type': 'thermo-screen', 'name': 'flux-thermo-screen'},
+        {'type': 'order', 'name': 'flux-order-file'},
+        {'type': 'cross', 'name': 'flux-cross-file'},
+    ]
 
-    def __init__(self, system, orderp, engine, interfaces,
+    def __init__(self, system, order_function, engine, interfaces,
                  steps=0, startcycle=0):
         """Initialise the MD-Flux simulation object.
 
@@ -203,66 +241,67 @@ class SimulationMDFlux(SimulationMD):
         ----------
         system : object like :py:class:`.System`
             This is the system we are investigating
-        orderp : object like :py:class:`.OrderParameter`
+        order_function : object like :py:class:`.OrderParameter`
             The class used for calculating the order parameters.
         engine : object like :py:class:`.EngineBase`
             This is the integrator that is used to propagate the system
             in time.
         interfaces : list of floats
-            These defines the interfaces for which we will check the
+            These define the interfaces for which we will check the
             crossing(s).
         steps : int, optional
             The number of steps to perform.
         startcycle : int, optional
-            The cycle we start the simulation on, can be useful if
-            restarting.
+            The cycle we start the simulation on.
 
         """
-        super().__init__(system, engine, steps=steps, startcycle=startcycle)
-        self.orderp = orderp
+        super().__init__(system, engine, order_function=order_function,
+                         steps=steps, startcycle=startcycle)
         self.interfaces = interfaces
         # set up for initial crossing
         self.leftside_prev = None
-        leftside, _ = check_crossing(
-            self.cycle['step'],
-            self.engine.calculate_order(self.orderp, self.system)[0],
-            self.interfaces,
-            self.leftside_prev)
-        self.leftside_prev = leftside
 
-    def step(self):
-        """Run a simulation step.
+    def run(self):
+        """Run the MD simulation.
 
-        Rather than using the tasks for the more general simulation, we
-        here just executing what we need.
-
-        Returns
-        -------
-        out : dict
-            This list contains the results of the defined tasks.
+        Yields
+        ------
+        results : dict
+            The results from a single step in the simulation.
 
         """
-        if not self.first_step:
-            self.cycle['step'] += 1
-            self.cycle['stepno'] += 1
-            self.engine.integration_step(self.system)
-        # collect energy and order parameter, this is done at all steps
-        results = {'cycle': self.cycle,
-                   'thermo': calculate_thermo(self.system),
-                   'order': self.engine.calculate_order(self.orderp,
-                                                        self.system),
-                   'system': self.system}
-        # do not check crossing at step 0
-        if not self.first_step:
+        nsteps = 1 + self.cycle['end'] - self.cycle['step']
+        leftside = None
+        integ = self.engine.integrate(
+            self.system,
+            nsteps,
+            order_function=self.order_function,
+            thermo='full',
+        )
+        for step in integ:
+            results = {}
+            if not self.first_step:
+                self.cycle['step'] += 1
+                self.cycle['stepno'] += 1
+            else:
+                self.first_step = False
+            results['cycle'] = self.cycle
+            if leftside:
+                self.leftside_prev = leftside
             leftside, cross = check_crossing(self.cycle['step'],
-                                             results['order'][0],
+                                             step['order'][0],
                                              self.interfaces,
                                              self.leftside_prev)
-            self.leftside_prev = leftside
             results['cross'] = cross
-        if self.first_step:
-            self.first_step = False
-        return results
+            results.update(step)
+
+            for task in self.output_tasks:
+                task.output(results)
+            self.write_restart()
+            if self.soft_exit():
+                yield results
+                break
+            yield results
 
     def __str__(self):
         """Return a string with info about the simulation."""
@@ -270,7 +309,7 @@ class SimulationMDFlux(SimulationMD):
         nstep = self.cycle['end'] - self.cycle['start']
         msg += ['Number of steps to do: {}'.format(nstep)]
         msg += ['Dynamics engine: {}'.format(self.engine)]
-        msg += ['Time step: {}'.format(self.engine.delta_t)]
+        msg += ['Time step: {}'.format(self.engine.timestep)]
         return '\n'.join(msg)
 
     def restart_info(self):

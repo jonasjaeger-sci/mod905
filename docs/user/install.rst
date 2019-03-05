@@ -77,7 +77,6 @@ set up a virtual environment:
 
       [sudo] apt-get install virtualenv
 
-
 2. Create a folder dedicated to your virtual environments, for instance in your home directory:
 
    .. code-block:: pyretis

@@ -35,7 +35,7 @@ from pyretis.engines import engine_factory
 from pyretis.orderparameter import order_factory
 from pyretis.orderparameter.orderparameter import CompositeOrderParameter
 from pyretis.forcefield.factory import potential_factory
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 
@@ -107,8 +107,8 @@ def check_settings(settings, required):
 
     This method will look for required settings in the given
     `settings`. If one or more keys from the given `required` list of
-    strings are not found, this method will return False. Otherwise
-    if will return True. Typically, and exception should be raised if
+    strings are not found, this method will return False. Otherwise,
+    it will return True. Typically, an exception should be raised if
     False is returned, this is handled outside the method in case
     someone wants to add some magic handling of missing settings.
 
@@ -141,7 +141,7 @@ def create_external(settings, key, factory, required_methods,
                     key_settings=None):
     """Create external objects from settings.
 
-    This method will handle creation of objects from settings. The
+    This method will handle the creation of objects from settings. The
     requested objects can be PyRETIS internals or defined in external
     modules.
 
@@ -157,8 +157,8 @@ def create_external(settings, key, factory, required_methods,
     required_methods : list of strings
         The methods we need to have if creating an object from external
         files.
-    key_settings : dict
-        This dictionary contains the settings for specific key we
+    key_settings : dict, optional
+        This dictionary contains the settings for the specific key we
         are processing. If this is not given, we will try to obtain
         these settings by `settings[key]`. The reason why we make it
         possible to pass these as settings is in case we are processing
@@ -184,41 +184,40 @@ def create_external(settings, key, factory, required_methods,
     try:
         klass = key_settings['class']
     except KeyError:
-        msg = 'No "{}" setting "class" specified!'.format(key)
-        logger.critical(msg)
-        raise ValueError(msg)
+        logger.debug('No "class" setting for "%s" specified. Skipping set-up',
+                     key)
+        return None
     if module is None:
         return factory(key_settings)
+    # Here we assume we are to load from a file. Before we import
+    # we need to check that the path is ok or if we should include
+    # the 'exe-path' from settings.
+    # 1) Check if we can find the module:
+    if os.path.isfile(module):
+        obj = import_from(module, klass)
     else:
-        # Here we assume we are to load from a file. Before we import
-        # we need to check that the path is ok or if we should include
-        # the 'exe-path' from settings.
-        # 1) Check if we can find the module:
-        if os.path.isfile(module):
+        if 'exe-path' in settings['simulation']:
+            module = os.path.join(settings['simulation']['exe-path'],
+                                  module)
             obj = import_from(module, klass)
         else:
-            if 'exe-path' in settings['simulation']:
-                module = os.path.join(settings['simulation']['exe-path'],
-                                      module)
-                obj = import_from(module, klass)
-            else:
-                msg = 'Could not find module "{}" for {}!'.format(module, key)
-                raise ValueError(msg)
-        # run some checks:
-        for function in required_methods:
-            objfunc = getattr(obj, function, None)
-            if not objfunc:
-                msg = 'Could not find method {}.{}'.format(klass,
-                                                           function)
+            msg = 'Could not find module "{}" for {}!'.format(module, key)
+            raise ValueError(msg)
+    # run some checks:
+    for function in required_methods:
+        objfunc = getattr(obj, function, None)
+        if not objfunc:
+            msg = 'Could not find method {}.{}'.format(klass,
+                                                       function)
+            logger.critical(msg)
+            raise ValueError(msg)
+        else:
+            if not callable(objfunc):
+                msg = 'Method {}.{} is not callable!'.format(klass,
+                                                             function)
                 logger.critical(msg)
                 raise ValueError(msg)
-            else:
-                if not callable(objfunc):
-                    msg = 'Method {}.{} is not callable!'.format(klass,
-                                                                 function)
-                    logger.critical(msg)
-                    raise ValueError(msg)
-        return initiate_instance(obj, key_settings)
+    return initiate_instance(obj, key_settings)
 
 
 def create_orderparameter(settings):
@@ -241,6 +240,9 @@ def create_orderparameter(settings):
         order_factory,
         ['calculate'],
     )
+    if main_order is None:
+        logger.info('No order parameter created')
+        return None
     logger.info('Created main order parameter:\n%s', main_order)
 
     extra_cv = []
@@ -277,8 +279,11 @@ def create_engine(settings):
         This object represents the engine.
 
     """
-    return create_external(settings, 'engine', engine_factory,
-                           ['integration_step'])
+    engine = create_external(settings, 'engine', engine_factory,
+                             ['integration_step'])
+    if not engine:
+        raise ValueError('Could not create engine from settings!')
+    return engine
 
 
 def create_potential(settings, key_settings):

@@ -17,11 +17,12 @@ units = gromacs
 Engine settings
 ---------------
 class = gromacs
-gmx = gmx_5.1.4
-mdrun = gmx_5.1.4 mdrun
+gmx = gmx_2016.4
+mdrun = gmx_2016.4 mdrun
 input_path = gromacs_input
 timestep = 0.002
 subcycles = 5
+gmx_format = g96
 
 TIS settings
 ------------

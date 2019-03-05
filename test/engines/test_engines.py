@@ -12,9 +12,13 @@ from pyretis.engines import (
     Verlet,
 )
 from pyretis.core import System, create_box, Particles
+from pyretis.core.particlefunctions import (
+    calculate_thermo,
+    calculate_thermo_path,
+)
 from pyretis.core.path import Path
 from pyretis.core.random_gen import MockRandomGenerator
-from pyretis.orderparameter import OrderParameterPosition
+from pyretis.orderparameter import PositionVelocity
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.potentials.potentials import DoubleWell
 logging.disable(logging.CRITICAL)
@@ -115,10 +119,25 @@ class EngineTest(unittest.TestCase):
         eng = MDEngine(1, description='Mock engine for testing')
         invert = eng.invert_dt()
         self.assertFalse(invert)
-        self.assertAlmostEqual(eng.delta_t, -1)
+        self.assertAlmostEqual(eng.timestep, -1)
         invert = eng.invert_dt()
         self.assertTrue(invert)
-        self.assertAlmostEqual(eng.delta_t, 1)
+        self.assertAlmostEqual(eng.timestep, 1)
+
+    def test_thermo(self):
+        """Test that we can select the thermo function."""
+        eng = MDEngine(1, description='Mock engine for testing')
+        thermo = eng.select_thermo_function(thermo='full')
+        self.assertEqual(thermo.__code__.co_code,
+                         calculate_thermo.__code__.co_code)
+        thermo = eng.select_thermo_function(thermo='path')
+        self.assertEqual(thermo.__code__.co_code,
+                         calculate_thermo_path.__code__.co_code)
+        thermo = eng.select_thermo_function(thermo='gibberish')
+        self.assertEqual(thermo.__code__.co_code,
+                         calculate_thermo_path.__code__.co_code)
+        thermo = eng.select_thermo_function(thermo=None)
+        self.assertIsNone(thermo)
 
     def test_calculate_order(self):
         """Test that we can calculate the order parameter."""
@@ -126,7 +145,7 @@ class EngineTest(unittest.TestCase):
         _box = create_box(periodic=[False], low=[0.0])
         system.box = _box
         eng = MDEngine(1, description='Mock engine for testing')
-        order_function = OrderParameterPosition(0, dim='x', periodic='False')
+        order_function = PositionVelocity(0, dim='x', periodic=False)
         order = eng.calculate_order(order_function, system)
         self.assertAlmostEqual(order[0], system.particles.pos[0])
         self.assertAlmostEqual(order[1], system.particles.vel[0])
@@ -205,7 +224,7 @@ class EngineTest(unittest.TestCase):
             eng.integration_step(system)
 
     def test_velocityverlet(self):
-        """Test the velocity verlet engine."""
+        """Test the Velocity Verlet engine."""
         system = prepare_test_system()
         eng = VelocityVerlet(0.002)
         for i in range(21):
@@ -242,27 +261,32 @@ class EngineTest(unittest.TestCase):
         """Test that we can add to paths from the engine."""
         eng = MDEngine(1.0, 'Just testing')
         path = Path(None, maxlen=10)
+        system = System()
+        system.particles = Particles(system.get_dim())
         left = -1.0
         right = 8.0
         for i in range(8):
-            phasepoint = {'order': [1.0 * i], 'pos': np.ones(3) * i,
-                          'vel': np.ones(3) * i, 'vpot': i, 'ekin': i}
+            snapshot = {'order': [1.0 * i], 'pos': np.ones(3) * i,
+                        'vel': np.ones(3) * i, 'vpot': i, 'ekin': i}
+            phasepoint = eng.snapshot_to_system(system, snapshot)
             status, success, stop, add = eng.add_to_path(path, phasepoint,
                                                          left, right)
             self.assertEqual(status, 'Running propagate...')
             self.assertFalse(success)
             self.assertFalse(stop)
             self.assertTrue(add)
-        phasepoint = {'order': [10.], 'pos': np.ones(3),
-                      'vel': np.ones(3), 'vpot': 0.0, 'ekin': 0.0}
+        snapshot = {'order': [10.], 'pos': np.ones(3),
+                    'vel': np.ones(3), 'vpot': 0.0, 'ekin': 0.0}
+        phasepoint = eng.snapshot_to_system(system, snapshot)
         status, success, stop, add = eng.add_to_path(path, phasepoint,
                                                      left, right)
         self.assertEqual(status, 'Crossed right interface!')
         self.assertTrue(success)
         self.assertTrue(stop)
         self.assertTrue(add)
-        phasepoint = {'order': [9.], 'pos': np.ones(3),
-                      'vel': np.ones(3), 'vpot': 0.0, 'ekin': 0.0}
+        snapshot = {'order': [9.], 'pos': np.ones(3),
+                    'vel': np.ones(3), 'vpot': 0.0, 'ekin': 0.0}
+        phasepoint = eng.snapshot_to_system(system, snapshot)
         status, success, stop, add = eng.add_to_path(path, phasepoint,
                                                      left, right)
         self.assertEqual(status, 'Max. path length exceeded!')

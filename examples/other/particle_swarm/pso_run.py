@@ -2,7 +2,7 @@
 # Copyright (c) 2019, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Example of performing particle swarm optimization."""
-# pylint: disable=C0103
+# pylint: disable=invalid-name
 import numpy as np
 from pyretis.core import create_box, Particles, System
 from pyretis.simulation import Simulation
@@ -59,7 +59,7 @@ def main():
 
 
 def evaluate_potential_grid():
-    """Evaluate the Ackley potential on a grid"""
+    """Evaluate the Ackley potential on a grid."""
     X, Y = np.meshgrid(np.linspace(MINX, MAXX, 100),
                        np.linspace(MINX, MAXX, 100))
     Z = ackley_potential(X, Y)

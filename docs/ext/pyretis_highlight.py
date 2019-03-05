@@ -19,6 +19,9 @@ KEYWORDS = (
     'conda',
     'sudo',
     'mkdir',
+    'pylint',
+    'pycodestyle',
+    'pydocstyle',
 )
 
 

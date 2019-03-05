@@ -3,7 +3,7 @@
 The TIS section
 ===============
 
-The TIS section defines settings for TIS and RETIS simulations.
+The ``TIS`` section defines settings for TIS and RETIS simulations.
 
 .. pyretis-input-example:: TIS
 
@@ -45,12 +45,12 @@ The following keywords can be set for the TIS section:
 .. _table-tis-keywords:
 
 .. table:: Keywords for the TIS section
-   :class: table-striped
+   :class: table-striped table-hover
 
    +----------------------+---------------------------------------------------+
    | Keyword              | Description                                       |
    +======================+===================================================+
-   | |tis_freq|           | Define how often shooting moves are               |
+   | |tis_freq|           | Define how often time reversal moves are          |
    |                      | performed.                                        |
    +----------------------+---------------------------------------------------+
    | |tis_maxlength|      | Sets the maximum length of the paths generated.   |
@@ -79,10 +79,10 @@ Keyword freq
 
 .. pyretis-keyword:: freq float
 
-   This defines how often shooting moves are performed:
+   This defines how often time reversal moves are performed:
    It corresponds to the percentage of the TIS moves that should be
    shooting moves. E.g. if ``freq = 0.5`` then 50% of the TIS moves
-   are shooting moves. Note that if you are running a RETIS simulation,
+   are time reversal. Note that if you are running a RETIS simulation,
    then the percentage of TIS moves will be modified by the percentage
    of swapping moves, e.g. the percentage of shooting moves will then
    be given by :math:`(1 - swapfreq) \times freq`.
@@ -113,7 +113,7 @@ Keyword allowmaxlength
 
 .. pyretis-keyword:: allowmaxlength boolean
 
-   If ``True``, we the maximum length for all paths is set to
+   If ``True``, the maximum length for all paths are set to
    the value given by the keyword ``maxlength``. If ``False``,
    the maximum length is determined at random based on the length
    of the current path we are shooting from.

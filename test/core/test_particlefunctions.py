@@ -26,16 +26,21 @@ from pyretis.core.particlefunctions import (
 logging.disable(logging.CRITICAL)
 
 
+def empty_particles(masses):
+    """Set up a particle object for testing."""
+    particles = Particles(dim=3)
+    for i in masses:
+        particles.add_particle(np.zeros(3), np.zeros(3), np.zeros(3), mass=i)
+    particles.virial = np.zeros((3, 3))
+    return particles
+
+
 class ParticleTest(unittest.TestCase):
     """Run the tests for the Particle() class."""
 
     def test_get_selection(self):
         """Test the creation a particle list."""
-        particles = Particles(dim=3)
-        particles.add_particle(np.zeros(3), np.zeros(3), np.zeros(3), mass=1)
-        particles.add_particle(np.zeros(3), np.zeros(3), np.zeros(3), mass=2)
-        particles.add_particle(np.zeros(3), np.zeros(3), np.zeros(3), mass=1)
-        particles.add_particle(np.zeros(3), np.zeros(3), np.zeros(3), mass=2)
+        particles = empty_particles([1, 2, 1, 2])
         _, mass = _get_vel_mass(particles, selection=[0, 1])
         for i, j in zip(mass, (1, 2)):
             self.assertAlmostEqual(i[0], j)
@@ -48,14 +53,9 @@ class ParticleTest(unittest.TestCase):
 
     def test_get_atomic_ek(self):
         """Test the atomic ek tensor calculation."""
-        particles = Particles(dim=3)
-        particles.add_particle(np.zeros(3), np.ones(3), np.zeros(3), mass=1)
-        particles.add_particle(np.zeros(3), np.ones(3) * 2.0, np.zeros(3),
-                               mass=2)
-        particles.add_particle(np.zeros(3), np.ones(3) * 3.0, np.zeros(3),
-                               mass=1)
-        particles.add_particle(np.zeros(3), np.ones(3) * 4.0, np.zeros(3),
-                               mass=2)
+        particles = empty_particles([1, 2, 1, 2])
+        particles.vel = np.array([[1., 1., 1.], [2., 2., 2.],
+                                  [3., 3., 3.], [4., 4., 4.]])
         kin = atomic_kinetic_energy_tensor(particles)
         kin1 = atomic_kinetic_energy_tensor(particles, selection=[0, 2])
         kin2 = atomic_kinetic_energy_tensor(particles, selection=[1, 3])
@@ -68,14 +68,9 @@ class ParticleTest(unittest.TestCase):
 
     def test_calculate_ek(self):
         """Test calculation of kinetic energy."""
-        particles = Particles(dim=3)
-        particles.add_particle(np.zeros(3), np.ones(3), np.zeros(3), mass=1)
-        particles.add_particle(np.zeros(3), np.ones(3) * 2.1, np.zeros(3),
-                               mass=2)
-        particles.add_particle(np.zeros(3), np.ones(3) * 3.1, np.zeros(3),
-                               mass=1)
-        particles.add_particle(np.zeros(3), np.ones(3) * 4.1, np.zeros(3),
-                               mass=2)
+        particles = empty_particles([1, 2, 1, 2])
+        particles.vel = np.array([[1., 1., 1.], [2.1, 2.1, 2.1],
+                                  [3.1, 3.1, 3.1], [4.1, 4.1, 4.1]])
         ekin, tensor = calculate_kinetic_energy(particles)
         tensor2 = calculate_kinetic_energy_tensor(particles)
         self.assertTrue(np.allclose(tensor, tensor2))
@@ -83,12 +78,8 @@ class ParticleTest(unittest.TestCase):
 
     def test_calculate_temp(self):
         """Test calculation of temperature."""
-        particles = Particles(dim=3)
-        particles.add_particle(np.zeros(3), np.ones(3), np.zeros(3), mass=1)
-        particles.add_particle(np.zeros(3), np.ones(3), np.zeros(3), mass=2)
-        particles.add_particle(np.zeros(3), np.ones(3), np.zeros(3), mass=1)
-        particles.add_particle(np.zeros(3), np.ones(3), np.zeros(3),
-                               mass=0.01)
+        particles = empty_particles([1, 2, 1, 0.01])
+        particles.vel = np.ones_like(particles.pos)
         temp1, temp2, _ = calculate_kinetic_temperature(particles, 1.0)
         self.assertAlmostEqual(temp2, 1.0025)
         for i in temp1:
@@ -96,11 +87,8 @@ class ParticleTest(unittest.TestCase):
 
     def test_kinetic_temp(self):
         """Test calculation of kinetic temperature."""
-        particles = Particles(dim=3)
-        particles.add_particle(np.zeros(3), np.ones(3), np.zeros(3), mass=1)
-        particles.add_particle(np.zeros(3), np.ones(3), np.zeros(3), mass=2)
-        particles.add_particle(np.zeros(3), np.ones(3), np.zeros(3), mass=1)
-        particles.add_particle(np.zeros(3), np.ones(3), np.zeros(3), mass=0.01)
+        particles = empty_particles([1, 2, 1, 0.01])
+        particles.vel = np.ones_like(particles.pos)
         vel = particles.vel
         mass = particles.mass
         temp1, temp2, _ = kinetic_temperature(vel, mass, 1.0)
@@ -115,26 +103,18 @@ class ParticleTest(unittest.TestCase):
 
     def test_linear_momentum(self):
         """Test calculation of linear momentum."""
-        particles = Particles(dim=3)
-        particles.add_particle(np.zeros(3), np.ones(3), np.zeros(3), mass=1)
-        particles.add_particle(np.zeros(3), np.ones(3) * 2, np.zeros(3),
-                               mass=0.5)
-        particles.add_particle(np.zeros(3), np.ones(3) * 0.5, np.zeros(3),
-                               mass=2)
-        particles.add_particle(np.zeros(3), np.ones(3), np.zeros(3), mass=1)
+        particles = empty_particles([1, 0.5, 2, 1])
+        particles.vel = np.array([[1., 1., 1.], [2., 2., 2.],
+                                  [0.5, 0.5, 0.5], [1., 1., 1.]])
         mom = calculate_linear_momentum(particles)
         for i in mom:
             self.assertAlmostEqual(i, 4.)
 
     def test_pressure_from_temp(self):
         """Test calculation of pressure."""
-        particles = Particles(dim=3)
-        particles.add_particle(np.zeros(3), np.ones(3), np.zeros(3), mass=1)
-        particles.add_particle(np.zeros(3), np.ones(3) * 2, np.zeros(3),
-                               mass=0.5)
-        particles.add_particle(np.zeros(3), np.ones(3) * 0.5, np.zeros(3),
-                               mass=2)
-        particles.add_particle(np.zeros(3), np.ones(3), np.zeros(3), mass=1)
+        particles = empty_particles([1, 0.5, 2, 1])
+        particles.vel = np.array([[1., 1., 1.], [2., 2., 2.],
+                                  [0.5, 0.5, 0.5], [1., 1., 1.]])
         pvol, press = calculate_pressure_from_temp(particles, 3, 1.0, 1.0)
         self.assertAlmostEqual(pvol, 4.5)
         self.assertAlmostEqual(press, 4.5)
@@ -145,13 +125,9 @@ class ParticleTest(unittest.TestCase):
 
     def test_pressure_tensors(self):
         """Test calculation of the pressure tensor and scalar."""
-        particles = Particles(dim=3)
-        particles.add_particle(np.zeros(3), np.ones(3), np.zeros(3), mass=1)
-        particles.add_particle(np.zeros(3), np.ones(3) * 2, np.zeros(3),
-                               mass=2)
-        particles.add_particle(np.zeros(3), np.ones(3) * 0.5, np.zeros(3),
-                               mass=3)
-        particles.add_particle(np.zeros(3), np.ones(3), np.zeros(3), mass=4)
+        particles = empty_particles([1, 2, 3, 4])
+        particles.vel = np.array([[1., 1., 1.], [2., 2., 2.],
+                                  [0.5, 0.5, 0.5], [1., 1., 1.]])
         press = calculate_pressure_tensor(particles, 1.0)
         for i in press.ravel():
             self.assertAlmostEqual(i, 13.75)
@@ -160,14 +136,10 @@ class ParticleTest(unittest.TestCase):
 
     def test_calculate_thermo(self):
         """Test the calculate_thermo method."""
-        system = System(units='reduced', box=create_box(length=[1., 1., 1.]))
-        particles = Particles(dim=3)
-        particles.add_particle(np.zeros(3), np.ones(3), np.zeros(3), mass=1)
-        particles.add_particle(np.zeros(3), np.ones(3) * 2, np.zeros(3),
-                               mass=2)
-        particles.add_particle(np.zeros(3), np.ones(3) * 0.5, np.zeros(3),
-                               mass=3)
-        particles.add_particle(np.zeros(3), np.ones(3), np.zeros(3), mass=4)
+        system = System(units='reduced', box=create_box(cell=[1., 1., 1.]))
+        particles = empty_particles([1, 2, 3, 4])
+        particles.vel = np.array([[1., 1., 1.], [2., 2., 2.],
+                                  [0.5, 0.5, 0.5], [1., 1., 1.]])
         particles.vpot = 123.456
         system.particles = particles
         res = calculate_thermo(system)
@@ -187,11 +159,9 @@ class ParticleTest(unittest.TestCase):
 
     def test_thermo_path(self):
         """Test thermo calculation for path-style output."""
-        system = System(units='reduced', box=create_box(length=[1., 1.5, 1.]))
-        particles = Particles(dim=3)
-        particles.add_particle(np.zeros(3), np.ones(3), np.zeros(3), mass=1)
-        particles.add_particle(np.zeros(3), np.ones(3) * 2, np.zeros(3),
-                               mass=2)
+        system = System(units='reduced', box=create_box(cell=[1., 1.5, 1.]))
+        particles = empty_particles([1, 2])
+        particles.vel = np.array([[1., 1., 1.], [2., 2., 2.]])
         particles.vpot = 314.21
         system.particles = particles
         res = calculate_thermo_path(system)
@@ -206,13 +176,9 @@ class ParticleTest(unittest.TestCase):
 
     def test_reset_mom(self):
         """Test that we can reset momentum."""
-        particles = Particles(dim=3)
-        particles.add_particle(np.zeros(3), np.ones(3), np.zeros(3), mass=1)
-        particles.add_particle(np.zeros(3), np.ones(3) * 2, np.zeros(3),
-                               mass=0.5)
-        particles.add_particle(np.zeros(3), np.ones(3) * 0.5, np.zeros(3),
-                               mass=2)
-        particles.add_particle(np.zeros(3), np.ones(3), np.zeros(3), mass=1)
+        particles = empty_particles([1, 0.5, 2, 1])
+        particles.vel = np.array([[1., 1., 1.], [2., 2., 2.],
+                                  [0.5, 0.5, 0.5], [1., 1., 1.]])
         vel = np.copy(particles.vel)
         reset_momentum(particles)
         mom = calculate_linear_momentum(particles)

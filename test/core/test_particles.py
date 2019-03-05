@@ -1,17 +1,22 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2019, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
-"""Test the Particles class from pyretis.core"""
+"""Test the classes and methods from pyretis.core.particles"""
 import logging
 import unittest
 import numpy as np
 from scipy.special import comb
-from pyretis.core.particles import Particles, ParticlesExt, get_particle_type
+from pyretis.core.particles import (
+    Particles,
+    ParticlesExt,
+    get_particle_type,
+    particles_from_restart,
+)
 logging.disable(logging.CRITICAL)
 
 
 class ParticleTest(unittest.TestCase):
-    """Run the tests for the Particle() class."""
+    """Run the tests for the Particle class."""
 
     def test_creation(self):
         """Test the creation a particle list."""
@@ -21,7 +26,7 @@ class ParticleTest(unittest.TestCase):
             particles.add_particle(np.zeros(dim), np.zeros(dim), np.zeros(dim))
             self.assertEqual(particles.dim, dim)
             self.assertEqual(particles.npart, 2)
-            self.assertEqual(particles.virial.shape, (dim, dim))
+            self.assertIsNone(particles.virial)
 
     def test_empty_list(self):
         """Test that we can empty the list."""
@@ -81,19 +86,6 @@ class ParticleTest(unittest.TestCase):
         self.assertFalse(force is particles.force)
         for i, j in zip(force, particles.force):
             self.assertTrue(np.allclose(i, j))
-
-    def test_set_get_state(self):
-        """Test that we can set/get the state."""
-        particles = Particles(dim=3)
-        particles.add_particle(np.ones(3), np.ones(3), np.ones(3))
-        particles.add_particle(np.ones(3), np.ones(3), np.ones(3))
-        particles.vpot = 100
-        state = particles.get_particle_state()
-        particles.pos[0] = np.array([100, 200, 300])
-        self.assertFalse(np.allclose(state['pos'], particles.pos))
-        particles.set_particle_state(state)
-        self.assertTrue(np.allclose(np.ones_like(particles.pos),
-                                    particles.pos))
 
     def test_get_selection(self):
         """Test that we can get a selection of properties."""
@@ -158,6 +150,36 @@ class ParticleTest(unittest.TestCase):
         self.assertTrue(np.allclose(particles.pos, particles2.pos))
         self.assertTrue(hasattr(particles2, 'ekin'))
         self.assertFalse(hasattr(particles, 'ekin'))
+        # Test load and create:
+        simulation_restart = {'particles': restart}
+        particles3 = particles_from_restart(simulation_restart)
+        self.assertNotEqual(particles, particles3)
+        particles.ekin = None
+        self.assertEqual(particles, particles3)
+        particles3 = particles_from_restart({})
+        self.assertIsNone(particles3)
+
+    def test_copy(self):
+        """Test that we can copy particles."""
+        particles = Particles(dim=3)
+        particles.add_particle(np.ones(3), np.ones(3), np.ones(3))
+        particles.add_particle(np.ones(3), np.ones(3), np.ones(3))
+        particles.ekin = 102
+        particles2 = particles.copy()
+        self.assertIsNot(particles, particles2)
+        self.assertEqual(particles, particles2)
+        del particles.ekin
+        particles2 = particles.copy()
+        self.assertIsNot(particles, particles2)
+        self.assertNotEqual(particles, particles2)
+        # Test that we can change one without changing the other:
+        particles2 = particles.copy()
+        for attr in ('pos', 'vel', 'force'):
+            val1 = getattr(particles2, attr)
+            setattr(particles2, attr, np.zeros_like(val1))
+            val1 = getattr(particles2, attr)
+            val2 = getattr(particles, attr)
+            self.assertFalse(np.allclose(val1, val2))
 
 
 class GetParticleTest(unittest.TestCase):
@@ -174,30 +196,31 @@ class GetParticleTest(unittest.TestCase):
 
 
 class ParticleExtTest(unittest.TestCase):
-    """Run the tests for the Particle() class."""
+    """Run the tests for the Particle class."""
 
     def test_creation(self):
         """Test the creation a particle list."""
         particles = ParticlesExt(dim=3)
-        self.assertTrue(hasattr(particles, 'config'))
-        self.assertTrue(hasattr(particles, 'vel_rev'))
+        self.assertTrue(hasattr(particles, 'pos'))
+        self.assertTrue(hasattr(particles, 'vel'))
 
     def test_empty_list(self):
         """Test that we can empty the list."""
         particles = ParticlesExt(dim=3)
-        particles.config = ('test', 100)
-        particles.empty_list()
+        particles.set_pos(('test', 100))
         self.assertEqual(particles.config, ('test', 100))
+        particles.empty_list()
+        self.assertEqual(particles.config, (None, None))
 
     def test_setget_pos(self):
         """Test that we can set/get positions."""
         particles = ParticlesExt(dim=3)
         pos = ('some file', 101)
-        self.assertEqual(particles.config, (None, None))
+        self.assertEqual(particles.get_pos(), (None, None))
         particles.set_pos(pos)
-        for i, j in zip(particles.config, pos):
+        for i, j in zip(particles.get_pos(), pos):
             self.assertEqual(i, j)
-        self.assertFalse(pos is particles.config)
+        self.assertFalse(pos is particles.get_pos())
         pos2 = particles.get_pos()
         self.assertTrue(pos2 is particles.config)
 
@@ -209,21 +232,6 @@ class ParticleExtTest(unittest.TestCase):
         particles.set_vel(False)
         self.assertFalse(particles.vel_rev)
 
-    def test_set_get_state(self):
-        """Test that we can set/get the state."""
-        particles = ParticlesExt(dim=3)
-        pos = ('hard line hard line', 2)
-        particles.set_pos(pos)
-        particles.set_vel(False)
-        state = particles.get_particle_state()
-        for i, j in zip(particles.config, pos):
-            self.assertEqual(i, j)
-        pos2 = ('brutally', 123)
-        state['pos'] = pos2
-        particles.set_particle_state(state)
-        for i, j in zip(particles.config, pos2):
-            self.assertEqual(i, j)
-
     def test_restart_info(self):
         """Test restart methods."""
         particles = ParticlesExt(dim=3)
@@ -232,17 +240,27 @@ class ParticleExtTest(unittest.TestCase):
         particles.set_vel(True)
         restart = particles.restart_info()
         self.assertTrue(restart['vel_rev'])
-        for i, j in zip(particles.config, pos):
+        for i, j in zip(particles.get_pos(), pos):
             self.assertEqual(i, j)
         pos2 = ('My my my', 4)
         restart['config'] = pos2
         particles2 = ParticlesExt(dim=3)
         particles2.load_restart_info(restart)
-        for i, j in zip(particles2.config, pos2):
+        for i, j in zip(particles2.get_pos(), pos2):
             self.assertEqual(i, j)
         del restart['config']
         with self.assertRaises(ValueError):
             particles2.load_restart_info(restart)
+
+    def test_copy(self):
+        """Test that we can copy particles."""
+        particles = ParticlesExt(dim=3)
+        particles.set_pos(('filename.ext', 987))
+        particles.ekin = 123
+        particles.vpot = 456
+        particles2 = particles.copy()
+        self.assertIsNot(particles, particles2)
+        self.assertEqual(particles, particles2)
 
 
 if __name__ == '__main__':

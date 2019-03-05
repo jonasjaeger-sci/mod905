@@ -3,7 +3,7 @@ Gromacs test
 
 Simulation settings
 -------------------
-steps = 100
+steps = 20
 
 Engine settings
 ---------------

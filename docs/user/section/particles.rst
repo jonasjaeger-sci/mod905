@@ -42,10 +42,12 @@ The following keywords can be specified for the Particles section:
 
 .. |part_type| replace:: :ref:`type <user-section-particles-keyword-type>`
 
+.. |part_npart| replace:: :ref:`npart <user-section-particles-keyword-npart>`
+
 .. _table-keywords-particles:
 
 .. table:: Keywords for the Particles section.
-   :class: table-striped
+   :class: table-striped table-hover
 
    +-----------------+--------------------------------------------------------+
    | Keyword         | Description                                            |
@@ -58,7 +60,9 @@ The following keywords can be specified for the Particles section:
    +-----------------+--------------------------------------------------------+
    | |part_name|     | Defines names for the particles.                       |
    +-----------------+--------------------------------------------------------+
-   | |part_type|     | Defines the know particle types.                       |
+   | |part_type|     | Defines the known particle types.                      |
+   +-----------------+--------------------------------------------------------+
+   | |part_npart|    | Defines the number of particles (analysis specific).   |
    +-----------------+--------------------------------------------------------+
 
 
@@ -89,8 +93,8 @@ Keyword position
         - ``'sc'``: A simple cubic lattice.
         - ``'sq'``: A square lattice (2D) with one atom in the unit cell.
         - ``'sq2'``: A square lattice (2D) with two atoms in the unit cell.
-        - ``'bcc'``: A body-centred cubic lattice.
-        - ``'fcc'``: A face-centred cubic lattice.
+        - ``'bcc'``: A body-centered cubic lattice.
+        - ``'fcc'``: A face-centered cubic lattice.
         - ``'hcp'``: A hexagonal close-packed lattice.
         - ``'diamond'``: A diamond-like structure.
 
@@ -122,7 +126,7 @@ Keyword position
       velocities with ``particles-velocity``.
 
       .. NOTE::
-         The specified file name is be **case-sensitive**.
+         The specified file name is **case-sensitive**.
 
    More examples:
 
@@ -180,7 +184,7 @@ Keyword velocity
      input keyword ``temperature`` is used.
 
    * ``'momentum'`` which specifies if the resulting momentum should be
-     zero or not. Default value is ``True`` which will generate velocities
+     zero or not. The default value is ``True`` which will generate velocities
      so that the total momentum is zero.
 
    * ``'seed'`` which can be used to specify a seed for the random number
@@ -195,7 +199,7 @@ Keyword mass
 
    The ``mass`` keyword sets the masses for different particles.
    The provided values are assumed to be in **internal units**. If masses are not
-   set, |pyretis| will try to guess them from the periodic system, however this
+   set, |pyretis| will try to guess them from the periodic system, however, this
    might fail unless the names you have used for the particles correspond to
    names used in the periodic system.
 
@@ -221,7 +225,7 @@ Keyword name
 .. pyretis-keyword:: name list of strings
 
    The ``name`` keyword is used give particles a name.
-   This can for instance be used to label specific particles and, when
+   This can, for instance, be used to label specific particles and, when
    used together with the ``mass`` keyword, it can be
    used to control the masses assigned to the different particles.
    The particle names are also used when writing output configurations.
@@ -262,7 +266,7 @@ Keyword type
    The input value is a list with the particle types in the order
    they have been generated/read from a file by the
    :ref:`position <user-section-particles-keyword-position>` keyword.
-   If the ``type`` list contain is too short, the **last** item in the list will be
+   If the ``type`` list is too short, the **last** item in the list will be
    repeated.
 
    Example 1:
@@ -283,6 +287,21 @@ Keyword type
        name= ['Ar', 'Ar2', 'Ar']
 
    This can be used to define a simulation where we have only particles
-   of the same type, however one of the particles have a different
+   of the same type, however, one of the particles have a different
    name than the others and can, for instance, be assigned a different
    mass.
+
+.. _user-section-particles-keyword-npart:
+
+Keyword npart
+^^^^^^^^^^^^^
+
+.. pyretis-keyword:: npart integer
+
+   The ``npart`` keyword specifies the number of particles in total in
+   the simulation. This keyword is used by the analysis application, and
+   does **not** need to be set in the input. The |pyretis| application
+   will automatically update this keyword.
+
+   Default
+      None, the |pyretis| application will automatically update this keyword.

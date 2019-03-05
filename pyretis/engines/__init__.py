@@ -16,17 +16,29 @@ Package structure
 Modules
 ~~~~~~~
 
+cp2k.py (:py:mod:`pyretis.engines.cp2k`)
+    Defines an engine for use with CP2K.
+
 engine.py (:py:mod:`pyretis.engines.engine`)
     Defines the base engine class.
-
-internal.py (:py:mod:`pyretis.engines.internal`)
-    Defines internal PyRETIS engines.
 
 external.py (:py:mod:`pyretis.engines.external`)
     Defines the interface for external engines.
 
 gromacs.py (:py:mod:`pyretis.engines.gromacs`)
     Defines an engine for use with GROMACS.
+
+gromacs2.py (:py:mod:`pyretis.engines.gromacs2`)
+    Defines an engine for use with GROMACS. This is
+    an alternative implementation which does not rely on
+    continuously starting and stopping the GROMACS
+    executable.
+
+internal.py (:py:mod:`pyretis.engines.internal`)
+    Defines internal PyRETIS engines.
+
+openmm.py (:py:mod:`pyretis.engines.openmm`)
+    Defines an engine for use with OpenMM.
 
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -40,6 +52,7 @@ from .external import ExternalMDEngine
 from .gromacs import GromacsEngine
 from .gromacs2 import GromacsEngine2
 from .cp2k import CP2KEngine
+from .openmm import OpenMMEngine
 
 
 def engine_factory(settings):
@@ -66,5 +79,6 @@ def engine_factory(settings):
         'gromacs': {'cls': GromacsEngine},
         'gromacs2': {'cls': GromacsEngine2},
         'cp2k': {'cls': CP2KEngine},
+        'openmm': {'cls': OpenMMEngine},
     }
     return generic_factory(settings, engine_map, name='engine')

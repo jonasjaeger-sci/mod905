@@ -4,7 +4,7 @@
 """Module defining the system class.
 
 The system class is used to group together many important objects
-in PyRETIS, for instance the particles, force field etc.
+in PyRETIS, for instance, the particles, force field etc.
 
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -13,15 +13,19 @@ System (:py:class:`.System`)
     A class representing a system. A system object defines the system
     the simulation acts and contains information about particles,
     force fields etc.
+
 """
+from copy import copy
 import logging
 import numpy as np
+from pyretis.core.common import compare_objects, numpy_allclose
 from pyretis.core.units import CONSTANTS
-from pyretis.core.box import create_box
+from pyretis.core.box import create_box, box_from_restart
+from pyretis.core.particles import particles_from_restart
 from pyretis.core.particlefunctions import (calculate_kinetic_temperature,
                                             calculate_kinetic_energy)
 from pyretis.core.random_gen import create_random_generator
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 
@@ -43,11 +47,14 @@ class System:
         * `beta`: The derived property ``1.0/(k_B*T)``.
         * `dof`: Information about the degrees of freedom for the
           system.
+    order : tuple
+        The order parameter(s) for the current state of the system (if
+        they have been calculated).
     particles : object like :py:class:`.Particles`
         Defines the particle list which represents the particles and the
-        properties of the particles (positions, velocities, forces etc.)
+        properties of the particles (positions, velocities, forces etc.).
     post_setup : list of tuples
-        This list contain extra functions that should be called when
+        This list contains extra functions that should be called when
         preparing to run a simulation. This is typically functions that
         should only be called after the system is fully set up. The
         tuples should correspond to ('function', args) where
@@ -66,20 +73,19 @@ class System:
 
         Parameters
         ----------
-        box : object like :py:class:`.Box`
-            This variable represents the simulation box. It is used to
-            determine the number of dimensions
-        temperature : float
-            The (desired) temperature of the system, if applicable.
-        units : string
+        units : string, optional
             The system of units to use in the simulation box.
+        box : object like :py:class:`.Box`, optional
+            This variable represents the simulation box. It is used to
+            determine the number of dimensions.
+        temperature : float, optional
+            The (desired) temperature of the system, if applicable.
 
         Note
         ----
         `self.temperature` is defined as a dictionary. This is just
         because it's convenient to include information about the
-        degrees of freedom of the system here. In the future one could
-        possibly have a more general temperature object.
+        degrees of freedom of the system here.
 
         """
         self.units = units
@@ -89,6 +95,7 @@ class System:
         self.particles = None
         self.forcefield = None
         self.post_setup = []
+        self.order = None
         self.temperature['beta'] = self.calculate_beta()
 
     def adjust_dof(self, dof):
@@ -141,9 +148,8 @@ class System:
     def get_dim(self):
         """Return the dimensionality of the system.
 
-        The value is obtained from the box. In other words,
-        it is the box object that defines the dimensionality of
-        the system.
+        The value is obtained from the box. In other words, it is the
+        box object that defines the dimensionality of the system.
 
         Returns
         -------
@@ -154,8 +160,9 @@ class System:
         try:
             return self.box.dim
         except AttributeError:
-            msg = 'Box dimensions are not set. Setting dimensions to "1"'
-            logger.warning(msg)
+            logger.warning(
+                'Box dimensions are not set. Setting dimensions to "1"'
+            )
             return 1
 
     def calculate_beta(self, temperature=None):
@@ -182,8 +189,7 @@ class System:
         if temperature is None:
             if self.temperature['set'] is None:
                 return None
-            else:
-                temperature = self.temperature['set']
+            temperature = self.temperature['set']
         return 1.0 / (temperature * CONSTANTS['kB'][self.units])
 
     def add_particle(self, pos, vel=None, force=None,
@@ -195,28 +201,27 @@ class System:
         pos : numpy.array,
             Position of the particle.
         vel : numpy.array, optional
-            Velocity of the particle. If not given numpy.zeros will be
+            The velocity of the particle. If not given numpy.zeros will be
             used.
         force : numpy.array, optional
             Force on the particle. If not given np.zeros will be used.
         mass : float, optional
-            Mass of the particle, default is 1.0.
+            Mass of the particle, the default is 1.0.
         name : string, optional
-            Name of the particle, default is '?'.
+            Name of the particle, the default is '?'.
         ptype : integer, optional
-            Particle type, default is 0.
+            Particle type, the default is 0.
 
         Returns
         -------
         out : None
-            Does not return anything, but updates `system.particles`.
+            Does not return anything, but updates :py:attr:`~particles`.
 
         """
-        dim = self.get_dim()
         if vel is None:
-            vel = np.zeros(dim)
+            vel = np.zeros_like(pos)
         if force is None:
-            force = np.zeros(dim)
+            force = np.zeros_like(pos)
         self.particles.add_particle(pos, vel, force, mass=mass,
                                     name=name, ptype=ptype)
 
@@ -307,7 +312,7 @@ class System:
         Note
         ----
         This function will not update the potential, but it will just
-        return it's value for the (possibly given) configuration.
+        return its value for the (possibly given) configuration.
         The function `self.potential` can be used to update the
         potential for the particles in the system.
 
@@ -343,16 +348,16 @@ class System:
 
         Parameters
         ----------
-        rgen : string or None
+        rgen : string, optional
             This string can be used to select a particular random
             generator. Typically this is only useful for testing.
         seed : int, optional
-            Seed for the `RandomGenerator` in case.
+            The seed for the random generator.
         momentum : boolean, optional
             Determines if the momentum should be reset.
         temperature : float, optional
             The desired temperature to set.
-        distribution : str
+        distribution : str, optional
             Selects a distribution for generating the velocities.
 
         Returns
@@ -435,7 +440,9 @@ class System:
 
     def restart_info(self):
         """Return a dictionary with restart information."""
-        info = {'temperature': self.temperature, 'units': self.units}
+        info = {}
+        for attr in ('units', 'temperature', 'post_setup', 'order'):
+            info[attr] = getattr(self, attr, None)
         # Collect some more info:
         try:
             info['box'] = self.box.restart_info()
@@ -447,16 +454,86 @@ class System:
             pass
         return info
 
+    def load_restart_info(self, info):
+        """Load the given restart information into the system."""
+        for attr in ('units', 'temperature', 'post_setup', 'order'):
+            setattr(self, attr, info[attr])
+        self.box = box_from_restart(info)
+        self.particles = particles_from_restart(info)
+
     def update_box(self, length):
         """Update the system box, create if needed.
 
         Parameters
         ----------
-        length : numpy.array, list or iterable.
-            The box vectors, represented as a list.
+        length : numpy.array, list or iterable
+            The box vectors represented as a list.
 
         """
         if self.box is None:
-            self.box = create_box(length=length)
+            self.box = create_box(cell=length)
         else:
             self.box.update_size(length)
+
+    def copy(self):
+        """Return a copy of the system.
+
+        This copy is useful for storing snapshots obtained during
+        a simulation.
+
+        Returns
+        -------
+        out : object like :py:class:`.System`
+            A copy of the system.
+
+        """
+        system_copy = System()
+        for attr in {'units', 'temperature', 'post_setup', 'order'}:
+            try:
+                val = getattr(self, attr)
+                if val is None:
+                    setattr(system_copy, attr, None)
+                else:
+                    setattr(system_copy, attr, copy(val))
+            except AttributeError:
+                logger.warning(
+                    'Missing attribute "%s" when copying system', attr
+                )
+        for attr in ('box', 'particles'):
+            val = getattr(self, attr)
+            if val is None:
+                setattr(system_copy, attr, None)
+            else:
+                setattr(system_copy, attr, val.copy())
+        # We do not copy the force field here and assume that
+        # systems that are copies should share the same force field,
+        # that is, if the force field were to change for some reason,
+        # then that change should be mediated to all copies of the
+        # system.
+        system_copy.forcefield = self.forcefield
+        return system_copy
+
+    def __eq__(self, other):
+        """Compare two system objects."""
+        # Note: We do not check the order parameter here as this
+        # depends on the choice of the order parameter function.
+        attrs = ('units', 'post_setup', 'box', 'particles')
+        check = compare_objects(self, other, attrs, numpy_attrs=None)
+        check = check and self.forcefield is other.forcefield
+        # For the temperature, one key may give some trouble:
+        check = check and len(self.temperature) == len(other.temperature)
+        for key in ('set', 'beta'):
+            check = check and self.temperature[key] == other.temperature[key]
+        check = check and numpy_allclose(self.temperature['dof'],
+                                         other.temperature['dof'])
+        return check
+
+    def __str__(self):
+        """Just print some basic info about the system."""
+        msg = ['PyRETIS System',
+               'Order parameter: {}'.format(self.order),
+               'Box:']
+        msg.append('{}'.format(self.box))
+        msg.append('Particles:')
+        msg.append('{}'.format(self.particles))
+        return '\n'.join(msg)

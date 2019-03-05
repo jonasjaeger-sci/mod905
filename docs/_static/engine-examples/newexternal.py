@@ -7,7 +7,7 @@ import os
 from pyretis.engines.external import ExternalMDEngine
 
 
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 

@@ -34,7 +34,7 @@ Execute the two simulations.
 
 2. Then, in ``run-gromacs2``: pyretisrun -i retis.rst -p -l DEBUG
 
-You can the compare the output. This can also be done by running the
+You can then compare the output. This can also be done by running the
 script ``compare.py``, e.g.: python compare.py
 
 Results

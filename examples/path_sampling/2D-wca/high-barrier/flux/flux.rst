@@ -15,7 +15,7 @@ temperature = 1.0
 
 Box
 ---
-length = [5.9761430466719681, 5.9761430466719681]
+cell = [5.9761430466719681, 5.9761430466719681]
 periodic = [True, True]
 
 Engine
@@ -55,7 +55,7 @@ parameter width = 0.5
 parameter types = [(1, 1)]
                          
 Orderparameter
----------------
+--------------
 class = Distance
 index = (0, 1)
 periodic = True

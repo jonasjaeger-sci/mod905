@@ -45,13 +45,13 @@ file ``ackley.py`` and adding the following code:
 
 .. literalinclude:: /_static/examples/pso-example/ackley.py
    :language: python
-   :lines: 5-39
+   :lines: 5-40
 
 If you add:
 
 .. literalinclude:: /_static/examples/pso-example/ackley.py
    :language: python
-   :lines: 42-52
+   :lines: 43-58
 
 you can also plot the potential by running:
 
@@ -101,7 +101,7 @@ Putting it all together and running the optimization
 ----------------------------------------------------
 
 We will now create a simulation for performing the optimization.
-First we need to import the new potential function and the new
+First, we need to import the new potential function and the new
 engine we have created:
 
 
@@ -150,4 +150,4 @@ And add the following methods:
 
 .. literalinclude:: /_static/examples/pso-example/pso_run.py
    :language: python
-   :lines: 61-110
+   :lines: 61-111

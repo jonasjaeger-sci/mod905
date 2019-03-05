@@ -2,9 +2,11 @@
 # Copyright (c) 2019, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """
-This is an simple example of how we can create a simple animation.
+This is an example of how we can create an animation with PyRETIS.
+
 It will run the umbrella sampling defined in `umbrella_sampling_mc.py` and
-draw the frames as a very simple animation.
+draw the frames as an animation.
+
 """
 import numpy as np
 from matplotlib import pyplot as plt
@@ -18,9 +20,9 @@ from umbrella_sampling_mc import (
 
 
 def main_amination(windows, save=False):
-    """Run the animation!"""
+    """Run the animation."""
     system = set_up_system()
-    # For plotting umbiased:
+    # For plotting unbiased potential:
     xpos = np.linspace(-2, 2, 250)
     vpot = plot_unbiased_potential(system, xpos)
 
@@ -30,13 +32,13 @@ def main_amination(windows, save=False):
     axs.set_ylabel('Potential energy ($V(x)$) / eV', fontsize='large')
     # Plot the line we have to cross:
     linec = axs.axvline(x=-10, lw=2, ls=':', color='#262626')
-    # Plot the umbrella region
+    # Plot the umbrella region:
     axv = axs.axvspan(xmin=-10, xmax=-10, alpha=0.1)
     # Plot the potential:
     axs.plot(xpos, vpot, lw=3)
-    # plot the particle:
+    # Plot the particle:
     scat = axs.scatter(-10, -10, s=150)
-    # txt with info
+    # Add text with info:
     txt = axs.text(0.02, 0.95, '', transform=axs.transAxes,
                    fontsize='large')
 
@@ -66,7 +68,7 @@ def main_amination(windows, save=False):
     if save:
         anim.save('movie.mp4')
     else:
-        plt.show()
+        plt.show(block=True)
 
 
 def update_animation(frame, simulations, systems, scat, linec, axv, txt):

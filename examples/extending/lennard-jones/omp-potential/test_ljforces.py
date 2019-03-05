@@ -10,7 +10,7 @@ potential:
 
 3) The FORTRAN implementation.
 """
-# pylint: disable=C0103
+# pylint: disable=invalid-name
 import unittest
 import numpy as np
 from pyretis.core import System, create_box, Particles
@@ -42,7 +42,7 @@ def set_up_initial_state():
 
 def run_calculations(system, parameters):
     """Evaluate the LJ potential."""
-    # Calculate with Fortran:
+    # Calculate with FORTRAN:
     potential_ext = PairLennardJonesCutFp(dim=3, shift=True,
                                           mixing='geometric')
     forceField_ext = ForceField('Python with external FORTRAN force field',
@@ -74,7 +74,7 @@ def run_calculations(system, parameters):
 
 
 class LennardJonesTest(unittest.TestCase):
-    """Run the tests for the Fortran potential class."""
+    """Run the tests for the FORTRAN potential class."""
 
     def test_lj(self):
         """Test one-component system."""

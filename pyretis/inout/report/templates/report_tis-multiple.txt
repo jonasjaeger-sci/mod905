@@ -1,0 +1,22 @@
+Numerical TIS results
+=====================
+
+@{{ tables['interfaces'] }}@
+
+@{{ tables['probability'] }}@
+
+@{{ tables['path'] }}@
+
+@{{ tables['efficiency'] }}@
+
+
+Combined results
+================
+
+P_cross: @{{ numbers['pcross'] }}@ +- @{{ numbers['perr'] }}@ %
+
+sim.time: @{{ numbers['simt'] }}@
+
+tau_eff: @{{ numbers['teff'] }}@
+
+Optimized P_cross tau_eff: @{{ numbers['opteff'] }}@

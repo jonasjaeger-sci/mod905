@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2019, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
-"""Module defining functions useful in analysis of simulation data.
+"""Module defining functions useful in the analysis of simulation data.
 
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -79,7 +79,7 @@ def block_error(data, maxblock=None, blockskip=1):
     data by performing a block analysis. The number of blocks
     to consider can be specified or it will be taken as the
     half of the length of the input data. Averages and variance are
-    calculated using a on-the-fly algorithm [1]_.
+    calculated using an on-the-fly algorithm [1]_.
 
     Parameters
     ----------
@@ -99,11 +99,11 @@ def block_error(data, maxblock=None, blockskip=1):
     Returns
     -------
     blocklen : numpy.array
-        These contains the block lengths considered.
+        These contain the block lengths considered.
     block_avg : numpy.array
-        The averages as function of block length.
+        The averages as a function of the block length.
     block_err : numpy.array
-        Estimate of errors as function of block length.
+        Estimate of errors as a function of the block length.
     block_err_avg : float
         Average of the error estimate using blocks where
         ``length > maxblock//2``.
@@ -152,8 +152,8 @@ def block_error(data, maxblock=None, blockskip=1):
 def block_error_corr(data, maxblock=None, blockskip=1):
     """Run block error analysis on the given data.
 
-    This will run the block error analysis and return relative
-    errors and the correlation length.
+    This will run the block error analysis and return the relative
+    errors and correlation length.
 
     Parameters
     ----------
@@ -173,7 +173,7 @@ def block_error_corr(data, maxblock=None, blockskip=1):
     out[0] : numpy.array
         These contains the block lengths considered (`blen`).
     out[1] : numpy.array
-        Estimate of errors as function of block length (`berr`).
+        Estimate of errors as a function of the block length (`berr`).
     out[2] : float
         Average of the error estimate for blocks (`berr_avg`)
         with ``length > maxblock // 2``.
@@ -184,7 +184,7 @@ def block_error_corr(data, maxblock=None, blockskip=1):
         The average relative error (`avg_rel_err`), for blocks
         with ``length > maxblock // 2``.
     out[5] : numpy.array
-        The estimated correlation length as a function of block
+        The estimated correlation length as a function of the block
         length (`ncor`).
     out[6] : float
         The average (for blocks with length > maxblock // 2) estimated
@@ -207,7 +207,7 @@ def mean_square_displacement(data, ndt=None):
     Parameters
     ----------
     data : numpy.array, 1D
-        This numpy.array contain the data as a function of time.
+        This numpy.array contains the data as a function of time.
     ndt : int, optional
         This parameter is the number of time origins. I.e. points up to
         ndt will be used as time origins. If not specified the value of
@@ -216,8 +216,8 @@ def mean_square_displacement(data, ndt=None):
     Returns
     -------
     msd : numpy.array, 2D
-        First column is the mean squared displacement and the second
-        column is the corresponding standard deviation.
+        The first column is the mean squared displacement and the
+        second column is the corresponding standard deviation.
 
     """
     length = data.size
@@ -233,7 +233,7 @@ def mean_square_displacement(data, ndt=None):
 def analyse_data(data, settings):
     """Analyse the given data and run some common analysis procedures.
 
-    Specifically it will:
+    Specifically, it will:
 
     1) Calculate a running average.
 
@@ -245,7 +245,7 @@ def analyse_data(data, settings):
     Parameters
     ----------
     data : numpy.array, 1D
-        This numpy.array contain the data as a function of time.
+        This numpy.array contains the data as a function of time.
     settings : dict
         This dictionary contains settings for the analysis.
 

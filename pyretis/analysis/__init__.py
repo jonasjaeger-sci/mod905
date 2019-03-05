@@ -4,7 +4,7 @@
 """This package defines analysis tools for the PyRETIS program.
 
 The analysis tools are intended to be used for analysis of the
-simulation output from the PyRETIS program. The typically use of this
+simulation output from the PyRETIS program. The typical use of this
 package is in post-processing of the results from a simulation (or
 several simulations).
 
@@ -48,13 +48,13 @@ analyse_flux (:py:func:`.analyse_flux`)
 
 analyse_orderp (:py:func:`.analyse_orderp`)
     Analyse order parameter data. It will calculate a running average,
-    a distribution and do a block error analysis. In addition if will
+    a distribution and do a block error analysis. In addition, it will
     analyse the mean square displacement (if requested).
 
 analyse_path_ensemble (:py:func:`.analyse_path_ensemble`)
     Analyse the results from a single path ensemble. It will calculate
     a running average of the probabilities, a crossing probability,
-    perform an block error analysis, analyse lengths of paths,
+    perform a block error analysis, analyse lengths of paths,
     type of Monte Carlo moves and calculate an efficiency.
 
 match_probabilities (:py:func:`.match_probabilities`)

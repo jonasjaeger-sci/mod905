@@ -8,7 +8,7 @@ from pyretis.engines.gromacs import read_gromos96_file
 from pyretis.core import System, Particles
 from orderp import RingDiffusion
 from ordermod import ordermod
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 

@@ -6,7 +6,7 @@
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-OrderParameterAngle (:py:class:`.OrderParameterAngle`)
+Angle (:py:class:`.Angle`)
     An angle defined by three atoms.
 """
 import logging
@@ -15,14 +15,14 @@ from numpy import arccos  # pylint: disable=no-name-in-module
 from numpy import clip
 from numpy.linalg import norm
 from pyretis.orderparameter.orderparameter import OrderParameter
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 
-__all__ = ['OrderParameterAngle']
+__all__ = ['Angle']
 
 
-class OrderParameterAngle(OrderParameter):
+class Angle(OrderParameter):
     """An angle order parameter.
 
     This class defines an order parameter which is an angle
@@ -32,7 +32,7 @@ class OrderParameterAngle(OrderParameter):
     Attributes
     ----------
     index : list of integers
-        This is the indexes of atoms to be used for he angle,
+        These are the indices of atoms to be used for the angle,
         i.e. system.particles.pos[index] will be used.
     periodic : boolean
         This determines if periodic boundaries should be applied to
@@ -46,7 +46,7 @@ class OrderParameterAngle(OrderParameter):
         Parameters
         ----------
         index : list/tuple of integers
-            The indexes for the atoms defining the angle.
+            The indices for the atoms defining the angle.
         periodic : boolean, optional
             This determines if periodic boundary conditions should be
             applied to the distance vectors.

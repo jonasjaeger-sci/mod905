@@ -5,7 +5,7 @@
 import logging
 import numpy as np
 from pyretis.orderparameter import OrderParameter
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 
@@ -26,10 +26,11 @@ class OrderXY(OrderParameter):
         An energy such that we are in state A for potential energy < energy_a.
     energy_b : float
         An energy such that we are in state A for potential energy < energy_b.
+
     """
 
     def __init__(self, index, inter_a, inter_b, energy_a, energy_b):
-        """Initialise the order parameter.
+        """Set up the order parameter.
 
         Parameters
         ----------
@@ -37,7 +38,7 @@ class OrderXY(OrderParameter):
             This is the indices of the atom we will use the position of.
         inter_a : float
             An interface such that we are in state A for postions < inter_a.
-       inter_b : float
+        inter_b : float
             An interface such that we are in state B for postions > inter_b.
         energy_a : float
             An energy such that we are in state A for
@@ -45,6 +46,7 @@ class OrderXY(OrderParameter):
         energy_b : float
             An energy such that we are in state A for
             potential energy < energy_b.
+
         """
         super().__init__(description='2D->1D projection')
         self.index = index
@@ -80,6 +82,7 @@ class OrderXY(OrderParameter):
         -------
         out : float
             The order parameter.
+
         """
         pos = system.particles.pos[self.index]
         vec = np.array([pos[0] - self.x_0, pos[1] - self.y_0])

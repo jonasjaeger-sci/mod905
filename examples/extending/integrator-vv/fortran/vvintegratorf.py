@@ -3,9 +3,12 @@
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Example of using a integration routine implemented in FORTRAN."""
 import logging
+import os
+import sys
 from pyretis.engines import MDEngine
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
+sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 try:
     from vvintegrator import vvintegrator
 except ImportError:
@@ -25,27 +28,29 @@ class VelocityVerletF(MDEngine):
 
     Attributes
     ----------
-    delta_t : float
+    timestep : float
         The time step.
-    half_delta_t : float
-        Half of timestep
+    half_timestep : float
+        The half of the timestep.
     desc : string
         Description of the integrator.
+
     """
 
-    def __init__(self, delta_t,
+    def __init__(self, timestep,
                  desc='The velocity verlet integrator (FORTRAN)'):
-        """Initiate the Velocity Verlet integrator.
+        """Set up the Velocity Verlet integrator.
 
         Parameters
         ----------
-        delta_t : float
+        timestep : float
             The time step.
         desc : string
             Description of the integrator.
+
         """
-        super().__init__(delta_t, desc, dynamics='NVE')
-        self.half_delta_t = self.delta_t * 0.5
+        super().__init__(timestep, desc, dynamics='NVE')
+        self.half_timestep = self.timestep * 0.5
 
     def integration_step(self, system):
         """Velocity Verlet integration, one time step.
@@ -61,6 +66,7 @@ class VelocityVerletF(MDEngine):
         out : None
             Does not return anything, but alters the state of the given
             `system`.
+
         """
         particles = system.particles
         particles.pos, particles.vel = vvintegrator.step1(
@@ -68,14 +74,13 @@ class VelocityVerletF(MDEngine):
             particles.vel,
             particles.force,
             particles.imass,
-            self.delta_t,
-            self.half_delta_t
+            self.timestep,
+            self.half_timestep
         )
         system.potential_and_force()
         particles.vel = vvintegrator.step2(
             particles.vel,
             particles.force,
             particles.imass,
-            self.half_delta_t
+            self.half_timestep
         )
-        return None

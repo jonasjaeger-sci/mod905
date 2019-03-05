@@ -31,12 +31,12 @@ different types:
 
 .. |engine_cp2k| replace:: :ref:`CP2K <user-section-engine-cp2k>`
 
-.. |engine_user| replace:: :ref:`User defined <user-section-engine-user-defined>`
+.. |engine_user| replace:: :ref:`User-defined <user-section-engine-user-defined>`
 
 .. _table-engine-types:
 
 .. table:: Supported engines in |pyretis|
-   :class: table-striped
+   :class: table-striped table-hover
 
    +-------------------+------------------------------------------------------+
    | Engine            | Description                                          |
@@ -52,7 +52,7 @@ different types:
    +-------------------+------------------------------------------------------+
    | |engine_cp2k|     | External engine, using CP2K.                         |
    +-------------------+------------------------------------------------------+
-   | |engine_user|     | Internal/External engine, user defined.              |
+   | |engine_user|     | Internal/External engine, user-defined.              |
    +-------------------+------------------------------------------------------+
 
 
@@ -88,7 +88,7 @@ For the Verlet engine, the following keywords can be set:
 .. _table-verlet-keywords:
 
 .. table:: Keywords for the Verlet engine.
-   :class: table-striped
+   :class: table-striped table-hover
 
    +----------------+---------------------------------------------------+
    | Keyword        | Description                                       |
@@ -157,7 +157,7 @@ For the Velocity Verlet engine, the following keywords can be set:
 .. _table-vverlet-keywords:
 
 .. table:: Keywords for the Velocity Verlet engine.
-   :class: table-striped
+   :class: table-striped table-hover
 
    +-----------------+---------------------------------------------------+
    | Keyword         | Description                                       |
@@ -235,7 +235,7 @@ For the Langevin engine, the following keywords can be set:
 .. _table-langevin-keywords:
 
 .. table:: Keywords for the Langevin engine.
-   :class: table-striped
+   :class: table-striped table-hover
 
    +------------------+-------------------------------------------------------+
    | Keyword          | Description                                           |
@@ -413,7 +413,7 @@ For the GROMACS engine, the following keywords can be set:
 .. _table-gromacs-keywords:
 
 .. table:: Keywords for the GROMACS engine.
-   :class: table-striped
+   :class: table-striped table-hover
 
    +-------------------+------------------------------------------------------+
    | Keyword           | Description                                          |
@@ -466,8 +466,8 @@ Keyword gmx
 .. pyretis-keyword:: gmx string
 
    This keyword sets the command |pyretis| will use for executing the GROMACS
-   ``gmx`` program. This can be used if you for instance have different version
-   of GROMACS installed, for instance a single precision build named ``gmx`` and
+   ``gmx`` program. This can be used if you have different version
+   of GROMACS installed, for instance, a single precision build named ``gmx`` and
    a double precision build named ``gmx_d``.
 
    Default:
@@ -481,9 +481,9 @@ Keyword mdrun
 .. pyretis-keyword:: mdrun string
 
    This keyword sets the command |pyretis| will use for executing the GROMACS
-   ``mdrun`` program. This can for instance be used to execute a MPI compiled
-   version of ``mdrun``, by for instance
-   setting: ``mdrun = mpiexec_mpt mdrun_5.1.4_mpi``. Note that this command is
+   ``mdrun`` program. This can be used to execute an MPI compiled
+   version of ``mdrun``, by, for instance,
+   setting: ``mdrun = mpiexec_mpt mdrun_mpi``. Note that this command is
    specific to the system you are using.
 
    Default:
@@ -497,7 +497,7 @@ Keyword input_path
 .. pyretis-keyword:: input_path string
 
    This keyword sets the directory where |pyretis| will look for input files to
-   use with GROMACS. If for instance ``input_path = gromacs-input`` is set, then
+   use with GROMACS. If, for instance, ``input_path = gromacs-input`` is set, then
    |pyretis| will look in the folder ``gromacs-input`` relative to the directory
    |pyretis| is executed in.
 
@@ -580,7 +580,7 @@ Keyword write_force
 
    The ``write_force`` keyword determines if GROMACS should write forces when
    integrating the equations of motion. Typically, the forces are not needed
-   unless your order parameter depend on them.
+   unless your order parameter depends on them.
 
    Default:
        The default value is ``write_force = False``.
@@ -592,7 +592,7 @@ Keyword gmx_format
 
 .. pyretis-keyword:: gmx_format string
 
-   The ``gmx_format`` keyword specify the format to use for GROMACS
+   The ``gmx_format`` keyword specifies the format to use for GROMACS
    configurations. It can be set to ``gro`` or ``g96``.
 
    Default:
@@ -641,7 +641,7 @@ For the CP2k engine, the following keywords can be set:
 .. _table-cp2k-keywords:
 
 .. table:: Keywords for the CP2K engine.
-   :class: table-striped
+   :class: table-striped table-hover
 
    +--------------+-----------------------------------------------------------+
    | Keyword      | Description                                               |
@@ -719,7 +719,7 @@ Keyword subcycles
 
 .. pyretis-keyword:: subcycles integer
 
-   The ``subcycles`` defines the frequency of output from CP2K
+   The ``subcycles`` defines the frequency of the output from CP2K
    and thus the frequency by which the order parameter(s) are obtained.
 
    Default:
@@ -728,19 +728,19 @@ Keyword subcycles
 
 .. _user-section-engine-user-defined:
 
-User defined engines
+User-defined engines
 --------------------
 
-It is also possible to extend |pyretis| with user defined
+It is also possible to extend |pyretis| with user-defined
 engines, written in for instance Python, FORTRAN or C.
-User defined engines are specified in Python modules that
+User-defined engines are specified in Python modules that
 |pyretis| can load and they are typically specified as
 follows:
 
 .. _user-section-engine-user-example:
 
 .. pyretis-input-example:: Engine
-   :class-name: a user defined engine
+   :class-name: a user-defined engine
 
    .. code-block:: rst
 
@@ -751,10 +751,10 @@ follows:
        timestep = 0.002
 
 
-Keywords for user defined engines
+Keywords for user-defined engines
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Typically, the user defined engines requires that, at least,
+Typically, the user-defined engines requires that, at least,
 the following keywords are set:
 
 .. |custom_class| replace:: :ref:`class <user-section-engine-user-class>`
@@ -763,8 +763,8 @@ the following keywords are set:
 
 .. _table-keyword-user-engine:
 
-.. table:: Keywords for user defined engines.
-   :class: table-striped
+.. table:: Keywords for user-defined engines.
+   :class: table-striped table-hover
 
    +-----------------+--------------------------------------------------------+
    | Keyword         | Description                                            |
@@ -797,7 +797,7 @@ Keyword module
 .. pyretis-keyword:: module string
 
    This keyword specified the location of the file containing the
-   user defined class. This file must be accessible by |pyretis|.
+   user-defined class. This file must be accessible by |pyretis|.
 
    Default
        Not any. This keyword must be specified.
@@ -819,10 +819,10 @@ Keyword timestep
 Additional keywords
 ...................
 
-In addition, user defined keywords can be specified, e.g.:
+In addition, user-defined keywords can be specified, e.g.:
 
 .. pyretis-input-example:: Engine
-   :class-name: a user defined engine
+   :class-name: a user-defined engine
 
    .. code-block:: rst
 

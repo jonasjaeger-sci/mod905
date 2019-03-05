@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2019, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
-"""Methods for analysis of energy simulation results.
+"""Methods for analysing energy data from simulations.
 
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 analyse_energies (py:func:`.analyse_energies`)
-    Run a energy analysis for energies (kinetic, potential etc.).
+    Run the analysis for energies (kinetic, potential etc.).
 """
 import numpy as np
-from scipy.stats import gamma  # pylint: disable=E0611
+from scipy.stats import gamma
 from pyretis.analysis.analysis import analyse_data
 
 

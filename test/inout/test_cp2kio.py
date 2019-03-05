@@ -5,19 +5,17 @@
 import logging
 import unittest
 import tempfile
-import itertools
 import os
 import numpy as np
-from pyretis.inout.writers.cp2kio import (
-    update_cp2k_input,
+from pyretis.inout.formats.cp2k import (
     read_cp2k_input,
     dfs_print,
-    remove_node,
     set_parents,
     read_cp2k_energy,
     read_cp2k_restart,
     read_cp2k_box,
     update_node,
+    remove_node,
 )
 
 
@@ -55,7 +53,7 @@ class CP2KIOTest(unittest.TestCase):
         infile = os.path.join(HERE, 'cp2k.inp')
         nodes = read_cp2k_input(infile)
         buff = []
-        for i, node in enumerate(nodes):
+        for _, node in enumerate(nodes):
             visited = set()
             out = dfs_print(node, visited)
             for line in out:
@@ -89,13 +87,27 @@ class CP2KIOTest(unittest.TestCase):
     def test_read_energy(self):
         """Test that we can read cp2k energy output."""
         infile = os.path.join(HERE, 'cp2k.ener')
-        kin, pot = read_cp2k_energy(infile)
+        energy = read_cp2k_energy(infile)
+        for key in ('ekin', 'vpot', 'temp', 'etot'):
+            self.assertTrue(key in energy)
         kin_correct = np.array([0.004750225, 0.008063503, 0.018933585,
                                 0.033672265, 0.048363565, 0.060298562])
         pot_correct = np.array([-15.906282000, -15.920520150, -15.931604156,
                                 -15.946600436, -15.961490491, -15.973407929])
-        self.assertTrue(np.allclose(kin, kin_correct))
-        self.assertTrue(np.allclose(pot, pot_correct))
+        self.assertTrue(np.allclose(kin_correct, energy['ekin']))
+        self.assertTrue(np.allclose(pot_correct, energy['vpot']))
+
+    def test_read_energy_missing(self):
+        """Test that we can read cp2k energy output with missing columns."""
+        infile = os.path.join(HERE, 'cp2k.ener2')
+        energy = read_cp2k_energy(infile)
+        for key in ('ekin', ):
+            self.assertTrue(key in energy)
+        for key in ('vpot', 'temp', 'etot'):
+            self.assertFalse(key in energy)
+        kin_correct = np.array([0.004750225, 0.008063503, 0.018933585,
+                                0.033672265, 0.048363565, 0.060298562])
+        self.assertTrue(np.allclose(kin_correct, energy['ekin']))
 
     def test_read_restart(self):
         """Test that we can read cp2k restart files."""
@@ -221,6 +233,23 @@ class CP2KIOTest(unittest.TestCase):
         update_node(target, settings, data, node_ref, nodes, replace=False)
         self.assertEqual(node_ref[target].data[0], 'setting1 100')
         self.assertEqual(node_ref[target].settings[0], 'nope')
+        self.assertEqual(len(node_ref), 26)
+        target = 'SOMETHING->WHATEVER'
+        settings = ['nope']
+        data = ['whatever']
+        update_node(target, settings, data, node_ref, nodes, replace=False)
+        self.assertEqual(len(node_ref), 28)
+        self.assertTrue('SOMETHING->WHATEVER' in node_ref)
+
+    def test_remove_node(self):
+        """Test removal of nodes."""
+        target = 'MOTION'
+        infile = os.path.join(HERE, 'cp2k.inp')
+        nodes = read_cp2k_input(infile)
+        node_ref = set_parents(nodes)
+        self.assertTrue('MOTION' in node_ref)
+        remove_node(target, node_ref, nodes)
+        self.assertFalse('MOTION' in node_ref)
 
 
 if __name__ == '__main__':

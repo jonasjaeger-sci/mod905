@@ -1,0 +1,94 @@
+TIS 1D example
+==============
+
+Simulation settings
+-------------------
+task = 'tis'
+steps = 50
+interfaces = [-0.9, -0.8, 1.0]
+
+System settings
+---------------
+units = 'reduced'
+dimensions = 1
+temperature = 0.27
+
+Engine settings
+---------------
+class = 'Langevin'
+timestep = 0.002
+gamma = 0.3
+high_friction = False
+seed = 16
+
+Box settings
+------------
+periodic = [False]
+
+Particles settings
+------------------
+position = {'file': 'initial.xyz'}
+velocity = {'generate': 'maxwell', 'momentum': False, 'seed': 0}
+mass = {'Ar': 1.0}
+name = ['Ar']
+type = [0]
+
+Forcefield settings
+-------------------
+description = '1D double well'
+
+Potential
+---------
+class = 'DoubleWell'
+a = 1.0
+b = 2.0
+c = 0.0
+
+Orderparameter settings
+-----------------------
+class = 'Position'
+dim = 'x'
+index = 0
+periodic = False
+name = 'Order Parameter'
+
+Output settings
+---------------
+energy-file = 100
+order-file = 100
+trajectory-file = 100
+backup = 'overwrite'
+screen = 10
+cross-file = 1
+restart-file = 10
+pathensemble-file = 1
+
+TIS settings
+------------
+freq = 0.5
+maxlength = 20000
+aimless = True
+allowmaxlength = False
+zero_momentum = False
+rescale_energy = False
+sigma_v = -1
+seed = 16
+shooting-move = 'shoot'
+ensemble_number = 2
+detect = -0.7
+
+Initial-path settings
+---------------------
+method = 'kick'
+
+Analysis settings
+-----------------
+skipcross = 1000
+maxblock = 1000
+blockskip = 1
+bins = 100
+ngrid = 1001
+maxordermsd = -1
+plot = {'output': 'png', 'plotter': 'mpl', 'style': 'pyretis'}
+txt-output = 'txt.gz'
+report = ['latex', 'rst', 'html']

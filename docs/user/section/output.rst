@@ -3,7 +3,7 @@
 The Output section
 ==================
 
-The Output section defines settings for how |pyretis| should create
+The ``output`` section defines settings for how |pyretis| should create
 output files.
 
 .. pyretis-input-example:: Output
@@ -33,7 +33,7 @@ The following keywords can be set for the output section:
 .. _table-keywords-file-output:
 
 .. table:: Keywords for output to files.
-   :class: table-striped
+   :class: table-striped table-hover
 
    +------------------+-------------------------------------------------------+
    | Keyword          | Description                                           |
@@ -56,8 +56,8 @@ The following keywords can be set for the output section:
 
 .. _table-keywords-screen-output:
 
-.. table:: Keywords for output to screen.
-   :class: table-striped
+.. table:: Keywords for output to the screen.
+   :class: table-striped table-hover
 
    +------------------+-------------------------------------------------------+
    | Keyword          | Description                                           |
@@ -69,7 +69,7 @@ The following keywords can be set for the output section:
 Keywords controlling output to files
 ------------------------------------
 
-For the keywords controlling the frequency of output
+For the keywords controlling the frequency of the output
 to files, e.g. :ref:`energy-file <user-section-output-keyword-energy-file>`,
 writing of such output can be disabled by setting a frequency of ``0`` or less.
 
@@ -108,7 +108,7 @@ Keyword prefix
 
    The prefix can be used to add names to the output files, that
    is ``prefix = TEXT`` will prepend ``TEXT`` to output files
-   created by |pyretis|. This can for instance be used to organize
+   created by |pyretis|. This can, for instance, be used to organize
    your output.
 
    Default
@@ -216,8 +216,8 @@ Keyword trajectory-file
       The default is ``trajectory-file = 100``.
 
 
-Keywords controlling output to screen
--------------------------------------
+Keywords controlling output to the screen
+-----------------------------------------
 
 Note that if you run the |pyretis| application and choose to
 use the progress bar, that is:

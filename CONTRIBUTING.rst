@@ -40,7 +40,7 @@ template:
     Expected behavior
     -----------------
 
-    Describe what behavior you expected insted of what actually happens.
+    Describe what behavior you expected instead of what actually happens.
 
     Relevant logs
     -------------
@@ -146,12 +146,12 @@ PyRETIS follows the python
 `pep8 <https://www.python.org/dev/peps/pep-0008/>`_ style guide
 (see also `pep8.org <http://pep8.org/>`_)
 and new code should be checked with the
-pep8 style guide `checker <https://github.com/PyCQA/pep8>`_
+pep8 style guide `checker <https://pycodestyle.readthedocs.io/en/latest/>`_
 and `pylint <http://www.pylint.org/>`_:
 
 .. code-block:: bash
 
-    pep8 source_file.py
+    pycodestyle source_file.py
     pylint source_file.py
 
 or other tools like `PyChecker <http://pychecker.sourceforge.net/>`_ or
@@ -168,7 +168,12 @@ tricky understand so you can help pylint by doing
 The PyRETIS project is documented using the
 `NumPy/SciPy documentation standard <https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt>`_
 and contributors are requested to familiarize themselves with this 
-style and *use it*.
+style and *use it*. Documentation style can also be checked with
+`pydocstyle <https://github.com/PyCQA/pydocstyle>`_
+
+.. code-block:: bash
+
+    pydocstyle source_file.py
 
 
 References

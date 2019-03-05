@@ -5,7 +5,7 @@
 
 This file is part of PyRETIS - a simulation package for rare events.
 
-Copyright (C) 2019, PyRETIS Development Team
+Copyright (c) 2019, PyRETIS Development Team
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -48,10 +48,10 @@ engines (:py:mod:`pyretis.engines`)
     evolve the dynamics/solve Newton's equations of motion in time.
 
 forcefield (:py:mod:`pyretis.forcefield`)
-    This package define force fields and potentials functions.
+    This package defines force fields and potentials functions.
 
 inout (:py:mod:`pyretis.inout`)
-    This package defines the input output operations for PyRETIS.
+    This package defines the input-output operations for PyRETIS.
     This includes generating output from the analysis and reading
     input-files etc.
 
@@ -61,7 +61,7 @@ orderparameter (:py:mod:`pyretis.orderparameter`)
 
 tools (:py:mod:`pyretis.tools`)
     This package defines some functions which can be useful for
-    setting up simple systems, for example functions for generating
+    setting up simple systems, for example, functions for generating
     lattices.
 
 """

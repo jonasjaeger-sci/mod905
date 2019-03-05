@@ -59,7 +59,7 @@ The following keywords can be set for order parameter Position:
 .. _table-keyword-op-pos:
 
 .. table:: Keywords for the Position order parameter.
-   :class: table-striped
+   :class: table-striped table-hover
 
    +-------------------+------------------------------------------------------+
    | Keyword           | Description                                          |
@@ -93,7 +93,7 @@ Keyword index
    The ``index`` selects the particle to use. The particles are numbered
    sequentially, from 0, in the sequence they appear in the input to |pyretis|.
 
-    Default:
+   Default:
       Not any. This keyword must be specified.
 
 .. _user-section-orderp-position-dim:
@@ -161,7 +161,7 @@ The following keywords can be set for order parameter Distance:
 .. _table-keyword-distance:
 
 .. table:: Keywords for the Distance order parameter.
-   :class: table-striped
+   :class: table-striped table-hover
 
    +--------------------+-----------------------------------------------------+
    | Keyword            | Description                                         |
@@ -217,7 +217,7 @@ Keyword periodic
 
 .. _user-section-orderparameter-custom:
 
-User defined order parameters
+User-defined order parameters
 -----------------------------
 
 You can also define custom order parameters to use with
@@ -226,7 +226,7 @@ generic :py:class:`.OrderParameter` class as described
 in the :ref:`user guide <user-guide-custom-order>`.
 
 .. pyretis-input-example:: Orderparameter
-   :class-name: a user defined order parameter
+   :class-name: a user-defined order parameter
 
    .. code-block:: rst
 
@@ -238,10 +238,10 @@ in the :ref:`user guide <user-guide-custom-order>`.
       periodic = True
 
 
-Keywords for user defined order parameters
+Keywords for user-defined order parameters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-At least the following keywords can be set for user defined
+At least the following keywords can be set for user-defined
 order parameters:
 
 
@@ -251,8 +251,8 @@ order parameters:
 
 .. _table-user-defined-order-parameters:
 
-.. table:: Keywords for user defined order parameters.
-   :class: table-striped
+.. table:: Keywords for user-defined order parameters.
+   :class: table-striped table-hover
 
    +------------------+-------------------------------------------------------+
    | Keyword          | Description                                           |
@@ -264,10 +264,10 @@ order parameters:
    +------------------+-------------------------------------------------------+
 
 
-In addition, user defined keywords can be specified, e.g.:
+In addition, user-defined keywords can be specified, e.g.:
 
 .. pyretis-input-example:: Orderparameter
-   :class-name: a user defined order parameter
+   :class-name: a user-defined order parameter
 
    .. code-block:: rst
 
@@ -298,7 +298,7 @@ Keyword module
 .. pyretis-keyword:: module string
 
    This keyword specified the location of the file containing the
-   user defined class for the order parameter.
+   user-defined class for the order parameter.
    This file must be accessible by |pyretis|.
 
    Default

@@ -6,21 +6,21 @@
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-OrderParameterDihedral (:py:class:`.OrderParameterAngle`)
+Dihedral (:py:class:`.Dihedral`)
     A dihedral angle order parameter.
 """
 import logging
 from numpy import dot, cross, arctan2
 from numpy.linalg import norm
 from pyretis.orderparameter.orderparameter import OrderParameter
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 
-__all__ = ['OrderParameterDihedral']
+__all__ = ['Dihedral']
 
 
-class OrderParameterDihedral(OrderParameter):
+class Dihedral(OrderParameter):
     """Calculates the dihedral angle defined by 4 atoms.
 
     The angle definition is given by Blondel and Karplus,
@@ -31,7 +31,7 @@ class OrderParameterDihedral(OrderParameter):
     Attributes
     ----------
     index : list/tuple of integers
-        This list give the indexes for the atoms to use in the
+        These are the indices for the atoms to use in the
         definition of the dihedral angle.
     periodic : boolean
         This determines if periodic boundaries should be applied to
@@ -45,7 +45,7 @@ class OrderParameterDihedral(OrderParameter):
         Parameters
         ----------
         index : list/tuple of integers
-            This list give the indexes for the atoms to use in the
+            This list gives the indices for the atoms to use in the
             definition of the dihedral angle.
         periodic : boolean, optional
             This determines if periodic boundary conditions should be
@@ -91,7 +91,7 @@ class OrderParameterDihedral(OrderParameter):
             vector1 = system.box.pbc_dist_coordinate(vector1)
             vector2 = system.box.pbc_dist_coordinate(vector2)
             vector3 = system.box.pbc_dist_coordinate(vector3)
-        # norm vector 2 to simplify formulas
+        # Norm to simplify formulas:
         vector2 /= norm(vector2)
         denom = (dot(vector1, vector3) -
                  dot(vector1, vector2) * dot(vector2, vector3))

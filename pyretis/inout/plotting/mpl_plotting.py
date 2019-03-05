@@ -35,7 +35,7 @@ from pyretis.inout.common import (ENERFILES, ENERTITLE, FLUXFILES,
                                   ORDERFILES, PATHFILES, PATH_MATCH)
 
 
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 
@@ -52,7 +52,7 @@ _TITLE_SETTINGS = {'loc': 'right'}
 class MplPlotter(Plotter):
     """A plotter using matplotlib.
 
-    This class defines a plotter which make use of matplotlib and
+    This class defines a plotter which makes use of matplotlib and
     it can be used as a starting point to create other plotters
     for PyRETIS bases on other tools (e.g. gnuplot etc.).
 
@@ -72,11 +72,11 @@ class MplPlotter(Plotter):
         ----------
         out_fmt : string
             This is the format to use for the images.
+        backup : boolean, optional
+            Determines if we should overwrite or backup old files.
         style : string, optional
             This selects the style to use, it can be a file path or the
             string with the style name.
-        backup : boolean, optional
-            Determines if we should overwrite or backup old files.
         out_dir : string, optional
             Determines if we should write the files to a particular
             directory.
@@ -250,7 +250,7 @@ def _mpl_read_style_file(filename):
                     matplotlib.rcParams[key] = value
                 except KeyError:
                     logger.warning(('Unknown setting "%s". '
-                                    'Please upate matplotlib'), key)
+                                    'Please update matplotlib'), key)
 
 
 def mpl_set_style(style='pyretis'):
@@ -296,7 +296,7 @@ def mpl_savefig(canvas, outputfile, backup=False):
         using ``canvas.print_figure()``.
     outputfile : string
         This is the name of the output file to create.
-    backup : boolean
+    backup : boolean, optional
         This determines if we should try to back-up old versions of the
         figures.
 
@@ -392,8 +392,8 @@ def mpl_simple_plot(series, fig_settings=None):
     Parameters
     ----------
     series : list of dicts
-        `series[i]` is the dict which contain the data to be plotted.
-    fig_settings : dict
+        `series[i]` is the dict which contains the data to be plotted.
+    fig_settings : dict, optional
         This dict contains settings for the figure, keys are:
 
         * `xlabel`: string, the label to use for the x-axis.
@@ -438,7 +438,8 @@ def mpl_simple_plot(series, fig_settings=None):
         ncol, rest = divmod(len(labels), 10)
         if rest > 0:
             ncol += 1
-        axs.legend(handles, labels, ncol=ncol)
+        if ncol <= 2:
+            axs.legend(handles, labels, ncol=ncol)
     if 'yscale' in fig_settings:
         axs.set_yscale(fig_settings['yscale'])
     return canvas
@@ -495,7 +496,7 @@ def mpl_chunks_gradient(axs, series, chunksize=20000):
         Where to do the plotting.
     series : dict
         Represents the data to be plotted.
-    chunksize : int
+    chunksize : int, optional
         This is the maximum size (number of points) we will try to plot
         in one go.
 
@@ -541,7 +542,7 @@ def mpl_line_gradient(series, fig_settings):
     Parameters
     ----------
     series : list of dicts
-        `series[i]` is the dict which contain the data to be plotted.
+        `series[i]` is the dict which contains the data to be plotted.
     fig_settings : dict
         This dict contains settings for the figure, keys are:
 
@@ -802,7 +803,7 @@ def mpl_plot_orderp(results, orderdata):
         Each item in `results` contains the results for the
         corresponding order parameter.
     orderdata : list of numpy.arrays
-        This is the raw-data for the order parameter analysis
+        This is the raw data for the order parameter analysis.
 
     Returns
     -------
@@ -877,7 +878,7 @@ def mpl_plot_energy(results, energies):
         corresponding energy. It is assumed to contains the keys
         'vpot', 'ekin', 'etot', 'ham', 'temp', 'elec'.
     energies : dict of numpy.arrays
-        This is the raw-data for the energy analysis.
+        This is the raw data for the energy analysis.
 
     Returns
     -------
@@ -1006,9 +1007,9 @@ def mpl_plot_flux(results):
 def get_color_map(ncolors):
     """Return a color map with at least n colors."""
     if ncolors <= 10:
-        name = 'Vega10'
+        name = 'tab10'
     elif 10 < ncolors <= 20:
-        name = 'Vega20'
+        name = 'tab20'
     else:
         name = None
     if name is None:

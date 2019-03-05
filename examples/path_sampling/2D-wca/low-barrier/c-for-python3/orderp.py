@@ -5,7 +5,7 @@
 import logging
 import numpy as np
 from pyretis.orderparameter import OrderParameter
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 
@@ -24,10 +24,11 @@ class OrderParameterWCAJCP1(OrderParameter):
     periodic : boolean
         This determines if periodic boundaries should be applied to
         the position or not.
+
     """
 
     def __init__(self, index, periodic=True):
-        """Initialise the order parameter.
+        """Set uå the order parameter.
 
         Parameters
         ----------
@@ -36,6 +37,7 @@ class OrderParameterWCAJCP1(OrderParameter):
         periodic : boolean, optional
             This determines if periodic boundary conditions should be
             applied to the position.
+
         """
         pbc = 'Periodic' if periodic else 'Non-periodic'
         txt = '{} distance particles {} and {}'.format(pbc, index[0],
@@ -62,6 +64,7 @@ class OrderParameterWCAJCP1(OrderParameter):
         -------
         out : float
             The order parameter.
+
         """
         # pylint: disable=invalid-name
         particles = system.particles

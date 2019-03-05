@@ -99,7 +99,7 @@ converted internally to the selected system of units.
 .. _table_unit_input:
 
 .. table:: Input units for different systems
-   :class: table-hover
+   :class: table-striped table-hover
 
    +--------------+----------+---------+---------------+
    | Unit system  | Energy   | Length  | Mass          |
@@ -142,7 +142,7 @@ further described in the :ref:`next section <user-units-custom>`.
 .. _table_unit_systems:
 
 .. table:: Defining units for energy systems
-   :class: table-hover
+   :class: table-striped table-hover
 
    +--------------+----------------+-------------+--------------------+
    | Unit system  | Energy unit    | Length unit | Mass unit          |
@@ -162,18 +162,18 @@ further described in the :ref:`next section <user-units-custom>`.
    | ``si``       | 1 J            | 1 m         | 1 kg               |
    +--------------+----------------+-------------+--------------------+
 
-These units are also used for the input and defines the time unit.
+These units are also used for the input and define the time unit.
 The time units are shown in :ref:`the table below <table_unit_systems_time>`.
 Further, all system of units expect an input temperature in Kelvin
 (``K``) and all systems, except for ``si``, expects a
 charge in units of electron charges. The ``si`` system uses here
-Coulomb as the unit for charge. The time units for the different
+Coulomb as the unit of charge. The time units for the different
 energy systems are given in the table below.
 
 .. _table_unit_systems_time:
 
 .. table:: Time units and velocity conversions for energy systems
-   :class: table-hover
+   :class: table-striped table-hover
 
    +--------------+--------------------+
    | Unit system  | Time unit          |

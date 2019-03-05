@@ -16,7 +16,7 @@ match_all_histograms (:py:func:`.match_all_histograms`)
     sampling simulation.
 
 histogram_and_avg (:py:func:`.histogram_and_avg`)
-    Create histogram an return bins, midpoints and simple statistics.
+    Create a histogram and return bins, midpoints and simple statistics.
 """
 
 import numpy as np
@@ -32,13 +32,13 @@ def histogram(data, bins=10, limits=(-1, 1), density=False,
     ----------
     data : numpy.array
         The data for making the histogram.
-    bins : int,
+    bins : int, optional
         The number of bins to divide the data into.
-    limits : tuple/list
+    limits : tuple/list, optional
         The max/min values to consider.
-    density : boolean
-        If True the histogram will be normalised.
-    weights : numpy.array
+    density : boolean, optional
+        If True the histogram will be normalized.
+    weights : numpy.array, optional
         Weighting factors for data.
 
     Returns
@@ -73,7 +73,7 @@ def histogram(data, bins=10, limits=(-1, 1), density=False,
 def histogram_and_avg(data, bins, density=True):
     """Create histogram an return bins, midpoints and simple statistics.
 
-    The simple statistics includes the mean value and the standard
+    The simple statistics include the mean value and the standard
     deviation. The return structure is useful for plotting routines.
     The midpoints returned are the midpoints of the bins.
 
@@ -84,14 +84,14 @@ def histogram_and_avg(data, bins, density=True):
     bins : int
         The number of bins to use for the histogram.
     density : boolean, optional
-        If `density` is true, the histogram will be normalised.
+        If `density` is true, the histogram will be normalized.
 
     Returns
     -------
     out[0] : numpy.array
         The histogram (frequency) values.
     out[1] : numpy.array
-        The mid points for the bins.
+        The midpoints for the bins.
     out[2] : tuple of floats
         These are some simple statistics, `out[2][0]` is the average
         `out[2][1]` is the standard deviation.
@@ -180,7 +180,7 @@ def match_all_histograms(histograms, umbrellas):
     scale_factor : list of floats
         The scale factors.
     matched_count : numpy.array
-        Count for overall matched histogram - a "averaged" histogram.
+        Count for overall matched histogram (an "averaged" histogram).
 
     """
     histograms_s, scale_factor = [histograms[0][0]], [1.0]

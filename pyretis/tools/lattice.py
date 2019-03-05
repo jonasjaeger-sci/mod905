@@ -57,14 +57,12 @@ def generate_lattice(lattice, repeat, lcon=None, density=None):
         * fcc : Face-centred cubic lattice.
         * hcp : Hexagonal close-packed lattice.
         * diamond : Diamond structure.
-    lcon : float
+    lcon : float, optional
         The lattice constant.
     density : float, optional
-        A desired density. If this is given, `lcon` is calculated.
+        The desired density. If this is given, `lcon` is calculated.
         Note that density will be interpreted as given in internal
         units.
-    repeat : list of integers
-        `repeat[i]` is the number of repetitions in the `i` direction.
 
     Returns
     -------

@@ -3,16 +3,16 @@
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Time the FORTRAN implementation of the Lennard-Jones potential.
 
-This timing is simply done by evaluating the Leannrd-Jones forces
+This timing is simply done by evaluating the Lennard-Jones forces
 (and potential) for different system sizes.
 """
-# pylint: disable=C0103
+# pylint: disable=invalid-name
+import timeit
 import numpy as np
 from pyretis.core import System, create_box, Particles
 from pyretis.core.units import create_conversion_factors
 from pyretis.tools import generate_lattice
 from ljpotentialfp import PairLennardJonesCutFp
-import timeit
 
 
 def set_up_initial_state(nlattice=5):
@@ -38,13 +38,13 @@ def set_up_initial_state(nlattice=5):
 
 def test_wrapper(func, *args, **kwargs):
     """A simple wrapper for calling functions."""
-    def wrapped():
+    def wrapped():  # pylint: disable=missing-docstring
         return func(*args, **kwargs)
     return wrapped
 
 
 def test_function(function, system, repeat=3, number=5):
-    """Run the test for a function"""
+    """Run the test for a function."""
     print('Testing function: {}'.format(function.__name__))
     wrapped = test_wrapper(function, system)
     res = timeit.repeat(wrapped, repeat=repeat, number=number)
@@ -56,7 +56,8 @@ def test_function(function, system, repeat=3, number=5):
     return best, avg, std
 
 
-if __name__ == '__main__':
+def main():
+    """Run the timing."""
     parameters = {0: {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5}}
     # set up potentials:
     potential = PairLennardJonesCutFp(dim=3, shift=True, mixing='geometric')
@@ -74,3 +75,7 @@ if __name__ == '__main__':
     results = np.array(results)
     np.savetxt('timings.txt', results, fmt='%i %.9e %.9e %.9e',
                header='N best avg std')
+
+
+if __name__ == '__main__':
+    main()

@@ -31,12 +31,12 @@ The guidelines can be summarised as follows:
 `pep8 <https://www.python.org/dev/peps/pep-0008/>`_ style guide
 (see also `pep8.org <http://pep8.org/>`_)
 and new code should be checked with the
-pep8 style guide `checker <https://github.com/PyCQA/pep8>`_
+`pep8 style guide checker <https://pycodestyle.readthedocs.io/en/latest/>`_
 and `pylint <http://www.pylint.org/>`_:
 
-.. code-block:: bash
+.. code-block:: pyretis
 
-    pep8 source_file.py
+    pycodestyle source_file.py
     pylint source_file.py
 
 or other tools like `PyChecker <http://pychecker.sourceforge.net/>`_ or
@@ -44,7 +44,7 @@ or other tools like `PyChecker <http://pychecker.sourceforge.net/>`_ or
 `NumPy's <http://www.numpy.org/>`_ imports can be a bit
 tricky understand so you can help pylint by doing
 
-.. code-block:: bash
+.. code-block:: pyretis
 
     pylint --extension-pkg-whitelist=numpy source_file.py
 
@@ -59,6 +59,13 @@ which can be useful to remember.
 The |pyretis| project is documented using the
 `NumPy/SciPy documentation standard <https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt>`_
 and contributors are requested to familiarise themselves with this style and *use it*.
+Documentation style can be checked with
+`pydocstyle <https://github.com/PyCQA/pydocstyle>`_
+
+.. code-block:: pyretis
+
+    pydocstyle source_file.py
+
 
 We also try to avoid ``print()`` statements in the libraries and reserve such
 statements for console output from command line scripts/programs. Output, like
@@ -85,7 +92,7 @@ We can then use it as follows:
     logger.error('An error occurred!')
 
 Please note that we do not add any particular handlers here - it is up to the **user** to
-define what should happen when a logging event occur.
+define what should happen when a logging event occurs.
 
 
 .. _developer-guide-contributing:

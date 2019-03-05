@@ -3,17 +3,20 @@
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """
 Example of running a MD NVE simulation.
+
 This system considered is a simple Lennard-Jones fluid.
+
 """
-# pylint: disable=C0103
+# pylint: disable=invalid-name
+import sys
 import numpy as np
 from matplotlib import pyplot as plt
-from matplotlib import gridspec as gridspec
+from matplotlib import gridspec
 from pyretis.core.units import create_conversion_factors
-from pyretis.inout.writers import FileIO, ThermoTable
+from pyretis.inout.formats import ThermoTableFormatter
+from pyretis.inout.fileio import FileIO
 from pyretis.inout.setup import (create_system, create_simulation,
-                                 create_engine, create_force_field,
-                                 create_output_tasks)
+                                 create_engine, create_force_field)
 # for plotting:
 from pyretis.inout.plotting import mpl_set_style
 # Define simulation settings:
@@ -29,7 +32,7 @@ settings['system'] = {
 }
 settings['engine'] = {
     'class': 'VelocityVerletC',
-    'delta_t': 0.002,
+    'timestep': 0.002,
     'module': 'vvintegratorc.py'
 }
 settings['output'] = {
@@ -54,23 +57,22 @@ print('# Creating simulation from settings.')
 sim_args = {'system': ljsystem, 'engine': create_engine(settings)}
 simulation_nve = create_simulation(settings, sim_args)
 print('# Creating output tasks from settings.')
-output_tasks = [task for task in create_output_tasks(settings)]
+simulation_nve.set_up_output(settings, progress=False)
 msg = 'Created fcc grid with {} atoms.'
 print(msg.format(ljsystem.particles.npart))
 
 # set up extra output:
-table = ThermoTable()
-thermo_file = FileIO('thermo.txt', header=table.header)
+thermo_file = FileIO('thermo-test.txt', 'w', ThermoTableFormatter())
+thermo_file.open()
 store_results = []
 # run the simulation :-)
 for result in simulation_nve.run():
     stepno = result['cycle']['stepno']
-    for lines in table.generate_output(stepno, result['thermo']):
-        thermo_file.write(lines)
+    thermo_file.output(stepno, result['thermo'])
     result['thermo']['stepno'] = stepno
     store_results.append(result['thermo'])
-    for task in output_tasks:
-        task.output(result)
+thermo_file.close()
+
 # the rest is now just plotting:
 # as an example, do some plotting:
 mpl_set_style()  # load pyretis style
@@ -111,4 +113,5 @@ ax4.plot(step, momentum[:, 2], lw=4, alpha=0.7, label='z')
 ax4.set_xlabel('Step')
 ax4.set_ylabel('Linear momentum')
 ax4.legend(loc='upper center', prop={'size': 'small'}, ncol=3)
-plt.show()
+if 'noplot' not in sys.argv[1:]:
+    plt.show()

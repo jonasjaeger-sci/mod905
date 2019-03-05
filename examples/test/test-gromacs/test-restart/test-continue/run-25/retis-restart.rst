@@ -4,7 +4,7 @@ Retis 1D example
 Simulation
 ----------
 task = retis
-steps = 50
+steps = 25
 interfaces = [-0.26, -0.24, -0.22, -0.20, -0.19, -0.18]
 restart = pyretis.restart
 
@@ -16,8 +16,8 @@ Engine settings
 ---------------
 class = GromacsEngine2R
 module = ../gromacs_restart.py
-gmx = gmx_5.1.4_d
-mdrun = gmx_5.1.4_d mdrun
+gmx = GMXCOMMAND
+mdrun = GMXCOMMAND mdrun
 input_path = ../gromacs_input
 timestep = 0.002
 subcycles = 5

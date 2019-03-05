@@ -4,6 +4,7 @@
 """Test functionality for the random generator classes."""
 import logging
 import unittest
+import math
 import numpy as np
 from numpy.random import RandomState
 from pyretis.core.system import System
@@ -17,6 +18,8 @@ from pyretis.core.random_gen import (
     RandomGenerator,
     MockRandomGenerator,
     ReservoirSampler,
+    RandomGeneratorBorg,
+    MockRandomGeneratorBorg,
     create_random_generator,
 )
 logging.disable(logging.CRITICAL)
@@ -26,7 +29,7 @@ class RandomTest(unittest.TestCase):
     """Run the tests for the random classes."""
 
     def test_rand(self):
-        """Test that we can draw random numbers in [0, 1)"""
+        """Test that we can draw random numbers in [0, 1)."""
         rgen = RandomGenerator(seed=0)
         for i in (0, 1, 10, 100, 1000000):
             numbers = rgen.rand(shape=i)
@@ -45,7 +48,7 @@ class RandomTest(unittest.TestCase):
         self.assertRaises(TypeError, rgen.rand, (1, 2))
 
     def test_random_integers(self):
-        """Test generation for [low, high]"""
+        """Test generation for [low, high]."""
         rgen = RandomGenerator(seed=0)
         for i in (-5, 0, 10, 100):
             for j in (-5, 0, 10, 100):
@@ -62,10 +65,10 @@ class RandomTest(unittest.TestCase):
         self.assertTrue(all([i == 1 for i in numbers]))
         # Just draw 1 or 2
         numbers = [rgen.random_integers(1, 2) for _ in range(100)]
-        self.assertTrue(all([i == 1 or i == 2 for i in numbers]))
+        self.assertTrue(all([i in (1, 2) for i in numbers]))
 
     def test_random_normal(self):
-        """Test generation of numbers from normal distribution"""
+        """Test generation of numbers from normal distribution."""
         rgen = RandomGenerator(seed=0)
         loc = 1.2345
         std = 0.2468
@@ -295,6 +298,80 @@ class TestMockRandomGenerator(unittest.TestCase):
                             [0.01537996, 0.01986571],
                             [0.01363436, 0.01553565]])
         self.assertTrue(np.allclose(correct, numbers))
+
+
+class TestBorgRandomGenerators(unittest.TestCase):
+    """Test the state sharing random generators."""
+
+    def test_borg_mock(self):
+        """Test that we share the Mock state."""
+        rgens = [
+            MockRandomGeneratorBorg(
+                seed=i,
+                norm_shift=(i == 0),
+            ) for i in range(5)
+        ]
+        state0 = rgens[0].get_state()
+        # Are all states the same?
+        self.assertTrue(all([i.get_state() is state0 for i in rgens]))
+        # Did the norm_shift get set to the first value?
+        self.assertTrue(all([i.norm_shift for i in rgens]))
+        # Change the state of one member by requesting a number:
+        _ = rgens[0].rand()
+        state1 = rgens[0].get_state()
+        # Check that the state did change:
+        self.assertNotEqual(state0, state1)
+        # Are all states still the same?
+        self.assertTrue(all([i.get_state() == state1 for i in rgens]))
+        # Set state manually
+        rgens[-1].set_state(3)
+        self.assertTrue(all([i.get_state() == 3 for i in rgens]))
+        MockRandomGeneratorBorg.reset_state()
+
+    @staticmethod
+    def assert_equal_npstates(state1, state2):
+        """Compare two random states coming from numpy.random.get_state()."""
+        if not len(state1) == len(state2):
+            raise AssertionError('Length of state data differ.')
+        if not state1[0] == 'MT19937':
+            raise AssertionError('Unexpected state string.')
+        if not state1[0] == state2[0]:
+            raise AssertionError('States differ for state string.')
+        if not np.allclose(state1[1], state2[1]):
+            raise AssertionError('States differ for state integers.')
+        if not state1[2] == state2[2]:
+            raise AssertionError('States differ for "pos" integer.')
+        if not state1[3] == state2[3]:
+            raise AssertionError('States differ for "has_gauss" integer.')
+        if not math.isclose(state1[4], state2[4]):
+            raise AssertionError('States differ for "cached_gaussian" float.')
+
+    def test_borg_randomgen(self):
+        """Test that we share the Mock state."""
+        rgens = [
+            RandomGeneratorBorg(seed=i) for i in range(5)
+        ]
+        # Check that rgen objects are identical:
+        obj = rgens[0].rgen
+        for i in rgens:
+            self.assertIs(obj, i.rgen)
+        # Check that the states are the same:
+        state0 = rgens[0].get_state()
+        for i in rgens:
+            self.assert_equal_npstates(state0, i.get_state())
+        RandomGeneratorBorg.reset_state()
+
+    def test_new_swarm(self):
+        """Test that we make a new swarm without altering the old one."""
+        rgenA = RandomGeneratorBorg(seed=0)
+        rgb2 = RandomGeneratorBorg.make_new_swarm()
+        rgenB = rgb2(seed=0)
+        rgenC = RandomGeneratorBorg(seed=0)
+        rgenD = rgb2(seed=0)
+
+        assert rgenA.rgen is not rgenB.rgen  # Test new swarm
+        assert rgenA.rgen is rgenC.rgen  # Test that the old swarm still works
+        assert rgenB.rgen is rgenD.rgen  # Test that the new swarm works
 
 
 if __name__ == '__main__':

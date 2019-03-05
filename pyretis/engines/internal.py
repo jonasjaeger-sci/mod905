@@ -27,10 +27,12 @@ import numpy as np
 from pyretis.engines.engine import EngineBase
 from pyretis.core.random_gen import create_random_generator
 from pyretis.core.particlefunctions import (calculate_kinetic_energy,
+                                            calculate_thermo,
+                                            calculate_thermo_path,
                                             reset_momentum)
 
 
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 
@@ -47,7 +49,7 @@ class MDEngine(EngineBase):
 
     Attributes
     ----------
-    delta_t : float
+    timestep : float
         Time step for the integration.
     description : string
         Description of the MD integrator.
@@ -66,14 +68,18 @@ class MDEngine(EngineBase):
         ----------
         timestep : float
             The time step for the integrator in internal units.
+        description : string
+            A short description of the integrator.
+        dynamics : string or None, optional
+            Description of the kind of dynamics the integrator does.
 
         """
         super().__init__(description)
-        self.delta_t = timestep
+        self.timestep = timestep
         self.dynamics = dynamics
 
     def integration_step(self, system):
-        """Perform one time step of the integration.
+        """Perform a single time step of the integration.
 
         Parameters
         ----------
@@ -89,19 +95,94 @@ class MDEngine(EngineBase):
         """
         raise NotImplementedError
 
+    def select_thermo_function(self, thermo='full'):
+        """Select function for calculating thermodynamic properties.
+
+        Parameters
+        ----------
+        thermo : string, or None, optional
+            String which selects the kind of thermodynamic output.
+
+        Returns
+        -------
+        thermo_func : callable or None
+            The function matching the requested thermodynamic output.
+
+        """
+        thermo_func = None
+        if thermo is not None:
+            if thermo not in ('full', 'path'):
+                logger.debug(
+                    'Unknown thermo "%s" requested: Using "path"!',
+                    thermo,
+                )
+                thermo = 'path'
+            logger.debug('Thermo output for %s.integrate(): "%s"',
+                         self.__class__.__name__, thermo)
+            if thermo == 'full':
+                thermo_func = calculate_thermo
+            elif thermo == 'path':
+                thermo_func = calculate_thermo_path
+        return thermo_func
+
+    def integrate(self, system, steps, order_function=None, thermo='full'):
+        """Perform several integration steps.
+
+        This method will perform several integration steps, but it will
+        also calculate order parameter(s) if requested and energy
+        terms.
+
+        Parameters
+        ----------
+        system : object like :py:class:`.System`
+            The system we are integrating.
+        steps : integer
+            The number of steps we are going to perform. Note that we
+            do not integrate on the first step (e.g. step 0) but we do
+            obtain the other properties. This is to output the starting
+            configuration.
+        order_function : object like :py:class:`.OrderParameter`, optional
+            An order function can be specified if we want to
+            calculate the order parameter along with the simulation.
+        thermo : string, optional
+            Select the thermodynamic properties we are to calculate.
+
+        Yields
+        ------
+        results : dict
+            The result of a MD step. This contains the state of the
+            system and also the order parameter(s) (if calculated) and
+            the thermodynamic quantities (if calculated).
+
+        """
+        thermo_func = self.select_thermo_function(thermo=thermo)
+        system.potential_and_force()
+        for i in range(steps):
+            if i == 0:
+                pass
+            else:
+                self.integration_step(system)
+            results = {'system': system}
+            if order_function:
+                results['order'] = self.calculate_order(order_function, system)
+            if thermo_func:
+                results['thermo'] = thermo_func(system)
+            yield results
+
     def invert_dt(self):
         """Invert the time step for the integration.
 
         Returns
         -------
         out : boolean
-            True if time step is positive, False otherwise.
+            True if the time step is positive, False otherwise.
 
         """
-        self.delta_t *= -1.0
-        return self.delta_t > 0.0
+        self.timestep *= -1.0
+        return self.timestep > 0.0
 
-    def propagate(self, path, system, orderp, interfaces, reverse=False):
+    def propagate(self, path, initial_system, order_function, interfaces,
+                  reverse=False):
         """Generate a path by integrating until a criterion is met.
 
         This function will generate a path by calling the function
@@ -109,7 +190,7 @@ class MDEngine(EngineBase):
         carried out until the order parameter has passed the specified
         interfaces or if we have integrated for more than a specified
         maximum number of steps. The given system defines the initial
-        state and the system is reset to it's initial state when this
+        state and the system is reset to its initial state when this
         method is done.
 
         Parameters
@@ -119,16 +200,16 @@ class MDEngine(EngineBase):
             We are here not returning a new path - this since we want
             to delegate the creation of the path (type) to the method
             that is running `propagate`.
-        system : object like :py:class:`.System`
+        initial_system : object like :py:class:`.System`
             The system object gives the initial state for the
-            integration. The initial state is stored and the system is
-            reset to the initial state when the integration is done.
-        orderp : object like :py:class:`.OrderParameter`
+            integration. The propagation will not alter the state of
+            the system.
+        order_function : object like :py:class:`.OrderParameter`
             The object used for calculating the order parameter.
         interfaces : list of floats
             These interfaces define the stopping criterion.
-        reverse : boolean
-            If True, the system will be propagated backwards in time.
+        reverse : boolean, optional
+            If True, the system will be propagated backward in time.
 
         Returns
         -------
@@ -141,18 +222,15 @@ class MDEngine(EngineBase):
         status = 'Propagate w/internal engine'
         logger.debug(status)
         success = False
-        initial_system = system.particles.get_particle_state()
-        system.potential_and_force()  # make sure forces are set
+        # Copy the system, so that we can propagate without altering it:
+        system = initial_system.copy()
+        system.potential_and_force()  # Make sure forces are set.
         left, _, right = interfaces
         for i in range(path.maxlen):
-            order = self.calculate_order(orderp, system)
-            kin = calculate_kinetic_energy(system.particles)[0]
-            phasepoint = {'order': order,
-                          'pos': system.particles.pos,
-                          'vel': system.particles.vel,
-                          'vpot': system.particles.vpot,
-                          'ekin': kin}
-            status, success, stop, _ = self.add_to_path(path, phasepoint,
+            system.order = self.calculate_order(order_function, system)
+            ekin = calculate_kinetic_energy(system.particles)[0]
+            system.particles.ekin = ekin
+            status, success, stop, _ = self.add_to_path(path, system.copy(),
                                                         left, right)
             if stop:
                 logger.debug('Stopping propagate at step: %i ', i)
@@ -163,8 +241,6 @@ class MDEngine(EngineBase):
                 system.particles.vel *= -1.0
             else:
                 self.integration_step(system)
-        # Reset to initial config:
-        system.particles.set_particle_state(initial_system)
         logger.debug('Propagate done: "%s" (success: %s)', status, success)
         return success, status
 
@@ -173,14 +249,10 @@ class MDEngine(EngineBase):
                           momentum=False, rescale=None):
         """Modify the velocities of the current state.
 
-        This method will modify the velocities of a time slice.
-        And it is part of the integrator since it, conceptually,
-        fits here:  we are acting on the system and modifying it.
-
         Parameters
         ----------
         system : object like :py:class:`.System`
-            System is used here since we need access to the particle
+            The system is used here since we need access to the particle
             list.
         rgen : object like :py:class:`.RandomGenerator`
             This is the random generator that will be used.
@@ -219,7 +291,7 @@ class MDEngine(EngineBase):
         if aimless:
             vel, _ = rgen.draw_maxwellian_velocities(system)
             particles.vel = vel
-        else:  # soft velocity change, add from Gaussian dist
+        else:  # Soft velocity change, from a Gaussian distribution:
             dvel, _ = rgen.draw_maxwellian_velocities(system, sigma_v=sigma_v)
             particles.vel = particles.vel + dvel
         if momentum:
@@ -253,22 +325,15 @@ class MDEngine(EngineBase):
                         box=None):
         """Return the order parameter.
 
-        This method is just to help calculating the order parameter
-        in cases where only the engine can do it! This creates
-        a uniform behaviour for both internal and external engines.
-        For internal engine this may not be so useful in it self, since
-        we could just call `order.calculate(system)`. But for external
-        engines, we can not assume that the system is able
-        to calculate the order parameter, this because the state of the
-        system might be stored in a file which only the engine knows
-        how to read.
+        This method is just to help to calculate the order parameter
+        in cases where only the engine can do it.
 
         Parameters
         ----------
         order_function : object like :py:class:`.OrderParameter`
             The object used for calculating the order parameter(s).
         system : object like :py:class:`.System`
-            The system containing the corrent positions and velocities.
+            The system containing the current positions and velocities.
         xyz : numpy.array, optional
             The positions to use. Typically for internal engines, this
             is not needed. It is included here as it can be used for
@@ -286,17 +351,17 @@ class MDEngine(EngineBase):
 
         """
         if any((xyz is None, vel is None, box is None)):
-            return order_function.calculate_all(system)
+            return order_function.calculate(system)
         system.particles.pos = xyz
         system.particles.vel = vel
         system.box.update_size(box)
-        return order_function.calculate_all(system)
+        return order_function.calculate(system)
 
     def kick_across_middle(self, system, order_function, rgen, middle,
                            tis_settings):
         """Force a phase point across the middle interface.
 
-        This is accomplished by repeatedly kicking the pahse point so
+        This is accomplished by repeatedly kicking the phase point so
         that it crosses the middle interface.
 
         Parameters
@@ -313,38 +378,31 @@ class MDEngine(EngineBase):
         tis_settings : dict
             This dictionary contains settings for TIS. Explicitly used here:
 
-            * `zero_momentum`: boolean, determines if the momentum is zeroed
+            * `zero_momentum`: boolean, determines if the momentum is zeroed.
             * `rescale_energy`: boolean, determines if energy is re-scaled.
 
         Returns
         -------
-        out[0] : dict
-            This dict contains the phase-point just before the interface.
-            It is obtained by calling the `get_particle_state()` of the
-            particles object.
-        out[1] : dict
-            This dict contains the phase-point just after the interface.
-            It is obtained by calling the `get_particle_state()` of the
-            particles object.
+        out[0] : object like :py:class:`.System`
+            The phase-point just before the interface.
+        out[1] : object like :py:class:`.System`
+            The phase-point just after the interface.
 
         Note
         ----
-        This function will update the system state so that the
-        `system.particles.get_particle_state() == out[1]`.
-        This is more convenient for the following usage in the
-        `generate_initial_path_kick` function.
+        This function will update the system state.
 
         """
         # We search for crossing with the middle interface and do this
         # by sequentially kicking the initial phase point:
-        previous = None
-        particles = system.particles
-        system.potential_and_force()  # make sure forces are set
+        previous = system.copy()
+        system.potential_and_force()  # Make sure forces are set.
         curr = self.calculate_order(order_function, system)[0]
+        logger.info('Kicking from: %9.6f', curr)
         while True:
-            # save current state:
-            previous = particles.get_particle_state()
-            # Modify velocities
+            # Save current state:
+            previous = system.copy()
+            # Modify velocities:
             self.modify_velocities(system,
                                    rgen,
                                    sigma_v=None,
@@ -353,41 +411,51 @@ class MDEngine(EngineBase):
                                    rescale=tis_settings['rescale_energy'])
             # Update order parameter in case it is velocity dependent:
             curr = self.calculate_order(order_function, system)[0]
-            previous['order'] = curr
-            # Store modified velocities
-            previous['vel'] = system.particles.get_vel()
+            previous.order = curr
+            # Store modified velocities:
+            previous.particles.set_vel(system.particles.get_vel())
             # Integrate forward one step:
             self.integration_step(system)
             # Compare previous order parameter and the new one:
             prev = curr
             curr = self.calculate_order(order_function, system)[0]
-            if (prev < middle < curr) or (curr < middle < prev):
-                # have crossed middle interface, just stop the loop
-                logger.info('Crossing found: %9.6f %9.6f ', prev, curr)
-                break
-            elif (prev <= curr <= middle) or (middle <= curr <= prev):
-                # We are getting closer, keep the new point
-                pass
-            elif (prev == middle):
-                # Unlucky case, we want more than 1 point, so search more
-                pass
-            else:  # we did not get closer, fall back to previous point
-                particles.set_particle_state(previous)
-                curr = previous['order']
-        return previous, particles.get_particle_state()
+            if curr == middle:
+                # By construction we want two points, one left and one
+                # right of the interface, and these two points should
+                # be connected by a MD step. If we hit exactly on the
+                # interface we just fall back:
+                system.particles = previous.particles.copy()
+                curr = previous.order
+                # TODO: This mehod should be improved and generalized.
+                # The generalization should be done so that this method
+                # is only defined once and not as it is now - defined
+                # for several engines.
+            else:
+                if (prev < middle < curr) or (curr < middle < prev):
+                    # Middle interface was crossed, just stop the loop.
+                    logger.info('Crossing found: %9.6f %9.6f ', prev, curr)
+                    break
+                elif (prev <= curr <= middle) or (middle <= curr <= prev):
+                    # We are getting closer, keep the new point.
+                    pass
+                else:  # We did not get closer, fall back to previous point.
+                    system.particles = previous.particles.copy()
+                    curr = previous.order
+        system.order = curr
+        return previous, system
 
     def dump_phasepoint(self, phasepoint, deffnm=None):
         """For compatibility with external integrators."""
-        pass
+        return
 
     def clean_up(self):
         """Clean up after using the engine.
 
-        Currently this is only included for compatibility with external
+        Currently, this is only included for compatibility with external
         integrators.
 
         """
-        pass
+        return
 
 
 class Verlet(MDEngine):
@@ -398,9 +466,9 @@ class Verlet(MDEngine):
     Attributes
     ----------
     half_idt : float
-        Half of inverse time step: `0.5 / delta_t`
-    delta_t2 : float
-        Squared time step: `delta_t**2`
+        Half of the inverse time step: `0.5 / timestep`.
+    timestepsq : float
+        Squared time step: `timestep**2`.
     previous_pos : numpy.array
         Stores the previous positions of the particles.
 
@@ -416,8 +484,8 @@ class Verlet(MDEngine):
 
         """
         super().__init__(timestep, 'Verlet MD integrator', dynamics='NVE')
-        self.half_idt = 0.5 / self.delta_t
-        self.delta_t2 = self.delta_t**2
+        self.half_idt = 0.5 / self.timestep
+        self.timestepsq = self.timestep**2
         self.previous_pos = None
 
     def set_initial_positions(self, particles):
@@ -430,7 +498,7 @@ class Verlet(MDEngine):
             required.
 
         """
-        self.previous_pos = particles.pos - particles.vel * self.delta_t
+        self.previous_pos = particles.pos - particles.vel * self.timestep
 
     def integration_step(self, system):
         """Perform one Verlet integration step.
@@ -450,11 +518,10 @@ class Verlet(MDEngine):
         """
         particles = system.particles
         acc = particles.force * particles.imass
-        pos = 2.0 * particles.pos - self.previous_pos + acc * self.delta_t2
+        pos = 2.0 * particles.pos - self.previous_pos + acc * self.timestepsq
         particles.vel = (pos - self.previous_pos) * self.half_idt
         self.previous_pos, particles.pos = particles.pos, pos
         system.potential_and_force()
-        return None
 
 
 class VelocityVerlet(MDEngine):
@@ -464,8 +531,8 @@ class VelocityVerlet(MDEngine):
 
     Attributes
     ----------
-    half_delta_t : float
-        Half of timestep.
+    half_timestep : float
+        Half of the timestep.
 
     """
 
@@ -480,7 +547,7 @@ class VelocityVerlet(MDEngine):
         """
         super().__init__(timestep, 'Velocity Verlet MD integrator',
                          dynamics='NVE')
-        self.half_delta_t = self.delta_t * 0.5
+        self.half_timestep = self.timestep * 0.5
 
     def integration_step(self, system):
         """Velocity Verlet integration, one time step.
@@ -500,11 +567,10 @@ class VelocityVerlet(MDEngine):
         """
         particles = system.particles
         imass = particles.imass
-        particles.vel += self.half_delta_t * particles.force * imass
-        particles.pos += self.delta_t * particles.vel
+        particles.vel += self.half_timestep * particles.force * imass
+        particles.pos += self.timestep * particles.vel
         system.potential_and_force()
-        particles.vel += self.half_delta_t * particles.force * imass
-        return None
+        particles.vel += self.half_timestep * particles.force * imass
 
 
 class Langevin(MDEngine):
@@ -515,7 +581,7 @@ class Langevin(MDEngine):
     Attributes
     ----------
     rgen : object like :py:class:`.RandomGenerator`
-        This is the class that handles generation of random numbers.
+        This is the class that handles the generation of random numbers.
     gamma : float
         The friction parameter.
     high_friction : boolean
@@ -531,7 +597,7 @@ class Langevin(MDEngine):
         The items in the dict are:
 
         * `sigma` : float
-          standard deviation for the positions, used when drawing dr
+          standard deviation for the positions, used when drawing dr.
         * `bddt` : numpy.array
           Equal to ``dt*gamma/masses``, since the masses is a
           numpy.array this will have the same shape.
@@ -590,13 +656,13 @@ class Langevin(MDEngine):
         timestep : float
             The time step in internal units.
         gamma : float
-            The gamma parameter for the Langevin integrator
-        rgen : string
+            The gamma parameter for the Langevin integrator.
+        rgen : string, optional
             This string can be used to pick a particular random
             generator, which is useful for testing.
         seed : integer, optional
             A seed for the random generator.
-        high_friction : boolean
+        high_friction : boolean, optional
             Determines if we are in the high_friction limit and should
             do the over-damped version.
 
@@ -630,32 +696,33 @@ class Langevin(MDEngine):
         beta = system.temperature['beta']
         imasses = system.particles.imass
         if self.high_friction:
-            self.param_high['sigma'] = np.sqrt(2.0 * self.delta_t *
+            self.param_high['sigma'] = np.sqrt(2.0 * self.timestep *
                                                imasses/(beta * self.gamma))
-            self.param_high['bddt'] = self.delta_t * imasses / self.gamma
+            self.param_high['bddt'] = self.timestep * imasses / self.gamma
         else:
-            gammadt = self.gamma * self.delta_t
+            gammadt = self.gamma * self.timestep
             exp_gdt = np.exp(-gammadt)
             if self.gamma > 0.0:
                 c_0 = exp_gdt
                 c_1 = (1.0 - c_0) / gammadt
                 c_2 = (1.0 - c_1) / gammadt
             else:
-                raise ValueError('Langevin: Found gamma = %6.2f < 0.',
-                                 self.gamma)
+                raise ValueError(
+                    'Langevin: Found gamma = {:6.2f} < 0.'.format(self.gamma)
+                )
 
             self.param_iner['c0'] = c_0
-            self.param_iner['a1'] = c_1 * self.delta_t
-            self.param_iner['a2'] = c_2 * self.delta_t**2 * imasses
-            self.param_iner['b1'] = (c_1 - c_2) * self.delta_t * imasses
-            self.param_iner['b2'] = c_2 * self.delta_t * imasses
+            self.param_iner['a1'] = c_1 * self.timestep
+            self.param_iner['a2'] = c_2 * self.timestep**2 * imasses
+            self.param_iner['b1'] = (c_1 - c_2) * self.timestep * imasses
+            self.param_iner['b2'] = c_2 * self.timestep * imasses
 
             self.param_iner['mean'] = []
             self.param_iner['cov'] = []
             self.param_iner['cho'] = []
 
             for imass in imasses:
-                sig_ri2 = ((self.delta_t * imass[0] / (beta * self.gamma)) *
+                sig_ri2 = ((self.timestep * imass[0] / (beta * self.gamma)) *
                            (2. - (3. - 4.*exp_gdt + exp_gdt**2) / gammadt))
                 sig_vi2 = ((1.0 - exp_gdt**2) * imass[0] / beta)
                 cov_rvi = (imass[0]/(beta * self.gamma)) * (1.0 - exp_gdt)**2
@@ -664,7 +731,7 @@ class Langevin(MDEngine):
                 self.param_iner['cov'].append(cov_matrix)
                 self.param_iner['cho'].append(np.linalg.cholesky(cov_matrix))
                 self.param_iner['mean'].append(np.zeros(2))
-                # NOTE: Can be simplified - mean is always just zero...
+                # NOTE: This can be simplified - the mean is always just zero.
 
     def integration_step(self, system):
         """Langevin integration, one time step.
@@ -712,7 +779,6 @@ class Langevin(MDEngine):
         particles.pos += self.param_high['bddt'] * particles.force + rands
         particles.vel = rands
         system.potential()
-        return None
 
     def integration_step_inertia(self, system):
         """Langevin integration, one time step.
@@ -748,9 +814,8 @@ class Langevin(MDEngine):
         vel2 = (self.param_iner['c0'] * particles.vel +
                 self.param_iner['b1'] * particles.force + vel_rand)
 
-        system.force()  # update forces
+        system.force()  # Update forces.
 
         particles.vel = vel2 + self.param_iner['b2'] * particles.force
 
         system.potential()
-        return None

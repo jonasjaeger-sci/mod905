@@ -12,19 +12,55 @@ The general syntax for executing is:
    pyretisanalyse [-h] -i INPUT [-V]
 
 
+where ``INPUT`` is the input file for the analysis. This file is
+similar to the input file to the |pyretis|
+:ref:`application <user-guide-application>` with some differences:
+
+1. It contains the actual number of cycles/steps completed,
+   specified by the
+   :ref:`endcycle <user-section-simulation-endcycle>`
+   keyword.
+
+2. It contains the directory from where the simulation was
+   executed, specified by the
+   :ref:`exe-path <user-section-simulation-exe-path>` keyword.
+
+3. It contains the number of particles in the simulation,
+   specified by the 
+   :ref:`npart <user-section-particles-keyword-npart>` keyword.
+
+4. It contains settings for the analysis, defined via the 
+   :ref:`analysis section <user-section-analysis>`.
+
+
+.. container:: panel panel-info
+
+   .. container:: panel-heading
+   
+      **Note**
+
+   .. container:: panel-body
+   
+      The ``INPUT`` file for the analysis is created automatically
+      by running the |pyretis| application. This file is named ``out.rst``
+      and can be directly used as input for the analysis program.
+
+
 Input arguments
 ---------------
 
 .. _tableappargument_analyse:
 
 .. table:: Description of input arguments for pyretisanalyse
+   :class: table-striped table-hover
 
    +-------------------------------------+--------------------------------------------------+
    | Argument                            | Description                                      |
    +=====================================+==================================================+
    | -h, --help                          | Show the help message and exit                   |
    +-------------------------------------+--------------------------------------------------+
-   | -i INPUT, --input INPUT             | Location of the input file.                      |
+   | -i INPUT, --input INPUT             | Location of the input file containing analysis   |
+   |                                     | settings.                                        |
    +-------------------------------------+--------------------------------------------------+
    | -V, --version                       | Show the version number and exit.                |
    +-------------------------------------+--------------------------------------------------+

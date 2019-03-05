@@ -4,12 +4,12 @@
 """A test of the pairpotential module."""
 import logging
 import unittest
+import numpy as np
 from pyretis.forcefield.potentials.pairpotentials.pairpotential import (
     mixing_parameters,
     generate_pair_interactions,
     _check_pair_parameters,
 )
-import numpy as np
 logging.disable(logging.CRITICAL)
 
 

@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """Time the FORTRAN implementation of the Lennard-Jones potential.
 
-This timing is simply done by evaluating the Leannrd-Jones forces
+This timing is simply done by evaluating the Lennard-Jones forces
 (and potential) for different system sizes.
 """
-# pylint: disable=C0103
+# pylint: disable=invalid-name
 import timeit
 import numpy as np
 from pyretis.core import System, create_box, Particles
@@ -42,7 +42,7 @@ def test_wrapper(func, *args, **kwargs):
 
 
 def test_function(function, system, repeat=3, number=5):
-    """Run the test for a function"""
+    """Run the test for a function."""
     print('Testing function: {}'.format(function.__name__))
     wrapped = test_wrapper(function, system)
     res = timeit.repeat(wrapped, repeat=repeat, number=number)

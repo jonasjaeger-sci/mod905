@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 make clean
 cd retis-full
 pyretisrun -i retis.rst -p

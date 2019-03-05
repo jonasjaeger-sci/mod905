@@ -20,11 +20,12 @@ import time
 import colorama
 from matplotlib import pyplot as plt
 import numpy as np
-from pyretis.core import System, create_box, ParticlesExt, PathExt
-from pyretis.orderparameter.orderparameter import OrderParameterPosition
-from pyretis.inout.common import make_dirs, print_to_screen
+from pyretis.core import System, create_box, ParticlesExt, Path
+from pyretis.orderparameter.orderparameter import PositionVelocity
+from pyretis.inout.common import make_dirs
+from pyretis.inout import print_to_screen
 from pyretis.inout.settings import parse_settings_file
-from pyretis.inout.writers.gromacsio import read_trr_file
+from pyretis.inout.formats.gromacs import read_trr_file
 from pyretis.engines import GromacsEngine, GromacsEngine2
 
 
@@ -32,7 +33,7 @@ plt.style.use('seaborn-deep')
 
 
 def clean_dir(dirname):
-    """Remove ALL files in the given directory!"""
+    """Remove ALL files in the given directory."""
     for files in os.listdir(dirname):
         filename = os.path.join(dirname, files)
         if os.path.isfile(filename):
@@ -53,13 +54,14 @@ def run_in_steps(engine, system, order_parameter, interfaces,
         An order parameter to calculate.
     interfaces : list of floats
         Interfaces to consider, here typically just set to
-        ``[-float('inf'), float('inf'), float('inf')]``
+        ``[-float('inf'), float('inf'), float('inf')]``.
     steps : integer
         The number of steps we will do.
     exe_dir : string
-        The foler to use for the execution.
+        The folder to use for the execution.
     reverse : boolean
         Selects the time direction.
+
     """
     print_to_screen('\nRunning {} steps in "{}"'.format(steps, exe_dir),
                     level='message')
@@ -68,7 +70,7 @@ def run_in_steps(engine, system, order_parameter, interfaces,
     folder = os.path.abspath(exe_dir)
     clean_dir(folder)
     engine.exe_dir = folder
-    path = PathExt(None, maxlen=steps)
+    path = Path(None, maxlen=steps)
     engine.propagate(path, system, order_parameter, interfaces,
                      reverse=reverse)
     print_to_screen('Propagation done!')
@@ -92,9 +94,10 @@ def run_plain_gromacs(engine, system, order_parameter, input_conf,
     steps : integer
         The number of steps to run.
     exe_dir : string
-        Path to where we should execute GROMACS
+        The path to where we should execute GROMACS.
     reverse : boolean
         Selects the time direction.
+
     """
     print_to_screen(
         '\nRunning {} plain GROMACS steps in "{}"'.format(steps, exe_dir),
@@ -131,7 +134,7 @@ def run_plain_gromacs(engine, system, order_parameter, input_conf,
         if reverse:
             system.particles.vel *= -1
         system.box.update_size(np.diagonal(data['box']))
-        order.append(order_parameter.calculate_all(system))
+        order.append(order_parameter.calculate(system))
     order = np.array(order)
     energym = np.zeros((len(order), 2))
     energym[:, 0] = energy['kinetic en.']
@@ -160,19 +163,16 @@ def main(select=1, plot=False):
     print_to_screen('Time step: {}'.format(gro.timestep))
     print_to_screen('Subcycles: {}'.format(gro.subcycles))
     print_to_screen('GMX format: {}'.format(gro.ext))
-    # create dummy variables for the test:
+    # Create dummy variables for the test:
     system = System(units='gromacs',
-                    box=create_box(length=[100, 100, 100]),
+                    box=create_box(cell=[100, 100, 100]),
                     temperature=200)
     system.particles = ParticlesExt(dim=3)
     initial_conf = gro.input_files['conf']
-    phase_point = {'pos': (initial_conf, None),
-                   'vel': False,
-                   'vpot': None,
-                   'ekin': None}
-    system.particles.set_particle_state(phase_point)
+    system.particles.set_pos((initial_conf, None))
+    system.particles.set_vel(False)
     interfaces = [-float('inf'), float('inf'), float('inf')]
-    order_parameter = OrderParameterPosition(1472, dim='z', periodic=True)
+    order_parameter = PositionVelocity(1472, dim='z', periodic=True)
     start = time.perf_counter()
     pathf = run_in_steps(gro, system, order_parameter, interfaces,
                          steps=steps,
@@ -181,9 +181,9 @@ def main(select=1, plot=False):
     end = time.perf_counter()
     print_to_screen('Time spent: {}'.format(end - start), level='info')
 
-    # set state to last point in trajectory:
-    phase_point = pathf.phasepoint(-1)
-    system.particles.set_particle_state(phase_point)
+    # Set state to last point in trajectory:
+    phase_point = pathf.phasepoints[-1]
+    system = phase_point.copy()
     start = time.perf_counter()
     pathb = run_in_steps(gro, system, order_parameter, interfaces,
                          steps=steps,
@@ -249,25 +249,31 @@ def mse_combinations(text, var, tol=None):
 
 
 def obtain_mses(pathf, pathb, plainf, plainb):
-    """Obtain some MSE's"""
-    mses = [(np.array(pathf.order), 'step-forward'),
-            (np.array([i for i in pathb.order[::-1]]), 'step-back'),
+    """Obtain some mean squared errors."""
+    orderf = [i.order for i in pathf.phasepoints]
+    orderb = [i.order for i in reversed(pathb.phasepoints)]
+    mses = [(np.array(orderf), 'step-forward'),
+            (np.array(orderb), 'step-back'),
             (plainf[1], 'plain-forward'),
             (plainb[1][::-1, :], 'plain-back')]
     mse_ok = mse_combinations('order parameters', mses, tol=1.0e-9)
     if not mse_ok:
         return mse_ok
 
-    mses = [(np.array(pathf.ekin), 'step-forward'),
-            (np.array(pathb.ekin[::-1]), 'step-back'),
+    ekinf = [i.particles.ekin for i in pathf.phasepoints]
+    ekinb = [i.particles.ekin for i in reversed(pathb.phasepoints)]
+    mses = [(np.array(ekinf), 'step-forward'),
+            (np.array(ekinb), 'step-back'),
             (plainf[0][:, 0], 'plain-forward'),
             (plainb[0][:, 0][::-1], 'plain-back')]
     mse_ok = mse_combinations('kinetic energy', mses, tol=1.0e-4)
     if not mse_ok:
         return mse_ok
 
-    mses = [(np.array(pathf.vpot), 'step-forward'),
-            (np.array(pathb.vpot[::-1]), 'step-back'),
+    vpotf = [i.particles.vpot for i in pathf.phasepoints]
+    vpotb = [i.particles.vpot for i in reversed(pathb.phasepoints)]
+    mses = [(np.array(vpotf), 'step-forward'),
+            (np.array(vpotb), 'step-back'),
             (plainf[0][:, 1], 'plain-forward'),
             (plainb[0][:, 1][::-1], 'plain-back')]
     mse_ok = mse_combinations('potential energy', mses, tol=1.0e-4)
@@ -276,8 +282,12 @@ def obtain_mses(pathf, pathb, plainf, plainb):
 
 def plot_path_comparison(pathf, pathb, plainf, plainb):
     """Just plot some properties for the paths."""
-    orderf = np.array(pathf.order)
-    orderb = np.array([i for i in pathb.order[::-1]])
+    orderf = np.array(
+        [i.order for i in pathf.phasepoints]
+    )
+    orderb = np.array(
+        [i.order for i in reversed(pathb.phasepoints)]
+    )
     fig1 = plt.figure(figsize=(12, 6))
     ax11 = fig1.add_subplot(121)
     ax12 = fig1.add_subplot(122)
@@ -294,24 +304,26 @@ def plot_path_comparison(pathf, pathb, plainf, plainb):
     ax12.plot(plainf[1][:, 1], lw=2, ls=':', marker='s')
     ax12.plot(plainb[1][:, 1][::-1], lw=2, ls='-.', marker='x')
     ax12.set_title('Order param 2')
-    kinf = np.array(pathf.ekin)
-    kinb = np.array(pathb.ekin[::-1])
-    potf = np.array(pathf.vpot)
-    potb = np.array(pathb.vpot[::-1])
+
+    ekinf = [i.particles.ekin for i in pathf.phasepoints]
+    ekinb = [i.particles.ekin for i in reversed(pathb.phasepoints)]
     fig2 = plt.figure(figsize=(12, 6))
     ax21 = fig2.add_subplot(131)
     ax22 = fig2.add_subplot(132)
     ax23 = fig2.add_subplot(133)
-    ax21.plot(kinf, lw=2, ls='-', marker='o', label='Forward')
-    ax21.plot(kinb, lw=2, ls='--', marker='^', label='Backward')
+    ax21.plot(ekinf, lw=2, ls='-', marker='o', label='Forward')
+    ax21.plot(ekinb, lw=2, ls='--', marker='^', label='Backward')
     ax21.plot(plainf[0][:, 0], lw=2, ls=':', marker='s',
               label='Forward-plain')
     ax21.plot(plainb[0][:, 0][::-1], lw=2, ls='-.', marker='x',
               label='Backward-plain')
     ax21.set_title('Kinetic energy')
     ax21.legend()
-    ax22.plot(potf, lw=2, ls='-', marker='o', label='Forward')
-    ax22.plot(potb, lw=2, ls='--', marker='^', label='Backward')
+
+    vpotf = [i.particles.vpot for i in pathf.phasepoints]
+    vpotb = [i.particles.vpot for i in reversed(pathb.phasepoints)]
+    ax22.plot(vpotf, lw=2, ls='-', marker='o', label='Forward')
+    ax22.plot(vpotb, lw=2, ls='--', marker='^', label='Backward')
     ax23.plot(plainf[0][:, 1], lw=2, ls=':', marker='s',
               label='Forward-plain')
     ax23.plot(plainb[0][:, 1][::-1], lw=2, ls='-.', marker='x',
@@ -353,30 +365,30 @@ def plot_path_comparison(pathf, pathb, plainf, plainb):
               c='#262626', alpha=0.5, lw=2)
     ax32.legend()
 
-    ax33.scatter(kinf, kinb, marker='o', label='Backward',
+    ax33.scatter(ekinf, ekinb, marker='o', label='Backward',
                  alpha=0.8)
-    ax33.scatter(kinf, plainf[0][:, 0], marker='s',
+    ax33.scatter(ekinf, plainf[0][:, 0], marker='s',
                  label='Forward-plain', alpha=0.8)
-    ax33.scatter(kinf, plainb[0][:, 0][::-1], marker='^',
+    ax33.scatter(ekinf, plainb[0][:, 0][::-1], marker='^',
                  label='Backward-plain', alpha=0.8)
     ax33.set_xlabel('Ekin Forward')
     ax33.set_ylabel('Ekin')
-    minx = min(kinf)
-    maxx = max(kinf)
+    minx = min(ekinf)
+    maxx = max(ekinf)
     ax33.plot([minx, maxx], [minx, maxx], ls=':',
               c='#262626', alpha=0.5, lw=2)
     ax33.legend()
 
-    ax34.scatter(potf, potb, marker='o', label='Backward',
+    ax34.scatter(vpotf, vpotb, marker='o', label='Backward',
                  alpha=0.8)
-    ax34.scatter(potf, plainf[0][:, 1], marker='s',
+    ax34.scatter(vpotf, plainf[0][:, 1], marker='s',
                  label='Forward-plain', alpha=0.8)
-    ax34.scatter(potf, plainb[0][:, 1][::-1], marker='^',
+    ax34.scatter(vpotf, plainb[0][:, 1][::-1], marker='^',
                  label='Backward-plain', alpha=0.8)
     ax34.set_xlabel('Vpot Forward')
     ax34.set_ylabel('Vpot')
-    minx = min(potf)
-    maxx = max(potf)
+    minx = min(vpotf)
+    maxx = max(vpotf)
     ax34.plot([minx, maxx], [minx, maxx], ls=':',
               c='#262626', alpha=0.5, lw=2)
     ax34.legend()

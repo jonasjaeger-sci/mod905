@@ -58,8 +58,8 @@ classes and here we will introduce the
 
 * :py:class:`.PathEnsemble` class which defines path ensembles.
 
-Below is an illustration on how some of these classes are interacting.
-The classes (shown as boxes in this figure) will be discusses
+Below is an illustration of how some of these classes are interacting.
+The classes (shown as boxes in this figure) will be discussed
 more in the following.
 
 .. _figure-relation-base-objects:
@@ -88,9 +88,8 @@ The System class
 The :py:class:`.System` class
 defines the system we are investigating. It will
 typically contain particles, a simulation box and a
-force field. For |pyretis|, this is a very convenient
-class since it exposes important parts we
-can interact with, in particular the particles.
+force field. This class exposes important parts we
+can interact with, in particular, the particles.
 
 Example of creation:
 
@@ -100,7 +99,7 @@ Example of creation:
     new_system = System(temperature=0.8, units='lj')
 
 This will create an empty system with a set temperature equal to ``0.8`` in
-``lj`` units (``lj`` refers to Lennard-Jones :ref:`units <user-guide-units>`.
+``lj`` units (``lj`` refers to Lennard-Jones :ref:`units <user-guide-units>`).
 It is also possible
 to specify a box here in case that it needed:
 
@@ -140,9 +139,9 @@ the class attributes :py:attr:`.Particles.pos`, :py:attr:`.Particles.vel` and
 :py:attr:`.Particles.force`. Actually, there is an additional particle class
 within |pyretis| which is called :py:class:`.ParticlesExt`. This class is
 used when |pyretis| is using external engines. It is very similar to the
-:py:class:`.Particles` class but it has in addition a
+:py:class:`.Particles` class but it has, in addition, a
 :py:attr:`.ParticlesExt.config` which can be used to reference files
-which holds the current configuration of the particles.
+which hold the current configuration of the particles.
 
 Here are some examples of interacting with
 the :py:class:`.Particles` class,
@@ -186,9 +185,11 @@ The :py:class:`.Box` class
 defines a simulation box. It is useful in
 simulations where we wish to have periodic boundaries. Typically,
 we do not interact much with the box beyond creating it.
-Boxes are created by passing a (optional) ``length`` which is a list
-of integers either of type ``[lengthx, lengthy, lengthz]``.
-At the same time periodicity can
+Boxes are created by passing an (optional) ``cell`` argument which is a list
+of floats of form ``[lengthx, lengthy, lengthz]``. If more than
+three floats are given, we assume that these represent a flattened version
+of the box matrix of the form: ``[xx, yy, zz, xy, xz, yx, yz, xz, zy]``.
+At the same time, periodicity can
 be specified with the keyword ``periodic`` which is a list of boolean values
 that determine if a dimension is periodic or not.  The default is periodic
 in all directions.
@@ -227,7 +228,7 @@ function named ``func``, then |pyretis| will assume that it can call:
    forces and the virial. Typically, this can be done by just calling
    ``func.potential(system)`` and ``func.force(system)``.
 
-Notice that all this functions should only take in a :py:class:`.System` as
+Notice that all these functions should only take in a :py:class:`.System` as
 the only parameter.
 
 Let's see an example of how we can set-up a potential function (or class)
@@ -253,19 +254,19 @@ we can make a plot of the potential by adding:
 The Path and PathEnsemble classes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-These two classes are representation of paths and path ensembles.
-Path are essentially trajectories and path ensembles are collections of such
+These two classes are representations of paths and path ensembles.
+Paths are essentially trajectories and path ensembles are collections of such
 paths. The :py:class:`.PathEnsemble` stores some information about
 all paths in the attribute :py:attr:`.PathEnsemble.paths`, but
 it will not store the full trajectory (positions, velocities, etc.).
 It will, however, keep a reference to the last accepted path in
-:py:attr:`.PathEnsemble.last_path`. This :py:class:`.Path` object can
-for instance be inspected by using the :py:meth:`.Path.trajectory`
-method.
+:py:attr:`.PathEnsemble.last_path`. This :py:class:`.Path` object can,
+for instance, be inspected by using the :py:attr:`.Path.phasepoints`
+attribute which is a list of system snapshots.
 
 .. _figure-relation-pathensemble:
 
-.. figure:: /_static/img/api-parhensemble.png
+.. figure:: /_static/img/api-pathensemble.png
     :width: 35%
     :alt: Illustration of the relation PathEnsemble->Path
     :align: center
@@ -292,7 +293,8 @@ The :py:mod:`pyretis.simulation` sub-package
 defines classes which are used to set-up and define different types
 of simulations. Typically, such simulations will need to interact
 with and change the state of a given :py:class:`.System`. This
-interaction is carried out by a particular :py:class:`.EngineBase`
+interaction is carried out by a particular engine object which behaves
+like :py:class:`.EngineBase`
 from the :py:mod:`pyretis.engines` sub-package.
 The interaction between these classes are illustrated in the
 figure below:
@@ -313,7 +315,7 @@ figure below:
     and forces in the system.
 
 In this section, we will not give a complete example on how to
-create new simulation class or a new engine class. We refer the
+create a new simulation class or a new engine class. We refer the
 reader to the examples, in particular:
 
 * The section of the user guide which describes
@@ -335,7 +337,7 @@ A simulation will typically act on a :py:class:`.System`
 and alter its state. We will here just describe the generic
 base class :py:class:`.Simulation` and we refer the reader to
 the extended :ref:`pyretis API documentation <api-doc>` for
-information about specific simulation classes, for instance
+information about specific simulation classes, for instance,
 the :py:class:`.SimulationRETIS` class. The most commonly
 used methods from the :py:class:`.Simulation` are:
 
@@ -385,7 +387,7 @@ The following keywords are used:
 * ``result`` a string which labels the result in the dictionary returned by the
   methods :py:meth:`.Simulation.run()` or :py:meth:`.Simulation.step()`.
 
-Typically, when creating custom simulation, you will rewrite the
+Typically, when creating a custom simulation, you will rewrite the
 methods :py:meth:`.Simulation.run` and :py:meth:`.Simulation.step` to
 fit the custom simulation you are going to perform, rather than adding
 tasks. However, for interactive work, short examples etc.,
@@ -433,48 +435,32 @@ like :py:class:`.System`. Since this is described
 :ref:`elsewhere <user-guide-custom-order>` we will here just describe
 the usage of:
 
-* :py:meth:`.OrderParameter.add_orderparameter`
-  which can be used to add additional collective variables on the fly.
-* :py:meth:`.OrderParameter.calculate_all` which is used to
+* :py:meth:`.OrderParameter.calculate` which is used to
   calculate the order parameters.
+* :py:class:`.CompositeOrderParameter`
+  which can be used to combine several collective variables (e.g.
+  when you are interested in additional order parameters).
 
-Here is an example on how these can be used. First we
-just set-up and define a test-system and we create an
-order parameter, for simplicity we use the pre-defined
-:py:class:`.OrderParameterPosition` class:
-
-.. literalinclude:: /_static/examples/orderintro.py
-   :language: python
-   :lines: 5-13
-
-Next, we can calculate the order parameter as follows:
+First, we create an order parameter. For simplicity we use the pre-defined
+:py:class:`.Position` class:
 
 .. literalinclude:: /_static/examples/orderintro.py
    :language: python
-   :lines: 14-15
+   :lines: 5-8
 
-Note that both these lines return two values. This is
-because the :py:class:`.OrderParameterPosition` class also
-calculates the time derivative of the order parameter when
-:py:meth:`calculate() <.OrderParameterPosition.calculate>` or
-:py:meth:`calculate_all() <.OrderParameterPosition.calculate_all>`
-is called.
-
-To show how we can add additional variables, try the following:
+Next, we can calculate the order parameter as follows
+(the system we set up here is just for testing):
 
 .. literalinclude:: /_static/examples/orderintro.py
    :language: python
-   :lines: 18-32
+   :lines: 10-14
 
+Several order parameters can be combined by creating
+a :py:class:`.CompositeOrderParameter`. Below is an
+example of how this can be used:
 
-As demonstrated by this example, one can add additional order parameters
-on the fly if such are needed. Note also the difference between
-:py:meth:`calculate() <.OrderParameter.calculate>` and
-:py:meth:`calculate_all() <.OrderParameter.calculate_all>`: The latter
-will also calculate order parameters added using
-:py:meth:`add_orderparameter() <.OrderParameter.add_orderparameter>` while the former
-only calculate the order parameters defined within the
-:py:meth:`calculate() <.OrderParameter.calculate>` method.
+.. literalinclude:: /_static/examples/orderintro2.py
+   :language: python
 
 .. important:: The first order parameter returned from
    :py:meth:`calculate() <.OrderParameter.calculate>` is taken as the
@@ -508,21 +494,21 @@ the following sub-packages:
 * :py:mod:`pyretis.inout.analysisio` which
   handles the input and output needed for analysis.
 
+* :py:mod:`pyretis.inout.formats` for formatting and
+  presenting text-based output.
+
 * :py:mod:`pyretis.inout.plotting` which handles plotting of figures.
   It defines simple things like colors etc.
   for plotting. It also defines functions which can be used for
   specific plotting by the analysis and report tools.
 
 * :py:mod:`pyretis.inout.report` which is used to
-  generate reports with resuts from different simulations.
+  generate reports with results from different simulations.
 
 * :py:mod:`pyretis.inout.setup` which handles creation of objects
   from simulation settings.
 
-* :py:mod:`pyretis.inout.writers` for formatting and
-  presenting text based output.
-
-Again, we refer the reader to the
+Again, we refer to the
 :ref:`pyretis API documentation <api-inout>` for more
 information about these sub-packages.
 
@@ -544,10 +530,10 @@ The tools sub-package
 The tools library can be used to generate initial structures for a
 simulation. In the tools library the function :py:func:`.generate_lattice`
 is defined and it supports the creation of the following lattices where
-the short hand keywords (``sc``, ``sq`` etc.) are used to select a
+the shorthand keywords (``sc``, ``sq`` etc.) are used to select a
 specific lattice:
 
-- ``sc``: A simple cubic lattice .
+- ``sc``: A simple cubic lattice.
 
 - ``sq``: Square lattice (2D) with one atom in the unit cell.
 
@@ -597,7 +583,7 @@ If we wish to save a generated lattice, this can be done as follows
 Some examples of using the |pyretis| library
 --------------------------------------------
 
-Here, we show some examples on how we can perform some common tasks
+Here, we show some examples of how we can perform some common tasks
 using the |pyretis| library.
 
 Reversing a trajectory
@@ -605,14 +591,14 @@ Reversing a trajectory
 
 |pyretis| will not reverse backward trajectories during a simulation if
 you are using an external engine. For visualization purposes, it is very
-helpfull to reverse these trajectories before viewing them. This can be
+helpful to reverse these trajectories before viewing them. This can be
 accomplished with the |pyretis| library as follows:
 
 * For GROMACS .trr trajectories:
 
   .. code-block:: python
 
-     from pyretis.inout.writers.gromacsio import reverse_trr
+     from pyretis.inout.formats.gromacs import reverse_trr
      reverse_trr('trajB.trr', 'rev-trajB.trr')
 
   which will read the trajectory ``trajB.trr`` and store it as ``rev-trajB.trr``.
@@ -621,7 +607,7 @@ accomplished with the |pyretis| library as follows:
 
   .. code-block:: python
 
-     from pyretis.inout.writers.xyzio import reverse_xyz_file
+     from pyretis.inout.formats.xyz import reverse_xyz_file
      reverse_xyz_file('trajB.xyz', 'rev-trajB.xyz')
 
   which will read the trajectory ``trajB.xyz`` and store it as ``rev-trajB.xyz``.

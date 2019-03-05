@@ -2,7 +2,7 @@
 # Copyright (c) 2019, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Plot raw data from a simulation."""
-# pylint: disable=C0103
+# pylint: disable=invalid-name
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.cm import get_cmap
@@ -12,7 +12,7 @@ from pyretis.inout.settings import parse_settings_file
 
 
 def plot_potential(settings, axi, axj):
-    """Just plot the potential in the given axis"""
+    """Plot the potential in the given axis."""
     forcefield = create_force_field(settings)
     box = create_box(periodic=[False, False])
     fakesys = System(units='reduced', box=box)

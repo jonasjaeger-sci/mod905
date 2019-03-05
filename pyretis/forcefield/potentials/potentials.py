@@ -18,7 +18,7 @@ RectangularWell (:py:class:`.RectangularWell`)
 import logging
 import numpy as np
 from pyretis.forcefield.potential import PotentialFunction
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 
@@ -38,7 +38,7 @@ class DoubleWell(PotentialFunction):
     where :math:`x` is the position and :math:`a`, :math:`b`
     and :math:`c` are parameters for the potential. These parameters
     are stored as attributes of the class. Typically, both :math:`a`
-    and :math:`b` are positive quantities however, we do not explicitly
+    and :math:`b` are positive quantities, however, we do not explicitly
     check that here.
 
     Attributes
@@ -162,7 +162,7 @@ class RectangularWell(PotentialFunction):
         * `right`: Right boundary of the potential.
         * `largenumber`: Value of potential outside the boundaries.
 
-        It is possible to define left > right, however a warning will
+        It is possible to define left > right, however, a warning will
         be issued then.
 
     """

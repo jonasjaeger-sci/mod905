@@ -3,7 +3,7 @@
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Example of creating a lattice."""
 from pyretis.tools import generate_lattice
-from pyretis.inout.writers.xyzio import write_xyz_file
+from pyretis.inout.formats.xyz import write_xyz_file
 xyz, size = generate_lattice('diamond', [3, 3, 3], lcon=3.57)
 write_xyz_file('diamond.xyz', xyz, names=['C']*len(xyz), header='Diamond')
 

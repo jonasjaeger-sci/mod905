@@ -3,7 +3,7 @@
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """This module handles parsing of input settings.
 
-This module define the file format for PyRETIS input files.
+This module defines the file format for PyRETIS input files.
 
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -21,7 +21,7 @@ import pprint
 import re
 from pyretis.inout.common import create_backup
 from pyretis.info import PROGRAM_NAME, URL
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 
@@ -34,15 +34,14 @@ HEADING = '{}\n{}\nFor more info, please see: {}\nHave Fun!'
 SECTIONS['heading'] = {'text': HEADING.format(TITLE, '=' * len(TITLE), URL)}
 
 SECTIONS['simulation'] = {
-    'task': None,
+    'task': 'md',
     'steps': None,
     'startcycle': None,
     'endcycle': None,
     'restart': None,
     'exe-path': None,
     'interfaces': None,
-    'ensemble': None,
-    'detect': None
+    'rgen': None,
 }
 
 SECTIONS['system'] = {
@@ -67,7 +66,7 @@ SECTIONS['engine'] = {
 SECTIONS['box'] = {
     'low': None,
     'high': None,
-    'length': None,
+    'cell': None,
     'periodic': None
 }
 
@@ -80,7 +79,9 @@ SECTIONS['particles'] = {
     'npart': None
 }
 
-SECTIONS['forcefield'] = {'description': None}
+SECTIONS['forcefield'] = {
+    'description': None
+}
 
 SECTIONS['potential'] = {
     'class': None,
@@ -89,12 +90,14 @@ SECTIONS['potential'] = {
 
 SECTIONS['orderparameter'] = {
     'class': None,
-    'module': None
+    'module': None,
+    'name': 'Order Parameter'
 }
 
 SECTIONS['collective-variable'] = {
     'class': None,
-    'module': None
+    'module': None,
+    'name': None
 }
 
 
@@ -111,23 +114,35 @@ SECTIONS['output'] = {
 }
 
 SECTIONS['tis'] = {
+    'shooting-move': 'shoot',
+    'ensemble_number': None,
+    'detect': None,
     'freq': None,
     'maxlength': None,
     'aimless': True,
     'allowmaxlength': False,
     'zero_momentum': False,
     'rescale_energy': False,
+    'n_jumps': None,
+    'interface_sour': None,
     'sigma_v': -1,
-    'seed': 0
+    'seed': 0,
+    'rgen': None,
 }
 
-SECTIONS['initial-path'] = {'method': None}
+SECTIONS['initial-path'] = {
+    'method': None
+}
 
 SECTIONS['retis'] = {
     'swapfreq': None,
     'relative_shoots': None,
     'nullmoves': None,
     'swapsimul': None
+}
+
+SECTIONS['ensemble'] = {
+    'interface': None
 }
 
 SECTIONS['analysis'] = {
@@ -149,7 +164,7 @@ SPECIAL_KEY = {'parameter'}
 
 # This dictionary contains sections where the keywords
 # can not be defined before we parse the input. The reason
-# for this is that we support user defined external modules
+# for this is that we support user-defined external modules
 # and that the user should have the freedom to define keywords
 # for these modules:
 ALLOW_MULTIPLE = {
@@ -158,6 +173,7 @@ ALLOW_MULTIPLE = {
     'engine',
     'collective-variable',
     'initial-path',
+    'ensemble'
 }
 
 # This dictionary contains sections that can be defined
@@ -166,7 +182,41 @@ ALLOW_MULTIPLE = {
 SPECIAL_MULTIPLE = {
     'potential',
     'collective-variable',
+    'ensemble'
 }
+
+
+def parse_settings_file(filename, add_default=True):
+    """Parse settings from a file name.
+
+    Here, we read the file line-by-line and check if the current line
+    contains a keyword, if so, we parse that keyword.
+
+    Parameters
+    ----------
+    filename : string
+        The file to parse.
+    add_default : boolean
+        If True, we will add default settings as well for keywords
+        not found in the input.
+
+    Returns
+    -------
+    settings : dict
+        A dictionary with settings for PyRETIS.
+
+    """
+    with open(filename, 'r') as fileh:
+        raw_sections = _parse_sections(fileh)
+    settings = _parse_all_raw_sections(raw_sections)
+    if add_default:
+        logger.debug('Adding default settings to settings read from: %s',
+                     filename)
+        add_default_settings(settings)
+        _check_for_bullshitt(settings)
+    if settings['simulation']['task'] in {'retis'}:
+        _fill_up_tis_and_retis_settings(settings)
+    return _clean_settings(settings)
 
 
 def parse_primitive(text):
@@ -213,7 +263,7 @@ def look_for_keyword(line):
     Returns
     -------
     out[0] : string
-        The matched keyword. It may contains spaces and it will also
+        The matched keyword. It may contain spaces and it will also
         contain the matched `=` seperator.
     out[1] : string
         A lower-case, stripped version of `out[0]`.
@@ -221,7 +271,7 @@ def look_for_keyword(line):
         `True` if we found a possible keyword.
 
     """
-    # match a word followed by a '='
+    # Match a word followed by a '=':
     key = re.match(r'(.*?)=', line)
     if key:
         keyword = ''.join([key.group(1), '='])
@@ -242,7 +292,7 @@ def _parse_sections(inputtxt):
     Parameters
     ----------
     inputtxt : list of strings or iterable file object
-        The raw data to parse
+        The raw data to parse.
 
     Returns
     -------
@@ -311,6 +361,12 @@ def _merge_section_text(raw_section):
     This method supports keyword settings that are split across several
     lines. Here we merge these lines by assuming that keywords separate
     different settings.
+
+    Parameters
+    ----------
+    raw_section : string
+        The text we will merge.
+
     """
     merged = []
     for line in raw_section:
@@ -331,7 +387,6 @@ def _parse_section_default(raw_section):
     ----------
     raw_section : list of strings
         The text data for a given section which will be parsed.
-
     section : string
         A text identifying the section we are parsing for. This is
         used to get a list over valid keywords for the section.
@@ -354,8 +409,9 @@ def _parse_section_default(raw_section):
                     if keyword not in setting:
                         setting[keyword] = {}
                     var = line.split(keyword)[1].split()[0]
-                    # yes, in some cases we really want an int
-                    # this only work for positive numbers.
+                    # Yes, in some cases we really want an integer.
+                    # Note: This will only work for positive numbers
+                    # (which we are assuming here).
                     if var.isdigit():
                         setting[keyword][int(var)] = parsed
                     else:
@@ -435,7 +491,161 @@ def _parse_all_raw_sections(raw_sections):
     return settings
 
 
-def _add_default_settings(settings):
+def _check_for_bullshitt(settings):
+    """Do what is stated.
+
+    Just for the input settings.
+
+    Parameters
+    ----------
+    settings : dict
+        The current input settings.
+
+    """
+    msg = [' ']
+    success = True
+
+    if (settings['simulation']['task'] in {'retis', 'tis'} and
+            len(settings['simulation']['interfaces']) < 3):
+        msg += ['Insufficient number of interfaces for {}'
+                .format(settings['simulation']['task'])]
+        success = False
+
+    if settings['simulation']['task'] in {'tis', 'retis'}:
+        if not is_sorted(settings['simulation']['interfaces']):
+            msg += ['Interface lambda positions in the simulation ']
+            msg += ['entry are NOT sorted (small to large)']
+            success = False
+
+        if 'ensemble' in settings:
+            savelambda = []
+            for ens in settings['ensemble']:
+                try:
+                    savelambda.append(ens['interface'])
+                    if not ens['interface'] \
+                            in settings['simulation']['interfaces']:
+                        msg += ['An ensemble with declared interface ']
+                        msg += ['is not present in the simulation interface ']
+                        msg += ['list']
+                        success = False
+                except ImportError:
+                    msg += ['An ensemble has been introduced without (!!!)']
+                    msg += [' its interface']
+                    success = False
+
+            if not is_sorted(savelambda):
+                msg += ['Interface positions in ensemble entries are NOT ']
+                msg += ['sorted (small to large)']
+                success = False
+
+    if not success:
+        msgtxt = '\n'.join(msg)
+        logger.critical(msgtxt)
+
+
+def _fill_up_tis_and_retis_settings(settings):
+    """Make the life of sloppy users easier.
+
+    The full input set-up will be here completed.
+
+    Parameters
+    ----------
+    settings : dict
+        The current input settings.
+
+    Returns
+    -------
+    None, but this method might add data to the input settings.
+
+    """
+    if 'ensemble' in settings:
+        ensemble_to_add = len(settings['simulation']['interfaces'])\
+                          - len(settings['ensemble'])
+
+    else:
+        settings['ensemble'] = [{'interface': None}]
+        ensemble_to_add = len(settings['simulation']['interfaces']) - 1
+
+    for _ in range(ensemble_to_add):
+        settings['ensemble'].append({'interface': None})
+
+    assign = len(settings['simulation']['interfaces'])
+    for ens in reversed(settings['ensemble']):
+        assign -= 1
+        if ens['interface'] in settings['simulation']['interfaces']:
+            shbe = settings['simulation']['interfaces'].index(ens['interface'])
+            settings['ensemble'][assign], settings['ensemble'][shbe] =\
+                settings['ensemble'][shbe], settings['ensemble'][assign]
+
+    ensemble_save = []
+    for i_ens, ens in enumerate(settings['ensemble']):
+        ens['interface'] = settings['simulation']['interfaces'][i_ens]
+        ensemble_save.append(ens.copy())
+        settings['ensemble'][i_ens] = {}
+        del ens
+
+    for i_ens, ens in enumerate(ensemble_save):
+        for key in list(ens):
+            key_list = key.split()
+            if key_list[0] in SPECIAL_MULTIPLE:
+                key_list[0] += '0'
+
+            clean_key = re.sub('([0-9])', '', key_list[0])
+            if clean_key in SPECIAL_MULTIPLE:
+                clean_num = int(re.sub('[^0-9]', '', key_list[0]))
+                if clean_key not in ensemble_save[i_ens]:
+                    ensemble_save[i_ens][clean_key] = []
+                while len(ensemble_save[i_ens][clean_key]) < clean_num + 1:
+                    ensemble_save[i_ens][clean_key].append({})
+                if len(key.split()) == 2:
+                    enst = ensemble_save[i_ens][clean_key][clean_num]
+                    enst[key_list[1]] = ens[key]
+
+                if len(key.split()) == 3:
+                    for key_run in range(clean_num+1):
+                        if key_run == clean_num:
+                            enst = ensemble_save[i_ens][clean_key][key_run]
+                            if not key_list[1] in enst:
+                                enst[key_list[1]] = {}
+                            enst[key_list[1]][key_list[2]] = ens[key]
+                del ens[key]
+
+            else:
+                if len(key.split()) == 2:
+                    if not key_list[0] in ensemble_save:
+                        ensemble_save[i_ens][key_list[0]] = {}
+                    ensemble_save[i_ens][key_list[0]][key_list[1]] = ens[key]
+                    del ens[key]
+
+    for i_ens, ens in enumerate(ensemble_save):
+
+        for key in settings:
+            if key in ensemble_save[i_ens]:
+                if key not in SPECIAL_MULTIPLE:
+                    ensemble_save[i_ens] = {**{key: settings[key]}.copy(),
+                                            **ensemble_save[i_ens].copy()}
+                else:
+                    for i_sub in range(len(settings[key])):
+                        if i_sub < len(ensemble_save[i_ens][key]):
+                            ensemble_save[i_ens][key][i_sub] = {
+                                **settings[key][i_sub].copy(),
+                                **ensemble_save[i_ens][key][i_sub]
+                            }
+
+                        # If the ensemble save has not the right length:
+                        else:
+                            ensemble_save[i_ens][key].append({
+                                **settings[key][i_sub].copy()})
+
+        ensemble_save[i_ens] = {**settings.copy(),
+                                **ensemble_save[i_ens].copy()}
+        del ensemble_save[i_ens]['ensemble']
+
+    for i_ens, ens in enumerate(ensemble_save):
+        settings['ensemble'][i_ens] = ensemble_save[i_ens].copy()
+
+
+def add_default_settings(settings):
     """Add default settings.
 
     Parameters
@@ -476,9 +686,9 @@ def _clean_settings(settings):
 
     """
     settingc = {}
-    # Add other sections
+    # Add other sections:
     for sec in settings:
-        if sec not in SECTIONS:  # Well, ignore unknown ones
+        if sec not in SECTIONS:  # Well, ignore unknown ones:
             msgtxt = 'Ignoring unknown section "{}"'.format(sec)
             logger.warning(msgtxt)
             continue
@@ -486,12 +696,12 @@ def _clean_settings(settings):
             settingc[sec] = [i for i in settings[sec]]
         else:
             settingc[sec] = {}
-            if sec in ALLOW_MULTIPLE:  # Here, just add them all
+            if sec in ALLOW_MULTIPLE:  # Here, just add multiple sections:
                 for key in settings[sec]:
                     settingc[sec][key] = settings[sec][key]
             else:
                 for key in settings[sec]:
-                    if key not in SECTIONS[sec]:  # Ignore junk
+                    if key not in SECTIONS[sec]:  # Ignore junk:
                         msgtxt = 'Ignoring unknown "{}" in "{}"'.format(key,
                                                                         sec)
                         logger.warning(msgtxt)
@@ -501,35 +711,6 @@ def _clean_settings(settings):
     for key in to_remove:
         settingc.pop(key, None)
     return settingc
-
-
-def parse_settings_file(filename, add_default=True):
-    """Parse settings from a file name.
-
-    Here, we read the file line-by-line and check if the current line
-    contains a keyword, if so, we parse that keyword.
-
-    Parameters
-    ----------
-    filename : string
-        The file to parse.
-    add_default : boolean
-        If True, we will add default settings as well for keywords
-        not found in the input.
-
-    Returns
-    -------
-    settings : dict
-        A dictionary with settings for PyRETIS.
-
-    """
-    with open(filename, 'r') as fileh:
-        raw_sections = _parse_sections(fileh)
-    settings = _parse_all_raw_sections(raw_sections)
-    if add_default:
-        logger.debug('Adding default settings')
-        _add_default_settings(settings)
-    return _clean_settings(settings)
 
 
 def settings_to_text(settings):
@@ -554,7 +735,10 @@ def settings_to_text(settings):
             for sec in settings[section]:
                 title = section.capitalize()
                 line = '-' * len(title)
-                raw_data = section_to_text(sec)
+                if section == 'ensemble':
+                    raw_data = double_section_to_text(sec)
+                else:
+                    raw_data = section_to_text(sec)
                 txt.append('{}\n{}\n{}\n\n'.format(title, line, raw_data))
         elif section == 'heading':
             txt.append('{}\n\n'.format(settings[section]['text']))
@@ -567,6 +751,42 @@ def settings_to_text(settings):
             raw_data = section_to_text(settings[section])
             txt.append('{}\n{}\n{}\n\n'.format(title, line, raw_data))
     return ''.join(txt)
+
+
+def double_section_to_text(settings):
+    """Turn settings for the ensemble into text for output.
+
+    Parameters
+    ----------
+    settings : dict
+        A dictionary with settings to transform.
+    prefix : string, optional
+        If this string is given, it will be prepended to
+        the setting we are writing.
+
+    Returns
+    -------
+    out : string
+        Formatted text representing the settings.
+
+    """
+    data = []
+    for key in settings:
+        if key == 'interface':
+            pretty = pprint.pformat(settings[key], width=67)
+            pretty = pretty.replace('\n', '\n' + ' ' * 67)
+            txt = '{} = {}'.format(key, pretty)
+            data.append(txt)
+        elif key not in SPECIAL_MULTIPLE:
+            txt = section_to_text(settings[key], prefix=key)
+            data.append(txt)
+        else:
+            for i, sub_key in enumerate(settings[key]):
+                txt = section_to_text(sub_key,
+                                      prefix=('{}{:02d}'.format(key, i)))
+                data.append(txt)
+
+    return '\n'.join(data)
 
 
 def section_to_text(settings, prefix=None):
@@ -589,7 +809,10 @@ def section_to_text(settings, prefix=None):
     data = []
     for key in settings:
         if key == 'parameter':
-            txt = section_to_text(settings[key], prefix='parameter')
+            if prefix is not None:
+                txt = section_to_text(settings[key], prefix=prefix+' '+key)
+            else:
+                txt = section_to_text(settings[key], prefix='parameter')
         else:
             if prefix is not None:
                 leng = len(str(key)) + 3 + len(prefix) + 1
@@ -601,7 +824,7 @@ def section_to_text(settings, prefix=None):
                 txt = '{} {} = {}'.format(prefix, key, pretty)
             else:
                 txt = '{} = {}'.format(key, pretty)
-        if len(txt) >= 5:  # Shortest is a = 1
+        if len(txt) >= 5:  # Shortest text, e.g: "a = 1".
             data.append(txt)
     return '\n'.join(data)
 
@@ -609,15 +832,15 @@ def section_to_text(settings, prefix=None):
 def write_settings_file(settings, outfile, backup=True):
     """Write simulation settings to an output file.
 
-    This will write a dictionary to a output file in the PyRETIS input
+    This will write a dictionary to an output file in the PyRETIS input
     file format.
 
     Parameters
     ----------
     settings : dict
-        The dictionary to write
+        The dictionary to write.
     outfile : string
-        The file to create
+        The file to create.
     backup : boolean, optional
         If True, we will backup existing files with the same file
         name as the provided file name.
@@ -631,7 +854,7 @@ def write_settings_file(settings, outfile, backup=True):
     if backup:
         msg = create_backup(outfile)
         if msg:
-            logger.warning(msg)
+            logger.info(msg)
     with open(outfile, 'w') as fileh:
         txt = settings_to_text(settings)
         fileh.write(txt.strip())
@@ -662,20 +885,6 @@ def copy_settings(settings):
     return lsetting
 
 
-def is_single_tis(settings):
-    """Return True if settings define a single TIS simulation.
-
-    Parameters
-    ----------
-    settings : dict
-        This is the settings for the simulation.
-
-    Returns
-    -------
-    out : boolean
-        True if the settings define a single TIS simulation, False
-        otherwise.
-
-    """
-    return (settings['simulation']['task'] == 'tis' and
-            len(settings['simulation']['interfaces']) <= 3)
+def is_sorted(lll):
+    """Check if a list is sorted."""
+    return all(aaa <= bbb for aaa, bbb in zip(lll[:-1], lll[1:]))

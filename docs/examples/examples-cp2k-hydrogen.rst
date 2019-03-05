@@ -56,7 +56,7 @@ Here, we make use of the following keywords:
 
 * ``timestep = 0.5`` which is the time step to use in the CP2K simulations.
 
-* ``subcycles = 3`` which is the number of sub cycles CP2K will complete
+* ``subcycles = 3`` which is the number of subcycles CP2K will complete
   before |pyretis| re-calculates the order parameter.
 
 * ``extra_files = ['BASIS_SET', 'GTH_POTENTIALS']`` which contain extra
@@ -67,7 +67,7 @@ Here, we make use of the following keywords:
   that all the files you list here are included in the ``cp2k_input``
   directory.
 
-This specifies and select the CP2K engine for use with |pyretis|.
+This specifies and selects the CP2K engine for use with |pyretis|.
 The full input file for the RETIS simulation is given below:
 
 .. pyretis-collapse-block::

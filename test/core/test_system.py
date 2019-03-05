@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2019, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
-"""Test the system class from pyretis.core"""
+"""Test the system class from pyretis.core.system"""
+import copy
 import logging
 import unittest
 import numpy as np
@@ -45,7 +46,7 @@ class FakePotential(PotentialFunction):
 
 def prepare_test_system():
     """Create system with some particles."""
-    box = create_box(length=[10., 10., 10])
+    box = create_box(cell=[10., 10., 10])
     particles = Particles(dim=3)
     particles.add_particle(np.zeros(3), np.zeros(3), np.zeros(3))
     particles.add_particle(np.zeros(3), np.zeros(3), np.zeros(3))
@@ -81,7 +82,7 @@ class SystemTest(unittest.TestCase):
 
     def test_restart_info(self):
         """Test that we can create restart info."""
-        box = create_box(length=[1, 2, 3])
+        box = create_box(cell=[1, 2, 3])
         syst = System(units='lj', box=box, temperature=10.)
         restart = syst.restart_info()
         correct = {
@@ -186,6 +187,43 @@ class SystemTest(unittest.TestCase):
         syst.update_box(length2)
         for i, j in zip(syst.box.cell, length):
             self.assertEqual(i, j)
+
+    def test_system_copy(self):
+        """Test that we can copy a system."""
+        system = prepare_test_system()
+        system.order = 1234
+        system_copy = system.copy()
+        self.assertIsNot(system, system_copy)
+        self.assertEqual(system, system_copy)
+        # Check that order parameter was also copied:
+        self.assertEqual(system_copy.order, system.order)
+        # Test that a change in one of the systems does not alter the other:
+        self.assertEqual(system.temperature['set'],
+                         system_copy.temperature['set'])
+        system.temperature['set'] = 11
+        self.assertNotEqual(system.temperature['set'],
+                            system_copy.temperature['set'])
+        self.assertNotEqual(system, system_copy)
+        system.temperature['dof'] = np.array([2, 2, 2])
+        # By construction, this should fail:
+        system_copy = system.copy()
+        system.forcefield = copy.deepcopy(system_copy.forcefield)
+        self.assertNotEqual(system, system_copy)
+        # Test what happens is some attribute is missing:
+        del system.temperature
+        system_copy = system.copy()
+        # Systems should not be equal in this case since one is
+        # missing an essential attribute:
+        self.assertNotEqual(system, system_copy)
+        # Test if particles/box are None:
+        system = System()
+        system_copy = system.copy()
+        self.assertEqual(system, system_copy)
+        # Test if articles/box are missing:
+        del system.box
+        del system.particles
+        with self.assertRaises(AttributeError):
+            system_copy = system.copy()
 
 
 if __name__ == '__main__':

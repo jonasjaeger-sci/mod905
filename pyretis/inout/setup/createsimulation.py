@@ -1,38 +1,38 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2019, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
-"""This module handles creation of simulations from settings.
+"""This module handles the creation of simulations from settings.
 
-The different simulations are defined as objects which inherits from the
-base :py:class:`.Simulation` class defined in
-:py:mod:`pyretis.simulation.simulation`.
-Here, we are treat each simulation with a special case since they are
-indeed special :-)
+The different simulations are defined as objects which inherit
+from the base :py:class:`.Simulation` class defined in
+:py:mod:`pyretis.simulation.simulation`. Here, we are treating
+each simulation with a special case.
 
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 create_simulation (:py:func:`.create_simulation`)
     Method for creating a simulation object from settings.
+
 """
 import logging
 from pyretis.core.random_gen import create_random_generator
 from pyretis.simulation.md_simulation import (
     SimulationNVE,
-    SimulationMDFlux
+    SimulationMDFlux,
+    SimulationMD,
 )
 from pyretis.simulation.mc_simulation import UmbrellaWindowSimulation
 from pyretis.simulation.path_simulation import (
     SimulationSingleTIS,
-    SimulationRETIS
+    SimulationRETIS,
 )
 from pyretis.core.pathensemble import (
     get_path_ensemble_class,
-    PATH_DIR_FMT
 )
 from pyretis.inout.setup.common import create_orderparameter
-from pyretis.inout.settings import copy_settings, is_single_tis
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+from pyretis.inout.settings import copy_settings
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 
@@ -40,7 +40,7 @@ __all__ = ['create_simulation']
 
 
 def create_path_ensemble(settings, ensemble_type):
-    """Create a new path ensemble from simulation settings.
+    """Create a single path ensemble from simulation settings.
 
     Parameters
     ----------
@@ -60,24 +60,33 @@ def create_path_ensemble(settings, ensemble_type):
     interfaces = settings['simulation']['interfaces']
     exe_dir = settings['simulation'].get('exe-path', '')
     if len(interfaces) != 3:
-        msgtxt = ('Wrong number of interfaces given. Expected 3 '
-                  'got {}'.format(len(interfaces)))
-        logger.error(msgtxt)
+        msgtxt = ('Wrong number of interfaces given for a TIS simulation. '
+                  'Expected 3, got {}. Maybe you need task = "tis-multiple" '
+                  'or "retis"').format(len(interfaces))
         raise ValueError(msgtxt)
-    if 'detect' not in settings['simulation']:
+    if 'detect' not in settings['tis']:
         detect = interfaces[-1]
-        msgtxt = ('Detect-interface not specified, '
-                  'using "product" interface: {}'.format(detect))
-        logger.warning(msgtxt)
+        logger.warning(
+            ('Detect interface not specified for the ensemble.'
+             ' Using the "product" interface: %s'), detect
+        )
     else:
-        detect = settings['simulation']['detect']
-    if 'ensemble' not in settings['simulation']:
+        detect = settings['tis']['detect']
+    if 'ensemble_number' not in settings['tis']:
         ensemble_name = 1
-        msgtxt = ('Ensemble name not specified, '
-                  'using default ensemble "{}"'.format(ensemble_name))
-        logger.warning(msgtxt)
+        logger.warning(
+            ('Ensemble name not specified, '
+             'using default ensemble "%s"'), ensemble_name
+        )
     else:
-        ensemble_name = int(settings['simulation']['ensemble'])
+        if settings['tis']['ensemble_number'] is None:
+            ensemble_name = 1
+            logger.warning(
+                ('Ensemble name not specified, '
+                 'using default ensemble "%s"'), ensemble_name
+            )
+        else:
+            ensemble_name = int(settings['tis']['ensemble_number'])
     klass = get_path_ensemble_class(ensemble_type)
     return klass(ensemble_name, interfaces,
                  detect=detect, exe_dir=exe_dir)
@@ -85,11 +94,11 @@ def create_path_ensemble(settings, ensemble_type):
 
 def create_path_ensembles(interfaces, ensemble_type, include_zero=False,
                           exe_dir=None):
-    """Create :py:class:`.PathEnsemble` like objects..
+    """Create set set of path ensembles.
 
     This function will create and return a set of objects representing
     path ensembles for a given set of interfaces. This is useful when
-    setting up TIS/RETIS imulations. Here we assume that the given
+    setting up TIS/RETIS simulations. Here we assume that the given
     interfaces define the path ensembles as follows:
     ``[0^-] | [0^+] | [1^+] | ... | [(n-1)^+] | state B``, where ``|``
     is the specified interface locations in the input `interfaces`.
@@ -101,20 +110,21 @@ def create_path_ensembles(interfaces, ensemble_type, include_zero=False,
     Parameters
     ----------
     interfaces : list of floats
-        `interfaces[i]` separates the [(i-1)^+] and [i^+] interfaces.
+        The interfaces we use to create path ensembles.
+        ``interfaces[i]`` separates the [(i-1)^+] and [i^+] interfaces.
     ensemble_type : string
         The kind of ensemble we are creating. This is typically defined
         by the engine.
     include_zero : boolean, optional
-        If `include_zero` is True, we include path ensemble [0^-].
+        If `include_zero` is True, we include the [0^-] path ensemble.
     exe_dir : string, optional
         This string can be used to tell the path ensemble object
-        where it is executed.
+        where it is executed and where it can store files.
 
     Returns
     -------
     ensembles : list of objects like :py:class:`.PathEnsemble`
-        The generated (empty) path ensemble objects.
+        The generated path ensemble objects.
     detect : list of floats
         These are interfaces that can be used for an analysis, i.e. for
         detection and matching of probabilities.
@@ -160,13 +170,47 @@ def create_nve_simulation(settings, system, engine):
 
     """
     sim = settings['simulation']
+    order_function = create_orderparameter(settings)
     for key in ('steps',):
         if key not in sim:
             msgtxt = 'Simulation setting "{}" is missing!'.format(key)
             logger.critical(msgtxt)
             raise ValueError(msgtxt)
-    return SimulationNVE(system, engine, steps=sim['steps'],
+    return SimulationNVE(system, engine,
+                         order_function=order_function,
+                         steps=sim['steps'],
                          startcycle=sim.get('startcycle', 0))
+
+
+def create_md_simulation(settings, system, engine):
+    """Set up and create a generic MD simulation.
+
+    Parameters
+    ----------
+    settings : dict
+        The settings needed to set up the simulation.
+    system : object like :py:class:`.System`
+        The system we are going to simulate.
+    engine : object like :py:class:`.EngineBase`
+        The engine to use for the simulation.
+
+    Returns
+    -------
+    out : object like :py:class:`.SimulationMD`
+        The object representing the simulation to run.
+
+    """
+    sim = settings['simulation']
+    order_function = create_orderparameter(settings)
+    for key in ('steps',):
+        if key not in sim:
+            msgtxt = 'Simulation setting "{}" is missing!'.format(key)
+            logger.critical(msgtxt)
+            raise ValueError(msgtxt)
+    return SimulationMD(system, engine,
+                        order_function=order_function,
+                        steps=sim['steps'],
+                        startcycle=sim.get('startcycle', 0))
 
 
 def create_mdflux_simulation(settings, system, engine):
@@ -188,10 +232,7 @@ def create_mdflux_simulation(settings, system, engine):
 
     """
     order_function = create_orderparameter(settings)
-    if order_function is None:
-        msgtxt = 'No order parameter created!'
-        logger.critical(msgtxt)
-        raise ValueError(msgtxt)
+    engine.can_use_order_function(order_function)
     sim = settings['simulation']
     for key in ('steps', 'interfaces'):
         if key not in sim:
@@ -228,8 +269,9 @@ def create_umbrellaw_simulation(settings, system):
             logger.critical(msgtxt)
             raise ValueError(msgtxt)
     return UmbrellaWindowSimulation(system, sim['umbrella'],
-                                    sim['over'], rgen,
+                                    sim['over'],
                                     sim['maxdx'],
+                                    rgen=rgen,
                                     mincycle=sim['mincycle'],
                                     startcycle=sim.get('startcycle', 0))
 
@@ -262,17 +304,17 @@ def create_tis_simulations(settings, system, engine):
     interfaces = settings['simulation']['interfaces']
     reactant = interfaces[0]
     product = interfaces[-1]
-    if is_single_tis(settings):
+    if settings['simulation']['task'] == 'tis':
         return _create_tis_single_simulation(settings, system, engine)
     for i, middle in enumerate(interfaces[:-1]):
         lsetting = copy_settings(settings)
+        lsetting['simulation']['task'] = 'tis'
         lsetting['simulation']['interfaces'] = [reactant, middle, product]
-        lsetting['simulation']['ensemble'] = i + 1
-        lsetting['output']['directory'] = PATH_DIR_FMT.format(i + 1)
+        lsetting['tis']['ensemble_number'] = i + 1
         try:
-            lsetting['simulation']['detect'] = interfaces[i + 1]
+            lsetting['tis']['detect'] = interfaces[i + 1]
         except IndexError:
-            lsetting['simulation']['detect'] = product
+            lsetting['tis']['detect'] = product
         sim_settings.append(lsetting)
     return sim_settings
 
@@ -296,10 +338,7 @@ def _create_tis_single_simulation(settings, system, engine):
 
     """
     order_function = create_orderparameter(settings)
-    if order_function is None:
-        msgtxt = 'No order parameter created!'
-        logger.critical(msgtxt)
-        raise ValueError(msgtxt)
+    engine.can_use_order_function(order_function)
     path_ensemble = create_path_ensemble(settings, engine.engine_type)
     rgen = create_random_generator(settings['tis'])
     sim = settings['simulation']
@@ -310,8 +349,8 @@ def _create_tis_single_simulation(settings, system, engine):
             raise ValueError(msgtxt)
     return SimulationSingleTIS(system, order_function, engine,
                                path_ensemble,
-                               rgen,
                                settings,
+                               rgen=rgen,
                                steps=sim['steps'],
                                startcycle=sim.get('startcycle', 0))
 
@@ -335,10 +374,7 @@ def create_retis_simulation(settings, system, engine):
 
     """
     order_function = create_orderparameter(settings)
-    if order_function is None:
-        msgtxt = 'No order parameter created!'
-        logger.critical(msgtxt)
-        raise ValueError(msgtxt)
+    engine.can_use_order_function(order_function)
     sim = settings['simulation']
     exe_dir = sim.get('exe-path', '')
     path_ensembles, _ = create_path_ensembles(sim['interfaces'],
@@ -353,8 +389,8 @@ def create_retis_simulation(settings, system, engine):
             raise ValueError(msgtxt)
     return SimulationRETIS(system, order_function, engine,
                            path_ensembles,
-                           rgen,
                            settings,
+                           rgen=rgen,
                            steps=sim['steps'],
                            startcycle=sim.get('startcycle', 0))
 
@@ -391,6 +427,8 @@ def create_simulation(settings, kwargs):
     sim_type = settings['simulation']['task'].lower()
 
     sim_map = {
+        'md': {'function': create_md_simulation,
+               'args': ('system', 'engine')},
         'md-nve': {'function': create_nve_simulation,
                    'args': ('system', 'engine')},
         'md-flux': {'function': create_mdflux_simulation,
@@ -399,6 +437,8 @@ def create_simulation(settings, kwargs):
                            'args': ('system',)},
         'tis': {'function': create_tis_simulations,
                 'args': ('system', 'engine')},
+        'tis-multiple': {'function': create_tis_simulations,
+                         'args': ('system', 'engine')},
         'retis': {'function': create_retis_simulation,
                   'args': ('system', 'engine')}
     }

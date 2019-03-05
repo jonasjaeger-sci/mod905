@@ -41,6 +41,7 @@ After cloning the repository, PyRETIS can be installed
 as follows:
 
 ```
+cd pyretis
 pip install . 
 ```
 
@@ -101,6 +102,6 @@ the ``docs`` directory) by:
 make html
 ```
 
-Thils will generate the documentation in HTML format
+This will generate the documentation in HTML format
 in the directory ``docs/_build/html/``. The documentation
 can be viewed by opening the file ``docs/_build/html/index.html``.

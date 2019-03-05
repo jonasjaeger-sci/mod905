@@ -7,18 +7,18 @@ Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 read_restart_file (:py:func:`.read_restart_file`)
-    Method for reading restart information from a file.
+    A method for reading restart information from a file.
 
 write_restart_file (:py:func:`.write_restart_file`)
-    Method for writing the restart file.
+    A method for writing the restart file.
 
-write_path_ensemble_restart (:py:func`.write_path_ensemble_restart`)
-    Method for writing restart files for path ensembles.
+write_path_ensemble_restart (:py:func:`.write_path_ensemble_restart`)
+    A method for writing restart files for path ensembles.
 """
 import logging
 import os
 import pickle
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 
@@ -57,10 +57,16 @@ def write_path_ensemble_restart(path_ensemble):
         The path ensemble we are writing restart info for.
 
     """
-    filename = os.path.join(
-        path_ensemble.ensemble_name_simple,
-        'ensemble.restart'
-    )
+    if path_ensemble.directory['path-ensemble'] is None:
+        filename = os.path.join(
+            path_ensemble.ensemble_name_simple,
+            'ensemble.restart'
+        )
+    else:
+        filename = os.path.join(
+            path_ensemble.directory['path-ensemble'],
+            'ensemble.restart'
+        )
     with open(filename, 'wb') as outfile:
         pickle.dump(path_ensemble.restart_info(), outfile)
 

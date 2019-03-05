@@ -15,14 +15,16 @@ initiate_instance (:py:func:`.initiate_instance`)
 
 generic_factory (:py:func:`.generic_factory`)
     Create instances of classes based on settings.
+
+compare_objects (:py:func`.compare_objects`)
+    Method to compare two PyRETIS objects.
 """
 import logging
 import inspect
-from pyretis.core.path import Path, PathExt
-from pyretis.core.reservoirpath import ReservoirPath
+import numpy as np
 
 
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 
@@ -37,7 +39,7 @@ def _arg_kind(arg):
 
     Parameters
     ----------
-    arg : object like :py:class:`inspect.Parameter`.
+    arg : object like :py:class:`inspect.Parameter`
         The argument we will determine the type of.
 
     Returns
@@ -59,7 +61,7 @@ def _arg_kind(arg):
     elif arg.kind == arg.VAR_KEYWORD:
         kind = 'keywords'
     elif arg.kind == arg.KEYWORD_ONLY:
-        # we treat these as keyword arguments:
+        # We treat these as keyword arguments:
         kind = 'kwargs'
     return kind
 
@@ -67,8 +69,8 @@ def _arg_kind(arg):
 def inspect_function(function):
     """Return arguments/kwargs of a given function.
 
-    This method is intended for usage where we are checking that we can
-    call certain function. This method will return arguments and
+    This method is intended for use where we are checking that we can
+    call a certain function. This method will return arguments and
     keyword arguments a function expects. This method may be fragile -
     we assume here that we are not really interested in args and
     kwargs and we do not look for more information about these here.
@@ -76,7 +78,7 @@ def inspect_function(function):
     Parameters
     ----------
     function : callable
-        The function to analyse.
+        The function to inspect.
 
     Returns
     -------
@@ -157,7 +159,7 @@ def initiate_instance(klass, settings):
 
     """
     args, kwargs = _pick_out_arg_kwargs(klass, settings)
-    # Ready to initiate!
+    # Ready to initiate:
     msg = 'Initiated "%s" from "%s" %s'
     name = klass.__name__
     mod = klass.__module__
@@ -180,7 +182,7 @@ def generic_factory(settings, object_map, name='generic'):
 
     This method is intended as a semi-generic factory for creating
     instances of different objects based on simulation input settings.
-    The input settings defines what classes should be created and
+    The input settings define what classes should be created and
     the object_map defines a mapping between settings and the
     class.
 
@@ -190,7 +192,7 @@ def generic_factory(settings, object_map, name='generic'):
         This defines how we set up and select the order parameter.
     object_map : dict
         Definitions on how to initiate the different classes.
-    name : string
+    name : string, optional
         Short name for the object type. Only used for error messages.
 
     Returns
@@ -214,27 +216,86 @@ def generic_factory(settings, object_map, name='generic'):
     return initiate_instance(cls, settings)
 
 
-def get_path_class(ensemble_type):
-    """Return the path class to work with an integrator.
+def numpy_allclose(val1, val2):
+    """Compare two values with allclose from numpy.
+
+    Here, we allow for one, or both, of the values to be None.
+    Note that if val1 == val2 but are not of a type known to
+    numpy, the returned value will be False.
 
     Parameters
     ----------
-    ensemble_type : string
-        The type of ensemble we are requesting.
+    val1 : np.array
+        The variable in the comparison.
+    val2 : np.array
+        The second variable in the comparison.
 
     Returns
     -------
-    out : object like :py:class:`.PathBase`
-        A path we can fill :-)
+    out : boolean
+        True if the values are equal, False otherwise.
 
     """
-    path_map = {'internal': Path,
-                'external': PathExt,
-                'reservoir': ReservoirPath}
+    if val1 is None and val2 is None:
+        return True
+    if val1 is None and val2 is not None:
+        return False
+    if val1 is not None and val2 is None:
+        return False
     try:
-        klass = path_map[ensemble_type]
-        return klass
-    except KeyError:
-        msg = 'Unknown ensemble type "{}" requested.'.format(ensemble_type)
-        logger.critical(msg)
-        raise ValueError(msg)
+        return np.allclose(val1, val2)
+    except TypeError:
+        return False
+
+
+def compare_objects(obj1, obj2, attrs, numpy_attrs=None):
+    """Compare two PyRETIS objects.
+
+    This method will compare two PyRETIS objects by checking
+    the equality of the attributes. Some of these attributes
+    might be numpy arrays in which case we use the
+    :py:funtion:`.numpy_allclose` defined in this module.
+
+    Parameters
+    ----------
+    obj1 : object
+        The first object for the comparison.
+    obj2 : object
+        The second object for the comparison.
+    attrs : iterable of strings
+        The attributes to check.
+    numpy_attrs : iterable of strings, optional
+        The subset of attributes which are numpy arrays.
+
+    Returns
+    -------
+    out : boolean
+        True if the objects are equal, False otherwise.
+
+    """
+    if not obj1.__class__ == obj2.__class__:
+        logger.debug(
+            'The classes are different %s != %s',
+            obj1.__class__, obj2.__class__
+        )
+        return False
+    if not len(obj1.__dict__) == len(obj2.__dict__):
+        logger.debug('Number of attributes differ.')
+        return False
+    # Compare the requested attributes:
+    for key in attrs:
+        try:
+            val1 = getattr(obj1, key)
+            val2 = getattr(obj2, key)
+        except AttributeError:
+            logger.debug('Failed to compare attribute "%s"', key)
+            return False
+        if numpy_attrs and key in numpy_attrs:
+            if not numpy_allclose(val1, val2):
+                logger.debug('Attribute "%s" differ.', key)
+                return False
+        else:
+            if not val1 == val2:
+                logger.debug('Attribute "%s" differ.', key)
+                return False
+    return True

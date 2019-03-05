@@ -10,6 +10,7 @@ __all__ = []
 
 class FooEngine(MDEngine):
     """FooIntegrator(MDEngine) - Dummy engine for tests."""
+
     foo_bar = 1.0
 
     def __init__(self, timestep, extra=0.0,
@@ -24,12 +25,14 @@ class FooEngine(MDEngine):
 
 class BarEngine:  # pylint: disable=too-few-public-methods
     """BarEngine - Dummy engine for tests."""
+
     def __init__(self, description='Dummy test engine'):
         self.description = description
 
 
 class BazEngine:  # pylint: disable=too-few-public-methods
     """BazEngine - Dummy engine for tests."""
+
     def __init__(self, description='Dummy test enginer'):
         self.description = description
         self.integration_step = 'fake_step'

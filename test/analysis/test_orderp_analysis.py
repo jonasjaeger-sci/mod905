@@ -8,8 +8,8 @@ import os
 import pickle
 import numpy as np
 from pyretis.analysis.order_analysis import analyse_orderp
-from pyretis.inout.writers import prepare_load
 from pyretis.inout.settings import SECTIONS
+from pyretis.inout.formats.order import OrderFile
 
 logging.disable(logging.CRITICAL)
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -21,7 +21,9 @@ class TestOrderAnalysis(unittest.TestCase):
     def test_energy_analysis(self):
         """Test the energy analysis."""
         filename = os.path.join(HERE, 'order.txt')
-        data = prepare_load('order', filename, required=True)
+        data = None
+        with OrderFile(filename, 'r') as orderfile:
+            data = orderfile.load()
         settings = {}
         settings['analysis'] = SECTIONS['analysis']
         for i in data:

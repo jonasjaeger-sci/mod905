@@ -72,21 +72,21 @@ c = 0.0
 
 Orderparameter
 --------------
-class = OrderParameterPosition
+class = Position
 dim = x
 index = 0
 periodic = False
 
 Collective-variable
 -------------------
-class = OrderParameterPosition2
+class = Position2
 dim = y
 index = 5
 periodic = False
 
 Collective-variable
 -------------------
-class = OrderParameterPosition3
+class = Position3
 dim = z
 index = 10
 periodic = False
@@ -96,3 +96,17 @@ Output
 trajectory-file = 100
 energy-file = 100
 order-file = 100
+
+Ensemble
+--------
+interface = -0.4
+output order-file = 16
+Collective-variable name = 'Gianni'
+
+Ensemble
+--------
+interface = -0.8
+output order-file = 1600000
+Collective-variable5 name = 'Bugno'
+particles velocity = {'generate': 'maxwell'}
+

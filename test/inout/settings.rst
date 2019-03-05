@@ -1,13 +1,11 @@
 Molecular dynamics example settings
 ===================================
-Here I can write some text to remind me 
-what this simulation is doing.
+this is a simple test system to check the input statements are correct
 
 Simulation settings
 -------------------
 task = 'md-nve'
 steps = 100
-
 
 Engine settings
 ---------------
@@ -33,7 +31,6 @@ velocity = {'generate': 'maxwell',
             'seed': 0}
 
 mass = {'Ar': 1.0}
-
 
 Forcefield settings
 -------------------

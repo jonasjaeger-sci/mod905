@@ -2,7 +2,7 @@
 
 The unit-system section
 =======================
-The ``units-system`` section is used in combination with the
+The ``unit-system`` section is used in combination with the
 ``units`` keyword from the system section for defining custom
 system of units.
 When defining a custom unit system, the ``units`` keyword
@@ -41,7 +41,7 @@ specified using the keywords:
 .. _table-unit-system-keywords:
 
 .. table:: Keywords for the unit-system section
-   :class: table-striped
+   :class: table-striped table-hover
 
    +----------------+---------------------------------------------------------+
    | Keyword        | Description                                             |
@@ -66,7 +66,7 @@ Keyword length
 .. pyretis-keyword:: length tuple like (float, string)
 
    The ``length`` keyword specifies the scale and base unit for
-   the length dimension. This is done on form:
+   the length dimension. This is done on the form:
 
    .. code-block:: rst
 
@@ -89,7 +89,7 @@ Keyword mass
 .. pyretis-keyword:: mass tuple like (float, string)
 
    The ``mass`` keyword specifies the scale and base unit for
-   the mass dimension. This is done on form:
+   the mass dimension. This is done on the form:
 
    .. code-block:: rst
 
@@ -112,7 +112,7 @@ Keyword energy
 .. pyretis-keyword:: energy tuple like (float, string)
 
    The ``energy`` keyword specifies the scale and base unit for
-   the energy dimension. This is done on form:
+   the energy dimension. This is done on the form:
 
    .. code-block:: rst
 
@@ -134,7 +134,7 @@ Keyword charge
 .. pyretis-keyword:: charge string
 
    The ``charge`` keyword specifies base unit for
-   the charge dimension. This is done on form:
+   the charge dimension. This is done on the form:
 
    .. code-block:: rst
 

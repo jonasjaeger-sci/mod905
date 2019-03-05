@@ -10,14 +10,11 @@ Modules
 ~~~~~~~
 
 common.py (:py:mod:`pyretis.inout.settings.common`)
-    Common methods for handing settings. Defines a method to dynamically
-    import methods and classes from user specified modules.
+    Common methods for handling settings. Defines a method to dynamically
+    import methods and classes from user-specified modules.
 
 createforcefield.py (:py:mod:`pyretis.inout.settings.createforcefield`)
     Handle creation of force fields from input simulation settings.
-
-createoutput.py (:py:mod:`pyretis.inout.settings.createoutput`)
-    Handle creation of output tasks from input simulation settings.
 
 createsimulation.py (:py:mod:`pyretis.inout.settings.createsimulation`)
     Handle creation of simulations from input simulation settings.
@@ -26,7 +23,7 @@ createsystem.py (:py:mod:`pyretis.inout.settings.createsystem`)
     Handle creation of systems from input simulation settings.
 
 __init__.py
-    This file, handles imports for PyRETIS.
+    This file. Handles imports for PyRETIS.
 
 Important methods defined in this package
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -40,9 +37,6 @@ create_force_field (:py:func:`.create_force_field`)
 create_orderparameter (:py:func:`.create_orderparameter`)
     Create an order parameter from input settings.
 
-create_output_tasks (:py:func:`.create_output_tasks`)
-    Create output tasks from input settings.
-
 create_simulation (:py:func:`.create_simulation`)
     Create a simulation from input settings.
 
@@ -52,5 +46,4 @@ create_system (:py:func:`.create_system`)
 from .common import create_orderparameter, create_engine
 from .createsystem import create_system
 from .createsimulation import create_simulation
-from .createoutput import create_output_tasks
 from .createforcefield import create_force_field

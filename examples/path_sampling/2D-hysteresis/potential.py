@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2019, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
-"""This is a 2D example potential"""
+"""This is a 2D example potential."""
 import logging
 import numpy as np
 from pyretis.forcefield.potential import PotentialFunction
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 
@@ -41,10 +41,11 @@ class Hyst2D(PotentialFunction):
         * `beta2`: The :math:`\beta_2` parameter for the potential.
         * `x0`: The :math:`x_0` parameter for the potential.
         * `y0`: The :math:`y_0` parameter for the potential.
+
     """
 
     def __init__(self, desc='2D hysteresis'):
-        """Initiate the potential.
+        """Set up the potential.
 
         Parameters
         ----------
@@ -56,6 +57,7 @@ class Hyst2D(PotentialFunction):
             Parameter for the potential.
         desc : string, optional
             Description of the force field.
+
         """
         super().__init__(dim=2, desc=desc)
         self.params = {'gamma1': 0.0, 'gamma2': 0.0, 'gamma3': 0.0,
@@ -75,6 +77,7 @@ class Hyst2D(PotentialFunction):
         -------
         out : float
             The potential energy.
+
         """
         x = system.particles.pos[:, 0]  # pylint: disable=invalid-name
         y = system.particles.pos[:, 1]  # pylint: disable=invalid-name
@@ -106,7 +109,8 @@ class Hyst2D(PotentialFunction):
         out[0] : numpy.array
             The calculated force.
         out[1] : numpy.array
-            The virial, currently not implemented for this potential
+            The virial, currently not implemented for this potential.
+
         """
         x = system.particles.pos[:, 0]  # pylint: disable=invalid-name
         y = system.particles.pos[:, 1]  # pylint: disable=invalid-name
@@ -150,6 +154,7 @@ class Hyst2D(PotentialFunction):
             positions in `particles.pos`.
         out[2] : numpy.array
             The virial, currently not implemented for this potential.
+
         """
         virial = np.zeros((self.dim, self.dim))  # just return zeros here
         x = system.particles.pos[:, 0]  # pylint: disable=invalid-name

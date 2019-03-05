@@ -1,19 +1,21 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2019, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
-"""Simple script to compare outcome of two simulations.
+"""Simple script to compare the outcome of two simulations.
 
 Here we compare a full simulation with one where we have stopped
 and restarted after 100 steps.
 """
-# pylint: disable=C0103
 import os
+import sys
 import colorama
 import numpy as np
-from pyretis.inout.common import print_to_screen
-from pyretis.inout.writers import get_writer
+from pyretis.inout import print_to_screen
 from pyretis.inout.settings import parse_settings_file
-from pyretis.core.pathensemble import PATH_DIR_FMT
+from pyretis.core.pathensemble import generate_ensemble_name
+from pyretis.inout.formats.path import PathIntFile
+from pyretis.inout.formats.energy import EnergyPathFile
+from pyretis.inout.formats.order import OrderPathFile
 
 
 def snapshot_difference(snap1, snap2):
@@ -26,7 +28,7 @@ def snapshot_difference(snap1, snap2):
 
 
 def compare_traj(traj1, traj2, tol=1e-12):
-    """A comparison of two trajectories from PyRETIS
+    """Compare two trajectories from PyRETIS.
 
     Here we calculate the mean squared error for the two
     trajectories.
@@ -42,40 +44,41 @@ def compare_traj(traj1, traj2, tol=1e-12):
 
     Returns
     -------
-    None, just prints out the result of the comparison.
+    out : int
+        0 if comparison is successful, != 0 otherwise.
+
     """
     print_to_screen('Comparing trajectories', level='info')
-    print_to_screen('Loading files:')
-    for i in (traj1, traj2):
-        print_to_screen(i)
+    print_to_screen('Loading files: {} & {}'.format(traj1, traj2))
     print_to_screen('Checking mean squared error...')
-    file1 = get_writer('pathtrajint').load(traj1)
-    file2 = get_writer('pathtrajint').load(traj2)
-    error, error_v = 0.0, 0.0
-    nsnap = 0
+    file1 = PathIntFile(traj1, 'r').load()
+    file2 = PathIntFile(traj2, 'r').load()
+    error, error_v = [], []
     for trj1, trj2 in zip(file1, file2):
         for snap1, snap2 in zip(trj1['data'], trj2['data']):
             pose, vele = snapshot_difference(snap1, snap2)
-            error += pose
-            error_v += vele
-            nsnap += 1
-    error /= float(nsnap)
-    print_what_you_think_about_the_error(error, 'positions', tol)
-    print_what_you_think_about_the_error(error_v, 'velocities', tol)
+            error.append(pose)
+            error_v.append(vele)
+    ret1 = print_error_assessment(np.mean(error), 'positions', tol)
+    ret2 = print_error_assessment(np.mean(error_v), 'velocities', tol)
+    return ret1 + ret2
 
 
-def print_what_you_think_about_the_error(error, what, tol):
+def print_error_assessment(error, what, tol):
     """Print out some error info."""
     if abs(error) < tol:
         lev = 'success'
+        ret = 0
     else:
         lev = 'error'
+        ret = 1
     print_to_screen('Mean error - {}: {}'.format(what, error),
                     level=lev)
+    return ret
 
 
 def compare_energy(traj1, traj2, tol=1e-12):
-    """A comparison of energies/orderparameters from PyRETIS
+    """Compare energies from two PyRETIS trajectories.
 
     Here we calculate the mean squared error for the given files.
 
@@ -88,15 +91,15 @@ def compare_energy(traj1, traj2, tol=1e-12):
 
     Returns
     -------
-    None, just prints out the result of the comparison.
+    out : int
+        0 if comparison is successful, != 0 otherwise.
+
     """
     print_to_screen('Comparing energies', level='info')
-    print_to_screen('Loading files:')
-    for i in (traj1, traj2):
-        print_to_screen(i)
+    print_to_screen('Loading files: {} & {}'.format(traj1, traj2))
     print_to_screen('Checking mean squared error...')
-    file1 = get_writer('pathenergy').load(traj1)
-    file2 = get_writer('pathenergy').load(traj2)
+    file1 = EnergyPathFile(traj1, 'r').load()
+    file2 = EnergyPathFile(traj2, 'r').load()
     errors = {}
     nsnap = 0
     for trj1, trj2 in zip(file1, file2):
@@ -108,13 +111,16 @@ def compare_energy(traj1, traj2, tol=1e-12):
             diff = (values - trj2['data'][key])**2
             errors[key] += sum(diff)
             nsnap += 1
+    retval = 0
     for key, err in errors.items():
         error = err / float(nsnap)
-        print_what_you_think_about_the_error(error, key, tol)
+        ret = print_error_assessment(error, key, tol)
+        retval += ret
+    return retval
 
 
 def compare_order(traj1, traj2, tol=1e-12):
-    """A comparison of energies/orderparameters from PyRETIS
+    """Compare order parameters from two PyRETIS trajectories.
 
     Here we calculate the mean squared error for the given files.
 
@@ -127,15 +133,15 @@ def compare_order(traj1, traj2, tol=1e-12):
 
     Returns
     -------
-    None, just prints out the result of the comparison.
+    out : int
+        0 if comparison is successful, != 0 otherwise.
+
     """
     print_to_screen('Comparing order parameters', level='info')
-    print_to_screen('Loading files:')
-    for i in (traj1, traj2):
-        print_to_screen(i)
+    print_to_screen('Loading files: {} & {}'.format(traj1, traj2))
     print_to_screen('Checking mean squared error...')
-    file1 = get_writer('pathorder').load(traj1)
-    file2 = get_writer('pathorder').load(traj2)
+    file1 = OrderPathFile(traj1, 'r').load()
+    file2 = OrderPathFile(traj2, 'r').load()
     errors = {}
     nsnap = 0
     for trj1, trj2 in zip(file1, file2):
@@ -148,32 +154,48 @@ def compare_order(traj1, traj2, tol=1e-12):
             diff = (trj1['data'][:, key] - trj2['data'][:, key])**2
             errors[key] += sum(diff)
             nsnap += 1
+    retval = 0
     for key, err in errors.items():
         error = err / float(nsnap)
-        print_what_you_think_about_the_error(error,
-                                             'orderp-{}'.format(key),
-                                             tol)
+        ret = print_error_assessment(error, 'orderp-{}'.format(key), tol)
+        retval += ret
+    return retval
 
 
 def compare_ensemble(ensemble):
-    """Run the comparison for an ensemble"""
+    """Run the comparison for an ensemble."""
     print_to_screen('Comparing for "{}"'.format(ensemble), level='info')
     traj1 = os.path.join('retis-100-200', ensemble, 'traj.txt')
     traj2 = os.path.join('retis-full', ensemble, 'traj.txt')
-    compare_traj(traj1, traj2, tol=1e-12)
+    print_to_screen()
+    ret1 = compare_traj(traj1, traj2, tol=1e-12)
     ener1 = os.path.join('retis-100-200', ensemble, 'energy.txt')
     ener2 = os.path.join('retis-full', ensemble, 'energy.txt')
-    compare_energy(ener1, ener2, tol=1e-12)
+    print_to_screen()
+    ret2 = compare_energy(ener1, ener2, tol=1e-12)
     order1 = os.path.join('retis-100-200', ensemble, 'order.txt')
     order2 = os.path.join('retis-full', ensemble, 'order.txt')
-    compare_order(order1, order2, tol=1e-12)
-    print()
+    print_to_screen()
+    ret3 = compare_order(order1, order2, tol=1e-12)
+    return ret1 + ret2 + ret3
+
+
+def main():
+    """Run all comparisons."""
+    settings = parse_settings_file(os.path.join('retis-full', 'retis.rst'))
+    inter = settings['simulation']['interfaces']
+    retval = 0
+    for intr in range(len(inter)):
+        ens = generate_ensemble_name(intr)
+        ret = compare_ensemble(ens)
+        retval += ret
+    if retval == 0:
+        print_to_screen('\nAll seems fine!', level='success')
+    else:
+        print_to_screen('\nComparison failed!', level='error')
+    return retval
 
 
 if __name__ == '__main__':
     colorama.init(autoreset=True)
-    settings = parse_settings_file('retis-full/retis.rst')
-    inter = settings['simulation']['interfaces']
-    for intr in range(len(inter)):
-        ens = PATH_DIR_FMT.format(intr)
-        compare_ensemble(ens)
+    sys.exit(main())

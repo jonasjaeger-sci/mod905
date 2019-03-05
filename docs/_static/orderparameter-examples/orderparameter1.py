@@ -3,20 +3,21 @@
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """This file contains examples for order parameters.
 
-This file is distributed as part of the documentation of pyretis.
+This file is distributed as part of the documentation of PyRETIS.
 """
 import numpy as np
 from pyretis.orderparameter import OrderParameter
 
+
 class PlaneDistanceX(OrderParameter):
     """A positional order parameter.
 
-    This class defines a very simple order parameter which is just
-    the position of a given particle.
+    This class defines a very simple order parameter which is
+    the distance from a plane for a given particle.
     """
 
     def __init__(self, index, plane_position):
-        """Initialize the order parameter.
+        """Initialise the order parameter.
 
         Parameters
         ----------

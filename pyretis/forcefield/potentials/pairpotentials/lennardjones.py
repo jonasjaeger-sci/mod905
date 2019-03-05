@@ -14,7 +14,7 @@ PairLennardJonesCut (:py:class:`.PairLennardJonesCut`)
 
 PairLennardJonesCutnp (:py:class:`.PairLennardJonesCutnp`)
     A class representing a Lennard-Jones 6-12 potential implemented
-    with usage of numpy.
+    using numpy.
 """
 import logging
 import numpy as np
@@ -22,7 +22,7 @@ from pyretis.forcefield.potential import PotentialFunction
 from .pairpotential import generate_pair_interactions
 
 
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 
@@ -49,8 +49,7 @@ class PairLennardJonesCut(PotentialFunction):
 
     This implementation is in pure python (yes we are double looping!)
     and it is slow. It should not be used for production, please
-    consider the numpy aware `PairLennardJonesCutnp` which is somewhat
-    better.
+    consider the numpy aware `PairLennardJonesCutnp` instead.
 
     Attributes
     ----------
@@ -77,7 +76,7 @@ class PairLennardJonesCut(PotentialFunction):
         Potential values for shifting the potential if requested.
         This is the potential evaluated at the cut-off.
     _rcut2 : dict
-        Squared cut-off for each interaction type.
+        The squared cut-off for each interaction type.
         Keys are the pairs (particle types) that may interact.
 
     """
@@ -88,12 +87,14 @@ class PairLennardJonesCut(PotentialFunction):
 
         Parameters
         ----------
-        dim : int
+        dim : int, optional
             The dimensionality to use.
-        shift : boolean
+        shift : boolean, optional
             Determines if the potential should be shifted or not.
-        mixing : string
+        mixing : string, optional
             Determines how we should mix potential parameters.
+        desc : string, optional
+            Description of the potential.
 
         """
         super().__init__(dim=dim, desc=desc)
@@ -217,16 +218,14 @@ class PairLennardJonesCut(PotentialFunction):
 
         """
         particles = system.particles
-        box = system.box
         forces = np.zeros(particles.pos.shape)
-        virial = np.zeros((box.dim, box.dim))
+        virial = np.zeros((system.box.dim, system.box.dim))
         for pair in particles.pairs():
             i, j, itype, jtype = pair
-            delta = box.pbc_dist_coordinate(particles.pos[i] -
-                                            particles.pos[j])
-            rsq = np.dot(delta, delta)
-            if rsq < self._rcut2[itype, jtype]:
-                r2inv = 1.0 / rsq
+            delta = system.box.pbc_dist_coordinate(particles.pos[i] -
+                                                   particles.pos[j])
+            if np.dot(delta, delta) < self._rcut2[itype, jtype]:
+                r2inv = 1.0 / np.dot(delta, delta)
                 r6inv = r2inv**3
                 forcelj = r2inv * r6inv * (self._lj1[itype, jtype] * r6inv -
                                            self._lj2[itype, jtype])
@@ -248,10 +247,10 @@ class PairLennardJonesCut(PotentialFunction):
 
         Note
         ----
-        Currently, the virial is only calculated for the particles as a
-        whole. It is not calculated as a virial per atom. The virial
+        Currently, the virial is only calculated for all the particles.
+        It is not calculated as per atom virial. The virial
         per atom might be useful to obtain a local pressure or stress,
-        however this needs some consideration. Perhaps it's best to
+        however, this needs some consideration. Perhaps it's best to
         fully implement this as a method of planes or something similar.
 
         Returns
@@ -296,7 +295,7 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
 
     A Lennard-Jones 6-12 potential with a simple cut-off which can be
     shifted. `PairLennardJonesCutnp` uses numpy for calculations, i.e.
-    most operations are recast as numpy.array operations. Otherwise it
+    most operations are recast as numpy.array operations. Otherwise, it
     is similar to `PairLennardJonesCut`.
     """
 
@@ -306,10 +305,14 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
 
         Parameters
         ----------
-        dim : int
+        dim : int, optional
             The dimensionality to use.
-        shift : boolean
+        shift : boolean, optional
             Determines if the potential should be shifted or not.
+        mixing : string, optional
+            Describes the mixing rules for the parameters.
+        desc : string, optional
+            Description of the potential.
 
         """
         super().__init__(dim=dim, desc=desc,
@@ -376,13 +379,12 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
 
         """
         particles = system.particles
-        box = system.box
         forces = np.zeros(particles.pos.shape)
-        virial = np.zeros((box.dim, box.dim))
+        virial = np.zeros((system.box.dim, system.box.dim))
         for i, particle_i in enumerate(particles.pos[:-1]):
             itype = particles.ptype[i]
             delta = particle_i - particles.pos[i+1:]
-            delta = box.pbc_dist_matrix(delta)
+            delta = system.box.pbc_dist_matrix(delta)
             rsq = np.einsum('ij, ij->i', delta, delta)
             k = np.where(_check_cutoff(self._rcut2, rsq,
                                        particles.ptype[i+1:],
@@ -410,10 +412,10 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
 
         Note
         ----
-        Currently, the virial is only calculated for the particles as a
-        whole. It is not calculated as a virial per atom. The virial per
+        Currently, the virial is only calculated for all the particles.
+        It is not calculated as a per atom virial. The virial per
         atom might be useful to obtain a local pressure or stress,
-        however this needs some consideration. Perhaps it's best to
+        however, this needs some consideration. Perhaps it's best to
         fully implement this as a method of planes or something similar.
 
         Returns

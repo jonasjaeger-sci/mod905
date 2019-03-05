@@ -8,8 +8,8 @@ import os
 import pickle
 import numpy as np
 from pyretis.analysis.energy_analysis import analyse_energies
-from pyretis.inout.writers import prepare_load
 from pyretis.inout.settings import SECTIONS
+from pyretis.inout.formats.energy import EnergyFile
 
 logging.disable(logging.CRITICAL)
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -21,7 +21,9 @@ class EnergyTest(unittest.TestCase):
     def test_energy_analysis(self):
         """Test the energy analysis."""
         filename = os.path.join(HERE, 'energy.txt')
-        data = prepare_load('energy', filename, required=True)
+        data = None
+        with EnergyFile(filename, 'r') as efile:
+            data = efile.load()
         settings = {
             'particles': {'npart': 1},
             'system': {'dimensions': 1, 'beta': 1, 'temperature': 1},

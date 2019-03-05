@@ -47,8 +47,8 @@ class TestUmbrellaWindow(unittest.TestCase):
             system,
             [-1.0, -0.4],
             -0.5,
-            rgen,
             0.1,
+            rgen=rgen,
             mincycle=10
         )
         for _ in simulation.run():
@@ -57,6 +57,15 @@ class TestUmbrellaWindow(unittest.TestCase):
         restart = simulation.restart_info()
         self.assertEqual(restart['type'], simulation.simulation_type)
         self.assertTrue('rgen' in restart)
+        # Test the creation when the random generator is not given:
+        simulation = UmbrellaWindowSimulation(
+            system,
+            [-1.0, -0.4],
+            -0.5,
+            0.1,
+            mincycle=10
+        )
+        self.assertIsInstance(simulation.rgen, np.random.RandomState)
 
 
 if __name__ == '__main__':

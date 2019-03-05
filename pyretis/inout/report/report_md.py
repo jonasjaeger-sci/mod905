@@ -13,7 +13,7 @@ generate_report_mdflux (:py:func:`.generate_report_mdflux`)
 """
 from pyretis.inout.report.markup import (generate_rst_table,
                                          generate_latex_table)
-from pyretis.inout.common import apply_format
+from pyretis.inout.formats.formatter import apply_format
 
 
 __all__ = ['generate_report_mdflux']
@@ -115,7 +115,7 @@ def _table_md_flux_cycles(results, fmt='rst'):
     """Generate a table for the MD-flux results for cycle numbers.
 
     The table will display the number of steps in state A, state B,
-    overall state A and B and total number of MD cycles.
+    overall state A and B and the total number of MD cycles.
 
     Parameters
     ----------

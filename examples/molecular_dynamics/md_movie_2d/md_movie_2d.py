@@ -1,21 +1,20 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2019, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
+"""Example of running a MD NVE simulation.
+
+In this example, we animate the output.
 """
-Example of running a MD NVE simulation.
-In this example we animate the output.
-"""
-# pylint: disable=C0103
+# pylint: disable=invalid-name
 import numpy as np
-from pyretis.core.units import CONVERT, create_conversion_factors
-from pyretis.inout.plotting import COLORS, COLOR_SCHEME
-from pyretis.inout.setup import (create_force_field, create_system,
-                                 create_engine, create_output_tasks,
-                                 create_simulation)
 # imports for the plotting:
 from matplotlib import pyplot as plt
 from matplotlib import animation
 import matplotlib as mpl
+from pyretis.core.units import CONVERT, create_conversion_factors
+from pyretis.inout.plotting import COLORS, COLOR_SCHEME
+from pyretis.inout.setup import (create_force_field, create_system,
+                                 create_engine, create_simulation)
 
 ljparams = {0: {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5}}
 # Define simulation settings:
@@ -67,7 +66,7 @@ print('# Creating simulation from settings.')
 kwargs = {'system': ljsystem, 'engine': create_engine(settings)}
 simulation_nve = create_simulation(settings, kwargs)
 print('# Creating output tasks from settings.')
-outputs = [task for task in create_output_tasks(settings)]
+simulation_nve.set_up_output(settings, progress=False)
 size = ljsystem.box.bounds()
 npart = ljsystem.particles.npart
 msg = 'Added {:d} particles to a simple square lattice'
@@ -158,6 +157,7 @@ def get_max_vector(vectors):
     -------
     vmax : float
         The length of the largest vector.
+
     """
     vmax = None
     for vi in vectors:
@@ -187,6 +187,7 @@ def get_velocity_force_arrows(forces, vels):
         The x-component of the velocities, normalised.
     out[3] : numpy.array
         The y-component of the velocities, normalised.
+
     """
     fmax, vmax = get_max_vector(forces), get_max_vector(vels)
     forceu, forcev, velu, velv = [], [], [], []
@@ -200,7 +201,7 @@ def get_velocity_force_arrows(forces, vels):
     return forceu, forcev, velu, velv
 
 
-def update(frame, sim, output_tasks):
+def update(frame, sim):
     """Update plots for the animation.
 
     This function will be running the simulation and updating the plots.
@@ -213,13 +214,12 @@ def update(frame, sim, output_tasks):
         The current frame number, supplied by `animation.FuncAnimation`.
     sim : object like `Simulation`
         The simulation we are running.
-    output_tasks : list of objects like `OutputTask`
-        A list of output tasks to perform during the simulation.
 
     Returns
     -------
     out : list
         list of the patches to be drawn.
+
     """
     particles = sim.system.particles
     pos = sim.system.box.pbc_wrap(particles.pos)
@@ -243,7 +243,7 @@ def update(frame, sim, output_tasks):
 
     if not sim.is_finished():
         result = sim.step()
-        for tsk in output_tasks:
+        for tsk in sim.output_tasks:
             tsk.output(result)
         # here we calculate some energies and updates the energy plots:
         step.append(result['cycle']['step'])
@@ -264,9 +264,8 @@ def update(frame, sim, output_tasks):
                                                                    frame))
         patches.append(time_text)
         return patches
-    else:
-        print('Simulation is done.')
-        return patches
+    print('Simulation is done.')
+    return patches
 
 
 def init():
@@ -275,7 +274,8 @@ def init():
     Returns
     -------
     out : list
-        list of the patches to be drawn
+        list of the patches to be drawn.
+
     """
     patches = []
     force_arrow.set_visible(False)
@@ -293,7 +293,7 @@ def init():
 # This will run the animation/simulation:
 anim = animation.FuncAnimation(fig, update,
                                frames=settings['simulation']['steps']+1,
-                               fargs=[simulation_nve, outputs],
+                               fargs=[simulation_nve],
                                repeat=False, interval=2, blit=True,
                                init_func=init)
 # for making a movie:

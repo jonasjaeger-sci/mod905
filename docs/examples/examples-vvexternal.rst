@@ -4,7 +4,8 @@ Using C or FORTRAN
 ==================
 
 In this section, we will show some examples on how C or FORTRAN
-can be used together with Python and |pyretis|:
+can be used together with Python and |pyretis|. We show examples
+on:
 
 .. contents::
    :local:
@@ -122,7 +123,7 @@ following :ref:`engine section <user-section-engine>` to the input file:
    Engine
    ------
    class = VelocityVerletF
-   delta_t = 0.002
+   timestep = 0.002
    module = vvintegratorf.py
 
 
@@ -199,7 +200,7 @@ following :ref:`engine section <user-section-engine>` to the input file:
    Engine
    ------
    class = VelocityVerletC
-   delta_t = 0.002
+   timestep = 0.002
    module = vvintegratorc.py
 
 

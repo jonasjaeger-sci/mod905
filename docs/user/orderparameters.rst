@@ -7,7 +7,7 @@ Creating custom order parameters
 ================================
 
 Often, you will find the need to create custom order parameters
-for your path sampling simulation.
+for your path sampling simulation(s).
 In |pyretis|, you can create new order parameters by making use
 of the generic :py:class:`.OrderParameter` class defined in the library.
 Technically speaking, you will have to sub-class :py:class:`.OrderParameter`
@@ -41,27 +41,37 @@ positioned somewhere along the x-axis.
 Step 1 and 2: Sub-classing OrderParameter
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In order to define a new class to use with |pyretis|, we first
-import some additional libraries.
-
+In order to define a new class to use with |pyretis|, we import
+`numpy <http://www.numpy.org/>`_ and the :py:class:`.OrderParameter` class:
 
 .. literalinclude:: /_static/orderparameter-examples/orderparameter1.py
    :language: python
    :lines: 8-9
 
-And we set up a new class, representing our new order parameter:
+And we define a class, representing our new order parameter:
 
 .. literalinclude:: /_static/orderparameter-examples/orderparameter1.py
    :language: python
-   :lines: 11-34
+   :lines: 12-35
 
 Here, we are initialising the class by storing two variables ``index``
 and ``plane_position`` which identifies the particle we will consider
 and the location of the plane.
-In addition, we add some more information ``txt``
-and a name when we initialise the parent class (the line
+In addition, we add some more information when we initialise the parent class (the line
 calling :python:`super().__init__`). This is simply following the convention
 defined by :py:class:`.OrderParameter`.
+
+.. warning::
+
+   If the order parameter you are defining depends explicitly on the velocity
+   (i.e. the direction so that it is not symmetric under time reversal) you
+   should mark the order parameter as being velocity dependent.
+   This can be done by setting the ``velocity``
+   argument to ``True`` while initiating the order parameter:
+
+   .. code-block:: python
+
+      super().__init__(description='Description', velocity=True)
 
 Step 3: Creating a method for calculating the order parameter
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -84,17 +94,19 @@ will correspond to one of the two following cases:
 
    .. literalinclude:: /_static/orderparameter-examples/orderparameter1.py
       :language: python
-      :lines: 36-40
+      :lines: 37-41
 
    Here, we are making use of the index and position of the
    plane which we stored previously. Further, we
    are using the :py:attr:`.System.particles` object in order
    to access the positions. Finally, we are returning the order
-   parameter. But note that we return this as a negative number.
+   parameter. In this particular case, we return the negative of
+   the distance, so that the order parameter will increase when
+   we are approaching the place.
 
 *  We are using an external engine (e.g. GROMACS) and we just want
    to reference the file containing the current configuration, and pass
-   this file reference on to another external library or program.
+   this file reference to another external library or program.
 
    Here, we will make use of some external tools to obtain the
    order parameter, for simplicity, let us here make use of
@@ -103,7 +115,7 @@ will correspond to one of the two following cases:
 
    .. literalinclude:: /_static/orderparameter-examples/orderparameter2.py
       :language: python
-      :lines: 8-10
+      :lines: 8-8
 
    In order to access the
    file containing the configuration, we make use of the
@@ -113,6 +125,10 @@ will correspond to one of the two following cases:
    .. literalinclude:: /_static/orderparameter-examples/orderparameter2.py
       :language: python
       :lines: 37-41
+
+   Note that the method ``some_function_to_obtain_order`` has not been
+   defined here and you will have to define his method yourself in order
+   to complete the example.
 
 Step 4: Making use of the new order parameter
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -132,12 +148,10 @@ to the input file:
 
 As you can see, we specify the following:
 
-1. The name of the class.
+1. The name of the order parameter class.
 
 2. The name of the file where we have stored the new class.
 
-3. The value for the index parameter the order parameter takes
-   in.
+3. The value for the ``index`` parameter of the order parameter.
 
-4. The value for the plane_position parameter the order parameter
-   takes in.
+4. The value for the ``plane_position`` parameter of the order parameter.

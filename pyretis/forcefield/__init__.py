@@ -22,6 +22,9 @@ potential.py (:py:mod:`pyretis.forcefield.potential`)
     (:py:class:`.PotentialFunction`) which is sub-classed in other
     potential functions.
 
+factory.py (:py:mod:`pyretis.forcefield.factory`)
+    Defines a method for creating potentials from input settings.
+
 Sub-packages
 ~~~~~~~~~~~~
 

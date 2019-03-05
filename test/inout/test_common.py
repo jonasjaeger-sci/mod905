@@ -6,18 +6,15 @@ import os
 import logging
 import unittest
 from pyretis.inout.common import (
-    apply_format,
     _remove_extension,
     make_dirs,
     simplify_ensemble_name,
     add_dirname,
     name_file,
-    format_number,
-    get_log_formatter,
-    PyretisLogFormatter,
-    LOG_FMT,
-    LOG_DEBUG_FMT,
+    generate_file_name,
 )
+
+
 logging.disable(logging.CRITICAL)
 
 
@@ -34,19 +31,6 @@ def remove_dir(dirname):
 
 class TestMethods(unittest.TestCase):
     """Test some of the methods from pyretis.inout.common."""
-
-    def test_apply_format(self):
-        """Test that we can apply a format."""
-        txt = apply_format(12345.7, '{:7.2f}')
-        self.assertEqual(txt, '1.2e+04')
-        txt = apply_format(-1234568.9, '{:7.2f}')
-        self.assertEqual(txt, ' -1e+06')
-        txt = apply_format(-1234568.9, '{:8.2f}')
-        self.assertEqual(txt, '-1.2e+06')
-        txt = apply_format(-1234568.9, '{:9.2f}')
-        self.assertEqual(txt, '-1.23e+06')
-        txt = apply_format(123.45, '{:>10.2f}')
-        self.assertEqual(txt, '    123.45')
 
     def test_remove_ext(self):
         """Test that we can remove the extenstion from a file name."""
@@ -100,29 +84,14 @@ class TestMethods(unittest.TestCase):
         filepath = os.path.join('path', filename)
         self.assertEqual(name, filepath)
 
-    def test_format_number(self):
-        """Test that we can format numbers as expected."""
-        txt = format_number(99.9, 0.0, 100, fmtf='{0:<4.2f}',
-                            fmte='{0:<4.2e}')
-        self.assertEqual(txt, '99.90')
-        txt = format_number(100.1, 0.0, 100, fmtf='{0:<4.2f}',
-                            fmte='{0:<4.2e}')
-        self.assertEqual(txt, '1.00e+02')
-        txt = format_number(-100.1, 0.0, 100, fmtf='{0:<4.2f}',
-                            fmte='{0:<4.2e}')
-        self.assertEqual(txt, '-1.00e+02')
-
-    def test_get_formatter(self):
-        """Test that we can select the log formatter."""
-        formatter = get_log_formatter(0)
-        self.assertIsInstance(formatter, PyretisLogFormatter)
-        self.assertEqual(formatter._fmt,  # pylint: disable=protected-access
-                         LOG_DEBUG_FMT)
-
-        formatter = get_log_formatter(100)
-        self.assertIsInstance(formatter, PyretisLogFormatter)
-        self.assertEqual(formatter._fmt,  # pylint: disable=protected-access
-                         LOG_FMT)
+    def test_generate_filename(self):
+        """Test the generation of file names."""
+        settings = {'output': {}}
+        name = generate_file_name('base.txt', 'dir', settings)
+        self.assertEqual(name, os.path.join('dir', 'base.txt'))
+        settings = {'output': {'prefix': 'abc-'}}
+        name = generate_file_name('base.txt', 'dir', settings)
+        self.assertEqual(name, os.path.join('dir', 'abc-base.txt'))
 
 
 if __name__ == '__main__':

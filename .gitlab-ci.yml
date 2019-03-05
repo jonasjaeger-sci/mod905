@@ -1,54 +1,94 @@
-image: "python:3.7-stretch"
+.protected: &protected
+  - master
+  - develop
+
+.coverage_artifact: &coverage_artifacts
+  artifacts:
+    paths:
+      - .coverage*
+    expire_in: 1 week
+
+image: python:3.7-stretch
+
+.oldpy: &old_py
+  image: python:3.6-stretch
+  stage: old_py
+
+.codacy: &codacy
+  after_script:
+  - pip install codacy-coverage
+  - python-codacy-coverage -r coverage.xml
+ 
 
 stages:
-  - test
-  - upload_docs
+  - style
+  - light_test
+  - heavy_test
+  - example_test
+  - old_py
+  - coverage
+  - upload
 
 before_script:
   - apt-get update -qy
-  - apt-get install -y python3-dev python3-pip
+  - apt-get install gcc -y
   - pip install --upgrade pip
+  - ln /usr/bin/gcc /usr/bin/gcc44
+  - ln /usr/bin/g++ /usr/bin/g++44
   - pip install -r requirements.txt
+  - pip install git+https://github.com/mdtraj/mdtraj.git
   - pip install -e .
+  - python -V
 
 test:
+  stage: light_test
   script:
   - pip install coverage
-  - coverage run -m unittest discover -s test
-  - coverage report -m
-  coverage: '/^TOTAL.*\s+(\d+\%)/'
-
-pep8:
-  script:
-  - pip install pep8
-  - pep8 --filename=*.py --count --statistics --exclude=./docs
+  - coverage run -p -m unittest discover -s test
+  <<: *coverage_artifacts
 
 pylint:
+  stage: style
   script:
-  - pip install pylint
+  - pip install -U pylint
+  - pip install 'numpy<1.16' #Remove when https://github.com/PyCQA/pylint/issues/2694 is resolved
   - python devtools/run_linting.py pyretis
-  allow_failure: true
 
 pycodestyle:
+  stage: style
   script:
   - pip install pycodestyle
   - pycodestyle --filename=*.py --count --statistics --exclude=./docs
-  allow_failure: true
 
 pydocstyle:
+  stage: style
   script:
   - pip install pydocstyle
   - pydocstyle --count pyretis
-  allow_failure: true
+
+test_tis:
+  stage: light_test
+  script:
+  - cd examples/test/test-internal/tis-multiple
+  - make clean
+  - ./run.sh
 
 test_retis:
+  stage: light_test
   script:
   - cd examples/test/test-internal/retis
   - make clean
   - pyretisrun -i retis.rst -p
   - python compare.py
+  - cd ../retis-load-sparse/load-frames
+  - make clean
+  - ./run.sh
+  - cd ../load-traj
+  - make clean
+  - ./run.sh
 
 test_gromacs:
+  stage: heavy_test
   script:
   - apt-cache policy gromacs
   - apt-get install -y gromacs
@@ -57,16 +97,44 @@ test_gromacs:
   - cd examples/test/test-gromacs/test-gromacs
   - ./run-test1.sh gmx_d
   - ./run-test2.sh gmx_d
+  - cd ../test-load/test-load-sparse/load-frames
+  - ./run.sh
+  - cd ../load-traj
+  - ./run.sh
 
 test_cp2k:
+  stage: heavy_test
   script:
   - apt-cache policy cp2k
   - apt-get install -y cp2k
   - cp2k -v
   - cd examples/test/test-cp2k/test-cp2k/
   - python test_cp2k.py
+  - cd ../test-retis-load
+  - ./run.sh
+
+test_openmm:
+  image: continuumio/miniconda3:latest
+  stage: heavy_test
+  before_script:
+  - apt-get update -qy
+  - apt-get install gcc -y
+  - pip install --upgrade pip
+  - pip install -e .
+  - python -V
+  script:
+  - conda install -c omnia -c conda-forge openmm mdtraj
+  - pip install -r requirements.txt
+  - pip install -e .
+  - python -V
+  - conda list
+  - python -m simtk.testInstallation
+  - pip install coverage
+  - coverage run -p -m unittest discover -s test
+  <<: *coverage_artifacts
 
 build_docs:
+  stage: style
   script:
   - apt-cache policy texlive-full
   - apt-get install -y texlive-full
@@ -74,16 +142,79 @@ build_docs:
   - pip install sphinx_bootstrap_theme
   - cd docs
   - make html
-  - cd ../
+  - cd ../devtools/docs  
+  - python check_api_docs.py ../../docs/api/ ../../pyretis
+  - cd ../../
   artifacts:
     paths:
       - docs/_build/html
     expire_in: 1 week
 
+
+test_oldpy:
+   extends: test
+   <<: *old_py
+
+test_tis_oldpy:   
+   extends: test_tis
+   <<: *old_py
+
+test_retis_oldpy:   
+   extends: test_retis
+   <<: *old_py
+
+test_gromacs_oldpy:   
+   extends: test_gromacs
+   <<: *old_py
+
+test_cp2k_oldpy:   
+   extends: test_cp2k
+   <<: *old_py
+
+test_min_version:
+  extends: test
+  before_script: 
+    - apt-get update -qy
+    - apt-get install -qy libblas-dev liblapack-dev libatlas-base-dev gfortran
+    - apt-get install gcc -y
+    - pip install --upgrade pip
+    - ln /usr/bin/gcc /usr/bin/gcc44
+    - ln /usr/bin/g++ /usr/bin/g++44
+    - awk '{gsub(">","="); print $0}' requirements.txt  >> min_req.txt
+    - grep "numpy" min_req.txt >> numpy.txt
+    - pip install -r numpy.txt
+    - pip install -r min_req.txt
+    - pip install git+https://github.com/mdtraj/mdtraj.git
+    - pip install -e .
+    - python -V
+    - pip freeze
+
+.coverage:
+  stage: coverage
+  dependencies:
+    - test
+    - test_openmm
+    - test_oldpy
+  script:
+  - pip install coverage
+  - coverage combine
+  - coverage xml -o coverage.xml
+  - coverage report -m
+  coverage: '/^TOTAL.*\s+(\d+\%)/'
+
+coverage_unprotected:
+  extends: .coverage
+  except: *protected
+ 
+coverage_protected:
+  extends: .coverage
+  only: *protected
+  <<: *codacy
+
 upload_docs:
    only: 
      - master@pyretis/pyretis
-   stage: upload_docs
+   stage: upload
    dependencies: 
      - build_docs
    before_script:
@@ -96,3 +227,33 @@ upload_docs:
      - mkdir -p ~/.ssh
      - ssh-keyscan -t rsa $WEBSITE >> ~/.ssh/known_hosts 2>/dev/null
      - rsync -ua --progress --delete --stats -e "ssh -i sshkey" ./docs/_build/html/* $WEBUSER@$WEBSITE:~/WWW/current/
+
+do_release:
+   stage: upload
+   dependencies:
+     - build_docs
+   only:
+     - /[v][0-9]+\.[0-9]+\.[0-9]+/
+   except:
+     - branches
+   script:
+     - pip install twine
+     - echo $CI_COMMIT_TAG
+     - diff -u <(python -c "import pyretis; print('v'+format(pyretis.version.VERSION))") <(echo "$CI_COMMIT_TAG")
+     - if [ $? -ne 0 ]; then exit 1; fi
+     - python setup.py sdist bdist_wheel
+     - twine upload --repository-url https://test.pypi.org/legacy/ dist/* -u $TWINE_USERNAME -p $TWINE_PASSWORD 
+     - pip uninstall pyretis -y 
+     - pip install --index-url https://test.pypi.org/simple/ pyretis
+     - twine upload dist/*
+     - apt-get update -qy
+     - apt-get -y install rsync
+     - ls docs/_build/html
+     - echo "$SSHKEY" > sshkey
+     - chmod 600 sshkey
+     - mkdir -p ~/.ssh
+     - ssh-keyscan -t rsa $WEBSITE >> ~/.ssh/known_hosts 2>/dev/null
+     - ssh -i sshkey $WEBUSER@$WEBSITE `bash -s` << EOF
+     - mkdir ~/WWW/$CI_COMMIT_TAG
+     - EOF
+     - rsync -ua --progress --delete --stats -e "ssh -i sshkey" ./docs/_build/html/* $WEBUSER@$WEBSITE:~/WWW/$CI_COMMIT_TAG/

@@ -6,7 +6,7 @@
 This style is based on `Xcode` from the Pygments.
 For the original style:
 
-    :copyright: Copyright 2006-2015 by the Pygments team, see AUTHORS.
+    :copyright: Copyright 2006-2019 by the Pygments team, see AUTHORS.
     :license: BSD, see LICENSE for details.
 
 See: http://pygments.org/

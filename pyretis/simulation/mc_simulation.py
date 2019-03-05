@@ -48,7 +48,7 @@ def mc_task(rgen, system, maxdx):
 
 
 class UmbrellaWindowSimulation(Simulation):
-    """This class defines a Umbrella simulation.
+    """This class defines an Umbrella simulation.
 
     The Umbrella simulation is a special case of
     the simulation class with settings to simplify the
@@ -76,7 +76,7 @@ class UmbrellaWindowSimulation(Simulation):
 
     simulation_type = 'umbrella-window'
 
-    def __init__(self, system, umbrella, overlap, rgen, maxdx,
+    def __init__(self, system, umbrella, overlap, maxdx, rgen=None,
                  mincycle=0, startcycle=0):
         """Initialise the umbrella simulation simulation.
 
@@ -88,11 +88,11 @@ class UmbrellaWindowSimulation(Simulation):
             The umbrella window to consider.
         overlap : float
             The position we have to cross before the simulation is done.
-        rgen : object like :py:class:`.RandomGenerator`
-            Object to use for random number generation.
         maxdx : float
             Defines the maximum movement allowed in the Monte Carlo
             moves.
+        rgen : object like :py:class:`.RandomGenerator`
+            Object to use for random number generation.
         mincycle : int, optional
             The *MINIMUM* number of cycles to perform. Note that in the
             base `Simulation` class this is the *MAXIMUM* number of
@@ -105,17 +105,23 @@ class UmbrellaWindowSimulation(Simulation):
         super().__init__(steps=mincycle, startcycle=startcycle)
         self.umbrella = umbrella
         self.overlap = overlap
-        self.rgen = rgen
+        if rgen is None:
+            self.rgen = np.random.RandomState()
+        else:
+            self.rgen = rgen
         self.system = system
         self.maxdx = maxdx
-        task_monte_carlo = {'func': mc_task,
-                            'args': [self.rgen, self.system, self.maxdx],
-                            'result': 'displace_step'}
-        self.add_task(task_monte_carlo)
+        self.add_task(
+            {
+                'func': mc_task,
+                'args': [self.rgen, self.system, self.maxdx],
+                'result': 'displace_step',
+            }
+        )
         self.first_step = False
 
     def is_finished(self):
-        """Check if simulation is done.
+        """Check if the simulation is done.
 
         In the umbrella simulation, the simulation is finished when we
         cycle is larger than maxcycle and all particles have
@@ -124,7 +130,7 @@ class UmbrellaWindowSimulation(Simulation):
         Returns
         -------
         out : boolean
-            True if simulation is finished, False otherwise.
+            True if the simulation is finished, False otherwise.
 
         """
         return (self.cycle['step'] > self.cycle['end'] and
@@ -137,14 +143,3 @@ class UmbrellaWindowSimulation(Simulation):
                                                     self.overlap)]
         msg += ['Minimum number of cycles: {}'.format(self.cycle['end'])]
         return '\n'.join(msg)
-
-    def restart_info(self):
-        """Return restart info.
-
-        Here we report the cycle number and the random
-        number generator status.
-        """
-        info = {'cycle': self.cycle,
-                'rgen': self.rgen.get_state(),
-                'type': self.simulation_type}
-        return info

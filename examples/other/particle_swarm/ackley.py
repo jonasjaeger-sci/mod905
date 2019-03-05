@@ -25,13 +25,15 @@ class Ackley(PotentialFunction):
 
     Note that the usage of this potential function differs from
     the usual usage for force fields.
+
     """
+
     def __init__(self):
-        """Initiate the function."""
+        """Set up the function."""
         super().__init__(dim=2, desc='The Ackley function')
 
     def potential(self, system):
-        """Evaluate the potential, note that we return all values!"""
+        """Evaluate the potential, note that we return all values."""
         xpos = system.particles.pos[:, 0]
         ypos = system.particles.pos[:, 1]
         pot = ackley_potential(xpos, ypos)

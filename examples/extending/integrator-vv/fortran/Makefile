@@ -13,3 +13,9 @@ clean:
 	find -name \*.so -delete
 	find -name \*.pyc -delete
 	find -name __pycache__ -delete
+	-rm thermo.txt*
+	-rm traj.xyz*
+	-rm energy.txt*
+	-rm pyretis.log*
+	-rm pyretis.restart*
+	-rm out.rst*

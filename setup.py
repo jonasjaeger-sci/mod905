@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2019, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
-"""
+"""PyRETIS - A simulation package for rare event simulations.
+
 PyRETIS - A simulation package for rare event simulations.
-Copyright (C) 2019, PyRETIS Development Team
+Copyright (c) 2019, PyRETIS Development Team
 
 This file is part of PyRETIS.
 
@@ -24,7 +25,11 @@ import ast
 from codecs import open as openc
 import os
 import shutil
+from shutil import SameFileError
 from setuptools import setup, find_packages
+
+
+FULL_VERSION = '2.0.0'  # Automatically set by setup_version.py
 
 
 def get_long_description():
@@ -46,7 +51,7 @@ def get_version():
             if lines.startswith('FULL_VERSION ='):
                 version = ast.literal_eval(lines.split('=')[1].strip())
                 return version
-    return '1.0.0.dev2'
+    return FULL_VERSION
 
 
 def get_requirements(docs=False):
@@ -64,21 +69,29 @@ def get_requirements(docs=False):
     return requirements
 
 
-# create copies of scripts:
-try:
-    shutil.copy('bin/pyretisrun.py', 'bin/pyretisrun')
-    shutil.copy('bin/pyretisanalyse.py', 'bin/pyretisanalyse')
-except FileNotFoundError:
-    pass
+def copy_exe_scripts():
+    """Copy and rename executable scripts."""
+    # create copies of scripts:
+    for filename in ('pyretisrun', 'pyretisanalyse'):
+        filepy = ''.join([filename, os.extsep, 'py'])
+        src = os.path.join('bin', filepy)
+        target = os.path.join('bin', filename)
+        try:
+            shutil.copy(src, target)
+        except FileNotFoundError:
+            pass
+        except SameFileError:
+            pass
 
 
+copy_exe_scripts()
 setup(
     name='pyretis',
     version=get_version(),
     description='A simulation package for rare events',
     long_description=get_long_description(),
     url='http://www.pyretis.org',
-    author='The PyRETIS team',
+    author='PyRETIS Development Team',
     author_email='pyretis@pyretis.org',
     license='LGPLv2.1+',
     classifiers=[
@@ -102,5 +115,7 @@ setup(
     },
     include_package_data=True,
     install_requires=get_requirements(docs=False),
-    scripts=['bin/pyretisrun', 'bin/pyretisanalyse'],
+    entry_points={'console_scripts':
+                  ['pyretisrun = pyretis.bin.pyretisrun:entry_point',
+                   'pyretisanalyse = pyretis.bin.pyretisanalyse:entry_point']},
 )

@@ -1,1 +1,1 @@
-../../../../examples/path_sampling/1D-double-well/tis/tis/tis.rst
+../../../../examples/path_sampling/1D-double-well/tis-multiple/tis-multiple.rst

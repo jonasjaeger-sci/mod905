@@ -3,7 +3,7 @@
 The Analysis section
 ====================
 
-The analysis section defines parameters for the analysis.
+The ``analysis`` section defines parameters for the analysis.
 
 .. pyretis-input-example:: Analysis
 
@@ -51,7 +51,7 @@ For the analysis section the following keywords can be set:
 .. _table-analysis-keywords:
 
 .. table:: Supported keywords for the analysis section.
-   :class: table-striped
+   :class: table-striped table-hover
 
    +------------------------+-------------------------------------------------+
    | Keyword                | Description                                     |
@@ -184,7 +184,7 @@ Keyword plot
      to any of the supported output formats by the plotter. Often this will depend
      on your specific system, but common choices are ``'png'``, ``'pdf'`` and ``'svg'``.
 
-   * ``'style'``: Selects a style for creating plots. Here you can for instance create your
+   * ``'style'``: Selects a style for creating plots. Here you can, for instance, create your
      own matplotlib style or use one of the built-in styles.
      Please see `<http://matplotlib.org/users/style_sheets.html>`_ for more information.
 

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2019, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
-"""Test the methods in pyretis.inout.setup.createsystem"""
+"""Test the methods in pyretis.inout.setup.createsystem."""
 import os
 import logging
 import filecmp
@@ -11,30 +11,21 @@ import numpy as np
 from pyretis.core.system import System
 from pyretis.inout.common import make_dirs
 from pyretis.engines.external import ExternalMDEngine
-from pyretis.inout.writers.xyzio import (
+from pyretis.inout.formats.xyz import (
     read_xyz_file,
     convert_snapshot,
 )
-from pyretis.orderparameter.orderparameter import (
-    OrderParameterPosition,
-)
+from pyretis.orderparameter.orderparameter import PositionVelocity
 from pyretis.core.particles import ParticlesExt
+from .test_helpers.test_helpers import remove_dir
 logging.disable(logging.CRITICAL)
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 
-def remove_dir(dirname):
-    """Remove a directory."""
-    try:
-        os.removedirs(dirname)
-    except OSError:
-        pass
-
-
 class DummyExternal(ExternalMDEngine):
-    """A dummy external engine. Only useful for testing!"""
+    """A dummy external engine. Only useful for testing."""
 
     def __init__(self, input_path, timestep, subcycles):
         """Initialise the dummy engine."""
@@ -47,10 +38,10 @@ class DummyExternal(ExternalMDEngine):
         }
 
     def step(self, system, name):
-        pass
+        """Perform a single dummy step."""
 
     def _read_configuration(self, filename):
-        """Just read a xyz configuration."""
+        """Read a xyz configuration."""
         xyz, vel, box, names = None, None, None, None
         for snapshot in read_xyz_file(filename):
             box, xyz, vel, names = convert_snapshot(snapshot)
@@ -58,31 +49,31 @@ class DummyExternal(ExternalMDEngine):
         return box, xyz, vel, names
 
     def _reverse_velocities(self, filename, outfile):
-        pass
+        """Reverse velocoties with a dummy method."""
 
     def _extract_frame(self, traj_file, idx, out_file):
-        pass
+        """Extract a frame, dummy method."""
 
     def _propagate_from(self, name, path, system, order_function, interfaces,
-                        reverse=False):
+                        msg_file, reverse=False):
+        """Propagate with the engine, dummy method."""
         # pylint: disable=too-many-arguments
-        pass
 
     def modify_velocities(self, system, rgen, sigma_v=None, aimless=True,
                           momentum=False, rescale=None):
+        """Modify velocities, dummy method."""
         # pylint: disable=too-many-arguments
-        pass
 
 
 class TestExternalEngine(unittest.TestCase):
-    """Test some of the methods from .createsystem"""
+    """Run tests for the external engine."""
 
     def test_exe_dir(self):
         """Test exe_dir property."""
         engine = DummyExternal('test', 1.0, 10)
         self.assertIsNone(engine.exe_dir)
         logging.disable(logging.INFO)
-        with self.assertLogs('pyretis.engines.external', level='WARNING'):
+        with self.assertLogs('pyretis.engines.engine', level='WARNING'):
             engine.exe_dir = 'non-existing-dir'
         logging.disable(logging.CRITICAL)
         self.assertEqual('non-existing-dir', engine.exe_dir)
@@ -205,7 +196,7 @@ class TestExternalEngine(unittest.TestCase):
         """Test calculation of the order parameter."""
         engine = DummyExternal('test', 1.0, 10)
         filename = os.path.join(HERE, 'config.xyz')
-        order_function = OrderParameterPosition(0, dim='x', periodic=False)
+        order_function = PositionVelocity(0, dim='x', periodic=False)
         system = System()
         system.particles = ParticlesExt(dim=3)
         system.particles.config = (filename, 0)

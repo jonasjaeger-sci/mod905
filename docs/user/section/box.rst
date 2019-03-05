@@ -3,8 +3,8 @@
 The Box section
 ===============
 
-The box section defines the simulation box.
-This is useful, for instance if periodic boundary
+The ``box`` section defines the simulation box.
+This is useful, for instance, if periodic boundary
 conditions are needed.
 
 .. pyretis-input-example:: Box
@@ -13,7 +13,7 @@ conditions are needed.
 
       Box settings
       ------------
-      length = [10, 10, 10]
+      cell = [10, 10, 10]
       periodic = [True, True, False]
 
 
@@ -22,7 +22,7 @@ Keywords for the Box section
 
 For the Box section the following keywords can be set:
 
-.. |box_length| replace:: :ref:`length <user-section-box-keyword-length>`
+.. |box_cell| replace:: :ref:`cell <user-section-box-keyword-cell>`
 
 .. |box_low| replace:: :ref:`low <user-section-box-keyword-low>`
 
@@ -33,12 +33,12 @@ For the Box section the following keywords can be set:
 .. _table-box-keywords:
 
 .. table:: Keywords for the Box section
-   :class: table-striped
+   :class: table-striped table-hover
 
    +----------------+---------------------------------------------------------+
    | Keyword        | Description                                             |
    +================+=========================================================+
-   | |box_length|   | Which defines the cell parameters of the simulation     |
+   | |box_cell|     | Which defines the cell parameters of the simulation     |
    |                | box.                                                    |
    +----------------+---------------------------------------------------------+
    | |box_low|      | Which defines the lower boundaries of the box.          |
@@ -50,24 +50,24 @@ For the Box section the following keywords can be set:
    +----------------+---------------------------------------------------------+
 
 
-.. _user-section-box-keyword-length:
+.. _user-section-box-keyword-cell:
 
-Keyword length
+Keyword cell 
 ^^^^^^^^^^^^^^
 
-.. pyretis-keyword:: length list of floats
+.. pyretis-keyword:: cell list of floats
 
-   The ``length`` keyword defines the length of the
-   simulation box in    each dimension. This
+   The ``cell`` keyword defines the length of the
+   simulation box in each dimension. This
    is given by a list of numbers:
 
    .. code-block:: rst
 
        Box
        ---
-       length = [2, 3, 5]
+       cell = [2, 3, 5]
        # or
-       length = [10, 10, float('inf')]
+       cell = [10, 10, float('inf')]
 
    This will define a simulation box with limits starting from 0
    and up to the specified length.
@@ -97,9 +97,9 @@ Keyword length
         \end{bmatrix}
 
    Default:
-     If the length is not given in the box section, then the length will
+     If the cell is not given in the box section, then the cell will
      be set to infinite in all directions. However, if present, the
-     lengths found in the input configuration will be used.
+     cell found in the input configuration will be used.
 
 .. _user-section-box-keyword-low:
 
@@ -117,7 +117,7 @@ Keyword low
        low = [0, -1, 0]
 
    Default:
-     The default setting is 0 for each dimension.
+     The default setting is ``0`` for each dimension.
 
 .. _user-section-box-keyword-high:
 
@@ -135,7 +135,7 @@ Keyword high
        high = [10, -10, 100]
 
    Default:
-     The default setting is ``low + length``.
+     The default setting is ``low + cell``.
 
 .. _user-section-box-keyword-periodic:
 

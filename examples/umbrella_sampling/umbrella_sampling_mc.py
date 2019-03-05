@@ -1,25 +1,26 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2019, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
-"""
-This is a simple example of how PyRETIS can be used
-for running an umbrella simulation.
+"""Example showing a simple umbrella simulation with PyRETIS.
 
 In this simulation, we study a particle moving in a one-dimensional
 potential energy landscape and the goal is to determine this
 landscape by performing umbrella simulations.
+
 """
+
+import sys
 import colorama
 from tqdm import tqdm
-from pyretis.core import System, RandomGenerator, create_box, Particles
-from pyretis.inout.setup import create_simulation
-from pyretis.inout.common import print_to_screen
-from pyretis.forcefield import ForceField
-from pyretis.forcefield.potentials import DoubleWell, RectangularWell
-from pyretis.analysis import histogram, match_all_histograms
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.cm import get_cmap
+from pyretis.core import System, RandomGenerator, create_box, Particles
+from pyretis.inout.setup import create_simulation
+from pyretis.inout import print_to_screen
+from pyretis.forcefield import ForceField
+from pyretis.forcefield.potentials import DoubleWell, RectangularWell
+from pyretis.analysis import histogram, match_all_histograms
 
 
 UMBRELLA_WINDOWS = [
@@ -37,17 +38,17 @@ plt.style.use('seaborn')
 
 
 def set_up_system(pos=np.array([-0.7])):
-    """Method to set up the initial system."""
-    # Define system with a temperature in K
+    """Set up the initial system."""
+    # Define system with a temperature in K:
     dummybox = create_box(periodic=[False])
     mysystem = System(temperature=500, units='eV/K', box=dummybox)
     mysystem.particles = Particles(dim=mysystem.get_dim())
     # We will only have one particle in the system:
     mysystem.add_particle(name='X', pos=pos)
     # In this particular example, we are going to use
-    # a simple double well potential
+    # a simple double well potential:
     potential_dw = DoubleWell(a=1, b=1, c=0.02)
-    # and a rectangular well potential
+    # And a rectangular well potential:
     potential_rw = RectangularWell()
     # Set up the force field:
     forcefield_bias = ForceField(
@@ -60,12 +61,12 @@ def set_up_system(pos=np.array([-0.7])):
 
 
 def set_up_simulation(system, umbrella, over, seed):
-    """Method to set up a single umbrella window simulation.
+    """Set up a single umbrella window simulation.
 
     Parameters
     ----------
     system : object like :py:class:`.System`
-        The system we are investigating
+        The system we are investigating.
     umbrella : list of floats
         The umbrella window we are investigating.
     over : float
@@ -73,6 +74,7 @@ def set_up_simulation(system, umbrella, over, seed):
         current window.
     seed : integer
         A seed for the random number generator.
+
     """
     settings = {}
     settings['simulation'] = {
@@ -83,11 +85,11 @@ def set_up_simulation(system, umbrella, over, seed):
         'over': over,
         'umbrella': umbrella,
     }
-    # update the parameters for the rectangular bias window:
+    # Update the parameters for the rectangular bias window:
     potential_rw = system.forcefield.potential[1]
     potential_rw.set_parameters({'left': umbrella[0], 'right': umbrella[1]})
     system.potential()  # recalculate potential energy
-    # Create the umbrella simulation :-)
+    # Create the umbrella simulation:
     simulation = create_simulation(settings, {'system': system})
     return simulation
 
@@ -99,6 +101,7 @@ def run_umbrellas(windows):
     ----------
     windows : list of floats
         The umbrella windows to investigate.
+
     """
     system = set_up_system()
     msg = '\nRunning umbrella no: {} of {}. Location: {}'
@@ -128,14 +131,13 @@ def analysis_and_plot(system, trajectory, windows):
     bins = 100
     lim = (-1.0, 1.0)
     histograms = [histogram(trj, bins=bins, limits=lim) for trj in trajectory]
-    # extract the bins (the midpoints) and the bin-width:
+    # Extract the bins (the midpoints) and the bin-width:
     bin_x = histograms[0][-1]
     dbin = bin_x[1] - bin_x[0]
     # We are going to match these histograms:
     print_to_screen('Matching histograms...', level='info')
     histograms_s, _, hist_avg = match_all_histograms(histograms, windows)
-    # let us create some simple plots using matplotlib:
-    # first, let us plot the matched histograms on a log-scale:
+    # Let us create some simple plots using matplotlib:
     plot_histograms(histograms_s, hist_avg, bin_x, dbin)
     plot_free_energy(hist_avg, bin_x, system)
 
@@ -150,9 +152,10 @@ def plot_histograms(histograms_s, hist_avg, bin_x, dbin):
     hist_avg : numpy.array
         The average histogram.
     bin_x : numpy.array
-        The mid points for the histograms.
+        The midpoints for the histograms.
     dbin : float
         The histogram width.
+
     """
     print_to_screen('Plotting matched histograms', level='info')
     fig = plt.figure()
@@ -182,8 +185,7 @@ def plot_histograms(histograms_s, hist_avg, bin_x, dbin):
 
 def plot_unbiased_potential(system, xpos):
     """Plot the unbiased potential for the given locations."""
-    # Plot the unbiased potential:
-    # set up the unbiased force field:
+    # Set up and plot the unbiased potential:
     forcefield = ForceField(
         'Double well',
         potential=[system.forcefield.potential[0]]
@@ -208,12 +210,13 @@ def plot_free_energy(hist_avg, bin_x, system):
         The system we have been investigating, we are here
         using it to plot the unbiased potential we have been
         sampling.
+
     """
     print_to_screen('Plotting the free energy', level='info')
     fig = plt.figure()
     axi = fig.add_subplot(111)
     xpos = np.linspace(-2, 2, 1000)
-    free = -np.log(hist_avg) / system.temperature['beta']  # free energy
+    free = -np.log(hist_avg) / system.temperature['beta']  # Free energy.
     vpot = plot_unbiased_potential(system, xpos)
     free += (vpot.min() - free.min())
 
@@ -232,4 +235,5 @@ if __name__ == '__main__':
     colorama.init(autoreset=True)
     SYS, TRAJ, _ = run_umbrellas(UMBRELLA_WINDOWS)
     analysis_and_plot(SYS, TRAJ, UMBRELLA_WINDOWS)
-    plt.show()
+    if 'noplot' not in sys.argv[1:]:
+        plt.show()

@@ -4,7 +4,7 @@
 """Definition of the base class for the plotter.
 
 This module just defines a base class for plotters. This is just to
-ensure that all plotters at least implements some functions and that we
+ensure that all plotters at least implement some functions and that we
 can make use of them.
 
 Important classes defined here
@@ -21,7 +21,7 @@ __all__ = ['Plotter']
 class Plotter(metaclass=ABCMeta):
     """Base class for PyRETIS plotters.
 
-    This class defines a plotter. A plotter is just a object
+    This class defines a plotter. A plotter is just an object
     that supports certain functions which can be called by analysis
     output functions. It should define certain plots and the
     ``Plotter`` class is an abstract class just to make sure that
@@ -59,27 +59,27 @@ class Plotter(metaclass=ABCMeta):
     @abstractmethod
     def output_flux(self, results):
         """Plot flux results."""
-        pass
+        return
 
     @abstractmethod
     def output_energy(self, results, energies):
         """Plot energy results."""
-        pass
+        return
 
     @abstractmethod
     def output_orderp(self, results, orderdata):
         """Plot order parameter results."""
-        pass
+        return
 
     @abstractmethod
     def output_path(self, results, path_ensemble):
         """Plot results for each path ensemble."""
-        pass
+        return
 
     @abstractmethod
     def output_matched_probability(self, path_ensembles, detect, matched):
         """Plot the overall probability for path ensembles."""
-        pass
+        return
 
     def __str__(self):
         """Print out the basic info."""

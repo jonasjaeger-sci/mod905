@@ -5,10 +5,11 @@
 
 We also do some test to check the correctness of values.
 """
+from copy import deepcopy
 import logging
 import os
-import unittest
 import tempfile
+import unittest
 from pyretis.core.units import (
     create_conversion_factors,
     generate_system_conversions,
@@ -18,7 +19,10 @@ from pyretis.core.units import (
     UNITS,
     write_conversions,
     units_from_settings,
+    convert_bases,
+    bfs_convert,
 )
+from .help import turn_on_logging
 logging.disable(logging.CRITICAL)
 
 
@@ -179,6 +183,28 @@ class UnitsTest(unittest.TestCase):
                 self.assertTrue(key in CONVERT)
                 self.assertAlmostEqual(val, CONVERT[key])
 
+    def test_convert_bases(self):
+        """Test convert_bases function"""
+        copy_convert = deepcopy(CONVERT)
+        CONVERT['mass'] = {('kg', 'kg'): 1.0, ('g', 'kg'): 0.001,
+                           ('g', 'g'): 1.0}
+        with turn_on_logging():
+            with self.assertLogs('pyretis.core.units', level='WARNING'):
+                convert_bases('mass')
+        self.assertAlmostEqual(CONVERT['mass'][('kg', 'g')], 1000.0)
+        CONVERT.clear()
+        CONVERT.update(copy_convert)
+
+    def test_bfs_convert(self):
+        """Test bfs_convert function"""
+        convertdim = {('g', 'g'): 1.0, ('kg', 'g'): 1000.0, ('kg', 'kg'): 1.0}
+        self.assertEqual(bfs_convert(convertdim, 'g', 'kg'),
+                         (('g', 'kg'), None, None))
+        self.assertEqual(bfs_convert(convertdim, 'kg', 'kg'),
+                         (('kg', 'kg'), 1.0, None))
+        self.assertEqual(bfs_convert(convertdim, 'kg', 'g'),
+                         (('kg', 'g'), 1000.0, None))
+
     def test_generate_conversion(self):
         """Test the generator of conversion factors."""
         generate_conversion_factors('myunit', (1.0, 'm'), (1.0, 'J'),
@@ -190,13 +216,39 @@ class UnitsTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             generate_conversion_factors('myunit3', (1.0, 'm'), (1.0, 'JJ'),
                                         (1.0, 'kg'), charge='e')
+        # Test with non-unit "1.0" values
+        generate_conversion_factors('myunit4', (2.0, 'm'), (0.5, 'J'),
+                                    (3.0, 'g'))
+        self.assertAlmostEqual(CONVERT['length']['myunit4', 'm'], 2.0)
+        self.assertAlmostEqual(CONVERT['length']['m', 'myunit4'], 0.5)
+        self.assertAlmostEqual(CONVERT['energy']['myunit4', 'J'], 0.5)
+        self.assertAlmostEqual(CONVERT['energy']['J', 'myunit4'], 2.0)
+        self.assertAlmostEqual(CONVERT['mass']['myunit4', 'g'], 3.0)
+        self.assertAlmostEqual(CONVERT['mass']['g', 'myunit4'], 0.33333333)
+        self.assertAlmostEqual(CONVERT['mass']['myunit4', 'kg'], 0.003)
+        # Test with 'unit' label part of  UNITS[dim]. To check coverage.
+        copy_convert = deepcopy(CONVERT)
+        self.assertEqual(CONVERT, copy_convert)
+        generate_conversion_factors('bohr', (1., 'm'), (1., 'J'), (1., 'g'))
+        self.assertNotEqual(CONVERT, copy_convert)
+        self.assertAlmostEqual(CONVERT['length']['bohr', 'bohr'], 1.)
+        # Test some expected but wrong assignment
+        self.assertAlmostEqual(CONVERT['length']['bohr', 'm'], 1.)
+        self.assertAlmostEqual(CONVERT['mass']['bohr', 'g'], 1.)
+        # Restore CONVERT
+        CONVERT.clear()
+        CONVERT.update(copy_convert)
+        self.assertEqual(CONVERT, copy_convert)
+        with self.assertRaises(Exception) as context:
+            generate_conversion_factors('au', (1., 'm'), (1., 'J'), (1., 'xx'))
+        self.assertTrue("Missing" in str(context.exception))
 
     def test_units_from_settings(self):
         """Test that we can create units from settings."""
         # Using a predefined unit system
         settings = {'system': {'units': 'real'}}
         msg = units_from_settings(settings)
-        self.assertEqual(msg, 'Creating unit: real')
+        self.assertEqual(msg, 'Created units: "real".')
         # Using a custom system:
         settings = {'system': {'units': 'my_new_system1'}}
         settings['unit-system'] = {
@@ -207,7 +259,7 @@ class UnitsTest(unittest.TestCase):
             'charge': 'e'
         }
         msg = units_from_settings(settings)
-        self.assertEqual(msg, 'Creating unit system: my_new_system1')
+        self.assertEqual(msg, 'Created unit system: "my_new_system1".')
         # Test for errors:
         with self.assertRaises(ValueError):
             settings = {'system': {'units': 'my_new_system2'}}

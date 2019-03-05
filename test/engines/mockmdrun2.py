@@ -11,7 +11,7 @@ import sys
 import os
 from time import sleep
 import numpy as np
-from pyretis.inout.writers.gromacsio import (
+from pyretis.inout.formats.gromacs import (
     read_gromos96_file,
     write_gromos96_file,
     write_trr_frame,
@@ -52,7 +52,7 @@ def read_mock_tpr(filename):
             elif lines.startswith('nsteps ='):
                 steps = int(lines.split()[-1])
             elif lines.startswith('gen_vel ='):
-                gen = True if lines.strip().split()[-1] == 'yes' else False
+                gen = lines.strip().split()[-1] == 'yes'
             elif lines.startswith('nstxout ='):
                 nstxout = int(lines.strip().split()[-1])
     frame, xyz, vel, _ = read_gromos96_file(config)

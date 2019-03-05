@@ -39,5 +39,5 @@ integrators. The tests can be run in the same way:
 
 4. Compare the output: ``python compare.py``
 
-Note: Inside each directory there is a ``run.sh`` file which lists the
+Note: Inside each directory, there is a ``run.sh`` file which lists the
 commands for the steps given above.

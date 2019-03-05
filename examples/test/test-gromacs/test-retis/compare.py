@@ -1,17 +1,19 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2019, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
-"""Simple script to compare outcome of two simulations.
+"""Simple script to compare the outcome of two simulations.
 
 Here we compare a RETIS simulation of 250 steps to known results.
 """
 import os
 import sys
+import shutil
 import tarfile
+import tempfile
 import colorama
-from pyretis.inout.common import print_to_screen
+from pyretis.inout import print_to_screen
 from pyretis.inout.settings import parse_settings_file
-from pyretis.core.pathensemble import PATH_DIR_FMT
+from pyretis.core.pathensemble import generate_ensemble_name
 
 
 RESULTS = 'results'
@@ -42,6 +44,7 @@ def read_tarfile(tar_file, file_to_extract):
     Note
     ----
     This will read the contents of the requested file into memory.
+
     """
     data = None
     with tarfile.open(tar_file, 'r:gz') as tar:
@@ -52,11 +55,47 @@ def read_tarfile(tar_file, file_to_extract):
     return data
 
 
+def make_traj_file(root, ensemble):
+    """Make a traj.txt file using the accepted and rejected ones.
+
+    Parameters
+    ----------
+    root : string
+        The path to the directory containing the output.
+    ensemble : integer
+        The ensemble we are comparing for (0, 1, 2, ...)
+
+    """
+    ensemble_dir = generate_ensemble_name(ensemble)
+    tar_file_acc = os.path.join(root, ensemble_dir, 'traj', 'traj-acc.tar')
+    tar_file_rej = os.path.join(root, ensemble_dir, 'traj', 'traj-rej.tar')
+    with tempfile.TemporaryDirectory() as tempdir:
+        filenames = []
+        for tar_file in (tar_file_acc, tar_file_rej):
+            with tarfile.open(tar_file, 'r') as tar:
+                files = [i for i in tar.getmembers() if i.isfile()]
+                traj_files = [i for i in files if i.name.endswith('traj.txt')]
+                tar.extractall(path=tempdir, members=traj_files)
+                filenames += [i.name for i in traj_files]
+        filenames.sort(key=lambda i: int(os.path.split(i)[0]))
+        traj_file = os.path.join(tempdir, 'traj.txt')
+        with open(traj_file, 'w') as outfile:
+            for i in filenames:
+                with open(os.path.join(tempdir, i), 'r') as infile:
+                    outfile.write(infile.read())
+        shutil.copy(
+            os.path.join(traj_file),
+            os.path.join(root, ensemble_dir, 'traj.txt')
+        )
+
+
 def compare_files(settings, root, results_tgz):
     """Compare ouput files."""
     inter = settings['simulation']['interfaces']
     for i in range(len(inter)):
         for files in ('pathensemble.txt', 'order.txt', 'traj.txt'):
+            if files == 'traj.txt':
+                make_traj_file(root, i)
             result = compare_file_contents(root, i, files, results_tgz)
             if not result:
                 print_to_screen('\t-> *Files differ!*', level='error')
@@ -84,9 +123,10 @@ def compare_file_contents(root, ensemble, file_name, results_tgz):
     -------
     result : boolean
         True if the files are equal, False otherwise.
+
     """
     tgz_file = os.path.join(root, results_tgz)
-    ensemble_dir = PATH_DIR_FMT.format(ensemble)
+    ensemble_dir = generate_ensemble_name(ensemble)
     file2 = os.path.join(RESULTS, ensemble_dir, file_name)
     data2 = read_tarfile(tgz_file, file2)
     file1 = os.path.join(root, ensemble_dir, file_name)

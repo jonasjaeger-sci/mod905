@@ -3,7 +3,7 @@
 The System section
 ==================
 
-The system section defines some properties of the system.
+The ``system`` section defines some properties of the system.
 
 .. pyretis-input-example:: System
 
@@ -27,7 +27,7 @@ The following keywords can be set for the System section:
 .. _table-system-keywords:
 
 .. table:: Keywords for the System section
-   :class: table-striped
+   :class: table-striped table-hover
 
    +----------------------+---------------------------------------------------+
    | Keyword              | Description                                       |

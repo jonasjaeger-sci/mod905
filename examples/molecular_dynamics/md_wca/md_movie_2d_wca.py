@@ -1,79 +1,83 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2019, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
-"""
-Example of running a MD NVE simulation
-"""
-# pylint: disable=C0103
+"""Example of running a MD NVE simulation."""
+# pylint: disable=invalid-name
 import numpy as np
-from pyretis.core import System, create_box, Particles
-from pyretis.core.units import CONVERT, create_conversion_factors
-from pyretis.inout.plotting import COLORS, COLOR_SCHEME
-from pyretis.inout.setup import (create_output_tasks, create_system,
-                                 create_engine, create_force_field,
-                                 create_simulation)
 # imports for the plotting:
 from matplotlib import pyplot as plt
 from matplotlib import animation
 import matplotlib as mpl
-import matplotlib.gridspec as gridspec
+from matplotlib import gridspec
+from pyretis.core import System, create_box, Particles
+from pyretis.core.units import CONVERT, create_conversion_factors
+from pyretis.inout.plotting import COLORS, COLOR_SCHEME
+from pyretis.inout.setup import (create_system, create_engine,
+                                 create_force_field, create_simulation)
+
 
 PCOLOR = {'A': 'blue', 'B': 'magenta'}  # Colors for drawing
 # Define potential parameters:
 WCA_PARAMETERS = {
     0: {'sigma': 1.0, 'epsilon': 1.0, 'factor': 2.**(1./6.)},
-    1: {'sigma': 1.0, 'epsilon': 1.0, 'factor': 2.**(1./6.)}
+    1: {'sigma': 1.0, 'epsilon': 1.0, 'factor': 2.**(1./6.)},
 }
 DWCA_PARAMETERS = {
     'types': [(1, 1)],
     'rzero': 1.0 * (2.0**(1.0/6.0)),
     'height': 6.0,
-    'width': 0.25
+    'width': 0.25,
 }
 # Give simulation settings:
-settings = {}
-settings['system'] = {'temperature': 2.0,
-                      'units': 'lj'}
-settings['box'] = {'low': [0.0, 0.0], 'high': [3.6, 3.6]}
-settings['simulation'] = {
-    'task': 'md-nve',
-    'steps': 1100
-}
-settings['engine'] = {
-    'class': 'velocityverlet',
-    'timestep': 0.0025
-}
-settings['output'] = {
-    'backup': 'overwrite',
-    'energy-file': 1,
-    'screen': 10,
-    'trajectory-file': 10
-}
-settings['potential'] = [
-    {
-        'class': 'PairLennardJonesCutnp',
-        'dim': 2,
-        'shift': True,
-        'mixing': 'geometric',
-        'parameter': WCA_PARAMETERS
+SETTINGS = {
+    'system': {
+        'temperature': 2.0,
+        'units': 'lj',
     },
-    {
-        'class': 'DoubleWellWCA',
-        'dim': 2,
-        'parameter': DWCA_PARAMETERS
+    'box': {
+        'low': [0.0, 0.0],
+        'high': [3.6, 3.6],
     },
-]
-settings['particles'] = {
-    'position': {'generate': 'sq', 'repeat': [3, 3], 'lcon': 1.0},
-    'velocity': {'generate': 'maxwell', 'momentum': True, 'seed': 0},
-    'type': [0, 1, 1, 0],
-    'name': ['A', 'B', 'B', 'A'],
-    'mass': {'A': 1.0, 'B': 1.0}
+    'simulation': {
+        'task': 'md-nve',
+        'steps': 1100,
+    },
+    'engine': {
+        'class': 'velocityverlet',
+        'timestep': 0.0025,
+    },
+    'output': {
+        'backup': 'overwrite',
+        'energy-file': 1,
+        'screen': 10,
+        'trajectory-file': 10,
+    },
+    'potential': [
+        {
+            'class': 'PairLennardJonesCutnp',
+            'dim': 2,
+            'shift': True,
+            'mixing': 'geometric',
+            'parameter': WCA_PARAMETERS,
+        },
+        {
+            'class': 'DoubleWellWCA',
+            'dim': 2,
+            'parameter': DWCA_PARAMETERS,
+        },
+    ],
+    'particles': {
+        'position': {'generate': 'sq', 'repeat': [3, 3], 'lcon': 1.0},
+        'velocity': {'generate': 'maxwell', 'momentum': True, 'seed': 0},
+        'type': [0, 1, 1, 0],
+        'name': ['A', 'B', 'B', 'A'],
+        'mass': {'A': 1.0, 'B': 1.0},
+    },
 }
-
-UNIT = settings['system']['units']
+UNIT = SETTINGS['system']['units']
 create_conversion_factors(UNIT)
 print('# Creating system from settings.')
+settings = SETTINGS
 system = create_system(settings)
 system.forcefield = create_force_field(settings)
 system.particles.pos -= (np.average(system.particles.pos, axis=0) -
@@ -82,8 +86,7 @@ print('# Creating simulation from settings.')
 kwargs = {'system': system, 'engine': create_engine(settings)}
 simulation = create_simulation(settings, kwargs)
 print('# Creating output tasks from settings.')
-outputs = [task for task in create_output_tasks(settings)]
-
+simulation.set_up_output(settings, progress=False)
 size = system.box.bounds()
 BIDX = [i for i, ptype in enumerate(system.particles.ptype) if ptype == 1]
 dwca = system.forcefield.potential[1]
@@ -163,7 +166,7 @@ ax2.legend(loc='lower left', ncol=3, frameon=False,
 def plot_dwca_potential():
     """Plot the double well WCA potential.
 
-    This is a helper function to plot the dwca potential.
+    This is a helper function to plot the potential.
     It is creating a fake system with a fake box and moves a
     particle relative to another one in order to obtain the potential.
 
@@ -174,6 +177,7 @@ def plot_dwca_potential():
     out[1] : numpy.array
         The potential energy as a function of `out[0]`, can be used as the
         y-coordinate in a plot.
+
     """
     rpos = np.linspace(0.1, 5, 500)
     potdwca = []
@@ -209,7 +213,8 @@ def init():
     Returns
     -------
     out : list
-        list of the patches to be drawn
+        list of the patches to be drawn.
+
     """
     patches = []
     for ci in circles:
@@ -240,6 +245,7 @@ def get_max_vector(vectors):
     -------
     vmax : float
         The length of the largest vector.
+
     """
     vmax = None
     for vi in vectors:
@@ -269,6 +275,7 @@ def get_velocity_force_arrows(forces, vels):
         The x-component of the velocities, normalised.
     out[3] : numpy.array
         The y-component of the velocities, normalised.
+
     """
     fmax, vmax = get_max_vector(forces), get_max_vector(vels)
     FU, FV, VU, VV = [], [], [], []
@@ -307,6 +314,7 @@ def spring_bond(delta, dr, part1, part2):
         X-coordinates for the line.
     out[1] : numpy.array
         Y-coordinates for the line.
+
     """
     delta_u = delta / dr
     xpos = [part1[0]]
@@ -334,7 +342,7 @@ def spring_bond(delta, dr, part1, part2):
     return xpos, ypos
 
 
-def update(frame, sys, output_tasks, sim):
+def update(frame, sys, sim):
     """Update plots for the animation.
 
     This function will be running the simulation and updating the plots.
@@ -347,8 +355,6 @@ def update(frame, sys, output_tasks, sim):
         The current frame number, supplied by `animation.FuncAnimation`.
     sys : object
         The system object we are simulating
-    output_tasks : list of objects like `OutputTask`
-        This list defines the outputs to do for this simulation.
     sim : object
         The simulation we are running
 
@@ -356,6 +362,7 @@ def update(frame, sys, output_tasks, sim):
     -------
     out : list
         List of the patches to be drawn.
+
     """
     pos = sys.particles.pos
     patches = []
@@ -378,8 +385,9 @@ def update(frame, sys, output_tasks, sim):
 
     if not sim.is_finished():
         result = sim.step()
-        for tsk in output_tasks:
-            tsk.output(result)
+        # Since we are not using run - manually output:
+        for task in sim.output_tasks:
+            task.output(result)
         # reaction coordinate:
         delta = sys.box.pbc_dist_coordinate(sys.particles.pos[BIDX[1]] -
                                             sys.particles.pos[BIDX[0]])
@@ -412,15 +420,14 @@ def update(frame, sys, output_tasks, sim):
                                                                    frame))
         patches.append(time_text)
         return patches
-    else:
-        print('Simulation is done')
-        return patches
+    print('Simulation is done')
+    return patches
 
 
 # This will run the animation/simulation:
 anim = animation.FuncAnimation(fig, update,
                                frames=settings['simulation']['steps']+1,
-                               fargs=[system, outputs, simulation],
+                               fargs=[system, simulation],
                                repeat=False, interval=2, blit=True,
                                init_func=init)
 # for making a movie:

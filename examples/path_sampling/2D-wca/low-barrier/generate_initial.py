@@ -3,7 +3,7 @@
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Here, we just generate the initial config using PyRETIS tools."""
 from pyretis.tools.lattice import generate_lattice
-from pyretis.inout.writers.xyzio import write_xyz_file
+from pyretis.inout.format.xyz import write_xyz_file
 
 
 # pylint: disable=invalid-name

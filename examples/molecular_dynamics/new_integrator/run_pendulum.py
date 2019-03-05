@@ -1,19 +1,16 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2019, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
-"""
-Double pendulum
-"""
-# pylint: disable=C0103
+"""Double pendulum example."""
+# pylint: disable=invalid-name
 import numpy as np
+import matplotlib as mpl
+from matplotlib import pyplot as plt
+from matplotlib import animation
+from matplotlib import gridspec
 from pyretis.core.units import create_conversion_factors
 from pyretis.inout.setup import (create_system, create_engine,
                                  create_force_field, create_simulation)
-# imports for the plotting:
-from matplotlib import pyplot as plt
-from matplotlib import animation
-import matplotlib as mpl
-import matplotlib.gridspec as gridspec
 
 # Define potential parameters:
 L1 = 1.5
@@ -51,7 +48,7 @@ settings['output'] = {
     'trajectory-file': 10
 }
 settings['potential'] = [
-    {'class': 'DoublePendulumn',
+    {'class': 'DoublePendulum',
      'module': 'doublependulum.py',
      'g': 1.0, 'l1': L1, 'l2': L2}
 ]
@@ -117,7 +114,8 @@ def init():
     Returns
     -------
     out : list
-        list of the patches to be drawn
+        List of the patches to be drawn.
+
     """
     patches = []
     circ1.set_visible(False)
@@ -144,15 +142,16 @@ def update(frame, sys, sim):
     ----------
     frame : int
         The current frame number, supplied by `animation.FuncAnimation`.
-    sys : object
-        The system object we are simulating
-    sim : object
-        The simulation we are running
+    sys : object like :py:class:`.System`
+        The system object we are simulating.
+    sim : object like :py:class:`.Simulation`
+        The simulation we are running.
 
     Returns
     -------
     out : list
         List of the patches to be drawn.
+
     """
     patches = []
     if not sim.is_finished():
@@ -202,9 +201,8 @@ def update(frame, sys, sim):
         time_text.set_text('Step: {}'.format(result['cycle']['step']))
         patches.append(time_text)
         return patches
-    else:
-        print('Simulation is done')
-        return patches
+    print('Simulation is done')
+    return patches
 
 
 # This will run the animation/simulation:

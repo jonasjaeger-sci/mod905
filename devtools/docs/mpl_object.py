@@ -8,7 +8,7 @@ from matplotlib.patches import Rectangle
 
 
 mpl.rcParams['font.family'] = 'serif'
-mpl.rcParams['font.serif'] = 'Droid Serif'
+mpl.rcParams['font.serif'] = 'DejaVu Serif'
 mpl.rcParams['savefig.directory'] = ''
 mpl.rcParams['savefig.format'] = 'svg'
 
@@ -40,7 +40,8 @@ OBJECTS = [
     },
     {
         'title': 'Path',
-        'methods': ['append()', 'trajectory()'],
+        'methods': ['append()'],
+        'attributes-ref': ['phasepoints'],
     },
     {
         'title': 'PotentialFunction',
@@ -67,6 +68,14 @@ OBJECTS = [
         'title': 'ParticlesExt',
         'methods': ['get_pos()', 'set_pos()'],
         'attributes': ['config', 'vel_rev'],
+    },
+    {
+        'title': 'System',
+        'attributes-ref': ['particles', 'box', 'forcefield'],
+    },
+    {
+        'title': 'EngineBase',
+        'methods': ['integration_step()', 'propagate()'],
     },
 ]
 

@@ -32,7 +32,7 @@ showing the use of |pyretis|.
 |pyretis| examples
 ------------------
 
-In addition to reading the documentation we have prepared
+In addition to reading the documentation, we have prepared
 several examples to highlight the usage and capabilities of |pyretis|.
 The full list of examples can be found in
 the :ref:`example section <examples-index>`.
@@ -67,7 +67,7 @@ the :ref:`example section <examples-index>`.
 
          :header:`TIS`
 
-         This example show how we can run a Transition Interface
+         This example shows how we can run a Transition Interface
          Sampling calculation and obtain a crossing probability.
          Here, we consider a 1D potential in which a single particle
          is moving.
@@ -102,7 +102,7 @@ the :ref:`example section <examples-index>`.
 
          :header:`RETIS 2D`
 
-         In this example we perform a simulation of a 2D potential
+         In this example, we perform a simulation of a 2D potential
          which is constructed such that the selection of the order
          parameter is not so obvious.
 
@@ -118,7 +118,7 @@ the :ref:`example section <examples-index>`.
 
          :header:`Extending with C/FORTRAN`
 
-         This example show how we can use FORTRAN or C to speed
+         This example shows how we can use FORTRAN or C to speed
          up |pyretis| calculations.
 
 
@@ -167,7 +167,7 @@ the :ref:`example section <examples-index>`.
          :header:`Using GROMACS`
 
          This example demonstrates how we can make use of GROMACS for
-         running the dynamics for |pyretis|. In this particular example
+         running the dynamics for |pyretis|. In this particular example,
          we study the diffusion of methane in a sI hydrate structure.
 
 

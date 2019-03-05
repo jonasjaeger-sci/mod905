@@ -1,0 +1,8 @@
+Example from: https://en.wikipedia.org/wiki/XYZ_file_format
+5
+    1DUM     Ba    1   0.000   0.000
+    2DUM     Hf    2   0.050   0.050
+    3DUM      O    3   0.050   0.050
+    3DUM      O    4   0.050   0.000
+    3DUM      O    5   0.000   0.050
+   2.00000   2.00000   2.00000

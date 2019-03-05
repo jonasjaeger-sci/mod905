@@ -10,7 +10,7 @@ can have a script for testing the GROMACS engine.
 """
 import sys
 import os
-from pyretis.inout.writers.gromacsio import (
+from pyretis.inout.formats.gromacs import (
     write_gromacs_gro_file,
     read_gromacs_gro_file,
     write_gromos96_file,
@@ -18,11 +18,11 @@ from pyretis.inout.writers.gromacsio import (
 )
 
 
-def simple_parser(args, need_args):
+def simple_parser(gmx_args, need_args):
     """Do some simple parsing of arguments."""
-    for i, arg in enumerate(args):
+    for i, arg in enumerate(gmx_args):
         if arg in need_args:
-            need_args[arg] = args[i+1]
+            need_args[arg] = gmx_args[i+1]
     # Check that all options are set:
     for key, val in need_args.items():
         if val is None:
@@ -30,20 +30,20 @@ def simple_parser(args, need_args):
             sys.exit(1)
 
 
-def check_that_files_exist(keys, args):
+def check_that_files_exist(keys, gmx_args):
     """Check that files in input arguments actually exist."""
     for key in keys:
-        if not os.path.isfile(args[key]):
-            print('Missing file {}'.format(args[key]),
+        if not os.path.isfile(gmx_args[key]):
+            print('Missing file {}'.format(gmx_args[key]),
                   file=sys.stderr, end='\n')
             sys.exit(1)
 
 
-def fake_gmx_energy(args):
+def fake_gmx_energy(gmx_args):
     """Fake the gmx energy command."""
     print('Running gmx energy...', file=sys.stdout)
     need_args = {'-f': None}
-    simple_parser(args, need_args)
+    simple_parser(gmx_args, need_args)
     check_that_files_exist(('-f',), need_args)
     with open('energy.xvg', 'w') as outfile:
         with open(need_args['-f'], 'r') as infile:
@@ -51,11 +51,11 @@ def fake_gmx_energy(args):
                 outfile.write(lines)
 
 
-def fake_gmx_grompp(args):
+def fake_gmx_grompp(gmx_args):
     """Fake the gmx grompp command."""
     print('Running gmx grompp...', file=sys.stdout)
     need_args = {'-f': None, '-c': None, '-p': None, '-o': None}
-    simple_parser(args, need_args)
+    simple_parser(gmx_args, need_args)
     check_that_files_exist(('-f', '-c', '-p'), need_args)
     with open(need_args['-o'], 'w') as fileh:
         fileh.write('Mock GROMACS .tpr file. Input files were:\n')
@@ -67,30 +67,34 @@ def fake_gmx_grompp(args):
                 fileh.write(lines)
 
 
-def fake_gmx_trjconv(args):
+def fake_gmx_trjconv(gmx_args):
     """Fake the gmx trjconv command."""
     print('Running gmx trjconv...', file=sys.stdout)
     need_args = {'-f': None, '-s': None, '-o': None}
-    simple_parser(args, need_args)
+    simple_parser(gmx_args, need_args)
     check_that_files_exist(('-f', '-s'), need_args)
-    read_write_gromacs(need_args['-f'], need_args['-o'])
+    read_write_gromacs(need_args['-f'], need_args['-o'], ' '.join(gmx_args))
 
 
-def read_write_gromacs(infile, outfile):
+def read_write_gromacs(infile, outfile, gmx_args):
     """Basically just copy a file, but ensure we have velocities."""
     if infile.endswith('gro'):
         snapshot, xyz, vel, _ = read_gromacs_gro_file(infile)
         write_gromacs_gro_file(outfile, snapshot, xyz, vel)
-    else:
+    elif infile.endswith('g96'):
         snapshot, xyz, vel, _ = read_gromos96_file(infile)
         write_gromos96_file(outfile, snapshot, xyz, vel)
+    else:
+        with open(outfile, 'w') as output:
+            output.write('This is a GROMACS TRR file for sure.\n')
+            output.write('Arguments given: {}'.format(gmx_args))
 
 
-def fake_gmx_converttpr(args):
+def fake_gmx_converttpr(gmx_args):
     """Fake the gmx convert-tpr command."""
     print('Running gmx convert-tpr...', file=sys.stdout)
     need_args = {'-extend': None, '-s': None, '-o': None}
-    simple_parser(args, need_args)
+    simple_parser(gmx_args, need_args)
     check_that_files_exist(('-s',), need_args)
     with open(need_args['-o'], 'w') as outfile:
         with open(need_args['-s'], 'r') as infile:

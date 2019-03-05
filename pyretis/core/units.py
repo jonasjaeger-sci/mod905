@@ -168,11 +168,11 @@ units for the other systems are given in the table below:
   +-------------+--------------+-------------+--------------------+
 
 
-These units are also used for the input and defines the time unit.
+These units are also used for the input and define the time unit.
 Further, all system of units expect an input temperature in Kelvin
-(``K``) and all systems, with the exception of ``si``, expects a
+(``K``) and all systems, with the exception of ``si``, expect a
 charge in units of electron charges. The ``si`` system uses here
-Coulomb as it's unit for charge. The time units for the different
+Coulomb as its unit of charge. The time units for the different
 energy systems are given in the table below.
 
 
@@ -238,7 +238,7 @@ References and footnotes
    doi: http://dx.doi.org/10.1016/0021-9991
 
 .. [12] Note that 'dimension' here is, strictly speaking, not a true
-        dimension, for instance we define conversions for the dimension
+        dimension, for instance, we define conversions for the dimension
         `velocity` which in reality is composed of the dimensions
         `length` and `time`.
 
@@ -269,7 +269,7 @@ Examples
 import logging
 from collections import deque
 import numpy as np
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 
@@ -310,9 +310,9 @@ CONSTANTS['kB']['cp2k'] = 3.16681534e-6  # hartree
 DIMENSIONS = {'length', 'mass', 'time', 'energy', 'velocity', 'charge',
               'temperature', 'pressure', 'force'}
 """A dictionary with the known dimensions. Note that not all of these
-are true dimensions, for instance we are using velocity as a dimension
-here. This is just because it convenient to use this to get conversion
-factors for velocities."""
+are true dimensions, for instance, we are using velocity as a dimension
+here. This is just because it is convenient to use this to get
+conversion factors for velocities."""
 # For each dimension we want conversion factors and units
 
 CONVERT = {key: {} for key in DIMENSIONS}
@@ -467,6 +467,8 @@ def _generate_conversion_for_dim(conv_dict, dim, unit):
         A dictionary with conversions which we wish to update.
     dim : string
         The dimension to consider
+    unit : string
+        The unit we create conversions for.
 
     Returns
     -------
@@ -497,7 +499,7 @@ def generate_conversion_factors(unit, distance, energy, mass, charge='e'):
         This is a label for the unit
     distance : tuple
         This is the distance unit. The form is assumed to be
-        `(value, unit)` where unit is one of the known distance
+        `(value, unit)` where the unit is one of the known distance
         units, 'nm', 'A', 'm'.
     energy : tuple
         This is the energy unit. The form is assumed to be
@@ -531,8 +533,18 @@ def generate_conversion_factors(unit, distance, energy, mass, charge='e'):
         _generate_conversion_for_dim(CONVERT, dim, unit)
     # We can now set up time conversions (since it's using length, mass and
     # energy:
-    value = (CONVERT['length'][unit, 'm']**2 * CONVERT['mass'][unit, 'kg'] /
-             CONVERT['energy'][unit, 'J'])**0.5
+    try:
+        value = (CONVERT['length'][unit, 'm']**2 *
+                 CONVERT['mass'][unit, 'kg'] /
+                 CONVERT['energy'][unit, 'J'])**0.5
+    except KeyError:
+        keys = [(unit, 'm'), (unit, 'kg'), (unit, 'J')]
+        dims = ['length', 'mass', 'energy']
+        msg = ""
+        for _ in range(len(keys)):
+            if not keys[_] in CONVERT[dims[_]]:
+                msg += 'Missing {} in CONVERT["{}"]. '.format(keys[_], dims[_])
+        raise ValueError(msg)
     _add_conversion_and_inverse(CONVERT['time'], value, unit, 's')
     # And velocity (since it's using time and length):
     value = CONVERT['length'][unit, 'm'] / CONVERT['time'][unit, 's']
@@ -575,7 +587,7 @@ def generate_inverse(conversions):
     Parameters
     ----------
     conversions : dictionary
-        The unit conversions, assumed to be of type `convert[quantity]`.
+        The unit conversions as `convert[quantity]`.
         Note that this variable will be updated by this function.
 
     Returns
@@ -604,7 +616,7 @@ def bfs_convert(conversions, unit_from, unit_to):
     Parameters
     ----------
     conversions : dictionary
-        The unit conversions, assumed to be of type `convert[quantity]`.
+        The unit conversion as `convert[quantity]`.
     unit_from : string
         Starting unit.
     unit_to : string
@@ -678,20 +690,15 @@ def convert_bases(dimension):
         for key2 in UNITS[dimension]:
             if key1 == key2:
                 continue
-            unit1 = (key1, key2)
-            unit2 = (key2, key1)
-            if unit1 in convert and unit2 not in convert:
+            value = bfs_convert(convert, key1, key2)[1]
+            if value is not None:
+                unit1 = (key1, key2)
+                unit2 = (key2, key1)
+                convert[unit1] = value
                 convert[unit2] = 1.0 / convert[unit1]
-            elif unit1 not in convert and unit2 in convert:
-                convert[unit1] = 1.0 / convert[unit2]
             else:
-                value = bfs_convert(convert, key1, key2)[1]
-                if value is not None:
-                    convert[unit1] = value
-                    convert[unit2] = 1.0 / convert[unit1]
-                else:
-                    logger.warning(('Could not convert base %s -> %s for '
-                                    'dimension %s'), key1, key2, dimension)
+                logger.warning(('Could not convert base %s -> %s for '
+                                'dimension %s'), key1, key2, dimension)
 
 
 def generate_system_conversions(system1, system2):
@@ -730,10 +737,9 @@ def print_table(unit, system=False):  # pragma: no cover
     Parameters
     ----------
     unit : string
-        The unit we would like to print out conversions for.
-    system : boolean
-        Determines if we print out information for system conversions
-        or not.
+        The unit to print out conversions for.
+    system : boolean, optional
+        Determines if information for system conversions should be printed.
 
     Returns
     -------
@@ -861,14 +867,14 @@ def _check_input_unit(unit, dim, input_unit):
         The dimension we are looking at, typically 'length', 'mass' or
         'energy'.
     input_unit : tuple
-        This is the input unit on form (value, string) where the value
-        is the numerical value and the string the unit,
+        This is the input unit on the form (value, string) where the
+        value is the numerical value and the string the unit,
         e.g. `(1.0, nm)`.
 
     Returns
     -------
     out : tuple
-        The `input_unit` if it passes the testes, otherwise an exception
+        The `input_unit` if it passes the tests, otherwise an exception
         will be raised. If the `input_unit` is `None` the default values
         from `UNIT_SYSTEMS` will be returned if they have been defined.
 
@@ -918,7 +924,7 @@ def create_conversion_factors(unit, length=None, energy=None, mass=None,
         This is the mass unit given as (float, string) where the
         float is the numerical value and the string the unit,
         e.g. `(1.0, g/mol)`.
-    charge : string
+    charge : string, optional
         This is the unit of charge given as a string, e.g. 'e' or 'C'.
 
     Returns
@@ -972,7 +978,8 @@ def units_from_settings(settings):
             logger.error(msg)
             raise ValueError(msg)
         if not unit2 == unit:
-            msg = 'Inconsistent unit settings "{}" != "{}"'.format(unit, unit2)
+            msg = 'Inconsistent unit settings "{}" != "{}".'.format(unit,
+                                                                    unit2)
             logger.error(msg)
             raise ValueError(msg)
         setts = {}
@@ -984,13 +991,13 @@ def units_from_settings(settings):
                 msg = msg.format(key)
                 logger.error(msg)
                 raise ValueError(msg)
-        logger.debug('Creating unit system: "%s"', unit)
-        msg = 'Creating unit system: {}'.format(unit)
+        logger.debug('Creating unit system: "%s".', unit)
         create_conversion_factors(unit, **setts)
+        msg = 'Created unit system: "{}".'.format(unit)
     else:
-        logger.debug('Creating unit: "%s"', unit)
-        msg = 'Creating unit: {}'.format(unit)
+        logger.debug('Creating units: "%s".', unit)
         create_conversion_factors(unit)
+        msg = 'Created units: "{}".'.format(unit)
     return msg
 
 

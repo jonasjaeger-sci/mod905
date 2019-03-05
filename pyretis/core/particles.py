@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2019, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
-"""This file contain a class to represent a collection of particles.
+"""This module defines a class, representing a collection of particles.
 
-The class for particles is in reality a simplistic particle list which
+The class for particles is, in reality, a simplistic particle list which
 stores positions, velocities, masses etc. and is used for representing
 the particles in the simulations.
 
@@ -15,10 +15,13 @@ Particles (:py:class:`.Particles`)
 
 ParticlesExt (:py:class:`.ParticlesExt`)
     Class for an external particle list.
+
 """
+from copy import copy
 import logging
 import numpy as np
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+from pyretis.core.common import compare_objects
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 
@@ -29,10 +32,11 @@ class Particles:
     """Base class for a collection of particles.
 
     This is a simple particle list. It stores the positions,
-    velocities, forces, masses (and inverse masses) and type information
-    for a set of particles. In general the particle lists are intended
-    to define neighbour lists etc. This class will just define an
-    all-pairs list.
+    velocities, forces, masses (and inverse masses) and type
+    information for a set of particles. This class also defines a
+    method for iterating over pairs of particles, which could be
+    useful for implementing neighbour lists. In this particular
+    class, this method will just define an all-pairs list.
 
     Attributes
     ----------
@@ -44,6 +48,8 @@ class Particles:
         Velocities of the particles.
     force : numpy.array
         Forces on the particles.
+    virial : numpy.array
+        The current virial for the particles.
     mass : numpy.array
         Masses of the particles.
     imass : numpy.array
@@ -56,7 +62,7 @@ class Particles:
         of the same kind.
     dim : int
         This variable is the dimensionality of the particle list. This
-        should be derived from the box. For some functions it is
+        should be derived from the box. For some functions, it is
         convenient to be able to access the dimensionality directly
         from the particle list. It is therefore set as an attribute
         here.
@@ -67,6 +73,14 @@ class Particles:
 
     """
 
+    particle_type = 'internal'
+
+    # Attributes to store when restarting/copying:
+    _copy_attr = {'npart', 'vpot', 'ekin', 'name', 'ptype', 'dim'}
+    # Attributes which are numpy arrays:
+    _numpy_attr = {'pos', 'vel', 'force', 'virial', 'mass', 'imass',
+                   'ptype'}
+
     def __init__(self, dim=1):
         """Initialise the Particle list.
 
@@ -74,7 +88,7 @@ class Particles:
 
         Parameters
         ----------
-        dim : integer
+        dim : integer, optional
             The number of dimensions we are considering for positions,
             velocities and forces.
 
@@ -89,7 +103,7 @@ class Particles:
         self.imass = None
         self.name = []
         self.ptype = None
-        self.virial = np.zeros((dim, dim))
+        self.virial = None
         self.dim = dim
 
     def empty_list(self):
@@ -103,7 +117,7 @@ class Particles:
         This is almost `self.__init__` repeated. The reason for this is
         simply that we want to define all attributes in `self.__init__`
         and not get any 'surprise attributes' defined elsewhere.
-        Also note that the dimensionality (`self.dim`) is not changed
+        Also, note that the dimensionality (`self.dim`) is not changed
         in this method.
 
         """
@@ -117,28 +131,55 @@ class Particles:
         self.imass = None
         self.name = []
         self.ptype = None
-        self.virial = np.zeros_like(self.virial)
+        self.virial = None
 
-    def get_particle_state(self):
-        """Return a copy of the current phase point.
+    def _copy_attribute(self, attr, copy_function):
+        """Copy an attribute.
 
-        The phase point includes `self.pos` and `self.vel`. In addition
-        it returns the accompanying forces from `self.force`.
+        Parameters
+        ----------
+        attr : string
+            The attribute to copy.
+        copy_function : callable
+            The method to use for copying the attribute.
 
         Returns
         -------
-        out : dict
-            Dictionary with the positions, velocity and forces.
+        out : object
+            A copy of the selected attribute.
 
         """
-        return {'pos': np.copy(self.pos), 'vel': np.copy(self.vel),
-                'vpot': self.vpot, 'ekin': self.ekin,
-                'force': np.copy(self.force)}
+        val = getattr(self, attr, None)
+        if val is None:
+            return None
+        return copy_function(val)
+
+    def copy(self):
+        """Return a copy of the particle state.
+
+        Returns
+        -------
+        out : object like :py:class:`.Particles`
+            A copy of the current state of the particles.
+
+        """
+        particles_copy = self.__class__(dim=self.dim)
+        for attr in self._copy_attr:
+            copy_attr = self._copy_attribute(attr, copy)
+            setattr(particles_copy, attr, copy_attr)
+        for attr in self._numpy_attr:
+            copy_attr = self._copy_attribute(attr, np.copy)
+            setattr(particles_copy, attr, copy_attr)
+        return particles_copy
+
+    def __eq__(self, other):
+        """Compare two particle states."""
+        attrs = self._copy_attr.union(self._numpy_attr)
+        return compare_objects(self, other, attrs,
+                               numpy_attrs=self._numpy_attr)
 
     def set_pos(self, pos):
-        """Set the positions for the particles.
-
-        This will copy the input positions.
+        """Set positions for the particles.
 
         Parameters
         ----------
@@ -153,9 +194,7 @@ class Particles:
         return np.copy(self.pos)
 
     def set_vel(self, vel):
-        """Set the velocities for the particles.
-
-        This will copy the input velocities.
+        """Set velocities for the particles.
 
         Parameters
         ----------
@@ -172,8 +211,6 @@ class Particles:
     def set_force(self, force):
         """Set the forces for the particles.
 
-        This will copy the input forces.
-
         Parameters
         ----------
         force : numpy.array
@@ -185,34 +222,6 @@ class Particles:
     def get_force(self):
         """Return (a copy of) the forces."""
         return np.copy(self.force)
-
-    def set_particle_state(self, phasepoint):
-        """Set the position, velocities (and forces) for the particles.
-
-        The function is included here for convenience - it can be used
-        together with `self.get_particle_state()` for easy change of the
-        particle state.
-
-        Parameters
-        ----------
-        phasepoint : dict
-            This dict contains the phase point we wish to set.
-            It contains the positions in the key `'pos'` and the
-            velocities in the key `'vel'`. It may optionally include
-            the forces in the key `'forces'`.
-
-        Returns
-        -------
-        out : None
-            Returns `None` and updates `self.pos`, `self.vel`
-            and `self.force` (if given).
-
-        """
-        self.set_pos(phasepoint['pos'])
-        self.set_vel(phasepoint['vel'])
-        self.set_force(phasepoint.get('force', None))
-        self.ekin = phasepoint['ekin']
-        self.vpot = phasepoint['vpot']
 
     def add_particle(self, pos, vel, force, mass=1.0,
                      name='?', ptype=0):
@@ -233,12 +242,6 @@ class Particles:
         ptype : integer, optional
             The particle type.
 
-        Returns
-        -------
-        out : None
-            This method does not return anything, but increments
-            `self.npart` and updates `self.particles`.
-
         """
         if self.npart == 0:
             self.name = [name]
@@ -249,7 +252,7 @@ class Particles:
             self.vel[0] = vel
             self.force = np.zeros((1, self.dim))
             self.force[0] = force
-            self.mass = np.zeros((1, 1))  # column matrix
+            self.mass = np.zeros((1, 1))  # Column matrix.
             self.mass[0] = mass
             self.imass = 1.0 / self.mass
         else:
@@ -269,18 +272,17 @@ class Particles:
         ----------
         properties : list of strings
             The strings represent the properties to return.
-        selection : optional, list with indexes to return
-            If selection is not given, data for all particles
+        selection : list with indices to return, optional
+            If a selection is not given, data for all particles
             are returned.
 
         Returns
         -------
-        A list with the properties in the order they were asked for
-        in the properties argument.
+        out : list
+            A list with the properties in the order they were asked for
+            in the ``properties`` argument.
 
         """
-        # if selection is None:
-        #    selection = range(self.npart)
         sel_prop = []
         for prop in properties:
             if hasattr(self, prop):
@@ -318,9 +320,6 @@ class Particles:
     def pairs(self):
         """Iterate over all pairs of particles.
 
-        For more sophisticated particle lists this can/should be an
-        implementation of a 'smart' neighbour list.
-
         Yields
         ------
         out[0] : integer
@@ -339,70 +338,145 @@ class Particles:
 
     def __str__(self):
         """Print out basic info about the particle list."""
-        msg = ['Particles: {}'.format(self.npart)]
-        msg += ['Types: {}'.format(np.unique(self.ptype))]
-        msg += ['Names: {}'.format(set(self.name))]
-        return '\n'.join(msg)
+        return 'Particles: {}\nTypes: {}\nNames: {}'.format(
+            self.npart, np.unique(self.ptype), set(self.name)
+        )
 
     def restart_info(self):
         """Generate information for saving a restart file."""
-        info = {'class': 'internal'}
-        for attr in ('npart', 'pos', 'vel', 'force',
-                     'vpot', 'ekin', 'mass', 'imass',
-                     'name', 'ptype', 'virial', 'dim'):
-            try:
-                info[attr] = getattr(self, attr)
-            except AttributeError:
-                pass
+        info = {'class': self.particle_type}
+        for copy_list in (self._copy_attr, self._numpy_attr):
+            for attr in copy_list:
+                try:
+                    info[attr] = getattr(self, attr)
+                except AttributeError:
+                    logger.warning(('Missing attribute "%s" when creating'
+                                    ' restart information.'), attr)
+                    info[attr] = None
         return info
 
     def load_restart_info(self, info):
-        """Load restart information."""
-        for attr in ('npart', 'pos', 'vel', 'force',
-                     'vpot', 'ekin', 'mass', 'imass',
-                     'name', 'ptype', 'virial', 'dim'):
+        """Load restart information.
+
+        Parameters
+        ----------
+        info : dict
+            Dictionary with the settings to load.
+
+        """
+        for attr in self._copy_attr.union(self._numpy_attr):
             if attr in info:
                 setattr(self, attr, info[attr])
             else:
-                logger.warning(('Could not set % for particles'
-                                ' from restart info'), attr)
+                msg = ('Could not set "{}" for particles '
+                       'from restart info').format(attr)
+                logger.error(msg)
+                raise ValueError(msg)
+
+    def reverse_velocities(self):
+        """Reverse the velocities in the system."""
+        self.vel = self.vel * -1
 
 
 class ParticlesExt(Particles):
-    """Particles, when positions and velocities are stored in files.
-
-    This represents a particle list for the case where the positions
-    and velocities might be stored in files.
+    """A particle list, when positions and velocities are stored in files.
 
     Attributes
     ----------
-    config : tuple of (string, int)
-        The location of the file with positions and the index
-        for locating a frame.
+    config : tuple
+        The file name and index in this file for the configuration
+        the particle list is representing.
     vel_rev : boolean
-        True if velocities should be reversed before using
-        the phase point.
+        If this is True, the velocities in the file represeting
+        the configuration will have to be reversed before they are
+        used.
+    top : string
+        The location of the file with the topology information for
+        external tools (e.g. mdtraj).
 
     """
 
-    def __init__(self, dim=1):
-        """Initialise the ParticleExt list.
+    particle_type = 'external'
 
-        Here we just create an empty particle list.
+    # Attributes to store when restarting/copying:
+    _copy_attr = {'npart', 'vpot', 'ekin', 'name', 'ptype', 'dim',
+                  'config', 'vel_rev', 'top'}
+    # Attributes which are numpy arrays:
+    _numpy_attr = {'pos', 'vel', 'force', 'virial', 'mass', 'imass',
+                   'ptype'}
+
+    def __init__(self, dim=1):
+        """Create an empty ParticleExt list.
+
+        Parameters
+        ----------
+        dim : integer, optional
+            The number of dimensions we are considering for positions,
+            velocities and forces.
+
         """
         super().__init__(dim=dim)
         self.config = (None, None)
-        self.vel_rev = None
+        self.vel_rev = False
+        self.top = None
+
+    def add_particle(self, pos, vel, force, mass=1.0,
+                     name='?', ptype=0):
+        """Add a particle to the system.
+
+        Parameters
+        ----------
+        pos : tuple
+            Positions of new particle.
+        vel : boolean
+            Velocities of new particle.
+        force : tuple
+            Forces on the new particle.
+        mass : float, optional
+            The mass of the particle.
+        name : string, optional
+            The name of the particle.
+        ptype : integer, optional
+            The particle type.
+
+        """
+        self.name = [name]
+        self.ptype = np.array(ptype, dtype=np.int16)
+        self.pos = None
+        self.set_pos(pos)
+        self.vel = None
+        self.set_vel(vel)
+        self.force = force
+        self.mass = np.zeros((1, 1))  # Column matrix.
+        self.mass[0] = mass
+        self.imass = 1.0 / self.mass
+        self.npart = 1
+
+    def empty_list(self):
+        """Just empty the list."""
+        super().empty_list()
+        self.config = (None, None)
+        self.vel_rev = False
+        self.top = None
+
+    def reverse_velocities(self):
+        """Reverse the velocities in the system."""
+        self.vel_rev = not self.vel_rev
 
     def set_pos(self, pos):
-        """Set the positions for the particles.
+        """Set positions for the particles.
 
-        This will copy the input positions.
+        This will copy the input positions, for this class, the
+        input positions are assumed to be a file name with a
+        corresponding integer which determines the index for the
+        positions in the file for cases where the file contains
+        several snapshots.
 
         Parameters
         ----------
         pos : tuple of (string, int)
-            The positions to set.
+            The positions to set, this represents the file name and the
+            index for the frame in this file.
 
         """
         self.config = (pos[0], pos[1])
@@ -412,81 +486,33 @@ class ParticlesExt(Particles):
         return self.config
 
     def set_vel(self, vel):
-        """Set the velocities for the particles.
+        """Set velocities for the particles.
 
-        Here we just store information which tells if the
+        Here we store information which tells if the
         velocities should be reversed or not.
 
         Parameters
         ----------
         vel : boolean
-            The velocities to set.
+            The velocities to set. If True, the velocities should
+            be reversed before used.
 
         """
         self.vel_rev = vel
 
-    def get_particle_state(self):
-        """Return a copy of the current phase point.
+    def get_vel(self):
+        """Return info about the velocities."""
+        return self.vel_rev
 
-        The phase point includes `self.pos` and `self.vel`. In addition
-        it returns the accompanying forces from `self.force`.
-
-        Returns
-        -------
-        out : dict
-            Dictionary with the positions, velocity and forces.
-
-        """
-        return {'pos': self.config, 'vel': self.vel_rev, 'vpot': self.vpot,
-                'ekin': self.ekin}
-
-    def set_particle_state(self, phasepoint):
-        """Update the state of particles to the given phase point.
-
-        The function is included here for convenience - it can be used
-        together with `self.get_particle_state()` for easy change of the
-        particle state.
-
-        Parameters
-        ----------
-        phasepoint : dict
-            This dict contains the phase point we wish to set.
-            It contains the positions in the key `'pos'` and the
-            velocities in the key `'vel'`.
-
-        Returns
-        -------
-        out : None
-            Returns `None` and updates `self.pos`, `self.vel`
-
-        """
-        self.set_pos(phasepoint['pos'])
-        self.set_vel(phasepoint['vel'])
-        self.ekin = phasepoint['ekin']
-        self.vpot = phasepoint['vpot']
-
-    def restart_info(self):
-        """Generate information for saving a restart file."""
-        info = super().restart_info()
-        info['class'] = 'external'
-        info['vel_rev'] = self.vel_rev
-        info['config'] = self.config
-        return info
-
-    def load_restart_info(self, info):
-        """Load restart information."""
-        super().load_restart_info(info)
-        for attr in ('vel_rev', 'config'):
-            try:
-                setattr(self, attr, info[attr])
-            except KeyError:
-                msg = 'Required restart info {} not found!'.format(attr)
-                logger.error(msg)
-                raise ValueError(msg)
+    def __str__(self):
+        """Print out basic info about the particle list."""
+        return 'Config: {}\nReverse velocities: {}'.format(
+            self.config, self.vel_rev
+        )
 
 
 def get_particle_type(engine_type):
-    """Return the path ensemble class consistent with a given engine.
+    """Return the particle class consistent with a given engine.
 
     Parameters
     ----------
@@ -502,3 +528,27 @@ def get_particle_type(engine_type):
         msg = 'Unknown particle type "{}" requested.'.format(engine_type)
         logger.critical(msg)
         raise ValueError(msg)
+
+
+def particles_from_restart(restart):
+    """Create particles from restart information.
+
+    Parameters
+    ----------
+    restart : dict
+        The restart settings.
+
+    Returns
+    -------
+    particles : object like :py:class:`.Particles.`
+        The object created from the restart information.
+
+    """
+    restart_particles = restart.get('particles', None)
+    if restart_particles is None:
+        logger.info('No particles were created from restart information.')
+        return None
+    klass = get_particle_type(restart_particles['class'])
+    particles = klass(dim=restart_particles['dim'])
+    particles.load_restart_info(restart_particles)
+    return particles

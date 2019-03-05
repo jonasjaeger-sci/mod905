@@ -6,6 +6,7 @@ from distutils.core import (  # pylint: disable=import-error,no-name-in-module
     setup,
     Extension,
 )
+import numpy as np
 
 
 LJMODULE = Extension(
@@ -16,5 +17,6 @@ LJMODULE = Extension(
 setup(
     name="PyRETIS Lennard-Jones C extension",
     description="C extension for the Lennard-Jones potential.",
-    ext_modules=[LJMODULE]
+    ext_modules=[LJMODULE],
+    include_dirs=[np.get_include()],
 )

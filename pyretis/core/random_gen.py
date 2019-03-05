@@ -28,7 +28,7 @@ import numpy as np
 from numpy.random import RandomState
 from pyretis.core.particlefunctions import (calculate_kinetic_temperature,
                                             reset_momentum)
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 
@@ -70,26 +70,26 @@ class RandomGeneratorBase(metaclass=ABCMeta):
 
         Parameters
         ----------
-        shape : int
-            Number of numbers to draw
+        shape : int, optional
+            The number of numbers to draw
 
         Returns
         -------
         out : float
-            Pseudo random number in [0, 1)
+            Pseudo-random number in [0, 1)
 
         """
-        pass
+        return
 
     @abstractmethod
     def get_state(self):
         """Return info about the current state."""
-        pass
+        return
 
     @abstractmethod
     def set_state(self, state):
         """Set state for random generator."""
-        pass
+        return
 
     @abstractmethod
     def random_integers(self, low, high):
@@ -105,10 +105,10 @@ class RandomGeneratorBase(metaclass=ABCMeta):
         Returns
         -------
         out : int
-            The pseudo random integers in [low, high].
+            The pseudo-random integers in [low, high].
 
         """
-        pass
+        return
 
     @abstractmethod
     def normal(self, loc=0.0, scale=1.0, size=None):
@@ -130,7 +130,7 @@ class RandomGeneratorBase(metaclass=ABCMeta):
             The random numbers generated.
 
         """
-        pass
+        return
 
     @abstractmethod
     def multivariate_normal(self, mean, cov, cho=None, size=1):
@@ -143,25 +143,25 @@ class RandomGeneratorBase(metaclass=ABCMeta):
         cov : numpy array (2D, (2, 2))
             Covariance matrix of the distribution.
         cho : numpy.array (2D, (2, 2)), optional
-            Cholesky factorisation of cov. If not given,
+            Cholesky factorization of the covariance. If not given,
             it will be calculated here.
         size : int, optional
-            Number of samples to do.
+            The number of samples to do.
 
         Returns
         -------
         out : float or numpy.array of floats size
-            The random numbers drawn.
+            The random numbers that are drawn here.
 
         """
-        pass
+        return
 
     def generate_maxwellian_velocities(self, particles, boltzmann, temperature,
                                        dof, selection=None, momentum=True):
         """Generate velocities from a Maxwell distribution.
 
         The velocities are drawn to match a given temperature and this
-        function can be applied to a sub-set of the particles.
+        function can be applied to a subset of the particles.
 
         The generation is done in three steps:
 
@@ -182,12 +182,12 @@ class RandomGeneratorBase(metaclass=ABCMeta):
             The desired temperature.
             Typically, `system.temperature['set']` will be used here.
         dof : list of floats, optional
-            dof is the degrees of freedom to subtract. It's shape should
+            The degrees of freedom to subtract. Its shape should
             be equal to the number of dimensions.
         selection : list of ints, optional
-            A list with indexes of the particles to consider.
+            A list with indices of the particles to consider.
             Can be used to only apply it to a selection of particles
-        momentum : boolean
+        momentum : boolean, optional
             If true, we will reset the momentum.
 
         Returns
@@ -223,7 +223,7 @@ class RandomGeneratorBase(metaclass=ABCMeta):
             This is used to determine the temperature parameter(s) and
             the shape (number of particles and dimensionality)
         sigma_v : numpy.array, optional
-            Standard deviation in velocity, one for each particle.
+            The standard deviation in velocity, one for each particle.
             If it's not given it will be estimated.
 
         """
@@ -240,7 +240,7 @@ class RandomGenerator(RandomGeneratorBase):
     """A random number generator from numpy.
 
     This class that defines a random number generator. It will use
-    `numpy.random.RandomState` for the actual generation, and we refer
+    `numpy.random.RandomState` for the actual generation and we refer
     to the numpy documentation [1]_.
 
     Attributes
@@ -277,13 +277,13 @@ class RandomGenerator(RandomGeneratorBase):
 
         Parameters
         ----------
-        shape : int
-            Number of numbers to draw
+        shape : int, optional
+            The number of numbers to draw
 
         Returns
         -------
         out : float
-            Pseudo random number in [0, 1)
+            Pseudo-random number in [0, 1)
 
         Note
         ----
@@ -314,7 +314,7 @@ class RandomGenerator(RandomGeneratorBase):
         Returns
         -------
         out : int
-            The pseudo random integers in [low, high].
+            The pseudo-random integers in [low, high].
 
         Note
         ----
@@ -350,7 +350,7 @@ class RandomGenerator(RandomGeneratorBase):
 
         This is an attempt on speeding up the call of
         `RandomState.multivariate_normal` if we need to call it over and
-        over again. Such repeated calling will do a SVD repeatedly,
+        over again. Such repeated calling will do an SVD repeatedly,
         which is wasteful. In this function, this transform can be
         supplied and it is only estimated if it's not explicitly given.
 
@@ -361,15 +361,15 @@ class RandomGenerator(RandomGeneratorBase):
         cov : numpy array (2D, (2, 2))
             Covariance matrix of the distribution.
         cho : numpy.array (2D, (2, 2)), optional
-            Cholesky factorisation of cov. If not given,
+            Cholesky factorization of the covariance. If not given,
             it will be calculated here.
         size : int, optional
-            Number of samples to do.
+            The number of samples to do.
 
         Returns
         -------
         out : float or numpy.array of floats size
-            The random numbers drawn.
+            The random numbers that are drawn here.
 
         See also
         --------
@@ -387,7 +387,7 @@ class RandomGenerator(RandomGeneratorBase):
 class ReservoirSampler:
     """A class representing a reservoir sampler.
 
-    The reservoir sampler will maintains a list of `k` items drawn
+    The reservoir sampler will maintain a list of `k` items drawn
     randomly from a set of `N > k` items. The list is created and
     maintained so that we only need to store `k`items This is useful
     when `N` is very large or when storing all `N` items require a lot
@@ -427,7 +427,7 @@ class ReservoirSampler:
             An integer used for seeding the generator.
         length : int, optional
             The maximum number of items to store.
-        rgen : object like :py:class:`.RandomGenerator`
+        rgen : object like :py:class:`.RandomGenerator`, optional
             In case we want to re-use a random generator object.
             If this is specified, the parameter `seed` is ignored.
 
@@ -489,16 +489,19 @@ class MockRandomGenerator(RandomGeneratorBase):
     be used for actual production runs!
     """
 
-    def __init__(self, seed=0):
+    def __init__(self, seed=0, norm_shift=False):
         """Initialise the mock random number generator.
 
-        Here, we set up predefined random number which we will
+        Here, we set up some predefined random number which we will
         use as a pool for the generation.
 
         Parameters
         ----------
         seed : int, optional
             An integer used for seeding the generator if needed.
+        norm_shift: boolean
+            If True is will ensure that the fake 'normal distribution'
+            is shifted to get the right mean.
 
         """
         super().__init__(seed=seed)
@@ -509,7 +512,14 @@ class MockRandomGenerator(RandomGeneratorBase):
                      0.31168372, 0.05072849, 0.44876368, 0.94301709]
         self.length = len(self.rgen)
         self.randint = self.seed
+        self.norm_shift = norm_shift
         logger.critical('You are using a "mock" random generator!\n')
+        if norm_shift:
+            logger.critical('Fake-normal is shifted.\n')
+            logger.critical('Comparison with TISMOL might fail\n')
+        else:
+            logger.critical('Fake-normal is not shifted.\n')
+            logger.critical('Random numbers not centered around 0.\n')
 
     def rand(self, shape=1):
         """Draw random numbers in [0, 1).
@@ -517,12 +527,12 @@ class MockRandomGenerator(RandomGeneratorBase):
         Parameters
         ----------
         shape : int
-            Number of numbers to draw
+            The number of numbers to draw.
 
         Returns
         -------
         out : float
-            Pseudo random number in [0, 1).
+            Pseudo-random number in [0, 1).
 
         """
         numbers = []
@@ -554,7 +564,7 @@ class MockRandomGenerator(RandomGeneratorBase):
         Returns
         -------
         out : int
-            This is a pseudo random integer in [low, high].
+            This is a pseudo-random integer in [low, high].
 
         """
         idx = self.rand()*(high-low+1)
@@ -578,12 +588,22 @@ class MockRandomGenerator(RandomGeneratorBase):
         out : float, numpy.array of floats
             The random numbers generated.
 
+        Note
+        ----
+        This is part of the Mock-random number generator. Hence, it
+        won't provide a true normal distribution, though the mean is set to
+        the value of loc.
+
         """
+        if self.norm_shift:
+            shift = loc-0.5
+        else:
+            shift = 0.
         if size is None:
-            return self.rand(shape=1)
+            return self.rand(shape=1)+shift
         numbers = np.zeros(size)
         for i in np.nditer(numbers, op_flags=['readwrite']):
-            i[...] = self.rand(shape=1)[0]
+            i[...] = self.rand(shape=1)[0] + shift
         return numbers
 
     def multivariate_normal(self, mean, cov, cho=None, size=1):
@@ -591,7 +611,7 @@ class MockRandomGenerator(RandomGeneratorBase):
 
         This is an attempt on speeding up the call of
         `RandomState.multivariate_normal` if we need to call it over and
-        over again. Such repeated calling will do a SVD repeatedly,
+        over again. Such repeated calling will do an SVD repeatedly,
         which is wasteful. In this function, this transform can be
         supplied and it is only estimated if it's not explicitly given.
 
@@ -602,15 +622,15 @@ class MockRandomGenerator(RandomGeneratorBase):
         cov : numpy array (2D, (2, 2))
             Covariance matrix of the distribution.
         cho : numpy.array (2D, (2, 2)), optional
-            Cholesky factorisation of cov. If not given,
+            Cholesky factorization of the covariance. If not given,
             it will be calculated here.
         size : int, optional
-            Number of samples to do.
+            The number of samples to do.
 
         Returns
         -------
         out : float or numpy.array of floats size
-            The random numbers drawn.
+            The random numbers that are drawn here.
 
         See also
         --------
@@ -621,6 +641,56 @@ class MockRandomGenerator(RandomGeneratorBase):
         norm = norm.reshape(size, 2)
         meanm = np.array([mean, ] * size)
         return 0.01*(meanm + norm)
+
+
+class Borg:
+    """A class for sharing states of objects."""
+
+    class_state = None
+    number_of_borgs = 0
+
+    @classmethod
+    def update_state(cls, state):
+        """Update the class state and enable sharing of it."""
+        if cls.class_state is None:
+            logger.debug('Setting state to the shared.')
+            cls.class_state = state
+        else:
+            logger.debug('Reusing shared state.')
+        return cls.class_state
+
+    @classmethod
+    def reset_state(cls):
+        """Remove memory of the shared state."""
+        cls.class_state = None
+
+    @classmethod
+    def make_new_swarm(cls):
+        """Make new swarm (new class)."""
+        name = cls.__name__ + str(cls.number_of_borgs)
+        cls.number_of_borgs += 1
+        new_borg = type(name, cls.__bases__, dict(cls.__dict__))
+        new_borg.reset_state()  # pylint: disable=no-member
+        return new_borg
+
+    def __init__(self, *args, **kwargs):
+        """Enable share of the state.
+
+        This will update the Borg.class_state and
+        update self.__dict__ to this object, which enables
+        sharing of the state.
+
+        """
+        super().__init__(*args, **kwargs)
+        self.__dict__ = self.update_state(self.__dict__)
+
+
+class RandomGeneratorBorg(Borg, RandomGenerator):
+    """A class for sharing the state between RandomGenerator objects."""
+
+
+class MockRandomGeneratorBorg(Borg, MockRandomGenerator):
+    """A class for sharing the state between MockRandomGenerator objects."""
 
 
 def create_random_generator(settings):
@@ -644,7 +714,12 @@ def create_random_generator(settings):
         logger.info(msg)
     else:
         seed = settings['seed']
+        logger.debug('Seed for random generator: %d', seed)
     rgen = settings.get('rgen', None)
-    if rgen is not None and rgen == 'mock':
-        return MockRandomGenerator(seed=seed)
-    return RandomGenerator(seed=seed)
+    class_map = {
+        'mock': MockRandomGenerator,
+        'mock-borg': MockRandomGeneratorBorg,
+        'test': RandomGeneratorBorg,
+    }
+    rgen_class = class_map.get(rgen, RandomGenerator)
+    return rgen_class(seed=seed)

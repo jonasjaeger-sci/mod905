@@ -5,7 +5,7 @@ Creating custom engines
 
 The Engines are used to propagate the equations of motion or
 alter the state of the system in some other way. In this
-section we describe how additional engines can be added to |pyretis|.
+section, we describe how additional engines can be added to |pyretis|.
 Here, we make a distinction between two types of engines:
 
 * :ref:`Internal engines <user-guide-engine-internal>`
@@ -69,7 +69,7 @@ create a new MDengine is as follows:
 
 
 Example: Creating a new internal LeapFrog integrator
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 To be specific, we will in the following show
 the steps needed to create a new MD engine using the
@@ -204,7 +204,7 @@ The __init__ method
 ...................
 
 The ``__init__`` method sets up the engine and makes it ready for use.
-This can for instance involve checking that the required input files are
+This can, for instance, involve checking that the required input files are
 in place and checking the consistency of the input files.
 
 
@@ -295,7 +295,7 @@ The _propagate_from method
 ..........................
 
 The ``_propagate_from`` method is used to propagate the equations of motion
-using the external engine. In some cases this can make use of the
+using the external engine. In some cases, this can make use of the
 :ref:`step <user-engine-external-step>` method, in other cases this is
 really distinct (e.g. in GROMACS this would correspond to extending a
 simulation).
