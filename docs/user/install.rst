@@ -32,7 +32,16 @@ with the following command:
 
     pip install pyretis
 
-**Note:** |pyretis| please make sure that you are using a Python environment
+
+|pyretis| requires `mdtraj <http://mdtraj.org>`_ and this has to be
+installed **after** installing |pyretis|:
+
+.. code-block:: pyretis
+
+    pip install git+https://github.com/mdtraj/mdtraj.git
+
+
+**Note:** Please make sure that you are using a Python environment
 of version 3.6 or newer. On some systems, **Python 2** may still be the default
 version and ``pip`` might actually try to install for **Python 2**.
 In this case, use ``pip3`` in the command above.
@@ -112,6 +121,12 @@ set up a virtual environment:
    .. code-block:: pyretis
 
       pip install pyretis
+
+6. Install `mdtraj <http://mdtraj.org>`_:
+
+   .. code-block:: pyretis
+
+    pip install git+https://github.com/mdtraj/mdtraj.git
 
 The folder ``~/name-of-environment-folder/pyretis-env`` now contains a new Python environment
 where |pyretis| has been installed. Since you have sourced the
@@ -196,31 +211,18 @@ tested by running the tests from the main directory:
 Requirements for |pyretis|
 --------------------------
 
-In order to run |pyretis|, the following Python libraries are needed:
-
-* `SciPy <http://www.scipy.org/>`_, `NumPy <http://www.numpy.org/>`_,
-  and `matplotlib <http://matplotlib.org/>`_
-  (see also the information on
-  `installing the SciPy Stack <http://www.scipy.org/install.html>`_).
-
-* `Jinja2 <http://jinja.pocoo.org/docs/dev/>`_
-
-* `Docutils <http://docutils.sourceforge.net/>`_
-
-* `Sphinx <http://sphinx-doc.org/>`_  and the
-  `Sphinx Bootstrap Theme <https://ryan-roemer.github.io/sphinx-bootstrap-theme>`_
-  (for building the documentation).
-
-* `tqdm <https://github.com/tqdm/tqdm/>`_
-
-* `colorama <https://pypi.python.org/pypi/colorama>`_
-
-These packages can be installed by:
+In order to run |pyretis|, several Python libraries are needed, for instance
+`SciPy <http://www.scipy.org/>`_, `NumPy <http://www.numpy.org/>`_, and `matplotlib <http://matplotlib.org/>`_
+(see also the information on `installing the SciPy Stack <http://www.scipy.org/install.html>`_).
+A list of the requirements can be found in the file
+:download:`requirements.txt </_static/files/requirements.txt>` in the source
+code directory. These packages can be installed by:
 
 .. code-block:: pyretis
 
     pip install -r requirements.txt
 
-using the :download:`requirements.txt </_static/files/requirements.txt>`
-file in the source code directory. This should be automatically done if you
-are installing |pyretis| using ``pip``/``conda``.
+after downloading the :download:`requirements.txt </_static/files/requirements.txt>` file.
+This should be automatically done if you
+are installing |pyretis| using ``pip``/``conda``. Note that the `mdtraj <http://mdtraj.org>`_
+requirement may have to be installed separately as described above when using ``pip``.

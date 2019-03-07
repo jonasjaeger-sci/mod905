@@ -2,9 +2,15 @@ Installing PyRETIS
 ==================
 
 PyRETIS and its requirements can be installed using pip or conda
-as described below. 
+as described below. PyRETIS requires mdtraj and this has to be
+installed **after** installing PyRETIS when using pip:
+
+```
+pip install git+https://github.com/mdtraj/mdtraj.git
+```
 
 Please note that PyRETIS only supports **Python 3.6** or **Python 3.7**.
+
 
 Installing PyRETIS using pip or conda
 -------------------------------------
