@@ -51,11 +51,15 @@ In this case, use ``pip3`` in the command above.
 Installing via ``conda``
 ------------------------
 |pyretis| can be installed using `conda <https://anaconda.org/conda-forge/pyretis>`_ 
-with the following command:
+with the following commands:
 
 .. code-block:: pyretis
 
-    conda install pyretis -c conda-forge
+    conda create --name pyretis
+    conda activate pyretis
+    conda install pip
+    pip install pyretis
+    pip install git+https://github.com/mdtraj/mdtraj.git
 
 **Note:** Since |pyretis| will **only work with Python 3.6 or newer**,
 please make sure that you are using an environment with a recent version
