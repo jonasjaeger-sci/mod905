@@ -26,10 +26,10 @@ from codecs import open as openc
 import os
 import shutil
 from shutil import SameFileError
-from setuptools import setup, find_packages
+from setuptools import setup, find_namespace_packages
 
 
-FULL_VERSION = '2.0.1'  # Automatically set by setup_version.py
+FULL_VERSION = '2.0.2'  # Automatically set by setup_version.py
 
 
 def get_long_description():
@@ -95,7 +95,7 @@ setup(
     author_email='pyretis@pyretis.org',
     license='LGPLv2.1+',
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
         'Environment :: Console',
         'Intended Audience :: Science/Research',
         ('License :: OSI Approved :: '
@@ -109,7 +109,7 @@ setup(
         'Topic :: Scientific/Engineering :: Physics',
     ],
     keywords='rare-events md mc tps simulation tis retis',
-    packages=find_packages(exclude=['docs']),
+    packages=find_namespace_packages(exclude=['docs']),
     package_data={
         'pyretis': ['pyretis.mplstyle', 'pyretis/inout/report/templates/*']
     },
