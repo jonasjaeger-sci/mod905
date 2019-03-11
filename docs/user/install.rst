@@ -173,6 +173,12 @@ or, alternatively:
 
    python setup.py install
 
+Then, install ``mdtraj``:
+
+.. code-block:: pyretis
+
+    pip install git+https://github.com/mdtraj/mdtraj.git
+
 .. _user-guide-install-develop:
 
 Optional: Installing a development version from the |pyretis| git repository
@@ -191,6 +197,12 @@ Then install the development requirements (these are defined in the file
 .. code-block:: pyretis
 
    pip install -r requirements-dev.txt
+
+install ``mdtraj``:
+
+.. code-block:: pyretis
+
+    pip install git+https://github.com/mdtraj/mdtraj.git
 
 Finally, install |pyretis| using:
 
