@@ -624,21 +624,21 @@ done as follows:
 
 .. code-block:: python
 
-   from pyretis.inout.writers import get_writer
+   from pyretis.inout.formats.order import OrderFile
    from pyretis.inout.settings import parse_settings_file
    from pyretis.inout.setup import create_orderparameter
    from pyretis.tools.recalculate_order import recalculate_order
-
+   
    settings = parse_settings_file('retis.rst')
    order_parameter = create_orderparameter(settings)
-   order = recalculate_order(order_parameter, 'traj.trr', reverse=False,
-                             maxidx=None, minidx=None)
-   writer = get_writer('order')
-   with open('order.txt', 'w') as outfile:
-       outfile.write('{}\n'.format(writer.header))
+   options = {'reverse': False, 'maxidx': None, 'minidx': None}
+   order = recalculate_order(order_parameter, 'traj.trr', options)
+   
+   with OrderFile('order.txt', 'w') as outfile:
+       outfile.write('# Order parameters')
        for step, data in enumerate(order):
-           txt = writer.format_data(step, data)
-           outfile.write('{}\n'.format(txt))
+           print(step, data)
+           outfile.output(step, data)
 
 This will create a new file ``order.txt`` with the re-calculated order parameters.
 The keyword ``reverse`` can be used to tell |pyretis| that you are looking at a
