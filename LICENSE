@@ -2,8 +2,7 @@ PyRETIS - A library for rare event simulations.
 Copyright (C) 2019, PyRETIS Development Team
 
 PyRETIS is released under the GNU Lesser General Public License v2.1 or later.
-Please see the files: COPYING and COPYING.LESSER included in the source
-directory.
+Please see the file COPYING included in the source directory.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
