@@ -169,6 +169,22 @@ the :ref:`example section <examples-index>`.
          This example demonstrates how we can make use of GROMACS for
          running the dynamics for |pyretis|. In this particular example,
          we study the diffusion of methane in a sI hydrate structure.
+   
+   .. container:: col-lg-3 col-md-3 col-sm-3 col-xs-6 thumbnail thumbnail2
+
+      .. image:: /_static/img/examples/thumbnails/2d-lammps.png
+         :width: 100%
+         :class: img-responsive
+         :target: ../examples/examples-lammps-wca.html
+
+      .. container:: caption
+
+         :header:`Using LAMMPS`
+
+         This example demonstrates how we can make use of LAMMPS for
+         running the dynamics for |pyretis|. In this particular example,
+         we revisit the 2D WCA example and use LAMMPS as our molecular dynamics
+         engine.
 
 
 Examples of |pyretis| use

@@ -7,9 +7,7 @@ Here we compare a RETIS simulation of 250 steps to known results.
 """
 import os
 import sys
-import shutil
 import tarfile
-import tempfile
 import colorama
 from pyretis.inout import print_to_screen
 from pyretis.inout.settings import parse_settings_file
@@ -55,8 +53,34 @@ def read_tarfile(tar_file, file_to_extract):
     return data
 
 
+def find_traj_txt(rootdir):
+    """Find all traj.txt files in the given rootdir.
+
+    Here, we also sort these files according to the cycle number
+    they claim to be produced at.
+
+    """
+    # Find all traj.txt files:
+    files = []
+    for root, _, filei in os.walk(rootdir):
+        for i in filei:
+            if i == 'traj.txt':
+                filename = os.path.join(root, i)
+                cycle = None
+                with open(filename, 'r') as infile:
+                    line = infile.readline()
+                    cycle = int(line.strip().split(':')[1].split(',')[0])
+                if cycle is None:
+                    raise ValueError('Could not find cyle for traj.txt')
+                files.append([os.path.join(root, i), cycle])
+    return sorted(files, key=lambda i: i[1])
+
+
 def make_traj_file(root, ensemble):
-    """Make a traj.txt file using the accepted and rejected ones.
+    """Make a traj.txt file with paths.
+
+    Here, we do not have the complete traj.txt file available and we thus
+    recreate it using the stored accepted and rejected trajectories.
 
     Parameters
     ----------
@@ -67,26 +91,13 @@ def make_traj_file(root, ensemble):
 
     """
     ensemble_dir = generate_ensemble_name(ensemble)
-    tar_file_acc = os.path.join(root, ensemble_dir, 'traj', 'traj-acc.tar')
-    tar_file_rej = os.path.join(root, ensemble_dir, 'traj', 'traj-rej.tar')
-    with tempfile.TemporaryDirectory() as tempdir:
-        filenames = []
-        for tar_file in (tar_file_acc, tar_file_rej):
-            with tarfile.open(tar_file, 'r') as tar:
-                files = [i for i in tar.getmembers() if i.isfile()]
-                traj_files = [i for i in files if i.name.endswith('traj.txt')]
-                tar.extractall(path=tempdir, members=traj_files)
-                filenames += [i.name for i in traj_files]
-        filenames.sort(key=lambda i: int(os.path.split(i)[0]))
-        traj_file = os.path.join(tempdir, 'traj.txt')
-        with open(traj_file, 'w') as outfile:
-            for i in filenames:
-                with open(os.path.join(tempdir, i), 'r') as infile:
-                    outfile.write(infile.read())
-        shutil.copy(
-            os.path.join(traj_file),
-            os.path.join(root, ensemble_dir, 'traj.txt')
-        )
+    traj_dir = os.path.join(root, ensemble_dir, 'traj')
+    files = find_traj_txt(traj_dir)
+    target_traj = os.path.join(root, ensemble_dir, 'traj.txt')
+    with open(target_traj, 'w') as outfile:
+        for (filename, _) in files:
+            with open(filename, 'r') as infile:
+                outfile.write(infile.read())
 
 
 def compare_files(settings, root, results_tgz):

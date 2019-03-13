@@ -221,14 +221,18 @@ class TestExternalEngine(unittest.TestCase):
             self.assertEqual(len(lines), 1)
             self.assertEqual(
                 lines[0].strip(),
-                'This is a program for testing external commands'
+                'This is a program for testing external commands.'
             )
         with open(os.path.join(HERE, 'stderr.txt'), 'r') as stdout:
             lines = stdout.readlines()
-            self.assertEqual(len(lines), 1)
+            self.assertEqual(len(lines), 2)
             self.assertEqual(
                 lines[0].strip(),
-                'ERROR: Program were given arguments!'
+                'ERROR: Program got arguments:'
+            )
+            self.assertEqual(
+                lines[1].strip(),
+                ' '.join(cmd)
             )
         for fname in ('stdout.txt', 'stderr.txt'):
             # pylint: disable=protected-access

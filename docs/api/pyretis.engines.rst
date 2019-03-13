@@ -18,6 +18,7 @@ List of submodules
 * :ref:`pyretis.engines.gromacs <api-engines-gromacs>`
 * :ref:`pyretis.engines.gromacs2 <api-engines-gromacs2>`
 * :ref:`pyretis.engines.internal <api-engines-internal>`
+* :ref:`pyretis.engines.lammps <api-engines-lammps>`
 * :ref:`pyretis.engines.openmm <api-engines-openmm>`
 
 .. _api-engines-cp2k:
@@ -77,6 +78,16 @@ pyretis.engines.internal module
 -------------------------------
 
 .. automodule:: pyretis.engines.internal
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. _api-engines-lammps:
+
+pyretis.engines.lammps module
+-----------------------------
+
+.. automodule:: pyretis.engines.lammps
     :members:
     :undoc-members:
     :show-inheritance:

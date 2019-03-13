@@ -104,9 +104,8 @@ class OrderFormatter(OutputFormatter):
 
         Yields
         ------
-        data : list of tuples of int
-            This is the data contained in the file. The columns are the
-            step number, interface number and direction.
+        data_dict : dict
+            This is the order parameter data in the file.
 
         See Also
         --------

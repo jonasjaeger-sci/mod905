@@ -8,7 +8,7 @@ clean:
 	find -name \*.txt -delete
 	find -name out.rst* -delete
 	find -name \*.restart -delete
-	find -name rnd.state -delete
+	find -name \*.state -delete
 	find -name \*.log -delete
 	find -name mdout.mdp -delete
 	find -name EXIT -delete

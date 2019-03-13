@@ -52,4 +52,8 @@ def initiate_restart(simulation, cycle, settings):
         )
         restart_info = read_restart_file(restart_file)
         ensemble.load_restart_info(path, restart_info, cycle=cycle)
+        # The Force field is not part of the restart, just explicitly
+        # set it:
+        for point in path.phasepoints:
+            point.forcefield = simulation.system.forcefield
         yield True, path, path.status, ensemble

@@ -88,6 +88,7 @@ def make_retis_step(ensembles, order_function, engine, rgen,
 
     """
     if rgen.rand() < settings['retis']['swapfreq']:
+        # Do RETIS moves
         logger.info('Performing RETIS swapping move(s).')
         results = retis_moves(ensembles, order_function, engine,
                               rgen, settings, cycle)
@@ -133,6 +134,7 @@ def _relative_shoots_select(ensembles, rgen, relative):
         if freq < cumulative:
             idx = i
             break
+    # just a sanity check, we should crash if idx is None
     try:
         path_ensemble = ensembles[idx]
     except TypeError:
@@ -532,8 +534,7 @@ def retis_swap_zero(ensembles, order_function, engine,
     ensemble1 = ensembles[1]
     # 1. Generate path for [0^-] from [0^+]:
     # We generate from the first point of the path in [0^+]:
-    logger.debug('Swapping [0^-] <-> [0^+]')
-    logger.debug('Creating path for [0^-]')
+    logger.debug('Creating path for [0^-] from [0^+]')
     # Note: The copy below is not really needed as the
     # propagate method will not alter the initial state:
     system = ensemble1.last_path.phasepoints[0].copy()
@@ -563,7 +564,7 @@ def retis_swap_zero(ensembles, order_function, engine,
     else:
         path0.status = 'ACC'
     # 2. Generate path for [0^+] from [0^-]:
-    logger.debug('Creating path for [0^+]')
+    logger.debug('Creating path for [0^+] from [0^-]')
     # This path will be generated starting from the LAST point of [0^-] which
     # should be on the right side of the interface. We will also add the
     # SECOND LAST point from [0^-] which should be on the left side of the

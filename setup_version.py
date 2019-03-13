@@ -13,8 +13,8 @@ import subprocess
 
 # For setting version. This is copied from Numpy's setup.py.
 MAJOR = 2
-MINOR = 0
-MICRO = 3
+MINOR = 1
+MICRO = 0
 DEV = 0
 ISRELEASED = True
 if not ISRELEASED:

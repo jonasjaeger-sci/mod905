@@ -11,7 +11,7 @@ Sampling (RETIS) algorithm.
 The system we consider consist of a simple diatomic
 bistable molecule immersed in a fluid of purely repulsive
 particles. This system was actually considered in the
-article introduction the TIS method, [1]_ and we will here
+article introducing the TIS method, [1]_ and we will here
 largely follow this simulation set-up. We refer to the
 original article for more details.
 

@@ -1,0 +1,9 @@
+#     Step    No.-acc  No.-shoot l m r  Length Acc Mc            Min-O            Max-O Idx-Min Idx-Max          O-shoot  Idx-sh Idx-shN
+         0          1          0 R M R      44 ACC ki -3.476517283e-01 -2.574822955e-01      22      43  0.000000000e+00       0       0
+         1          1          0 * * *      49 BTL sh -3.203922864e-01 -2.740464883e-01      48       0 -2.740464883e-01       4       0
+         2          2          0 R M R      44 ACC tr -3.476517283e-01 -2.574822955e-01      21       0  0.000000000e+00       0       0
+#     Step    No.-acc  No.-shoot l m r  Length Acc Mc            Min-O            Max-O Idx-Min Idx-Max          O-shoot  Idx-sh Idx-shN
+         3          3          0 R M R     108 ACC s+ -3.335573160e-01 -2.586002254e-01      84     107  0.000000000e+00       0       0
+         4          4          0 R M R     108 ACC tr -3.335573160e-01 -2.586002254e-01      23       0  0.000000000e+00       0       0
+         5          5          0 R M R     108 ACC tr -3.335573160e-01 -2.586002254e-01      84     107  0.000000000e+00       0       0
+#     Step    No.-acc  No.-shoot l m r  Length Acc Mc            Min-O            Max-O Idx-Min Idx-Max          O-shoot  Idx-sh Idx-shN

@@ -7,15 +7,20 @@ Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 PathStorage (:py:class:`.PathStorage`)
-    A class or handling storage of external trajectories to an archive
+    A class for handling storage of external trajectories to an archive.
+    In this case, it is simply a folder based structure.
+
+PathStorageTar (:py:class:`.PathStorageTar`)
+    A class for handling storage of external trajectories to an archive
     format (tar in this case).
 
 """
 import logging
 import tempfile
+import shutil
 import tarfile
 import os
-from pyretis.inout.common import OutputBase, create_backup
+from pyretis.inout.common import OutputBase, create_backup, make_dirs
 from pyretis.inout.formats import (
     EnergyPathFormatter,
     OrderPathFormatter,
@@ -94,22 +99,28 @@ class PathStorage(OutputBase):
     ----------
     target : string
         Determines the target for this output class. Here it will
-        be a file.
-    tar_acc : string
+        be a file archive (i.e. a directory based collection of
+        files).
+    archive_acc : string
         Basename for the archive with accepted trajectories.
-    tar_rej : string
+    archive_rej : string
         Basename for the archive with rejected trajectories.
+    archive_traj : string
+        Basename for a sub-folder containing the actual files
+        for a trajectory.
     formatters : dict
         This dict contains the formatters for writing path data,
         with default filenames used for them.
     out_dir_fmt : string
         A format to use for creating directories within the archive.
+        This one is applied to the step number for the output.
 
     """
 
     target = 'file-archive'
-    tar_acc = 'traj-acc.tar'
-    tar_rej = 'traj-rej.tar'
+    archive_acc = 'traj-acc'
+    archive_rej = 'traj-rej'
+    archive_traj = 'traj'
     formatters = {
         'order': {'fmt': OrderPathFormatter(), 'file': 'order.txt'},
         'energy': {'fmt': EnergyPathFormatter(), 'file': 'energy.txt'},
@@ -128,7 +139,11 @@ class PathStorage(OutputBase):
         """
         super().__init__(None)
 
-    def output_path_files(self, step, data, tempdir):
+    def archive_name_from_status(self, status):
+        """Return the name of the archive to use."""
+        return self.archive_acc if status == 'ACC' else self.archive_rej
+
+    def output_path_files(self, step, data, target_dir):
         """Write the output files for energy, path and order parameter.
 
         Parameters
@@ -139,15 +154,18 @@ class PathStorage(OutputBase):
             Here, ``data[0]`` is assumed to be an object like
             :py:class:`.Path` and `data[1]`` a string containing the
             status of this path.
-        tempdir : string
-            The path to where we create the temporary file, before
-            it is added to the tar file.
+        target_dir : string
+            The path to where we archive the files.
 
         Returns
         -------
         files : list of tuple of strings
-            This is the list of the source files and target files on
-            form ``files[i] = (source[i], target[i])``.
+            These are the files created. The tuple contains the files as
+            a full path and a relative path (to the given
+            target directory). The form is
+            ``files[i] = (full_path[i], relative_path[i])``.
+            The relative path is useful for organizing internally in
+            archives.
 
         """
         path, status, = data[0], data[1]
@@ -155,13 +173,87 @@ class PathStorage(OutputBase):
         for key, val in self.formatters.items():
             logger.debug('Storing: %s', key)
             fmt = val['fmt']
-            src = os.path.join(tempdir, val['file'])
-            trg = os.path.join(self.out_dir_fmt.format(step), val['file'])
-            files.append((src, trg))
-            with open(src, 'w') as output:
+            full_path = os.path.join(target_dir, val['file'])
+            relative_path = os.path.join(
+                self.out_dir_fmt.format(step), val['file']
+            )
+            files.append((full_path, relative_path))
+            with open(full_path, 'w') as output:
                 for line in fmt.format(step, (path, status)):
                     output.write('{}\n'.format(line))
         return files
+
+    def output(self, step, data):
+        """Format the path data and store the path.
+
+        Parameters
+        ----------
+        step : integer
+            The current simulation step.
+        data : list
+            Here, ``data[0]`` is assumed to be an object like
+            :py:class:`.Path`, ``data[1]`` a string containing the
+            status of this path and ``data[2]`` the path ensemble for
+            which the path was generated.
+
+        Returns
+        -------
+        files : list of tuples of strings
+            The files added to the archive.
+
+        """
+        path, status, ensemble = data
+        archive = self.archive_name_from_status(status)
+        # This is the path on form: /path/to/000/traj/11
+        archive_path = os.path.join(
+            ensemble.directory['traj'],
+            archive,
+            self.out_dir_fmt.format(step),
+        )
+        # To organize things we create a subfolder for storing the
+        # files. This is on form: /path/to/000/traj/11/traj
+        traj_dir = os.path.join(archive_path, self.archive_traj)
+        # Create the needed directories:
+        make_dirs(traj_dir)
+        # Write order, energy and traj files to the archive:
+        files = self.output_path_files(step, data, archive_path)
+        # Get name of files we need to copy for the current path:
+        traj_files = generate_traj_names(
+            path,
+            os.path.join(self.out_dir_fmt.format(step), self.archive_traj)
+        )
+        # Copy the actual trajectory files:
+        for (file_src, file_dest) in traj_files:
+            target = os.path.join(traj_dir, os.path.basename(file_dest))
+            shutil.copyfile(file_src, target)
+            files.append((target, file_dest))
+        return files
+
+    def write(self, towrite, end='\n'):
+        """We do not need the write method for this object."""
+        logger.critical(
+            '%s does *not* support the "write" method!',
+            self.__class__.__name__
+        )
+
+    def formatter_info(self):
+        """Return info about the formatters."""
+        return [val['fmt'].__class__ for val in self.formatters.values()]
+
+    def __str__(self):
+        """Return basic info."""
+        return '{} - archive writer.'.format(self.__class__.__name__)
+
+
+class PathStorageTar(PathStorage):
+    """A class for handling storage of external trajectories.
+
+    Here, we collect the external trajectories into tar archives.
+
+    """
+
+    archive_acc = 'traj-acc.tar'
+    archive_rej = 'traj-rej.tar'
 
     @staticmethod
     def _add_to_archive(archive_file, files):
@@ -214,33 +306,24 @@ class PathStorage(OutputBase):
 
         """
         path, status, ensemble = data
-        tar_file = self.tar_acc if status == 'ACC' else self.tar_rej
+        tar_file = self.archive_name_from_status(status)
         tar_path = os.path.join(ensemble.directory['traj'], tar_file)
         files = []
+        # We create the files in a temporary directory and then add them
+        # to the tar archive:
         with tempfile.TemporaryDirectory() as tempdir:
             # Write order, energy and traj files:
             files1 = self.output_path_files(step, data, tempdir)
             if self._add_to_archive(tar_path, files1):
                 files.extend(files1)
-        # Write the traj files:
-        target_dir = os.path.join(self.out_dir_fmt.format(step), 'traj')
+        # Add the trajectory files to the archive:
+        target_dir = os.path.join(self.out_dir_fmt.format(step),
+                                  self.archive_traj)
         files2 = generate_traj_names(path, target_dir)
         if self._add_to_archive(tar_path, files2):
             files.extend(files2)
         return files
 
-    def write(self, towrite, end='\n'):
-        """We do not need the write method for this object."""
-        raise NotImplementedError(
-            '{} does not support the "write" method!'.format(
-                self.__class__.__name__
-            )
-        )
-
-    def formatter_info(self):
-        """Return info about the formatters."""
-        return [val['fmt'].__class__ for _, val in self.formatters.items()]
-
     def __str__(self):
         """Return basic info."""
-        return '{} - archive writer.'.format(self.__class__.__name__)
+        return '{} - TAR archive writer.'.format(self.__class__.__name__)

@@ -342,6 +342,8 @@ class CP2KEngine(ExternalMDEngine):
         The number of steps each CP2K run is composed of.
     rgen : object like :py:class:`.RandomGenerator`
         An object we use to set seeds for velocity generation.
+    extra_files : list
+        List of extra files which may be required to run CP2K.
 
     """
 
@@ -363,6 +365,8 @@ class CP2KEngine(ExternalMDEngine):
             List of extra files which may be required to run CP2K.
         seed : integer, optional
             A seed for the random number generator.
+        extra_files : list
+            List of extra files which may be required to run CP2K.
 
         """
         super().__init__('CP2K external engine', timestep,
@@ -374,23 +378,20 @@ class CP2KEngine(ExternalMDEngine):
         # Store input path:
         self.input_path = os.path.abspath(input_path)
         # Store input files:
-        self.input_files = {}
-        for key, fname in zip(('conf', 'template'),
-                              ('initial.xyz', 'cp2k.inp')):
-            self.input_files[key] = os.path.join(self.input_path, fname)
-            if not os.path.isfile(self.input_files[key]):
-                msg = 'CP2K engine could not find file "{}"!'.format(fname)
-                raise ValueError(msg)
-            logger.debug('Input %s: %s', key, self.input_files[key])
-        self.extra_files = []
+        input_files = {
+            'conf': 'initial.xyz',
+            'template': 'cp2k.inp',
+        }
+        self.input_files = self._look_for_input_files(
+            self.input_path,
+            input_files,
+        )
+        self.extra_files = {}
         if extra_files is not None:
-            for key in extra_files:
-                fname = os.path.join(self.input_path, key)
-                if not os.path.isfile(fname):
-                    logger.critical('Extra CP2K input file "%s" not found!',
-                                    fname)
-                else:
-                    self.extra_files.append(fname)
+            self.extra_files = self._look_for_input_files(
+                self.input_path,
+                {'file-{}'.format(i): val for i, val in enumerate(extra_files)}
+            )
 
     def run_cp2k(self, input_file, proj_name):
         """
@@ -743,13 +744,13 @@ class CP2KEngine(ExternalMDEngine):
             The full path to where we want to add the files.
 
         """
-        for files in self.extra_files:
-            basename = os.path.basename(files)
+        for filei in self.extra_files:
+            basename = os.path.basename(self.extra_files[filei])
             dest = os.path.join(dirname, basename)
             if not os.path.isfile(dest):
                 logger.debug('Adding input file "%s" to "%s"',
                              basename, dirname)
-                self._copyfile(files, dest)
+                self._copyfile(self.extra_files[filei], dest)
 
     @staticmethod
     def _find_backup_files(dirname):

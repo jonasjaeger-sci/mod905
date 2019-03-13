@@ -112,16 +112,11 @@ class GromacsEngine(ExternalMDEngine):
             'topology': 'topol.top',
             'index': 'index.ndx',
         }
-        self.input_files = {}
-        for key, val in input_files.items():
-            self.input_files[key] = os.path.join(self.input_path, val)
-            if not os.path.isfile(self.input_files[key]):
-                if key in ('index', ):
-                    del self.input_files[key]
-                else:
-                    msg = 'Missing GROMACS input file "{}"'.format(val)
-                    logger.error(msg)
-                    raise ValueError(msg)
+        self.input_files = self._look_for_input_files(
+            self.input_path,
+            input_files,
+            optional_files=('index', ),
+        )
         # Check the input file and create a PyRETIS version with
         # consistent settings:
         settings = {

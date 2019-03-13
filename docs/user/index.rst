@@ -20,3 +20,5 @@ User Guide
     engine.rst
     units.rst
     errors.rst
+    lammps.rst
+

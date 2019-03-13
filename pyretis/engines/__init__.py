@@ -37,6 +37,9 @@ gromacs2.py (:py:mod:`pyretis.engines.gromacs2`)
 internal.py (:py:mod:`pyretis.engines.internal`)
     Defines internal PyRETIS engines.
 
+lammps.py (:py:mod:`pyretis.engines.lammps`)
+    Defines and engine for use with LAMMPS.
+
 openmm.py (:py:mod:`pyretis.engines.openmm`)
     Defines an engine for use with OpenMM.
 
@@ -53,6 +56,7 @@ from .gromacs import GromacsEngine
 from .gromacs2 import GromacsEngine2
 from .cp2k import CP2KEngine
 from .openmm import OpenMMEngine
+from .lammps import LAMMPSEngine
 
 
 def engine_factory(settings):
@@ -80,5 +84,6 @@ def engine_factory(settings):
         'gromacs2': {'cls': GromacsEngine2},
         'cp2k': {'cls': CP2KEngine},
         'openmm': {'cls': OpenMMEngine},
+        'lammps': {'cls': LAMMPSEngine},
     }
     return generic_factory(settings, engine_map, name='engine')

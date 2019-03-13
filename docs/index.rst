@@ -21,7 +21,8 @@ Welcome to |pyretis|!
   and :ref:`replica exchange transition interface sampling <user-guide-retis-theory>`.
 
   |pyretis| is :ref:`open source <pyretis-license>`, easy to use
-  and can be interfaced with other simulation packages such as GROMACS or CP2K.
+  and can be interfaced with other simulation packages such as GROMACS, LAMMPS
+  or CP2K.
 
   You can use the |pyretis| :ref:`library <api-doc>` to set up tailored
   simulations or you can use a Python flavored :ref:`input file <user-guide-input>`
