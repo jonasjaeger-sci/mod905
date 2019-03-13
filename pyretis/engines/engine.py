@@ -85,7 +85,7 @@ class EngineBase(metaclass=ABCMeta):
         ----------
         path : object like :py:class:`.PathBase`
             The path to add to.
-        phase_point : dict
+        phase_point : object like py:class:`.System`
             The phase point to add to the path.
         left : float
             The left interface.

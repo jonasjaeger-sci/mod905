@@ -1,0 +1,17 @@
+# Cycle: 5, status: ACC
+#     Step              Filename       index    vel
+         0             trajB.trr           2     -1
+         1             trajB.trr           1     -1
+         2             trajB.trr           0     -1
+         3             trajF.trr           1      1
+         4             trajF.trr           2      1
+         5             trajF.trr           3      1
+         6             trajF.trr           4      1
+         7             trajF.trr           5      1
+         8             trajF.trr           6      1
+         9             trajF.trr           7      1
+        10             trajF.trr           8      1
+        11             trajF.trr           9      1
+        12             trajF.trr          10      1
+        13             trajF.trr          11      1
+        14             trajF.trr          12      1

@@ -4,7 +4,7 @@ Retis 1D example
 Simulation
 ----------
 task = retis
-steps = 100
+steps = 30
 interfaces = [-0.26, -0.24, -0.22, -0.20, -0.19, -0.18]
 restart = ../run-20/pyretis.restart
 
@@ -15,12 +15,13 @@ units = gromacs
 Engine settings
 ---------------
 class = GromacsEngine2R
-module = ../gromacs_restart.py
+module = gromacs.py
 gmx = GMXCOMMAND
 mdrun = GMXCOMMAND mdrun
 input_path = ../gromacs_input
 timestep = 0.002
 subcycles = 5
+gmx_format = g96
 
 TIS settings
 ------------
@@ -48,7 +49,7 @@ swapsimul = True
 Orderparameter
 --------------
 class = RingDiffusion
-module = ../orderp.py
+module = orderp.py
 
 Output settings
 ---------------

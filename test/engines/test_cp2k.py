@@ -39,15 +39,12 @@ class CP2KEngineTest(unittest.TestCase):
         """Test that we can initiate the engine."""
         dir_name = os.path.join(HERE, 'cp2k_input')
         extra_files = ['extra_file']
-        engine = CP2KEngine('cp2k', dir_name, 0.002, 10, extra_files)
+        engine = CP2KEngine('cp2k', dir_name, 0.002, 10,
+                            extra_files=extra_files)
         self.assertEqual(len(engine.extra_files), 1)
-        # Check that we get an error if we are missing files:
+        # Check that we get an error if we are missing files.
         with self.assertRaises(ValueError):
-            CP2KEngine('cp2k', '', 0.002, 10, extra_files)
-        # Check that non-existing extra files are not added:
-        extra_files.append('a-non-existing-file-please')
-        engine = CP2KEngine('cp2k', dir_name, 0.002, 10, extra_files)
-        self.assertEqual(len(engine.extra_files), 1)
+            CP2KEngine('cp2k', '', 0.002, 10, 'not-directory-file')
 
     def test_single_step(self):
         """Test that the single step method work as we intend."""

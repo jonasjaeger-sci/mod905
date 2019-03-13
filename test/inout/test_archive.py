@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2019, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
-"""Test the PathStorage class."""
+"""Test the PathStorage classes."""
 import logging
 import os
 import unittest
@@ -14,13 +14,14 @@ from pyretis.inout.archive import (
     add_to_tar_file,
     generate_traj_names,
     PathStorage,
+    PathStorageTar,
 )
 from pyretis.inout.formats import (
     OrderPathFormatter,
     EnergyPathFormatter,
     PathExtFormatter,
 )
-from .help import create_external_path
+from .help import create_external_path, turn_on_logging
 
 logging.disable(logging.CRITICAL)
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -51,6 +52,18 @@ def generate_file_names(start, stop, dirname, paths):
             (filename, os.path.join(*paths, 'file-{}.txt'.format(i)))
         )
     return files
+
+
+def look_for_files_and_dirs(dirname):
+    """Return files or directories found in the given path."""
+    files = []
+    dirs = []
+    for i in os.scandir(dirname):
+        if i.is_file():
+            files.append(i.name)
+        elif i.is_dir():
+            dirs.append(i.name)
+    return files, dirs
 
 
 class TestArchiveMethods(unittest.TestCase):
@@ -96,29 +109,21 @@ class TestArchiveMethods(unittest.TestCase):
             )
 
 
-class TestPathStorage(unittest.TestCase):
-    """Test the PathStorage class."""
-
-    def test_write_fail(self):
-        """Test that the write method give an error."""
-        storage = PathStorage()
-        with self.assertRaises(NotImplementedError):
-            storage.write('test')
+class TestPathStorageTar(unittest.TestCase):
+    """Test the PathStorageTar class."""
 
     def test_output(self):
         """Test that we can output to the storage."""
-        storage = PathStorage()
+        storage = PathStorageTar()
         path, _ = create_external_path()
         with tempfile.TemporaryDirectory() as tempdir:
             ensemble = PathEnsemble(1, [0.0, 1.0, 2.0], exe_dir=tempdir)
             create_dirs_and_files(ensemble, path)
-            for j, (status, tarbase) in enumerate(zip(('ACC', 'REJ'),
-                                                      (storage.tar_acc,
-                                                       storage.tar_rej))):
+            for j, status in enumerate(('ACC', 'REJ')):
                 files = storage.output(10 + j, (path, status, ensemble))
                 # Check if we got the files in the tar-files:
-                tar_file = os.path.join(ensemble.directory['traj'],
-                                        tarbase)
+                archive = storage.archive_name_from_status(status)
+                tar_file = os.path.join(ensemble.directory['traj'], archive)
                 with tarfile.open(tar_file, 'r') as tar:
                     members = [i.name for i in tar.getmembers()]
                     self.assertEqual(len(members), len(files))
@@ -127,25 +132,38 @@ class TestPathStorage(unittest.TestCase):
 
     def test_output_recreate(self):
         """Test that the backup of archives does work."""
-        storage = PathStorage()
+        storage = PathStorageTar()
         path, _ = create_external_path()
         with tempfile.TemporaryDirectory() as tempdir:
             ensemble = PathEnsemble(1, [0.0, 1.0, 2.0], exe_dir=tempdir)
             create_dirs_and_files(ensemble, path)
             storage.output(10, (path, 'ACC', ensemble))
             tar_file = os.path.join(ensemble.directory['traj'],
-                                    storage.tar_acc)
+                                    storage.archive_name_from_status('ACC'))
+            # This will overwrite/corrupt the tar archive:
             with open(tar_file, 'w') as tar:
                 tar.write('Some Men Just Want to Watch The World Burn')
+            # We should be able to create a new archive and backup the old:
             storage.output(11, (path, 'ACC', ensemble))
-            expected = [storage.tar_acc, '{}_000'.format(storage.tar_acc)]
-            files = []
-            for i in os.scandir(ensemble.directory['traj']):
-                if i.is_file():
-                    files.append(i.name)
+            expected = [
+                storage.archive_name_from_status('ACC'),
+                '{}_000'.format(storage.archive_name_from_status('ACC'))
+            ]
+            files, _ = look_for_files_and_dirs(ensemble.directory['traj'])
             self.assertEqual(len(expected), len(files))
             for i in expected:
                 self.assertIn(i, files)
+
+
+class TestPathStorage(unittest.TestCase):
+    """Test the PathStorage class."""
+
+    def test_write_fail(self):
+        """Test that the write method give an critical log message."""
+        storage = PathStorage()
+        with turn_on_logging():
+            with self.assertLogs('pyretis.inout.archive', level='CRITICAL'):
+                storage.write('test')
 
     def test_formatter_info(self):
         """Test that we get correct info about formatters."""
@@ -155,6 +173,47 @@ class TestPathStorage(unittest.TestCase):
         self.assertEqual(len(info), len(correct))
         for i in correct:
             self.assertIn(i, info)
+
+    def test_output(self):
+        """Test that we can create output."""
+        storage = PathStorage()
+        path, _ = create_external_path()
+        with tempfile.TemporaryDirectory() as tempdir:
+            ensemble = PathEnsemble(1, [0.0, 1.0, 2.0], exe_dir=tempdir)
+            create_dirs_and_files(ensemble, path)
+            # Now, there should be no output yet:
+            files, dirs = look_for_files_and_dirs(ensemble.directory['traj'])
+            self.assertEqual(len(files), 0)
+            self.assertEqual(len(dirs), 0)
+            # Output some trajectories:
+            statuses = ('ACC', 'REJ', 'AN USER ERROR')
+            files = {}
+            for i, status in enumerate(statuses):
+                written = storage.output(10 + i, (path, status, ensemble))
+                target_dir = os.path.join(
+                    storage.archive_name_from_status(status),
+                    storage.out_dir_fmt.format(10 + i),
+                )
+                # Grab path to the files added:
+                files[target_dir] = [j[0] for j in written]
+            # We now expect to have some files:
+            for key, val in files.items():
+                dir_name = os.path.join(ensemble.directory['traj'], key)
+                self.assertTrue(os.path.isdir(dir_name))
+                # Check that the files we claimed to make are present
+                # as files:
+                for i in val:
+                    self.assertTrue(os.path.isfile(i))
+                # Just search for all files in the given archive folder
+                # to check that we did not create anything extra:
+                found_files = []
+                for root, _, filei in os.walk(dir_name):
+                    found_files += [os.path.join(root, i) for i in filei]
+                self.assertEqual(
+                    len(val), len(found_files)
+                )
+                for i in found_files:
+                    self.assertIn(i, val)
 
 
 if __name__ == '__main__':

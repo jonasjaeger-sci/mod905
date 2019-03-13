@@ -14,12 +14,13 @@ units = gromacs
 Engine
 ------
 class = GromacsEngine2R
-module = ../gromacs.py
+module = gromacs.py
 gmx = GMXCOMMAND
 mdrun = GMXCOMMAND mdrun
 input_path = ../gromacs_input
 timestep = 0.002
 subcycles = 5
+gmx_format = g96
 
 TIS
 ---
@@ -46,7 +47,7 @@ swapsimul = True
 Orderparameter
 --------------
 class = RingDiffusion
-module = ../orderp.py
+module = orderp.py
 
 Output settings
 ---------------

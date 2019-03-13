@@ -1,0 +1,25 @@
+units real
+timestep 1.0
+
+atom_style full
+bond_style hybrid morse harmonic
+angle_style hybrid class2 harmonic
+dihedral_style class2
+improper_style class2
+
+read_data system.data
+
+include "groups.in"
+
+include "md.in.settings"
+
+thermo 100
+
+variable SET_TEMP equal 343
+
+include "order.in"  # this is the order parameter
+
+fix 1 mg nvt temp 343 343 100
+fix 2 dummy nvt temp 343 343 10
+fix 3 water rigid/nvt molecule temp 343 343 100
+

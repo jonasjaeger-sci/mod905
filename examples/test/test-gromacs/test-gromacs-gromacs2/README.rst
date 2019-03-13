@@ -2,40 +2,65 @@ Comparison of the two engines ``gromacs`` and ``gromacs2``
 ==========================================================
 
 This example will compare the two engines ``gromacs`` and ``gromacs2``.
+
 For this test GROMACS **must** have been compiled with support for
 **double precision**. The test will run a RETIS simulation with the
-same input using the two engines, the expected result is that both
+same input using the two engines. The expected result is that both
 engines should produce the same output. To ensure this, we let PyRETIS
 determine the seed for the generation of velocities in GROMACS.
-This implies that we need to change ``gromacs`` and ``gromacs2``
-accordingly and this is done by overriding the class methods responsible
-for creating the shooting point.
+This implies that we need to change the two engines ``gromacs`` and
+``gromacs2`` accordingly and this is done by overriding the class methods
+responsible for creating the shooting point. The modified engines can be
+found in ``gromacs.py`` in the folder ``gmx`` in the parent directory.
 
-Description of files
---------------------
+Description of files and folders
+--------------------------------
 
-- gromacs.py: Contains the two integrators where the seeds for GROMACS is
-  excplicitly set.
+- ``gromacs_input``: Contains the input files for GROMACS.
 
-- orderp.py: The order parameter used in the example.
+- ``run-gromacs1``: Contains the input script for using the ``gromacs`` engine.
 
-- gromacs_input: The input files for GROMACS.
+- ``run-gromacs2``: Contains the input script for using the ``gromacs2`` engine.
 
-- run-gromacs1: The input script for using the ``gromacs`` engine.
+- ``Makefile``: A makefile which can be used for removing temporary files, i.e. by
+  doing a ``make clean``.
 
-- run-gromacs2: The input script for using the ``gromacs2`` engine.
+- ``run.sh``: A script which will automatically run the test and compare the results.
 
 Running the test
 ----------------
 
-Execute the two simulations.
+Either use the ``run.sh`` script or run the tests manually.
 
-1. First, in ``run-gromacs1``: pyretisrun -i retis.rst -p -l DEBUG
+To manually execute the tests do the following:
 
-2. Then, in ``run-gromacs2``: pyretisrun -i retis.rst -p -l DEBUG
+1. Copy the following files from the ``gmx`` parent directory:
 
-You can then compare the output. This can also be done by running the
-script ``compare.py``, e.g.: python compare.py
+   - ``gromacs.py``
+   - ``orderp.py``
+
+   into ``run-gromacs1`` or ``run-gromacs2``.
+
+2. Move into the folder containing the test you want to run,
+   either ``run-gromacs1`` or ``run-gromacs2``. Note: you will
+   have to execute both these.
+
+3. Manually specify the name of the GROMACS executable in the file
+   ``retis.rst``, before running the test. This is done by replacing
+   the text ``GMXCOMMAND`` with the name of your GROMACS executable
+   in the file ``retis.rst``
+
+4. Execute the simulation by running:
+
+   pyretisrun -i retis.rst -p -l DEBUG
+
+5. After having executed both simulations (``run-gromacs1`` and
+   ``run-gromacs2``) you can compare them. This is done using the
+   script ``compare.py`` from the parent ``gmx`` directory. You
+   first need to copy this script and then run the comparison using:
+
+   python compare.py run-gromacs1 run-gromacs2 --energy_skip 'vpot'
+
 
 Results
 -------
@@ -44,5 +69,5 @@ the output files.
 
 Note: The potential energies in the two cases will differ. This difference is due
 to the continuation runs not writing the dispersion correction to the energy file.
-This means that the energy from the ``gromacs`` engine will be shifted with a
-constant amount relative to the ``gromacs2`` engine.
+This means that the energy from the ``gromacs`` engine will be shifted relative
+to the ``gromacs2`` engine for some points.

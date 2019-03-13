@@ -22,13 +22,14 @@ This directory contains tests for restarting with GROMACS:
 Instructions
 ------------
 
-For these tests, there is a ``run.sh`` script which contains the
-commands used for executing them.
+For these tests, there is a ``run.sh`` script in each folder, which
+contains the commands used for executing the test.
 
 Note
 ----
-The engines ``gromacs.py`` and ``gromacs_restart.py`` are used
-here to create engines that draw predictable random numbers so
-that the results can be compared. The ``gromacs`` engine of
-PyRETIS will ask GROMACS to randomly select a seed for generating
-velocities. Here, we explicitly set these seeds.
+The engines found in the file ``gromacs.py`` in the parent ``gmx``
+directory are used in these tests to create engines that draw
+predictable random numbers so that the results can be compared.
+The ``gromacs`` engine of PyRETIS will ask GROMACS to randomly
+select a seed for generating velocities. Here, we explicitly set
+these seeds.

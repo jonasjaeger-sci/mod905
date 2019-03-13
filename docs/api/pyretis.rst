@@ -46,6 +46,9 @@ into sub-packages:
 * :ref:`pyretis.simulation <api-simulation>` for running predefined
   simulations.
 
+* :ref:`pyretis.testing <api-testing>` with functions which are used
+  in connection with testing.
+
 * :ref:`pyretis.tools <api-tools>` for performing some simple
   tasks useful for setting up simulations.
 
@@ -80,6 +83,7 @@ Contents: The |pyretis| sub-packages
     pyretis.initiation
     pyretis.orderparameter
     pyretis.simulation
+    pyretis.testing
     pyretis.tools
 
 In addition |pyretis| has the following submodules:

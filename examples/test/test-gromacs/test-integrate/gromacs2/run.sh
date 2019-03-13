@@ -16,9 +16,12 @@ Total-Energy
 Temperature
 EOF
 
-python compare_energies.py energy.txt gmx-energy.xvg
+python ../compare_energies.py energy.txt gmx-energy.xvg plot
 
+cp ../../gmx/make_mdp.py .
 python make_mdp.py gromacs-run.rst pyretis-gmx.mdp gromacs-run.mdp
+rm make_mdp.py
+
 $gmx grompp -f gromacs-run.mdp -p gromacs_input/topol.top -c gromacs_input/conf.g96 -o gromacs-run.tpr
 $gmx mdrun -s gromacs-run.tpr -deffnm gromacs-run
 
@@ -29,4 +32,4 @@ Total-Energy
 Temperature
 EOF
 
-python compare_energies.py energy.txt gmx-gromacs-run.xvg plot
+python ../compare_energies.py energy.txt gmx-gromacs-run.xvg plot

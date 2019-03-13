@@ -9,13 +9,14 @@ clean:
 	find -name \*.txt -delete
 	find -name out.rst\* -delete
 	find -name \*.restart -delete
-	find -name rnd.state -delete
-	find -name \*.log -delete
+	find -name \*.state -delete
+	find -name \*.log\* -delete
 	find -name mdout.mdp -delete
 	find -name \*.tpr -delete
 	-rm -rf run-20/0*
-	-rm -rf run-100/0*
+	-rm -rf run-50/0*
 	-rm -rf run-load/0*
 	-rm -rf run-load/initial_path
+	-rm -rf merged
 	-rm -rf gromacs_input/pyretis.mdp
     

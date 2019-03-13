@@ -101,6 +101,49 @@ class ExternalMDEngine(EngineBase):
         self.timestep = timestep
         self.subcycles = subcycles
 
+    def _look_for_input_files(self, input_path, required,
+                              optional_files=None):
+        """Check that required files are present.
+
+        The required files are needed to run a simulation with the
+        external engine. We will fail if these are missing. There
+        might also be optional files which are not required, but
+        might be passed in here. If these are not present we will
+        not fail, but delete the reference to this file.
+
+        Parameters
+        ----------
+        input_path : string
+            The path to the folder where the input files are stored.
+        required : dict of strings
+            These are the file names of the required files.
+        optional_files : list of strings, optional
+            These are the file names of the optional files.
+
+        Returns
+        -------
+        out : dict
+            The paths to the required and optional files we found.
+
+        """
+        input_files = {}
+        for key, val in required.items():
+            input_files[key] = os.path.join(input_path, val)
+            if not os.path.isfile(input_files[key]):
+                if optional_files and key in optional_files:
+                    del input_files[key]
+                    continue
+                else:
+                    msg = 'Missing {} input file "{}"'.format(
+                        self.description,
+                        input_files[key],
+                    )
+                    logger.error(msg)
+                    raise ValueError(msg)
+            logger.debug('%s input %s: %s', self.description, key,
+                         input_files[key])
+        return input_files
+
     def integration_step(self, system):
         """
         Perform a single time step of the integration.
@@ -323,9 +366,9 @@ class ExternalMDEngine(EngineBase):
                 msg = ('Execution of external program ({}) failed. '
                        'Return code: {}').format(self.description, return_code)
                 raise RuntimeError(msg)
-            else:
-                self._removefile(out_name)
-                self._removefile(err_name)
+        if return_code is not None and return_code == 0:
+            self._removefile(out_name)
+            self._removefile(err_name)
         return return_code
 
     @staticmethod

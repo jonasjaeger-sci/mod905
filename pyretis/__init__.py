@@ -59,6 +59,9 @@ orderparameter (:py:mod:`pyretis.orderparameter`)
     Definition of classes for order parameters. Defines the base class
     for order parameters.
 
+testing (:py:mod:`pyretis.testing`)
+    This package defines common methods which are used in testing.
+
 tools (:py:mod:`pyretis.tools`)
     This package defines some functions which can be useful for
     setting up simple systems, for example, functions for generating
@@ -76,3 +79,4 @@ from . import tools
 from . import analysis
 from . import inout
 from . import initiation
+from . import testing

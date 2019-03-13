@@ -32,8 +32,9 @@ version of GROMACS.
 
 Note
 ----
-The engines ``gromacs.py`` and ``gromacs_restart.py`` are used
-here to create engines that draw predictable random numbers so
-that the results can be compared. The ``gromacs`` engine of
-PyRETIS will ask GROMACS to randomly select a seed for generating
-velocities. Here, we explicitly set these seeds.
+The engines found in the file ``gromacs.py`` in the parent ``gmx``
+directory are used in these tests to create engines that draw
+predictable random numbers so that the results can be compared.
+The ``gromacs`` engine of PyRETIS will ask GROMACS to randomly
+select a seed for generating velocities. Here, we explicitly set
+these seeds.

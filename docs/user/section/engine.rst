@@ -31,6 +31,8 @@ different types:
 
 .. |engine_cp2k| replace:: :ref:`CP2K <user-section-engine-cp2k>`
 
+.. |engine_lammps| replace:: :ref:`LAMMPS <user-section-engine-lammps>`
+
 .. |engine_user| replace:: :ref:`User-defined <user-section-engine-user-defined>`
 
 .. _table-engine-types:
@@ -51,6 +53,8 @@ different types:
    | |engine_gromacs|  | External engine, using GROMACS.                      |
    +-------------------+------------------------------------------------------+
    | |engine_cp2k|     | External engine, using CP2K.                         |
+   +-------------------+------------------------------------------------------+
+   | |engine_lammps|   | External engine, using LAMMPS.                       |
    +-------------------+------------------------------------------------------+
    | |engine_user|     | Internal/External engine, user-defined.              |
    +-------------------+------------------------------------------------------+
@@ -625,7 +629,7 @@ class ``cp2k`` with some additional keywords:
 Keywords for the CP2K engine
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-For the CP2k engine, the following keywords can be set:
+For the CP2K engine, the following keywords can be set:
 
 .. |cp2k_class| replace:: :ref:`class <user-section-engine-cp2k-class>`
 
@@ -667,7 +671,7 @@ Keyword class
 .. pyretis-keyword:: class cp2k
    :specific: yes
 
-   The class selects the Verlet engine and it should be set to ``cp2k``.
+   The class selects the CP2K engine and it should be set to ``cp2k``.
 
 .. _user-section-engine-cp2k-cp2k:
 
@@ -695,6 +699,10 @@ Keyword input_path
 
    Further, in the folder specified by ``input_path`` the following files **must**
    be present:
+
+   * ``initial.xyz``: A file with the initial configuration.
+
+   * ``cp2k.inp``: A CP2K input file, defining a MD simulation.
 
    Default:
        Not any. This keyword must be specified.
@@ -724,6 +732,148 @@ Keyword subcycles
 
    Default:
        Not any. This keyword must be specified.
+
+
+
+.. _user-section-engine-lammps:
+
+The ``LAMMPS`` engine
+---------------------
+
+The LAMMPS engine will use LAMMPS [4]_ in order
+to integrate the equations of motion.
+A description of how to use the LAMMPS engine with |pyretis| can
+be found in :ref:`the user guide on LAMMPS <user-guide-lammps>`.
+
+The engine is selected by specifying the
+class ``lammps`` with some additional keywords:
+
+.. pyretis-input-example:: Engine
+   :class-name: lammps
+
+   .. code-block:: rst
+
+      Engine
+      ------
+      class = lammps
+      lmp = lmp
+      input_path = lammps_input
+      subcycles = 1
+      extra_files = ['potential.in']
+
+
+Keywords for the LAMMPS engine
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+For the LAMMPS engine, the following keywords can be set:
+
+.. |lammps_class| replace:: :ref:`class <user-section-engine-lammps-class>`
+
+.. |lammps_lmp| replace:: :ref:`lmp <user-section-engine-lammps-lmp>`
+
+.. |lammps_input| replace:: :ref:`input_path <user-section-engine-lammps-input>`
+
+.. |lammps_sub| replace:: :ref:`subcycles <user-section-engine-lammps-sub>`
+
+.. |lammps_extra| replace:: :ref:`extra_files <user-section-engine-lammps-extra>`
+
+
+.. _table-lammps-keywords:
+
+.. table:: Keywords for the LAMMPS engine.
+   :class: table-striped table-hover
+
+   +----------------+-----------------------------------------------------------+
+   | Keyword        | Description                                               |
+   +================+===========================================================+
+   | |lammps_class| | Selects the LAMMPS engine.                                |
+   +----------------+-----------------------------------------------------------+
+   | |lammps_lmp|   | Defines the command used to execute LAMMPS.               |
+   +----------------+-----------------------------------------------------------+
+   | |lammps_input| | Defines the location of input files to use for LAMMPS.    |
+   +----------------+-----------------------------------------------------------+
+   | |lammps_sub|   | Which defines the number of steps LAMMPS will execute     |
+   |                | before we calculate order parameter(s).                   |
+   +----------------+-----------------------------------------------------------+
+   | |lammps_extra| | Defines the location of input files to use for LAMMPS.    |
+   +----------------+-----------------------------------------------------------+
+
+
+.. _user-section-engine-lammps-class:
+
+Keyword class
+.............
+
+.. pyretis-keyword:: class lammps
+   :specific: yes
+
+   The class selects the LAMMPS engine and it should be set to ``lammps``.
+
+.. _user-section-engine-lammps-lmp:
+
+Keyword lmp
+...........
+
+.. pyretis-keyword:: lmp string
+
+   The command used for executing LAMMPS.
+
+   Default:
+       Not any. This keyword must be specified.
+
+.. _user-section-engine-lammps-input:
+
+Keyword input_path
+..................
+
+.. pyretis-keyword:: input_path string
+
+   This keyword sets the directory where |pyretis| will look for input files to
+   use with LAMMPS. If for instance ``input_path = lammps_input`` is set, then
+   |pyretis| will look in the folder ``lammps_input`` relative to the directory
+   |pyretis| is executed in.
+
+   Further, in the folder specified by ``input_path`` the following files **must**
+   be present:
+
+   * ``system.data``: A LAMMPS data file with the initial configuration.
+
+   * ``lammps.in``: A LAMMPS input file, defining a MD simulation.
+
+   * ``order.in``: A LAMMPS input file, defining the order parameter calculation.
+
+   Default:
+       Not any. This keyword must be specified.
+
+.. _user-section-engine-lammps-sub:
+
+Keyword subcycles
+.................
+
+.. pyretis-keyword:: subcycles integer
+
+   The ``subcycles`` defines the frequency of the output from LAMMPS,
+   and thus the frequency by which the order parameter(s) are obtained.
+
+   Default:
+       Not any. This keyword must be specified.
+
+.. _user-section-engine-lammps-extra:
+
+Keyword extra
+.............
+
+.. pyretis-keyword:: extra_files list of strings
+
+   The ``extra_files`` defines additional files that might be needed
+   to execute LAMMPS. For instance, may the user refer to several
+   additional LAMMPS script in the given ``lammps.in`` file. This keyword
+   is to make |pyretis| aware of these additional files.
+
+   Default:
+       None.
+
+
 
 
 .. _user-section-engine-user-defined:
@@ -845,3 +995,5 @@ References
 .. [2] http://www.gromacs.org
 
 .. [3] https://www.cp2k.org/
+
+.. [4] https://lammps.sandia.gov/

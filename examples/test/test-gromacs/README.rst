@@ -2,7 +2,15 @@ Test GROMACS
 ============
 
 This folder contains some tests for using GROMACS as an
-external integrator. The different tests are described below.
+external integrator. The folder `gmx` contain common
+Python scripts used while running the tests. Each
+test is defined, and can be run using an accompanying
+`run.sh` script. If you want to use a specific GROMACS
+executable, this can be given as an argument to the `run.sh`
+script: `run.sh gmx_2016.4_d`. If no such argument is given,
+the default `gmx_d` will be used.
+
+The different tests are described below:
 
 test-gromacs
 ------------
@@ -17,7 +25,8 @@ and ``GROMACS2`` by running two short RETIS simulations.
 
 test-integrate
 --------------
-Test that the integrate method of the engine work as intended.
+Test that the integration of the equation of motion works as intended
+with the PyRETIS GROMACS engines.
 
 test-load
 ---------
