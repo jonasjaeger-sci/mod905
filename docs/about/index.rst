@@ -18,7 +18,7 @@ the research activities in the
 group at the `Norwegian University of Science and Technology <http://www.ntnu.edu/>`_.
 
 |pyretis| is open source and is released
-under a :ref:`GNU Lesser General Public license v3 <pyretis-license>`.
+under a :ref:`GNU Lesser General Public license v2.1+ <pyretis-license>`.
 It is still under active development and a
 list of :ref:`planned work <todo-notes>`
 and :ref:`version changes <release-notes>` are available.
