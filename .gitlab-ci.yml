@@ -182,9 +182,10 @@ test_min_version:
     - ln /usr/bin/g++ /usr/bin/g++44
     - awk '{gsub(">","="); print $0}' requirements.txt  >> min_req.txt
     - grep "numpy" min_req.txt >> numpy.txt
+    - grep "cython" min_req.txt >> numpy.txt 
     - pip install -r numpy.txt
     - pip install -r min_req.txt
-    - pip install git+https://github.com/mdtraj/mdtraj.git
+    - pip install --no-use-pep517 git+https://github.com/mdtraj/mdtraj.git
     - pip install -e .
     - python -V
     - pip freeze
