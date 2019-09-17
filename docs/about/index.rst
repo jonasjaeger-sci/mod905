@@ -19,12 +19,9 @@ group at the `Norwegian University of Science and Technology <http://www.ntnu.ed
 
 |pyretis| is open source and is released
 under a :ref:`GNU Lesser General Public license v2.1+ <pyretis-license>`.
-It is still under active development and a
-list of :ref:`planned work <todo-notes>`
-and :ref:`version changes <release-notes>` are available.
 If you are interested in contributing to the |pyretis| project,
 please have a look
-to the :ref:`developer guide <developer-guide-index>` and visit our
+at the :ref:`developer guide <developer-guide-index>` and visit our
 git repository `<https://gitlab.com/pyretis/pyretis>`_.
 
 .. toctree::
@@ -32,4 +29,3 @@ git repository `<https://gitlab.com/pyretis/pyretis>`_.
 
     license.rst
     release-notes.rst
-    todo.rst
