@@ -10,11 +10,11 @@ with emphasis on methods based on
 :ref:`transition interface sampling <user-guide-tis-theory>`
 and :ref:`replica exchange transition interface sampling <user-guide-retis-theory>`.
 The paper describing the |pyretis| program
-can be found here: `<https://doi.org/10.1002/jcc.24900>`_
+can be found here: `<https://doi.org/10.1002/jcc.24900>`_.
 
 The work on |pyretis| was initiated by `Titus van Erp <http://www.van-erp.org>`_ and is used in
 the research activities in the
-`applied theoretical chemistry <http://www.ntnu.edu/chemistry/research/theoretical-chemistry>`_
+`theoretical chemistry <http://www.ntnu.edu/chemistry/research/theoretical-chemistry>`_
 group at the `Norwegian University of Science and Technology <http://www.ntnu.edu/>`_.
 
 |pyretis| is open source and is released
@@ -24,8 +24,12 @@ please have a look
 at the :ref:`developer guide <developer-guide-index>` and visit our
 git repository `<https://gitlab.com/pyretis/pyretis>`_.
 
+The current |pyretis| version is |version|.
+For an overview of the official |pyretis| releases,
+please visit our git repository: `<https://gitlab.com/pyretis/pyretis/-/releases>`_.
+
 .. toctree::
     :maxdepth: 2
+    :hidden:
 
     license.rst
-    release-notes.rst

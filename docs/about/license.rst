@@ -1,9 +1,5 @@
 .. _pyretis-license:
 
-#######
-License
-#######
-
 |pyretis| License (GNU Lesser General Public License v2.1+)
 ===========================================================
 
