@@ -5,7 +5,7 @@ Simulation
 ----------
 task = retis
 steps = 5
-interfaces = [2.19, 2.20, 2.21, 2.22, 2.23]
+interfaces = [2.19, 2.20, 2.21, 2.22, 4.33]
 
 System
 ------
@@ -36,7 +36,6 @@ Initial-path
 ------------
 method = load
 load_folder = pippo
-top_file = 'gromacs_input/conf.gro'
 
 RETIS settings
 --------------

@@ -75,6 +75,7 @@ _GRO_BOX_FMT = '{:15.9f}'
 _G96_FMT = '{0:}{1:15.9f}{2:15.9f}{3:15.9f}\n'
 _G96_FMT_FULL = '{0:5d} {1:5s} {2:5s}{3:7d}{4:15.9f}{5:15.9f}{6:15.9f}\n'
 _G96_BOX_FMT = '{:15.9f}' * 9 + '\n'
+_G96_BOX_FMT_3 = '{:15.9f}' * 3 + '\n'
 
 # Definitions for the TRR reader.
 _GROMACS_MAGIC = 1993
@@ -251,7 +252,7 @@ def read_gromacs_gro_file(filename):
     return snapshot, xyz, vel, box
 
 
-def write_gromacs_gro_file(outfile, txt, xyz, vel):
+def write_gromacs_gro_file(outfile, txt, xyz, vel=None, box=None):
     """Write configuration in GROMACS GRO format.
 
     Parameters
@@ -263,8 +264,10 @@ def write_gromacs_gro_file(outfile, txt, xyz, vel):
         etc. required to write the GRO file.
     xyz : numpy.array
         The positions to write.
-    vel : numpy.array
+    vel : numpy.array, optional
         The velocities to write.
+    box: numpy.array, optional
+        The box matrix.
 
     """
     resnum = txt['residunr']
@@ -276,19 +279,32 @@ def write_gromacs_gro_file(outfile, txt, xyz, vel):
         output.write('{}\n'.format(txt['header']))
         output.write('{}\n'.format(npart))
         for i in range(npart):
-            buff = _GRO_VEL_FMT.format(
-                resnum[i],
-                resname[i],
-                atomname[i],
-                atomnr[i],
-                xyz[i, 0],
-                xyz[i, 1],
-                xyz[i, 2],
-                vel[i, 0],
-                vel[i, 1],
-                vel[i, 2])
+            if vel is None:
+                buff = _GRO_FMT.format(
+                    resnum[i],
+                    resname[i],
+                    atomname[i],
+                    atomnr[i],
+                    xyz[i, 0],
+                    xyz[i, 1],
+                    xyz[i, 2])
+            else:
+                buff = _GRO_VEL_FMT.format(
+                    resnum[i],
+                    resname[i],
+                    atomname[i],
+                    atomnr[i],
+                    xyz[i, 0],
+                    xyz[i, 1],
+                    xyz[i, 2],
+                    vel[i, 0],
+                    vel[i, 1],
+                    vel[i, 2])
             output.write('{}\n'.format(buff))
-        box = ' '.join([_GRO_BOX_FMT.format(i) for i in txt['box']])
+        if box is None:
+            box = ' '.join([_GRO_BOX_FMT.format(i) for i in txt['box']])
+        else:
+            box = ' '.join([_GRO_BOX_FMT.format(i) for i in box])
         output.write('{}\n'.format(box))
 
 
@@ -316,7 +332,8 @@ def read_gromos96_file(filename):
     """
     _len = 15
     _pos = 24
-    rawdata = {'TITLE': [], 'POSITION': [], 'VELOCITY': [], 'BOX': []}
+    rawdata = {'TITLE': [], 'POSITION': [], 'VELOCITY': [], 'BOX': [],
+               'POSITIONRED': [], 'VELOCITYRED': []}
     section = None
     with open(filename, 'r', errors='replace') as gromosfile:
         for lines in gromosfile:
@@ -342,6 +359,11 @@ def read_gromos96_file(filename):
             txtdata[key].append(txt)
             pos = [float(line[i:i+_len]) for i in range(_pos, 4*_len, _len)]
             xyzdata[key].append(pos)
+        for line in rawdata[key+'RED']:
+            txt = line[:_pos]
+            txtdata[key].append(txt)
+            pos = [float(line[i:i+_len]) for i in range(0, 3*_len, _len)]
+            xyzdata[key].append(pos)
         xyzdata[key] = np.array(xyzdata[key])
     rawdata['POSITION'] = txtdata['POSITION']
     rawdata['VELOCITY'] = txtdata['VELOCITY']
@@ -357,7 +379,7 @@ def read_gromos96_file(filename):
     return rawdata, xyzdata['POSITION'], xyzdata['VELOCITY'], box
 
 
-def write_gromos96_file(filename, raw, xyz, vel):
+def write_gromos96_file(filename, raw, xyz, vel, box=None):
     """Write configuration in GROMACS .g96 format.
 
     Parameters
@@ -370,6 +392,8 @@ def write_gromos96_file(filename, raw, xyz, vel):
         The positions to write.
     vel : numpy.array
         The velocities to write.
+    box: numpy.array, optional
+        The box matrix.
 
     """
     _keys = ('TITLE', 'POSITION', 'VELOCITY', 'BOX')
@@ -383,6 +407,11 @@ def write_gromos96_file(filename, raw, xyz, vel):
                     outfile.write(_G96_FMT.format(line, *xyz[i]))
                 elif key == 'VELOCITY':
                     outfile.write(_G96_FMT.format(line, *vel[i]))
+                elif box is not None and key == 'BOX':
+                    if len(box) == 3:
+                        outfile.write(_G96_BOX_FMT_3.format(*box))
+                    else:
+                        outfile.write(_G96_BOX_FMT.format(*box))
                 else:
                     outfile.write('{}\n'.format(line))
             outfile.write('END\n')
@@ -404,7 +433,7 @@ def read_xvg_file(filename):
                 else:
                     data.append([float(i) for i in lines.split()])
     data = np.array(data)
-    data_dict = {'step': data[:, 0]}
+    data_dict = {'step': np.arange(data.shape[0])}
     for i, key in enumerate(legends):
         data_dict[key] = data[:, i+1]
     return data_dict
@@ -879,3 +908,4 @@ def write_trr_header(outfile, header, floatfmt, endian=None):
     outfile.write(struct.pack(fmt[3], *head))
     outfile.write(struct.pack(floatfmt.format(1), header['time']))
     outfile.write(struct.pack(floatfmt.format(1), header['lambda']))
+    outfile.flush()

@@ -48,7 +48,6 @@ def initiate_load(simulation, cycle, settings):
     """
     maxlen = settings['tis']['maxlength']
     folder = settings['initial-path'].get('load_folder', 'load')
-    simulation.system.particles.top = settings['initial-path'].get('top_file')
 
     if not os.path.exists(folder):
         logger.critical('Load folder "%s" not found!', folder)
@@ -67,6 +66,9 @@ def initiate_load(simulation, cycle, settings):
             generate_ensemble_name(path_ensemble.ensemble_number))
 
         if not os.path.exists(os.path.join(edir, 'traj.txt')):
+            logger.info('Input Load missing')
+            print_to_screen('No traj.txt file found in {}, attempt generate!'
+                            .format(edir))
             # Make sure the files are where they are supposed to be:
             _do_the_dirty_load_job(folder, edir)
             # Generate a traj.txt file for the path ensemble:
@@ -99,9 +101,23 @@ def initiate_load(simulation, cycle, settings):
         else:
             raise ValueError('Unknown engine type!')
 
-        if not accept and path.get_move() == 'ld':  # Let's try to fix it:
+        # If a path is not acceptable, than here we try to rearrange it such
+        # to satisfy each ensemble definition
+        if not accept and path.get_move() == 'ld':  # Let's try to fix the path
             path, (accept, status) = reorderframes(path, path_ensemble)
             path.status = status
+            if status != 'ACC':
+                msg = 'Path stored in folder {} does not satisfy the relative'\
+                      ' ensemble ({}) definition. ' \
+                      'The given path has a min of {} and a max of {} while '\
+                      'the relative interface are located at {}, {} and {}. '\
+                      'NOTE: points withing state B are not used.'\
+                      .format(edir, path_ensemble.ensemble_number,
+                              path.ordermin[0], path.ordermax[0],
+                              path_ensemble.interfaces[0],
+                              path_ensemble.interfaces[1],
+                              path_ensemble.interfaces[2])
+                raise ValueError(msg)
         path_ensemble.add_path_data(path, status, cycle)
         path_ensemble.last_path = path
         yield accept, path, status, path_ensemble
@@ -111,6 +127,8 @@ def reorderframes(path, path_ensemble):
     """Re-order the phase points in the input path.
 
     This function assumes that the path needs to be fixed.
+    It checks for the validity of the path and keeps only the frames
+    that are useful for the region to explore e.g. [0^-].
 
     Parameters
     ----------
@@ -128,21 +146,87 @@ def reorderframes(path, path_ensemble):
     # a reversed path is generated.
     # If the path goes from L and stops, it is doubled to create a
     # L to L path.
+    # If the path goes from R and stops, it is doubled to create a
+    # R to R path.
     if path_ensemble.start_condition == 'R':
         path.sorting('order', reverse=False)
         slave_path.sorting('order', reverse=False)
-        path = paste_paths(path, slave_path, maxlen=100000)
+        path = paste_paths(path, slave_path)
 
     if path_ensemble.start_condition == 'L':
         path.sorting('order', reverse=False)
 
-        if path.get_end_point(left, right) not in ['L', 'R']:
+        if path.get_end_point(left, right) not in {'L', 'R'}:
             slave_path = path.copy()
             path.sorting('order', reverse=True)
             slave_path.sorting('order', reverse=True)
-            path = paste_paths(path, slave_path, maxlen=100000)
+            path = paste_paths(path, slave_path)
     path.set_move('ld')
+
+    clean_path(path, path_ensemble)
+
     return path, _check_path(path, path_ensemble)
+
+
+def clean_path(path, path_ensemble):
+    """Remove useless frames from a path.
+
+    This function remove phasepoints from a path that are
+    not needed (e.g. the one in stable states)
+
+    Parameters
+    ----------
+    path : object like :py:class:`.PathBase`
+        The path we try to fix.
+    path_ensemble : object like :py:class:`.PathEnsembleExt`
+        The path ensemble the path could be added to.
+
+    """
+    left, _, right = path_ensemble.interfaces
+    # Set up initial guest for the crossing point search.
+    # 0,1,2,3,4 is a safe initial guess to eventually avoid empty paths out.
+    # Such cases shall be intercepted by _check_path and not give an error
+    # here.
+
+    # Initialize
+    ph_min = path.phasepoints[0].copy()
+    ph_max = path.phasepoints[0].copy()
+    dist_right = float('inf')
+    dist_left = float('inf')
+
+    # First, find the two nearest crossing points to the 0 interface.
+    for i, phasepoint in enumerate(path.phasepoints):
+        # From left:
+        if phasepoint.order[0] < left:
+            if left - phasepoint.order[0] <= dist_left:
+                dist_left = left - phasepoint.order[0]
+                ph_min = phasepoint.copy()
+        # From right:
+        if phasepoint.order[0] >= right:
+            if phasepoint.order[0] - right < dist_right:
+                dist_right = phasepoint.order[0] - right
+                ph_max = phasepoint.copy()
+
+    # Delete unnecessary frames.
+    erase_list = []
+    for i, phasepoint in enumerate(path.phasepoints):
+        if not left <= phasepoint.order[0] < right:
+            erase_list.append(i)
+
+    # Erase the largest elements first to avoid counting problems.
+    erase_list.reverse()
+
+    # Happy Ending.
+    for i in erase_list:
+        path.delete(i)
+
+    # The path has to cope with the ensemble requirements.
+    if path_ensemble.start_condition == 'R':
+        path.phasepoints.insert(0, ph_max.copy())
+        path.phasepoints.append(ph_max.copy())
+    if path_ensemble.start_condition == 'L':
+        path.phasepoints.insert(0, ph_min.copy())
+        path.phasepoints.append(ph_min.copy())
 
 
 def _do_the_dirty_load_job(mainfolder, edir):
@@ -158,7 +242,7 @@ def _do_the_dirty_load_job(mainfolder, edir):
         frame/trajectory files.
 
     """
-    formats = ['.xyz', '.gro', '.xtc', '.trr']
+    formats = ['.xyz', '.gro', '.xtc', '.trr', '.txt']
 
     listoffiles = [i.name for i in os.scandir(mainfolder) if i.is_file()]
     traj_files = [i for i in listoffiles if i[-4:] in formats]
@@ -192,7 +276,7 @@ def _do_the_dirty_load_job(mainfolder, edir):
                     )
             else:
                 for filei in traj_files_ens:
-                    shutil.move(
+                    os.rename(
                         os.path.join(edir, filei),
                         os.path.join(edir, 'accepted', filei)
                     )
@@ -214,27 +298,40 @@ def _generate_traj_txt_from_ext(dirname, system, engine):
         reference a topology, if needed, for mdtraj.
 
     """
-    trajexts = ['.xyz', '.gro', '.trr', '.xtc']
+    trajexts = ['.xyz', '.gro', '.trr', '.xtc', '.txt']
     load_file = os.path.join(dirname, 'traj.txt')
 
     traj_files = sorted([i for i in
                          os.listdir(os.path.join(dirname, 'accepted'))
                          if i[-4:] in trajexts])
 
+    path = Path()
+    # Load Sparse works also from multiple initial trajectories
+    # both internally and externally
     if system.particles.particle_type == 'internal':
-        path = Path()
         for filei in traj_files:
-            for snap in read_xyz_file(os.path.join(dirname,
-                                                   'accepted', filei)):
-                _, pos, vel, _ = convert_snapshot(snap)
-                snapshot = {'pos': pos, 'vel': vel}
-                phase_point = system_from_snapshot(system, snapshot)
-                path.append(phase_point)
+            if filei[-4:] == '.xyz':
+                for snap in read_xyz_file(os.path.join(dirname,
+                                                       'accepted', filei)):
+                    _, pos, vel, _ = convert_snapshot(snap)
+                    snapshot = {'pos': pos, 'vel': vel}
+                    phase_point = system_from_snapshot(system, snapshot)
+                    path.append(phase_point)
+            if filei[-4:] == '.txt':
+                traj = _load_trajectory(os.path.join(dirname, 'accepted'),
+                                        filei)
+                for snapshot in traj['data']:
+                    snapshot = {'pos': snapshot['pos'],
+                                'vel': snapshot['vel']}
+                    phase_point = system_from_snapshot(system, snapshot)
+                    path.append(phase_point)
+
         with PathIntFile(load_file, 'w', backup=True) as trajfile:
             trajfile.output(0, (path, 'ACC'))
     else:
-        path = Path()
         for tfile in traj_files:
+            if tfile[-4:] == '.txt':
+                continue
             all_tfile = os.path.join(dirname, 'accepted', tfile)
             if tfile[-4:] == '.xyz':
                 for i, snap in enumerate(read_xyz_file(all_tfile)):
@@ -245,10 +342,6 @@ def _generate_traj_txt_from_ext(dirname, system, engine):
                 if tfile[-4:] == '.gro':
                     md_file = mdtraj.load(all_tfile)
                 else:
-                    if system.particles.top is None:
-                        # Steal it from the engine:
-                        system.particles.top = engine.input_files['conf']
-
                     md_file = mdtraj.load(all_tfile, top=system.particles.top)
 
                 for i in range(0, md_file.n_frames):
@@ -329,14 +422,24 @@ def _load_order_parameters_ext(traj, dirname, order_function, system, engine):
         a time frame.
 
     """
+    order_file_main_name = os.path.join(dirname, '../', 'order.txt')
     order_file_name = os.path.join(dirname, 'order.txt')
-    try:
+    if os.path.isfile(order_file_name):
         with OrderPathFile(order_file_name, 'r') as orderfile:
             print_to_screen('Loading order parameters.')
             order = next(orderfile.load())
             return order['data'][:, 1:]
-    except FileNotFoundError:
+    elif os.path.isfile(order_file_main_name):
+        with OrderPathFile(order_file_main_name, 'r') as orderfile:
+            print_to_screen('Loading order parameters from main directory.')
+            order = next(orderfile.load())
+            # Store the re-calculated order parameters so we don't have
+            # to re-calculate again later:
+            write_order_parameters(order_file_name, order['data'][:, 1:])
+            return order['data'][:, 1:]
+    else:
         print_to_screen('Could not read file: {}'.format(order_file_name))
+
     orderdata = []
     print_to_screen('Recalculating order parameters for input path.')
     logger.info('Recalculating order parameters for input path.')
@@ -362,9 +465,12 @@ def _load_order_parameters_ext(traj, dirname, order_function, system, engine):
             info['box'], _ = read_cp2k_box(engine.input_files['template'])
         for new_order in recalculate_order(order_function, filename, info):
             orderdata.append(new_order)
+
     # Store the re-calculated order parameters so we don't have
     # to re-calculate again later:
     write_order_parameters(order_file_name, orderdata)
+    # Make a copy in the main load folder
+    write_order_parameters(order_file_main_name, orderdata)
     return orderdata
 
 
@@ -442,26 +548,27 @@ def _check_path(path, path_ensemble):
     return accept, status
 
 
-def _load_trajectory(dirname):
+def _load_trajectory(dirname, filename='traj.txt'):
     """Set-up and load a trajectory from a file.
 
     Parameters
     ----------
     dirname : string
         The directory where we can find the trajectory file(s).
+    filename : string
+        The name of the trajectory file.
 
     Returns
     -------
     traj : dict
-        A dictionary containing the trajectory information. Here,
-        the trajectory information is a list of files with indices and
-        information about velocity direction.
+        A dictionary containing the trajectory information.
+        That is, position and velocity for each frame.
 
     """
-    with PathIntFile(os.path.join(dirname, 'traj.txt'), 'r') as trajfile:
+    with PathIntFile(os.path.join(dirname, filename), 'r') as trajfile:
         # Just get the first trajectory:
         traj = next(trajfile.load())
-        return traj
+    return traj
 
 
 def read_path_files(path, path_ensemble, dirname, system, order_function,

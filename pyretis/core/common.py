@@ -18,17 +18,33 @@ generic_factory (:py:func:`.generic_factory`)
 
 compare_objects (:py:func`.compare_objects`)
     Method to compare two PyRETIS objects.
+
+crossing_counter (:py:func`.crossing_counter`)
+    Function to count the crossing of a path on an interface.
+
+crossing_finder (:py:func`.crossing_finder`)
+    Function to get the shooting points of the crossing of a path
+    on an interface.
+
+select_and_trim_a_segment (:py:func`.select_and_trim_a_segment`)
+    Function to trim a path between interfaces plus the two external points.
+
+trim_path_between_interfaces (:py:func`.trim_path_between_interfaces`)
+    Function to trim a path between interfaces.
+
 """
 import logging
 import inspect
 import numpy as np
 
-
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 
-__all__ = ['inspect_function', 'initiate_instance', 'generic_factory']
+__all__ = ['inspect_function', 'initiate_instance', 'generic_factory',
+           'crossing_counter', 'crossing_finder',
+           'select_and_trim_a_segment', 'trim_path_between_interfaces',
+           'big_fat_comparer']
 
 
 def _arg_kind(arg):
@@ -64,6 +80,93 @@ def _arg_kind(arg):
         # We treat these as keyword arguments:
         kind = 'kwargs'
     return kind
+
+
+def big_fat_comparer(any1, any2, hard=False):
+    """Check if two dictionary are the same, regardless their complexity.
+
+    Parameters
+    ----------
+    any1 : anything
+    any2 : anything
+    hard : boolean, optional
+        Raise ValueError if any1 and any2 are different
+
+    Returns
+    -------
+    out : boolean
+        True if any1 = any2, false otherwise
+
+    """
+    if type(any1) is not type(any2):
+        if hard:
+            raise ValueError('Fail type', any1, any2)
+        return False
+
+    if isinstance(any1, (list, tuple)):
+        if len(any1) != len(any2):
+            if hard:
+                raise ValueError('Fail list length', any1, any2)
+            return False
+
+        for key1, key2 in zip(any1, any2):
+            if not big_fat_comparer(key1, key2, hard):
+                if hard:
+                    raise ValueError('Fail item in list',
+                                     any1, any2)  # pragma: no cover
+                return False
+
+    elif isinstance(any1, np.ndarray):
+        if any1.shape != any2.shape:
+            if hard:
+                raise ValueError('Fail np array shape', any1, any2)
+            return False
+
+        for key1, key2 in zip(np.nditer(any1), np.nditer(any2)):
+            if not (key1 == key2).all():
+                if hard:
+                    raise ValueError('Fail np array item', any1, any2)
+                return False
+
+    elif isinstance(any1, dict):
+        for key in any1:
+            if key not in any2:
+                if hard:
+                    raise ValueError('Fail dict', any1, any2)
+                return False
+
+            if not isinstance(any1[key], type(any2[key])):
+                if hard:
+                    raise ValueError('Fail types', any1[key], any2[key])
+                return False
+
+            if isinstance(any1[key], (dict, list, tuple, np.ndarray)):
+                if not big_fat_comparer(any1[key], any2[key], hard):
+                    if hard:
+                        raise ValueError('Fail item',
+                                         any1[key],
+                                         any2[key])  # pragma: no cover
+                    return False
+
+            else:
+                if any1[key] != any2[key]:
+                    if hard:
+                        raise ValueError('Fail item', any1[key], any2[key])
+                    return False
+
+        for key in any2:
+            if key not in any1:
+                if hard:
+                    raise ValueError('Fail item', any1, any2)
+                return False
+
+    else:
+        if any1 != any2:
+            if hard:
+                raise ValueError('Fail item', any1, any2)
+            return False
+
+    return True
 
 
 def inspect_function(function):
@@ -254,7 +357,7 @@ def compare_objects(obj1, obj2, attrs, numpy_attrs=None):
     This method will compare two PyRETIS objects by checking
     the equality of the attributes. Some of these attributes
     might be numpy arrays in which case we use the
-    :py:funtion:`.numpy_allclose` defined in this module.
+    :py:function:`.numpy_allclose` defined in this module.
 
     Parameters
     ----------
@@ -299,3 +402,187 @@ def compare_objects(obj1, obj2, attrs, numpy_attrs=None):
                 logger.debug('Attribute "%s" differ.', key)
                 return False
     return True
+
+
+def segments_counter(path, interface_l, interface_r):
+    """Count the directional segment between interfaces.
+
+    Method to count the number of the directional segments of the path,
+    along the orderp, that connect FROM interface_l TO interface_r.
+
+    Parameters
+    -----------
+    path : object like :py:class:`.PathBase`
+        This is the input path which segments will be counted.
+    interface_r : float
+        This is the position of the RIGHT interface.
+    interface_l : float
+        This is the position of the LEFT interface.
+
+    Returns
+    -------
+    n_segments : integer
+        Segment counter
+
+    """
+    icros, n_segments = -1, 0
+    for i in range(len(path.phasepoints[:-1])):
+        op1 = path.phasepoints[i].order[0]
+        op2 = path.phasepoints[i+1].order[0]
+        if op2 > interface_l >= op1:
+            icros = i
+        if op2 > interface_r >= op1:
+            if icros != -1:
+                icros = -1
+                n_segments += 1
+    return n_segments
+
+
+def crossing_counter(path, interface):
+    """Count the crossing to an interfaces.
+
+    Method to count the crosses of a path over an interface.
+
+    Parameters
+    -----------
+    path : object like :py:class:`.PathBase`
+        This is the input path which will be trimmed.
+    interface : float
+        This is the position of the interface.
+
+    Returns
+    -------
+    cnt : integer
+        Number of crossing of the given interface.
+
+    """
+    cnt = 0
+    for i in range(len(path.phasepoints[:-1])):
+        op1 = path.phasepoints[i].order[0]
+        op2 = path.phasepoints[i+1].order[0]
+        if op2 >= interface > op1 or op1 >= interface > op2:
+            cnt += 1
+    return cnt
+
+
+def crossing_finder(path, interface):
+    """Find the crossing to an interfaces.
+
+    Method to select the crosses of a path over an interface.
+
+    Parameters
+    -----------
+    path : object like :py:class:`.PathBase`
+        This is the input path which will be trimmed.
+    interface : float
+        This is the position of the interface.
+
+    Returns
+    -------
+    ph1, ph2 : lists of snapshots
+        It is a list of snapshots to define the crossing,
+        one right before and one right after the interface.
+
+    """
+    ph1, ph2 = [], []
+    for i in range(len(path.phasepoints[:-1])):
+        op1 = path.phasepoints[i].order[0]
+        op2 = path.phasepoints[i+1].order[0]
+        if op2 >= interface > op1 or op1 >= interface > op2:
+            ph1.append(path.phasepoints[i])
+            ph2.append(path.phasepoints[i+1])
+    return ph1, ph2
+
+
+def trim_path_between_interfaces(path, interface_l, interface_r):
+    """Cut a path between the two interfaces.
+
+    The method cut a path and keeps only what is within the range
+    (interface_l interface_r).
+    -Be careful, it can provide multiple discontinuous segments-
+    =Be carefull2 consider if you need to make this check left inclusive
+    (as the ensemble should be left inclusive)
+
+    Parameters
+    ----------
+    path : object like :py:class:`.PathBase`
+        This is the input path which will be trimmed.
+    interface_r : float
+        This is the position of the RIGHT interface.
+    interface_l : float
+        This is the position of the LEFT interface.
+
+    Returns
+    -------
+    new_path : object like :py:class:`.PathBase`
+        This is the output trimmed path.
+
+    """
+    new_path = path.empty_path()
+    for phasepoint in path.phasepoints:
+        orderp = phasepoint.order[0]
+        if interface_r > orderp > interface_l:
+            new_path.append(phasepoint)
+    new_path.maxlen = path.maxlen
+    new_path.status = path.status
+    new_path.time_origin = path.time_origin
+    new_path.generated = 'ct'
+    new_path.rgen = path.rgen
+    return new_path
+
+
+def select_and_trim_a_segment(path, interface_l, interface_r,
+                              segment_to_pick=None):
+    """Cut a directional segment from interface_l to interface_r.
+
+    It keeps what is within the range [interface_l interface_r)
+    AND the snapshots just after/before the interface.
+
+    Parameters
+    ----------
+    path : object like :py:class:`.PathBase`
+        This is the input path which will be trimmed.
+    interface_r : float
+        This is the position of the RIGHT interface.
+    interface_l : float
+        This is the position of the LEFT interface.
+    segment_to_pick : integer (n.b. it starts from 0)
+        This is the segment to be selected, None = random
+
+    Returns
+    -------
+    segment : a path segment composed only the snapshots for which
+        orderp is between interface_r and interface_l and the
+        ones right after/before the interfaces
+
+    """
+    key = False
+    segment = path.empty_path()
+    segment_i = -1
+    if segment_to_pick is None:
+        segment_number = segments_counter(path, interface_l, interface_r)
+        segment_to_pick = path.rgen.random_integers(0, segment_number)
+
+    for i, phasepoint in enumerate(path.phasepoints[:-1]):
+        op1 = path.phasepoints[i].order[0]
+        op2 = path.phasepoints[i+1].order[0]
+        # NB: these are directional crossing
+        if op2 >= interface_l > op1:
+            # We are in the good region, segment_i
+            if not key:
+                segment_i += 1
+            key = True
+        if key:
+            if segment_i == segment_to_pick:
+                segment.append(phasepoint)
+        if op2 >= interface_r > op1:
+            if key and segment_i == segment_to_pick:
+                segment.append(path.phasepoints[i+1])
+            key = False
+
+    segment.maxlen = path.maxlen
+    segment.status = path.status
+    segment.time_origin = path.time_origin
+    segment.generated = 'sg'
+    segment.rgen = path.rgen
+    return segment

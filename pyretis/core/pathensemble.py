@@ -282,7 +282,8 @@ class PathEnsemble:
             # Here we add a dummy path with minimal info. This is because we
             # could not generate a path for some reason which should be
             # specified by the status.
-            path_data = {'status': status, 'generated': ('', 0, 0, 0)}
+            path_data = {'status': status, 'generated': ('', 0, 0, 0),
+                         'weight': 1.}
         else:
             path_data = path.get_path_data(status, self.interfaces)
             if path_data['status'] == 'ACC':  # Store the path:
@@ -444,7 +445,7 @@ class PathEnsembleExt(PathEnsemble):
                         logger.debug('Removing %s as it exists', dest)
                         os.remove(dest)
                 logger.debug('Moving %s -> %s', src, dest)
-                shutil.move(src, dest)
+                os.rename(src, dest)
 
     @staticmethod
     def _copy_path(path, target_dir, prefix=None):

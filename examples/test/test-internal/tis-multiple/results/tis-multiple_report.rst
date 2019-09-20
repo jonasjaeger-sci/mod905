@@ -234,12 +234,20 @@ Efficiency analysis
 Combined results
 ================
 
-The overall matched probability is shown in the left figure below
-and the individual matched probabilities are shown in the right figure:
+The overall matched probability distributions are shown in the left figure
+while the matched probability distribution is shown in the right figure below.
+The overall crossing probability as a function of cycles
+and its relative error block analysis are reported in the two following
+plots, respectively.
 
 .. image:: total-probability.png
    :width: 45%
 .. image:: matched-probability.png
+   :width: 45%
+
+.. image:: overall-prun.png
+   :width: 45%
+.. image:: overall-err.png
    :width: 45%
 
 The overall crossing probability is:

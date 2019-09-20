@@ -5,7 +5,7 @@ Simulation
 ----------
 task = retis
 steps = 10
-interfaces = [2.78, 2.88, 3.01, 3.80, 4.00]
+interfaces = [2.21, 2.211, 2.212, 2.213, 4.00]
 
 System
 ------

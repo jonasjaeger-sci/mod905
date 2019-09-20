@@ -230,10 +230,14 @@ class TestGromacsIO(unittest.TestCase):
             tmp.flush()
             frame2, _, _, _ = read_gromacs_gro_file(tmp.name)
             self.assert_equal_snapshot(frame, frame2)
+            write_gromacs_gro_file(tmp.name, frame, xyz)
+            tmp.flush()
+            _, xyz1, _, _ = read_gromacs_gro_file(tmp.name)
+            self.assertTrue(np.allclose(xyz, xyz1))
 
     def test_read_gromosg96(self):
         """Test that we can read GROMACS g96 files."""
-        for name in ('config.g96', 'config-novel.g96'):
+        for name in ('config.g96', 'config-novel.g96', 'config-red.g96'):
             filename = os.path.join(HERE, name)
             frame, xyz, vel, box = read_gromos96_file(filename)
             self.assertTrue(np.allclose(box, np.array(CORRECT_GRO_VEL['box'])))
@@ -248,7 +252,7 @@ class TestGromacsIO(unittest.TestCase):
         filename = os.path.join(HERE, 'config.g96')
         frame, xyz, vel, box = read_gromos96_file(filename)
         with tempfile.NamedTemporaryFile() as tmp:
-            write_gromos96_file(tmp.name, frame, xyz, vel)
+            write_gromos96_file(tmp.name, frame, xyz, vel, box)
             tmp.flush()
             frame2, xyz2, vel2, box2 = read_gromos96_file(tmp.name)
             self.assertTrue(np.allclose(xyz, xyz2))
@@ -256,6 +260,12 @@ class TestGromacsIO(unittest.TestCase):
             self.assertTrue(np.allclose(box, box2))
             for key, val in frame.items():
                 self.assertEqual(val, frame2[key])
+            box = [0]*9
+            write_gromos96_file(tmp.name, frame, xyz, vel, box)
+            tmp.flush()
+            _, _, _, box2 = read_gromos96_file(tmp.name)
+            self.assertTrue(np.allclose(box, box2))
+
         # Test that we can write without some fields:
         del frame['VELOCITY']
         del frame['TITLE']
@@ -278,7 +288,7 @@ class TestGromacsIO(unittest.TestCase):
 
 
 class TestGromacsTRR(unittest.TestCase):
-    """Test Gromacs TRR input output."""
+    """Test GROMACS TRR input output."""
 
     def test_swap_integer(self):
         """Test the swap_integer method."""

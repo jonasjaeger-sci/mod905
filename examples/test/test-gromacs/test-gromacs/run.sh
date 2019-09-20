@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e 
 make clean
 gmx=${1:-gmx_d}
 echo Using gmx=$gmx
@@ -7,3 +8,4 @@ sed -e $replace engine.rst > engine-run.rst
 python test_gromacs.py 1 plot
 python test_gromacs.py 2 plot
 rm engine-run.rst
+make clean

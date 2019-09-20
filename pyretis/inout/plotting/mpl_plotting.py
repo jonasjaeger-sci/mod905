@@ -381,6 +381,13 @@ def _mpl_plot_xy_chunk(axs, series, low=0, high=None, color=None):
         except KeyError:
             pass
 
+    if len(series['x']) != len(series['y']) and high is None:
+        high = min(len(series['x']), len(series['y']))
+    elif high is not None and high > len(series['x']):
+        high = len(series['x'])
+    elif high is not None and high > len(series['y']):
+        high = len(series['y'])
+
     handle, = axs.plot(series['x'][low:high], series['y'][low:high],
                        **kwargs)
     return handle
@@ -1036,8 +1043,9 @@ def mpl_plot_matched(path_ensembles, detect, matched):
         These are the detect interfaces used in the analysis.
     matched : dict
         This dict contains the results from the matching of the
-        probabilities. `matched['overall-prob']` and
-        `matched['matched-prob']` are used here.
+        probabilities: `matched['overall-prob']`,
+         and `matched['overall-prun']`
+         or `matched['overall-rrun']` (if exists) are used here.
 
     Returns
     -------
@@ -1081,7 +1089,7 @@ def mpl_plot_matched(path_ensembles, detect, matched):
 
     figset = {'xlabel': r'Order parameter ($\lambda$)',
               'ylabel': 'Probability',
-              'title': 'Matched probabilities',
+              'title': 'Overall probabilities',
               'yscale': 'log'}
     canvas[PATH_MATCH['total']] = mpl_simple_plot(series,
                                                   fig_settings=figset)
@@ -1099,5 +1107,47 @@ def mpl_plot_matched(path_ensembles, detect, matched):
               'title': 'Matched probability',
               'yscale': 'log'}
     canvas[PATH_MATCH['match']] = mpl_simple_plot(series,
+                                                  fig_settings=figset)
+    # Also make a plot with the TIME evolution of the overall
+    # probability or rate:
+    if 'overall-rrun' in matched:
+        title = 'Time evolution of the overall Rate'
+        ylabel = 'Rate (running avg.)'
+        data = matched['overall-rrun']
+        label = 'overall-rrun'
+
+    elif 'overall-prun' in matched:
+        title = 'Time evolution of the Overall Crossing Probability'
+        ylabel = 'Crossing Probability (running avg.)'
+        data = matched['overall-prun']
+        label = 'overall-prun'
+    else:
+        return canvas
+
+    series = [{'type': 'xy',
+               'x': matched['overall-cycle'],
+               'y': data},
+              {'type': 'hline',
+               'y': data[-1],
+               'ls': '--',
+               'alpha': 0.8}]
+    figset = {'xlabel': 'Cycle number',
+              'ylabel': ylabel,
+              'title': title}
+    canvas[label] = mpl_simple_plot(series, fig_settings=figset)
+    # and finish with the block error analysis.
+    series = [{'type': 'xy',
+               'x': matched['overall-error'][0],
+               'y': matched['overall-error'][3]},
+              {'type': 'hline',
+               'y': matched['overall-error'][4],
+               'ls': '--',
+               'alpha': 0.8}]
+    title = r'Overall: Rate Rel. err.: {0:9.6e}, Ncor: {1:9.6e}'
+
+    figset = {'xlabel': 'Block length', 'ylabel': 'Estimated error',
+              'title': title.format(matched['overall-error'][4],
+                                    matched['overall-error'][6])}
+    canvas[PATH_MATCH['error']] = mpl_simple_plot(series,
                                                   fig_settings=figset)
     return canvas

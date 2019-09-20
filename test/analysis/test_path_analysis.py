@@ -85,6 +85,13 @@ class AnalysePathEnsembleTest(unittest.TestCase):
                 'file': 'pathensemble003.txt',
                 'test': {'prun': (-1, 0.12487512)},
             },
+            {
+                'ensemble_number': 4,
+                'interfaces': [-0.9, -0.71, 1],
+                'detect': -0.6,
+                'file': 'pathensemble004.txt',
+                'test': {'prun': (-1, 0.129132231)},
+            },
         ]
         settings = {'analysis': SECTIONS['analysis']}
         results = []
@@ -97,14 +104,19 @@ class AnalysePathEnsembleTest(unittest.TestCase):
                 self.assertAlmostEqual(val[-1], res[key][val[0]])
             results.append(analyse_path_ensemble(raw_data, settings))
             detect.append(ens['detect'])
-        match = match_probabilities(results[1:], detect[1:])
-        self.assertAlmostEqual(match['prob'], 0.00404784431946)
+        match = match_probabilities(results[1:], detect[1:], settings)
+        self.assertAlmostEqual(match['prob'], 0.0005227071693518608)
         flux = retis_flux(results[0], results[1], 0.002)
         self.assertAlmostEqual(flux[0], 0.26513774978836657)
         self.assertAlmostEqual(flux[1], 0.023855082020650387)
         rate = retis_rate(match['prob'], match['relerror'], flux[0], flux[1])
-        self.assertAlmostEqual(rate[0], 0.0010732363343554615)
-        self.assertAlmostEqual(rate[1], 0.43377192333568948)
+        self.assertAlmostEqual(rate[0], 0.00013858940268019902)
+        self.assertAlmostEqual(rate[1], 0.4684306995194783)
+
+        # Re-check the last one:
+        settings['analysis']['maxblock'] = 0
+        res = analyse_path_ensemble(raw_data, settings)
+        self.assertAlmostEqual(val[-1], res[key][val[0]])
 
     def test_path_analysisobject(self):
         """Test analyse_path_ensemble_object."""

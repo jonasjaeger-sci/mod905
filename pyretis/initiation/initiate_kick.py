@@ -111,9 +111,8 @@ def initiate_kick_max(simulation, cycle):
             'Running kick-max initiation in: {}'.format(ensemble.ensemble_name)
         )
         if last_paths:
+            # Look for the phase point closest to the middle interface
             middle = ensemble.interfaces[1]
-            # Look for the phase point closest to the middle interface,
-            # but still on the left side:
             current = None
             min_dist = float('inf')
             for last_path in last_paths:
@@ -429,7 +428,7 @@ def fix_path_by_tis(initial_path, order_function, path_ensemble,
             logger.debug('Moving initial_path')
             path_ensemble.move_path_to_generated(initial_path, prefix='_')
             backup_path = False
-
+        shooting_move = 'sh'
         accept, trial, _ = make_tis_step(
             initial_path,
             order_function,
@@ -437,7 +436,8 @@ def fix_path_by_tis(initial_path, order_function, path_ensemble,
             engine,
             rgen,
             local_tis_settings,
-            path_ensemble.start_condition
+            path_ensemble.start_condition,
+            shooting_move
         )
 
         if accept:

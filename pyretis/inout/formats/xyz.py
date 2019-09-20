@@ -322,6 +322,7 @@ def _reverse_xyz_buffer(buff, output):
         if finish_next:
             output.write('\n'.join(frame[::-1]))
             output.write('\n')
+            output.flush()
             frame = []
             finish_next = False
             continue

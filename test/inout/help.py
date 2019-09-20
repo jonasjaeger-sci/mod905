@@ -152,7 +152,8 @@ def assert_equal_path_dict(dict1, dict2):
         'length': 'int',
         'ordermax': 'tuple-float',
         'ordermin': 'tuple-float',
-        'status': 'string'
+        'status': 'string',
+        'weight': 'float'
     }
     for key in dict1:
         if key not in dict2:
@@ -163,7 +164,7 @@ def assert_equal_path_dict(dict1, dict2):
     for key, val in comp.items():
         if key not in dict1 or key not in dict2:
             raise AssertionError('Missing key: {}'.format(key))
-        if val in ('int', 'string'):
+        if val in ('int', 'string', 'float'):
             if not dict1[key] == dict2[key]:
                 raise AssertionError('Different {}'.format(key))
         elif val in ('tuple', 'tuple-float'):

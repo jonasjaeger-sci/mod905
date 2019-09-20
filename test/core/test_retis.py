@@ -8,12 +8,15 @@ import unittest
 import numpy as np
 from pyretis.core.system import System
 from pyretis.core.particles import Particles
+from pyretis.core.pathensemble import PathEnsemble
 from pyretis.core.random_gen import MockRandomGenerator
 from pyretis.inout.setup.createsimulation import create_path_ensembles
 from pyretis.forcefield import ForceField
 from pyretis.core.retis import (
     retis_swap,
+    retis_swap_zero,
     make_retis_step,
+    high_acc_swap,
     null_move,
     retis_moves,
     _relative_shoots_select,
@@ -91,9 +94,13 @@ class RetisTestSwap(unittest.TestCase):
         path1c = path1.copy()
         path2 = ensembles[4].last_path
         path2c = path2.copy()
-        accept, (trial1, trial2), status = retis_swap(
-            ensembles, 3, None, None, None, 0
-        )
+        rgen = MockRandomGenerator(seed=0)
+        accept, (trial1, trial2), status = retis_swap(ensembles, idx=3,
+                                                      order_function=None,
+                                                      engine=None,
+                                                      rgen=rgen,
+                                                      settings={'tis': {}},
+                                                      cycle=0)
         self.assertTrue(accept)
         self.assertEqual(status, 'ACC')
         # Here, path1 and trial2 should be identical:
@@ -108,6 +115,109 @@ class RetisTestSwap(unittest.TestCase):
         self.assertFalse(path1.generated[0] == path1c.generated[0])
         self.assertTrue(compare_path_skip_generated(path2, path2c))
         self.assertFalse(path2.generated[0] == path2c.generated[0])
+
+    def test_high_acc_swap(self):
+        """Test weights and high_acc_swap method."""
+        ensembles = create_ensembles_and_paths()
+        rgen = MockRandomGenerator(seed=3)
+        interfaces = [-1., 0., 1., 2., 10]
+        # 1) Try [0^+] with [1^+]:
+        # This move should be reject, we here check that
+        # the currently accepted paths are not modified.
+
+        path1 = ensembles[2].last_path.copy()
+        path2 = ensembles[4].last_path.copy()
+        path1.set_move('ss')
+        path2.set_move('ss')
+
+        success, status = high_acc_swap(path1, path2, rgen,
+                                        interfaces[1],
+                                        interfaces[2],
+                                        interfaces[-1])
+        self.assertFalse(success)
+        self.assertEqual(status, 'HAS')
+
+        path1 = ensembles[3].last_path.copy()
+        path2 = ensembles[4].last_path.copy()
+        path1.set_move('ss')
+        path2.set_move('ss')
+        success, status = high_acc_swap(path1, path2, rgen,
+                                        interfaces[1],
+                                        interfaces[2],
+                                        interfaces[-1])
+        self.assertTrue(success)
+        self.assertEqual(status, 'ACC')
+
+        # Now let's check with ss only in path1
+        path1.set_move('ss')
+        path2.set_move('wt')
+        success, status = high_acc_swap(path1, path2, rgen,
+                                        interfaces[1],
+                                        interfaces[2],
+                                        interfaces[-1])
+        self.assertTrue(success)
+        self.assertEqual(status, 'ACC')
+
+        path1 = ensembles[4].last_path.copy()
+        path2 = ensembles[4].last_path.copy()
+        path1.set_move('ss')
+        path2.set_move('wt')
+        success, status = high_acc_swap(path1, path2, rgen,
+                                        interfaces[1],
+                                        interfaces[2],
+                                        interfaces[-1])
+        self.assertTrue(success)
+        self.assertEqual(status, 'ACC')
+
+        # Now let's check with ss only in path2
+        path1.set_move('wt')
+        path2.set_move('ss')
+        success, status = high_acc_swap(path1, path2, rgen,
+                                        interfaces[1],
+                                        interfaces[2],
+                                        interfaces[-1])
+        self.assertTrue(success)
+        self.assertEqual(status, 'ACC')
+
+        path1 = ensembles[4].last_path.copy()
+        path2 = ensembles[4].last_path.copy()
+        path1.set_move('wt')
+        path2.set_move('ss')
+        success, status = high_acc_swap(path1, path2, rgen,
+                                        interfaces[1],
+                                        interfaces[2],
+                                        interfaces[-1])
+        self.assertTrue(success)
+        self.assertEqual(status, 'ACC')
+
+        path1 = ensembles[4].last_path.copy()
+        success, status = high_acc_swap(path1, path2, rgen,
+                                        interfaces[1],
+                                        interfaces[2],
+                                        interfaces[-1])
+        self.assertTrue(success)
+        self.assertEqual(status, 'ACC')
+
+        settings = {'tis': {'high_accept': True}}
+        accept, (_, _), status = retis_swap(ensembles, idx=3,
+                                            order_function=None,
+                                            engine=None,
+                                            rgen=rgen,
+                                            settings=settings,
+                                            cycle=0)
+        self.assertTrue(accept)
+        self.assertEqual(status, 'ACC')
+
+        # Check that we can use the ss weights:
+        ensembles[3].last_path.set_move('ss')
+        ensembles[4].last_path.set_move('ss')
+        accept, (_, _), status = retis_swap(ensembles, idx=3,
+                                            order_function=None,
+                                            engine=None,
+                                            rgen=rgen,
+                                            settings=settings,
+                                            cycle=0)
+        self.assertEqual(ensembles[4].last_path.weight, 1)
 
     def test_nullmove_internal(self):
         """Test the null move."""
@@ -134,7 +244,7 @@ class RetisTestSwap(unittest.TestCase):
         path2 = ensembles[1].last_path
         path2c = path2.copy()
         accept, (trial1, trial2), status = retis_swap(
-            ensembles, 0, order, engine, settings, 0
+            ensembles, 0, order, engine, settings, 0, None
         )
         # This should be accepted:
         self.assertTrue(accept)
@@ -151,6 +261,57 @@ class RetisTestSwap(unittest.TestCase):
         # Second point in trial 2 is last point in path 1:
         self.assertEqual(trial2.phasepoints[1], path1.phasepoints[-1])
 
+    def test_swap_zero_internal_0L(self):
+        ens0 = PathEnsemble(ensemble_number=0, interfaces=(0, 2, 2))
+        ens1 = PathEnsemble(ensemble_number=1, interfaces=(2, 2.5, 3))
+        path0 = make_internal_path((0, 2.1), (100, 2.2), (50, -1),
+                                   ens0.interfaces[1])
+        path1 = make_internal_path((0, 1.9), (100, 1.8), (50, 2.5),
+                                   ens1.interfaces[1])
+
+        ens0.add_path_data(path0, status='ACC')
+        ens1.add_path_data(path1, status='ACC')
+        order_f = MockOrder()
+        eng = MockEngine(10, turn_around=15)
+        eng.delta_v *= -1
+
+        out = retis_swap_zero(ensembles=[ens0, ens1],
+                              order_function=order_f,
+                              engine=eng,
+                              settings={"tis": {"maxlength": 1000}},
+                              cycle=1
+                              )
+        self.assertFalse(out[0])
+        self.assertEqual(out[1][0].status, "0-L")
+        self.assertEqual(out[1][1].status, "0-L")
+        self.assertEqual(out[1][0].check_interfaces(ens0.interfaces)[:2],
+                         ('L', 'R'))
+
+    def test_swap_zero_internal_0L_acc(self):
+        ens0 = PathEnsemble(ensemble_number=0, interfaces=(0, 2, 2))
+        ens1 = PathEnsemble(ensemble_number=1, interfaces=(2, 2.5, 3))
+        path0 = make_internal_path((0, 2.1), (100, 2.2), (50, -1),
+                                   ens0.interfaces[1])
+        path1 = make_internal_path((0, 1.9), (100, 1.8), (50, 2.5),
+                                   ens1.interfaces[1])
+
+        ens0.add_path_data(path0, status='ACC')
+        ens1.add_path_data(path1, status='ACC')
+        order_f = MockOrder()
+        eng = MockEngine(5, turn_around=100)
+
+        out = retis_swap_zero(ensembles=[ens0, ens1],
+                              order_function=order_f,
+                              engine=eng,
+                              settings={"tis": {"maxlength": 1000}},
+                              cycle=1
+                              )
+        self.assertTrue(out[0])
+        self.assertEqual(out[1][0].status, "ACC")
+        self.assertEqual(out[1][1].status, "ACC")
+        self.assertEqual(out[1][0].check_interfaces(ens0.interfaces)[:2],
+                         ('R', 'R'))
+
     def test_swap_zero_internal_ftx(self):
         """Test the swap zero when we force a FTX."""
         ensembles = create_ensembles_and_paths()
@@ -158,7 +319,7 @@ class RetisTestSwap(unittest.TestCase):
         order = MockOrder()
         engine = MockEngine(1.0, turn_around=500)
         accept, _, status = retis_swap(
-            ensembles, 0, order, engine, settings, 0
+            ensembles, 0, order, engine, settings, 0, None
         )
         self.assertFalse(accept)
         self.assertEqual(status, 'FTX')
@@ -177,7 +338,7 @@ class RetisTestSwap(unittest.TestCase):
         order = MockOrder()
         engine = MockEngine(1.0, turn_around=500)
         accept, _, status = retis_swap(
-            ensembles, 0, order, engine, settings, 0
+            ensembles, 0, order, engine, settings, 0, None
         )
         self.assertFalse(accept)
         self.assertEqual(status, 'BTX')
@@ -192,7 +353,7 @@ class RetisTestSwap(unittest.TestCase):
         path = make_internal_path((0, -0.9), (100, -1.2), (50, -0.2), None)
         ensembles[1].add_path_data(path, 'ACC')
         accept, _, status = retis_swap(
-            ensembles, 0, order, engine, settings, 0
+            ensembles, 0, order, engine, settings, 0, None
         )
         self.assertFalse(accept)
         self.assertEqual(status, 'BTS')
@@ -207,7 +368,7 @@ class RetisTestSwap(unittest.TestCase):
         path = make_internal_path((0, -0.9), (100, -1.2), (50, -5), None)
         ensembles[0].add_path_data(path, 'ACC')
         accept, _, status = retis_swap(
-            ensembles, 0, order, engine, settings, 0
+            ensembles, 0, order, engine, settings, 0, None
         )
         self.assertFalse(accept)
         self.assertEqual(status, 'FTS')

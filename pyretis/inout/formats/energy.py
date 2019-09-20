@@ -86,7 +86,7 @@ class EnergyFormatter(OutputFormatter):
             if value is None:
                 towrite.append(self.ENERGY_FMT[i + 1].format(float('nan')))
             else:
-                towrite.append(self.ENERGY_FMT[i + 1].format(value))
+                towrite.append(self.ENERGY_FMT[i + 1].format(float(value)))
         return ' '.join(towrite)
 
     def format(self, step, data):

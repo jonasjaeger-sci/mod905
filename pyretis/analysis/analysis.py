@@ -43,35 +43,6 @@ def running_average(data):
     return data.cumsum(axis=0) / one.cumsum(axis=0)
 
 
-def _chunks(itera, size):
-    """Yield successive same-sized chunks from an iterable.
-
-    Parameters
-    ----------
-    itera : iterable
-        This is the iterable we will return chunks of.
-    size : int
-        The size of the chunks.
-
-    Yields
-    ------
-    out : object like `itera`
-        The successive same-sized chunks from `itera`-
-
-    Notes
-    -----
-    The code is based on one question at Stackoverflow [chunks]_.
-
-    References
-    ----------
-    .. [chunks] Stackoverflow, "How do you split ...",
-       http://stackoverflow.com/a/312464
-
-    """
-    for i in range(0, len(itera), size):
-        yield itera[i:i+size]
-
-
 def block_error(data, maxblock=None, blockskip=1):
     """Perform block error analysis.
 

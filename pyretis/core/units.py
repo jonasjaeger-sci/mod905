@@ -812,6 +812,7 @@ def write_conversions(filename='units.txt'):
                 out = '{} {} {} {}\n'.format(dim, unit[0], unit[1],
                                              convert[unit])
                 fileh.write(out)
+                fileh.flush()
 
 
 def read_conversions(filename='units.txt', select_units=None):

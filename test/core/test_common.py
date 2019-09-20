@@ -5,13 +5,20 @@
 import logging
 import unittest
 import numpy as np
+from io import StringIO
 from pyretis.core.common import (
+    big_fat_comparer,
+    crossing_finder,
     inspect_function,
-    _pick_out_arg_kwargs,
     generic_factory,
     numpy_allclose,
+    select_and_trim_a_segment,
+    segments_counter,
+    trim_path_between_interfaces,
+    _pick_out_arg_kwargs,
 )
-
+from unittest.mock import patch
+from .test_path import PATHTEST0, PATHTEST1, PATHTEST2
 
 logging.disable(logging.CRITICAL)
 
@@ -65,6 +72,24 @@ def function8(arg1, arg2=100, self='something'):
 # pylint: enable=unused-argument
 
 
+CORRECT = [
+    {'args': ['arg1', 'arg2', 'arg3', 'arg4'],
+     'varargs': [], 'kwargs': [], 'keywords': []},
+    {'args': ['arg1', 'arg2', 'arg3'],
+     'varargs': [], 'kwargs': ['arg4'], 'keywords': []},
+    {'args': ['arg1', 'arg2', 'arg3'], 'varargs': [],
+     'kwargs': ['arg4', 'arg5'], 'keywords': []},
+    {'args': [], 'varargs': ['args'], 'kwargs': [],
+     'keywords': ['kwargs']},
+    {'args': ['arg1', 'arg2'], 'kwargs': ['arg3', 'arg4'],
+     'varargs': ['args'], 'keywords': []},
+    {'args': ['arg1', 'arg2'], 'kwargs': ['arg3', 'arg4'],
+     'varargs': [], 'keywords': []},
+    {'args': ['arg1', 'arg2'], 'kwargs': ['arg3', 'arg4', 'arg5'],
+     'varargs': ['args'], 'keywords': []},
+]
+
+
 class InspectTest(unittest.TestCase):
     """Run the inspect_function method."""
 
@@ -73,26 +98,10 @@ class InspectTest(unittest.TestCase):
         # Define some test functions:
         functions = [function1, function2, function3, function4,
                      function5, function6, function7]
-        correct = [
-            {'args': ['arg1', 'arg2', 'arg3', 'arg4'],
-             'varargs': [], 'kwargs': [], 'keywords': []},
-            {'args': ['arg1', 'arg2', 'arg3'],
-             'varargs': [], 'kwargs': ['arg4'], 'keywords': []},
-            {'args': ['arg1', 'arg2', 'arg3'], 'varargs': [],
-             'kwargs': ['arg4', 'arg5'], 'keywords': []},
-            {'args': [], 'varargs': ['args'], 'kwargs': [],
-             'keywords': ['kwargs']},
-            {'args': ['arg1', 'arg2'], 'kwargs': ['arg3', 'arg4'],
-             'varargs': ['args'], 'keywords': []},
-            {'args': ['arg1', 'arg2'], 'kwargs': ['arg3', 'arg4'],
-             'varargs': [], 'keywords': []},
-            {'args': ['arg1', 'arg2'], 'kwargs': ['arg3', 'arg4', 'arg5'],
-             'varargs': ['args'], 'keywords': []},
-        ]
 
         for i, func in enumerate(functions):
             args = inspect_function(func)
-            self.assertEqual(args, correct[i])
+            self.assertEqual(args, CORRECT[i])
 
     def test_arg_kind(self):
         """Test a function with only positional arguments."""
@@ -118,6 +127,9 @@ class InspectTest(unittest.TestCase):
         args, kwargs = _pick_out_arg_kwargs(abo, settings)
         self.assertFalse('self' in args)
         self.assertFalse('self' in kwargs)
+
+        with self.assertRaises(ValueError):
+            _, _ = _pick_out_arg_kwargs(abo, {})
 
 
 class Klass1:
@@ -182,6 +194,182 @@ class TestNumpyComparison(unittest.TestCase):
         # Both is something else:
         self.assertFalse(numpy_allclose('the roof is on fire',
                                         'the roof is on fire'))
+
+
+class TestBigFatComparer(unittest.TestCase):
+    """Test the big_fat_comparer."""
+
+    def test_fat_part_1(self):
+        """Test the big_fat_comparer."""
+        self.assertFalse(big_fat_comparer(np.array([1]), np.array([1, 2, 3])))
+        with self.assertRaises(ValueError):
+            big_fat_comparer(np.array([1]), np.array([1, 2, 3]), hard=True)
+
+        self.assertFalse(big_fat_comparer(np.array([1, 2, 4]),
+                                          np.array([1, 2, 3])))
+        with self.assertRaises(ValueError):
+            big_fat_comparer(np.array([1, 2, 4]),
+                             np.array([1, 2, 3]), hard=True)
+
+        self.assertFalse(big_fat_comparer(1, 2))
+        with self.assertRaises(ValueError):
+            big_fat_comparer(1, 2, hard=True)
+
+        self.assertFalse(big_fat_comparer(1, 2))
+        with self.assertRaises(ValueError):
+            big_fat_comparer(1, 2, hard=True)
+
+        self.assertFalse(big_fat_comparer(1, [1]))
+        with self.assertRaises(ValueError):
+            big_fat_comparer(1, [1], hard=True)
+
+        self.assertFalse(big_fat_comparer((1, 3, 4), (1, 3)))
+        with self.assertRaises(ValueError):
+            big_fat_comparer((1, 3, 4), (1, 3), hard=True)
+        self.assertFalse(big_fat_comparer((1, 3), (1, 3, 4)))
+        with self.assertRaises(ValueError):
+            big_fat_comparer((1, 3), (1, 3, 4), hard=True)
+        self.assertFalse(big_fat_comparer((1, 2, 3), (2, 3, 4)))
+        with self.assertRaises(ValueError):
+            big_fat_comparer((1, 2, 3), (2, 3, 4), hard=True)
+
+        self.assertFalse(big_fat_comparer('Ciao', 'Mamma'))
+        with self.assertRaises(ValueError):
+            big_fat_comparer('Ciao', 'Mamma', hard=True)
+
+        self.assertFalse(big_fat_comparer([1, 2], [0]))
+        with self.assertRaises(ValueError):
+            big_fat_comparer([1, 2], [0], hard=True)
+
+        a, b = np.array([0, 2]), np.array([0, 1])
+        with self.assertRaises(ValueError):
+            big_fat_comparer(a, b, hard=True)
+
+        a, b = [0, 2], [0, {'b': 'c'}]
+        with self.assertRaises(ValueError):
+            big_fat_comparer(a, b, hard=True)
+
+    def test_fat_part_2(self):
+        """Test the big_fat_comparer."""
+        try1 = {'correct': CORRECT,
+                'kkk': [1, 2, 3],
+                'giorgio': {'santo': 'subito',
+                            'yes': [12, 'b']}}
+
+        try2 = {'correct': CORRECT,
+                'kkk': [1, 2, 3],
+                'giorgio': {'santo': 'subito',
+                            'yes': [12, 'b']}}
+
+        try3 = {'correct': CORRECT,
+                'kkk': [1, 2, 3],
+                'giorgio': {'santo': 'subit',
+                            'yes': [12, 'b']}}
+        try4 = {'correct': CORRECT,
+                'kkk': [1, 2, 3],
+                'giorgio': {'santo': 'subit',
+                            'no': 'interest',
+                            'yes': {'b': 12}}}
+
+        self.assertFalse(big_fat_comparer(try1, try3))
+        with self.assertRaises(ValueError):
+            big_fat_comparer(try1, try3, hard=True)
+
+        self.assertFalse(big_fat_comparer(try1, try4))
+        with self.assertRaises(ValueError):
+            big_fat_comparer(try1, try4, hard=True)
+
+        self.assertFalse(big_fat_comparer(try3, try4))
+        with self.assertRaises(ValueError):
+            big_fat_comparer(try3, try4, hard=True)
+
+        self.assertFalse(big_fat_comparer(try2, try4))
+        with self.assertRaises(ValueError):
+            big_fat_comparer(try2, try4, hard=True)
+
+        self.assertFalse(big_fat_comparer(try1, {**{'Ihate': 'Cinnamon'},
+                                                 **try2}))
+        with self.assertRaises(ValueError):
+            big_fat_comparer(try1, {**{'Ihate': 'Cinnamon'},
+                                    **try2}, hard=True)
+
+        self.assertFalse(big_fat_comparer({**{'Iate': 'Cinnamon'}, **try2},
+                                          try1))
+        with self.assertRaises(ValueError):
+            big_fat_comparer({**{'Iate': 'Cinnamon'}, **try2},
+                             try1, hard=True)
+
+        self.assertFalse(big_fat_comparer(try1, 'TestMcTest'))
+        with self.assertRaises(ValueError):
+            big_fat_comparer(try1, 'TestMcTest', hard=True)
+
+        self.assertFalse(big_fat_comparer('TestMcTest', try1))
+        with self.assertRaises(ValueError):
+            big_fat_comparer('TestMcTest', try1, hard=True)
+
+        self.assertTrue(big_fat_comparer(try1, try2))
+        self.assertTrue(big_fat_comparer(try1, try2, hard=True))
+
+        try2['giorgio']['yes'][0] = 1
+        self.assertFalse(big_fat_comparer(try1, try2))
+        with self.assertRaises(ValueError):
+            big_fat_comparer(try1, try2, hard=True)
+
+        try2['giorgio']['yes'][0] = 'c'
+        self.assertFalse(big_fat_comparer(try1, try2))
+        with self.assertRaises(ValueError):
+            big_fat_comparer(try1, try2, hard=True)
+
+        try2['giorgio']['yes'][0] = 12
+        try1['giorgio']['yes'].append(12)
+        self.assertFalse(big_fat_comparer(try1, try2))
+        with self.assertRaises(ValueError):
+            big_fat_comparer(try1, try2, hard=True)
+
+        del try1['giorgio']['yes'][2]
+        self.assertTrue(big_fat_comparer(try1, try2))
+        self.assertTrue(big_fat_comparer(try1, try2, hard=True))
+
+
+class Test_wt(unittest.TestCase):
+    """Run the tests for the wt utilities."""
+
+    def test_crossing_counter(self):
+        ph1, ph2 = crossing_finder(path=PATHTEST0, interface=2.9)
+        self.assertEqual(7, len(ph1))
+
+    def test_segments_counter(self):
+        self.assertEqual(4, segments_counter(path=PATHTEST0,
+                                             interface_l=2.9, interface_r=4.1))
+        self.assertEqual(4, segments_counter(path=PATHTEST0,
+                                             interface_l=2, interface_r=9))
+
+    def test_trim_path_between_interfaces(self):
+        """ Test for trimming trajectories withing a range in path space"""
+        path0 = trim_path_between_interfaces(path=PATHTEST0, interface_l=3.0,
+                                             interface_r=7.0)
+        path2 = PATHTEST2.copy()
+        path2.generated = 'ct'
+
+        with patch('sys.stdout', new=StringIO()):
+            self.assertTrue(path0.length == 12)
+            self.assertTrue(path2 == path0)
+            self.assertTrue(PATHTEST0 != path0)
+
+    def test_select_and_trim_a_segment(self):
+        """ Test to trim a selected segment keeping the crossing"""
+        path_rnd = select_and_trim_a_segment(path=PATHTEST0, interface_l=4.1,
+                                             interface_r=5.9)
+        path3 = select_and_trim_a_segment(path=PATHTEST0, interface_l=4.1,
+                                          interface_r=5.9, segment_to_pick=0)
+        path1 = PATHTEST1.copy()
+        path1.generated = 'sg'
+
+        with patch('sys.stdout', new=StringIO()):
+            self.assertTrue(path3 != path_rnd)
+            self.assertTrue(path1 == path3)
+            self.assertTrue(path3.length == 3)
+            self.assertTrue(PATHTEST1 != path3)
 
 
 if __name__ == '__main__':

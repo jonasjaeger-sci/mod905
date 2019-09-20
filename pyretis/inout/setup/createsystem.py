@@ -570,6 +570,7 @@ def create_system_from_settings(settings, engine):
         klass = get_particle_type(engine.engine_type)
         particles = klass(dim=3)
         particles.set_pos((engine.input_files['conf'], None))
+        particles.top = engine.input_files.get('top', None)
         particles.set_vel(False)
         vel = None
         box = set_up_box(settings, None, dim=0)

@@ -52,6 +52,12 @@ Orderparameter
 class = RingDiffusion
 module = orderp.py
 
+Collective-variable
+-------------------
+class = Position
+index = 1472  # This is the methane molecule
+dim = z
+
 Output
 ------
 order-file = 1

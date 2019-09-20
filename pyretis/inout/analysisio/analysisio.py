@@ -299,7 +299,8 @@ def run_tis_analysis(settings, plotter, txt_plotter):
             print_to_screen()
     # match probabilities:
     out, fig, txt = analyse_and_output_matched(results['pathensemble'],
-                                               plotter, txt_plotter)
+                                               plotter, txt_plotter,
+                                               settings)
     results['matched'] = {'out': out, 'figures': fig, 'txtfile': txt}
     print_to_screen('Overall results', level='success')
     print_to_screen('===============', level='success')
@@ -350,15 +351,18 @@ def run_retis_analysis(settings, plotter, txt_plotter):
                                          output='txt')[0]
             print_to_screen(''.join(report_txt))
             print_to_screen()
-    # match probabilities:
-    out, fig, txt = analyse_and_output_matched(results['pathensemble'],
-                                               plotter, txt_plotter)
-    results['matched'] = {'out': out, 'figures': fig, 'txtfile': txt}
+    # flux first:
     flux, flux_error = retis_flux(results['pathensemble0']['out'],
                                   results['pathensemble'][0]['out'],
                                   settings['engine']['timestep'])
     results['flux'] = {'value': flux, 'error': flux_error,
                        'unit': units}
+    # match probabilities:
+    out, fig, txt = analyse_and_output_matched(results['pathensemble'],
+                                               plotter, txt_plotter,
+                                               settings,
+                                               flux=flux)
+    results['matched'] = {'out': out, 'figures': fig, 'txtfile': txt}
     rate, rate_error = retis_rate(out['prob'], out['relerror'],
                                   flux, flux_error)
     results['rate'] = {'value': rate, 'error': rate_error,
@@ -580,7 +584,8 @@ def analyse_file(file_type, file_name, settings):
     return results, raw_data
 
 
-def analyse_and_output_matched(raw_data, plotter, txt_plotter):
+def analyse_and_output_matched(raw_data, plotter, txt_plotter,
+                               settings=None, flux=None):
     """Analyse and output matched probability.
 
     This will calculate the over-all crossing probability by combining
@@ -594,6 +599,24 @@ def analyse_and_output_matched(raw_data, plotter, txt_plotter):
         This is the object that handles the plotting.
     txt_plotter : object like :py:class:`.Plotter`
         This is the object that handles the text output.
+    settings : dict
+        This dictionary contains settings for the analysis.
+        Here we make use of the following keys from the
+        analysis section:
+
+        * `ngrid`: The number of grid points for calculating the
+          crossing probability as a function of the order parameter.
+        * `maxblock`: The max length of the blocks for the block error
+          analysis. Note that this will maximum be equal the half of the
+          length of the data, see `block_error` in `.analysis`.
+        * `blockskip`: Can be used to skip certain block lengths.
+          A `blockskip` equal to `n` will consider every n'th block up
+          to `maxblock`, i.e. it will use block lengths equal to `1`,
+          `1+n`, `1+2n`, etc.
+        * `bins`: The number of bins to use for creating histograms.
+    flux : float, optional
+        The computed flux to be used only in RETIS if the running average
+        of the computed rate is desired.
 
     Returns
     -------
@@ -613,7 +636,9 @@ def analyse_and_output_matched(raw_data, plotter, txt_plotter):
         detect.append(ensemble['out']['detect'])
         if interface_left is None:
             interface_left = ensemble['out']['interfaces'][0]
-    result = match_probabilities(path_results, detect)
+    result = match_probabilities(path_results, detect, settings)
+    if flux is not None:
+        result['overall-rrun'] = flux*result['overall-prun']
     # for the figure, we add the A interface:
     detect_plot = [interface_left] + detect
     figures = plotter.output_matched_probability(ensemble_names,

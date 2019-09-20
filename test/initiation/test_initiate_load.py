@@ -12,11 +12,12 @@ import pathlib
 import shutil
 import numpy as np
 from pyretis.initiation.initiate_load import (
-    _do_the_dirty_load_job,
+    clean_path,
     read_path_files,
     read_path_files_ext,
-    _check_path,
     reorderframes,
+    _check_path,
+    _do_the_dirty_load_job,
 )
 from pyretis.engines.gromacs import GromacsEngine
 from pyretis.engines.internal import Langevin
@@ -80,16 +81,19 @@ def set_up_system(order, pos, vel, vpot=None, ekin=None, internal=True):
     return system
 
 
-def fill_path(path, npoints=20):
-    """Fill in data for forward and backward paths."""
+def fill_path(path=None, npoints=20, scale=1):
+    """Fill in data for a arbitrary path."""
+    if path is None:
+        path = Path()
     for i in range(npoints):
         path.append(
-            set_up_system([-20.0 + 2.5 * i],
+            set_up_system([(-20.0 + 2.5 * i) * scale],
                           [np.ones(3) * i],
                           [np.ones(3) * i],
                           vpot=i, ekin=i,
                           internal=True)
         )
+    return path
 
 
 def find_files_in_dir(dirname):
@@ -567,6 +571,22 @@ class TestInitiateLoad(unittest.TestCase):
                 with self.assertRaises(FileNotFoundError):
                     simulation.initiate(settings)
 
+    def test_initiate_load_fail2(self):
+        """Test that the initiate load fails for insufficient file inputs."""
+        settings = parse_settings_file(os.path.join(HERE, 'internal',
+                                                    'retis-load',
+                                                    'reload.rst'))
+        with tempfile.TemporaryDirectory() as tempdir:
+            with patch('sys.stdout', new=StringIO()):
+                simulation = self._set_up_for_load_2(settings, tempdir)
+            # Instead to change the inputs, we change the requirements.
+            simulation.path_ensembles[0].interfaces = [1, 100, 100000]
+            with patch('sys.stdout', new=StringIO()):
+                with self.assertRaises(ValueError) as err:
+                    _ = simulation.initiate(settings)
+                self.assertTrue('000 does not satisfy the relative ensemble'
+                                in str(err.exception))
+
     def test_reorderframes(self):
         """Test the reorder_frames funciton."""
         interfaces = [-18., -10., 1., 2., 60]
@@ -581,6 +601,8 @@ class TestInitiateLoad(unittest.TestCase):
         left, _, right = path_ensemble.interfaces
         path_ensemble.start_condition = 'R'
 
+        # Test that the re-order function generated path
+        # satisfies the ensemble requirements (R, R case)
         path, _ = reorderframes(path, path_ensemble)
 
         self.assertEqual(path.get_start_point(left, right), 'R')
@@ -612,7 +634,80 @@ class TestInitiateLoad(unittest.TestCase):
         path, _ = reorderframes(path, path_ensemble)
 
         self.assertEqual(path.get_start_point(left, right), 'L')
-        self.assertEqual(path.get_end_point(left, right), 'R')
+        self.assertEqual(path.get_end_point(left, right), 'L')
+
+    def test_reorderframes2(self):
+        """Test the clean_path function."""
+        interfaces = [float('-inf'), -10., -5]
+        path_ensemble = PathEnsemble(0, interfaces)
+        rgen = RandomGenerator(seed=0)
+        path = Path(rgen, maxlen=1000)
+
+        fill_path(path, npoints=20000, scale=0.01)
+        clean_path(path, path_ensemble)
+        self.assertEqual(path.length, 2)
+        self.assertTrue(_check_path(path, path_ensemble))
+
+        interfaces = [-14., -10., 10]
+        path_ensemble = PathEnsemble(0, interfaces)
+        rgen = RandomGenerator(seed=0)
+        path = Path(rgen, maxlen=1000)
+
+        fill_path(path)
+        clean_path(path, path_ensemble)
+        self.assertEqual(path.length, 11)
+        self.assertTrue(_check_path(path, path_ensemble))
+
+        # Same results?
+        clean_path(path, path_ensemble)
+        self.assertEqual(path.length, 11)
+        self.assertTrue(_check_path(path, path_ensemble))
+
+        # Some intuitive numerical checks> Only crossing points
+        # shall remain (4 for the 0 interface and one for the B
+        # interface.
+        path = fill_path(scale=10000)
+        interfaces = [-16., 0., 16]
+        path_ensemble = PathEnsemble(1, interfaces)
+        initial_length = path.length
+        path, _ = reorderframes(path, path_ensemble)
+
+        # Numerical checks
+        counter_R, counter_L, counter_M = 0, 0, 0
+        for i, phasepoint in enumerate(path.phasepoints):
+            if phasepoint.order[0] > interfaces[2]:
+                counter_R += 1
+            if phasepoint.order[0] < interfaces[0]:
+                counter_L += 1
+            if interfaces[0] < phasepoint.order[0] < interfaces[2]:
+                counter_M += 1
+
+        self.assertEqual(path.length, (counter_R + counter_L + counter_M))
+        self.assertEqual((counter_R, counter_M, counter_L), (0, 1, 2))
+        self.assertTrue(path.length < initial_length)
+        self.assertEqual(path.length, 3)
+        self.assertTrue(_check_path(path, path_ensemble))
+
+        # Check that it doesn't fix the impossible.
+
+        # Too large interfaces, all should be kept
+        interfaces = [-14000., 0., 1000]
+        path_ensemble = PathEnsemble(0, interfaces)
+
+        path = fill_path(npoints=1000, scale=0.16)
+        path, _ = reorderframes(path, path_ensemble)
+        self.assertEqual((_check_path(path, path_ensemble)),
+                         (False, 'EWI'))
+        self.assertEqual(path.length, 2001)
+
+        # Too large orderp, almost nothing should remain
+        interfaces = [-16., 0., 16]
+        path_ensemble = PathEnsemble(0, interfaces)
+        path = fill_path(npoints=1000, scale=16016)
+        path, _ = reorderframes(path, path_ensemble)
+        self.assertEqual((_check_path(path, path_ensemble)),
+                         (False, 'NCR'))
+        self.assertEqual(path.length, 4)
 
     def test_external_load(self):
         """Test the load initialise for external trajectories."""
@@ -755,7 +850,7 @@ class TestInitiateLoad(unittest.TestCase):
 
             for i in range(1, 4):
                 path = simulation.path_ensembles[i].last_path
-                for j in range(path.length-1):
+                for j in range(path.length-2):
                     point1 = path.phasepoints[j]
                     point2 = path.phasepoints[j+1]
                     self.assertTrue(point1.order[0] < point2.order[0])
@@ -860,17 +955,15 @@ class TestInitiateLoad(unittest.TestCase):
                                                         'order.txt')))
             for i in range(4):
                 self.assertEqual(
-                    simulation.path_ensembles[i].last_path.status, 'NCR')
+                    simulation.path_ensembles[i].last_path.status, 'ACC')
 
             self.assertTrue(os.path.exists(os.path.join(load_dir, '004',
                                                         'traj.txt')))
 
+            exp_len = [None, 11, 11, 11]
             for i in range(1, 4):
                 path = simulation.path_ensembles[i].last_path
-                for j in range(path.length-1):
-                    point1 = path.phasepoints[j]
-                    point2 = path.phasepoints[j+1]
-                    self.assertTrue(point1.order[0] < point2.order[0])
+                self.assertEqual(path.length, exp_len[i])
 
     @staticmethod
     def _create_empty_gro_files(tempdir, nfiles):

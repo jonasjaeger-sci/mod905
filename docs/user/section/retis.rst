@@ -17,19 +17,25 @@ to be defined for a RETIS simulation.
        relative_shoots = None
        nullmoves = True
        swapsimul = True
+       rgen = None
+       seed = None
 
 Keywords for the RETIS section
 ------------------------------
 
 The following keywords can be set for the RETIS section:
 
-.. |retis_swapfreq| replace:: :ref:`swapfreq <user-section-retis-swapfreq>`
+.. |retis_nullmoves| replace:: :ref:`nullmoves <user-section-retis-nullmoves>`
 
 .. |retis_relatives| replace:: :ref:`relative_shoots <user-section-retis-relatives>`
 
-.. |retis_nullmoves| replace:: :ref:`nullmoves <user-section-retis-nullmoves>`
+.. |retis_rgen| replace:: :ref:`rgen <user-section-retis-rgen>`
+
+.. |retis_seed| replace:: :ref:`seed <user-section-retis-seed>`
 
 .. |retis_swapsimul| replace:: :ref:`swapsimul <user-section-retis-swapsimul>`
+
+.. |retis_swapfreq| replace:: :ref:`swapfreq <user-section-retis-swapfreq>`
 
 .. _table-retis-keywords:
 
@@ -39,28 +45,31 @@ The following keywords can be set for the RETIS section:
    +-------------------+------------------------------------------------------+
    | Keyword           | Description                                          |
    +===================+======================================================+
-   | |retis_swapfreq|  | Defines how often we perform swapping moves.         |
+   | |retis_nullmoves| | Determines if we do null moves or not.               |
    +-------------------+------------------------------------------------------+
    | |retis_relatives| | Selects and defines relative shooting.               |
    +-------------------+------------------------------------------------------+
-   | |retis_nullmoves| | Determines if we do null moves or not.               |
+   | |retis_rgen|      | Determines the rgen to use in retis function.        |
+   +-------------------+------------------------------------------------------+
+   | |retis_seed|      | Determines the seed for rgen in the retis function.  |
+   +-------------------+------------------------------------------------------+
+   | |retis_swapfreq|  | Defines how often we perform swapping moves.         |
    +-------------------+------------------------------------------------------+
    | |retis_swapsimul| | Determines if we swap multiple path ensebles at the  |
    |                   | same time or not.                                    |
    +-------------------+------------------------------------------------------+
 
 
-.. _user-section-retis-swapfreq:
+.. _user-section-retis-nullmoves:
 
-Keyword swapfreq
-^^^^^^^^^^^^^^^^
+Keyword nullmoves
+^^^^^^^^^^^^^^^^^
 
-.. pyretis-keyword:: swapfreq float
+.. pyretis-keyword:: nullmoves boolean
 
-   This defines how often we perform swapping moves.
-   This gives the percentage of swapping moves in the simulation,
-   e.g.: ``swapfreq = 0.5`` corresponds to 50% swapping moves, the 50% other
-   moves will be :ref:`TIS moves <user-section-tis>`.
+   If ``True`` we perform null moves in the ensembles
+   not included in a swapping move. Otherwise, no move is done in these
+   ensembles.
 
    Default
        No default, this setting **must** be specified.
@@ -89,16 +98,47 @@ Keyword relative_shoots
    Default
        No default, this setting **must** be specified.
 
-.. _user-section-retis-nullmoves:
+.. _user-section-retis-rgen:
 
-Keyword nullmoves
-^^^^^^^^^^^^^^^^^
+Keyword rgen
+^^^^^^^^^^^^
 
-.. pyretis-keyword:: nullmoves boolean
+.. pyretis-keyword:: rgen string
 
-   If ``True`` we perform null moves in the ensembles
-   not included in a swapping move. Otherwise, no move is done in these
-   ensembles.
+   Select the function to use to generate the random number used in the
+   retis function. That is, (1) the selection of the swap move vs shooting
+   or time reversal, (2) detail balance for swap when Stone Skipping with 
+   high acceptance is used.
+
+   Default
+       The default value is ``rgen = None``.
+
+
+.. _user-section-retis-seed:
+
+Keyword seed
+^^^^^^^^^^^^
+
+.. pyretis-keyword:: seed integer
+
+   Select the seed for the random number generator to be used in the
+   retis function.
+
+   Default
+       The default value is ``seed = None``.
+
+
+.. _user-section-retis-swapfreq:
+
+Keyword swapfreq
+^^^^^^^^^^^^^^^^
+
+.. pyretis-keyword:: swapfreq float
+
+   This defines how often we perform swapping moves.
+   This gives the percentage of swapping moves in the simulation,
+   e.g.: ``swapfreq = 0.5`` corresponds to 50% swapping moves, the 50% other
+   moves will be :ref:`TIS moves <user-section-tis>`.
 
    Default
        No default, this setting **must** be specified.

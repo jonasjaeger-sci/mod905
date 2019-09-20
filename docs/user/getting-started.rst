@@ -208,6 +208,7 @@ Below are some examples which illustrate the use of |pyretis| for realistic syst
          its rate quantified. Simulations have been performed with GROMACS at
          full atomistic resolution. Metadynamics localized the stable states and
          the RETIS approach was used to compute the transition rate between them.
+         
          More information can be found in the paper
          `Predicting the mechanism and rate of H-NS binding to AT-rich DNA
          <https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1006845>`_.

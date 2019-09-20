@@ -12,6 +12,7 @@ from pyretis.inout.common import (
     add_dirname,
     name_file,
     generate_file_name,
+    create_empty_ensembles
 )
 
 
@@ -31,6 +32,35 @@ def remove_dir(dirname):
 
 class TestMethods(unittest.TestCase):
     """Test some of the methods from pyretis.inout.common."""
+    def test_create_empty_ensembles(self):
+        """Test that we can properly create empty ensembles."""
+        settings = {'simulation': {'interfaces': [1, 2, 3, 4, 5]}}
+        create_empty_ensembles(settings)
+        settings = {'simulation': {'interfaces': [1, 2, 3, 4, 5]}}
+        settings['ensemble'] = [settings]
+        settings['ensemble'][0]['interface'] = 1
+        settings['ensemble'][0]['tis'] = {'ensemble_number': 123321}
+        create_empty_ensembles(settings)
+        self.assertTrue(settings['ensemble'][0]['interface'] == 1)
+        self.assertTrue(
+            settings['ensemble'][0]['tis']['ensemble_number'] == 123321)
+
+        settings = {'simulation': {'interfaces': [1, 2, 3, 4, 5]},
+                    'tis': {'ensemble_number': 123321}}
+        create_empty_ensembles(settings)
+        self.assertTrue(
+            settings['ensemble'][0]['tis']['ensemble_number'] == 123321)
+        self.assertTrue(len(settings['ensemble']) == 1)
+
+        settings = {'simulation': {'interfaces': [1, 2, 3, 4, 5]},
+                    'ensemble': [{'interface': 3,
+                                  'gnappo': 'lappo',
+                                  'tis': {'ensemble_number': 3}}]}
+        create_empty_ensembles(settings)
+        self.assertEqual(settings['ensemble'][3]['interface'], 3)
+        self.assertEqual(settings['ensemble'][3]['gnappo'], 'lappo')
+        self.assertEqual(
+            settings['ensemble'][3]['tis']['ensemble_number'], 3)
 
     def test_remove_ext(self):
         """Test that we can remove the extenstion from a file name."""

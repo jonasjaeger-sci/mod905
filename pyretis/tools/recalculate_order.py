@@ -55,20 +55,21 @@ def recalculate_from_trj(order_parameter, trr_file, options):
         The order parameter to use.
     trr_file : string
         The path to the trr file we should read.
-    options: dict. It contains
-        reverse : boolean, optional
-            If True, we reverse the velocities.
-        maxidx : integer, optional
-            This is the maximum frame we will read. Can be used in case
-            the .trr file contains extra frames not needed by us.
-        minidx : integer, optional
-            This is the first frame we will read. Can be used in case we
-            want to skip some frames from the .trr file.
-        top: string, optional
-            This is the name of a top_file to instruct the external tool
-            (e.g. mdtraj, top= option) to properly read the trajectory.
-            When this entry is given, the order parameter is assumed to
-            be computed externally.
+    options: dict,
+        It contains:
+        * `reverse`: boolean, optional
+          If True, we reverse the velocities.
+        * `maxidx`: integer, optional
+          This is the maximum frame we will read. Can be used in case
+          the .trr file contains extra frames not needed by us.
+        * `minidx`: integer, optional
+          This is the first frame we will read. Can be used in case we
+          want to skip some frames from the .trr file.
+        * `top`: string, optional
+          This is the name of a top_file to instruct the external tool
+          (e.g. mdtraj, top= option) to properly read the trajectory.
+          When this entry is given, the order parameter is assumed to
+          be computed externally.
 
     Yields
     ------
@@ -94,28 +95,29 @@ def recalculate_from_trj(order_parameter, trr_file, options):
                 system.particles.config = (trr_file, idx)
                 yield order_parameter.calculate(system)
 
-    for i, (header, data) in enumerate(read_trr_file(trr_file)):
-        if maxidx is not None and i > maxidx:
-            break
-        if minidx is not None and i < minidx:
-            continue
-        print_to_screen(msg.format(header['step'], header['time']))
-        if system.particles is None:
-            system.particles = ParticlesExt(dim=data['x'].shape[1])
-        system.particles.pos = data['x']
-        if 'v' in data:
-            if reverse:
-                system.particles.vel = -1.0 * data['v']
+    else:
+        for i, (header, data) in enumerate(read_trr_file(trr_file)):
+            if maxidx is not None and i > maxidx:
+                break
+            if minidx is not None and i < minidx:
+                continue
+            print_to_screen(msg.format(header['step'], header['time']))
+            if system.particles is None:
+                system.particles = ParticlesExt(dim=data['x'].shape[1])
+            system.particles.pos = data['x']
+            if 'v' in data:
+                if reverse:
+                    system.particles.vel = -1.0 * data['v']
+                else:
+                    system.particles.vel = data['v']
             else:
-                system.particles.vel = data['v']
-        else:
-            logger.warning('No velocities found in .trr file! Set to zero.')
-            system.particles.vel = np.zeros_like(data['x'])
-        length = box_matrix_to_list(data['box'])
-        system.update_box(length)
-        system.particles.config = (trr_file, i)
-        order = order_parameter.calculate(system)
-        yield order
+                logger.warning('No velocities found in .trr file! Set to 0.')
+                system.particles.vel = np.zeros_like(data['x'])
+            length = box_matrix_to_list(data['box'])
+            system.update_box(length)
+            system.particles.config = (trr_file, i)
+            order = order_parameter.calculate(system)
+            yield order
 
 
 def recalculate_from_xyz(order_parameter, traj_file, options):
@@ -127,22 +129,19 @@ def recalculate_from_xyz(order_parameter, traj_file, options):
         The order parameter to use.
     traj_file : string
         The path to the trajectory file we should read.
-    options: dict. It contains
-        reverse : boolean, optional
-            If True, we reverse the velocities.
-        maxidx : integer, optional
-            This is the maximum frame we will read. Can be used in case
-            the file contains extra frames not needed by us.
-        minidx : integer, optional
-            This is the first frame we will read. Can be used in case we
-            want to skip some frames from the file.
-        top: string, optional
-            This is the name of a top file to instruct the external tool
-            (e.g. mdtraj, top= option) to properly read the trajectory.
-            WARNING: mdtraj does not upport .xyz trajectories!
-        box: list of floats.
-            It contains the box vector lenght. It is required in the case
-            that .xyz do not normally contains the simulation box dimension.
+    options: dict,
+        It contains:
+        * `reverse`: boolean, optional
+          If True, we reverse the velocities.
+        * `maxidx`: integer, optional
+          This is the maximum frame we will read. Can be used in case
+          the .trr file contains extra frames not needed by us.
+        * `minidx`: integer, optional
+          This is the first frame we will read. Can be used in case we
+          want to skip some frames from the .trr file.
+        * `box`: list of floats
+          It contains the box vector lenght. It is required in the case
+          that .xyz do not normally contains the simulation box dimension.
 
     Yields
     ------
@@ -154,7 +153,7 @@ def recalculate_from_xyz(order_parameter, traj_file, options):
     msg = ('Re-calculate from {}:'.format(os.path.basename(traj_file)) +
            ' Step {}')
     minidx, maxidx = options.get('minidx'), options.get('maxidx')
-    reverse, top = options.get('reverse'), options.get('top')
+    reverse = options.get('reverse')
 
     for i, snapshot in enumerate(read_xyz_file(traj_file)):
         if maxidx is not None and i > maxidx:
@@ -188,11 +187,11 @@ def recalculate_from_frame(order_parameter, traj_file, options):
         The order parameter to use.
     traj_file : string
         The path to the trajectory file we should read.
-    options: dict. It contains
-        ext : string
-            File extension for the ``traj_file``.
-        reverse : boolean, optional
-            If True, we reverse the velocities.
+    options: dict,
+        * `ext`: string
+          File extension for the ``traj_file``.
+        * `reverse`: boolean, optional
+          If True, we reverse the velocities.
 
     Returns
     -------
@@ -229,14 +228,17 @@ def recalculate_order(order_parameter, traj_file, options):
         The order parameter to use.
     traj_file : string
         Path to the trajectory file to recalculate for.
-    options: dictionary. It contains:
-        reverse : boolean, optional
-            If True, we assume that we are reading a time-reversed
-            trajectory.
-        maxidx : integer, optional
-            The maximum frame number we will read from ``traj_file``.
-        minidx : integer, optional
-            The minimum frame number we will read from ``traj_file``.
+
+    options: dict,
+        It contains:
+        * `reverse`: boolean, optional
+          If True, we reverse the velocities.
+        * `maxidx`: integer, optional
+          This is the maximum frame we will read. Can be used in case
+          the .trr file contains extra frames not needed by us.
+        * `minidx`: integer, optional
+          This is the first frame we will read. Can be used in case we
+          want to skip some frames from the .trr file.
 
     """
     _, ext = os.path.splitext(traj_file)
