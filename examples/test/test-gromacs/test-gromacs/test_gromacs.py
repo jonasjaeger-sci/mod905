@@ -150,13 +150,13 @@ def main(select=1, plot=False):
     if select == 2:
         gro = GromacsEngine2(engine['gmx'], engine['mdrun'],
                              engine['input_path'], engine['timestep'],
-                             engine['subcycles'], maxwarn=0,
+                             engine['subcycles'], maxwarn=1,
                              gmx_format=engine.get('gmx_format', 'g96'),
                              write_vel=True, write_force=True)
     else:
         gro = GromacsEngine(engine['gmx'], engine['mdrun'],
                             engine['input_path'], engine['timestep'],
-                            engine['subcycles'], maxwarn=0,
+                            engine['subcycles'], maxwarn=1,
                             gmx_format=engine.get('gmx_format', 'g96'),
                             write_vel=True, write_force=True)
     print_to_screen('Testing for: {}'.format(gro), level='info')
@@ -171,6 +171,7 @@ def main(select=1, plot=False):
     initial_conf = gro.input_files['conf']
     system.particles.set_pos((initial_conf, None))
     system.particles.set_vel(False)
+    system.particles.top = gro.input_files['conf']
     interfaces = [-float('inf'), float('inf'), float('inf')]
     order_parameter = PositionVelocity(1472, dim='z', periodic=True)
     start = time.perf_counter()

@@ -331,6 +331,29 @@ class TxtPlotter(Plotter):
                           matched['overall-prob'][:, 1]),
                          backup=self.backup)
         outfiles.append(outfile)
+
+        # output the prun matched probability:
+        if 'overall-rrun' in matched:
+            outfile = name_file('overall-rrun', self.out_fmt,
+                                path=self.out_dir)
+            interf = ' , '.join([str(idet) for idet in detect])
+            header = 'Running average overall rate. Interfaces: {}'
+            txt_save_columns(outfile, header.format(interf),
+                             (matched['overall-cycle'],
+                              matched['overall-rrun']),
+                             backup=self.backup)
+            outfiles.append(outfile)
+        if 'overall-prun' in matched:
+            outfile = name_file('overall-prun', self.out_fmt,
+                                path=self.out_dir)
+            interf = ' , '.join([str(idet) for idet in detect])
+            header = 'Running average crossing probability. Interfaces: {}'
+            txt_save_columns(outfile, header.format(interf),
+                             (matched['overall-cycle'],
+                              matched['overall-prun']),
+                             backup=self.backup)
+            outfiles.append(outfile)
+
         return outfiles
 
 

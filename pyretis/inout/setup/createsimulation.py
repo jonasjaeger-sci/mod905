@@ -93,7 +93,7 @@ def create_path_ensemble(settings, ensemble_type):
 
 
 def create_path_ensembles(interfaces, ensemble_type, include_zero=False,
-                          exe_dir=None):
+                          exe_dir=None, zero_left='-inf'):
     """Create set set of path ensembles.
 
     This function will create and return a set of objects representing
@@ -120,6 +120,9 @@ def create_path_ensembles(interfaces, ensemble_type, include_zero=False,
     exe_dir : string, optional
         This string can be used to tell the path ensemble object
         where it is executed and where it can store files.
+    zero_left : float, optional
+        This defines the position of left interface of the {0^-} interface
+        Default is -inf
 
     Returns
     -------
@@ -136,7 +139,7 @@ def create_path_ensembles(interfaces, ensemble_type, include_zero=False,
     product = interfaces[-1]
     klass = get_path_ensemble_class(ensemble_type)
     if include_zero:
-        interface = [-float('inf'), reactant, reactant]
+        interface = [float(zero_left), reactant, reactant]
         path_ensemble = klass(0, interface, detect=None, exe_dir=exe_dir)
         ensembles.append(path_ensemble)
     for i, middle in enumerate(interfaces[:-1]):
@@ -377,10 +380,13 @@ def create_retis_simulation(settings, system, engine):
     engine.can_use_order_function(order_function)
     sim = settings['simulation']
     exe_dir = sim.get('exe-path', '')
+    zero_left = sim.get('zero_left', '-inf')
     path_ensembles, _ = create_path_ensembles(sim['interfaces'],
                                               engine.engine_type,
                                               include_zero=True,
-                                              exe_dir=exe_dir)
+                                              exe_dir=exe_dir,
+                                              zero_left=zero_left
+                                              )
     rgen = create_random_generator(settings['tis'])
     for key in ('steps',):
         if key not in sim:

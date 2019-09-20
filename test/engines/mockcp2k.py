@@ -9,7 +9,6 @@ will simply just create the output files.
 """
 import sys
 import os
-import shutil
 import numpy as np
 from pyretis.inout.formats.xyz import write_xyz_trajectory
 
@@ -36,7 +35,7 @@ def write_wfn_file(outfile):
     if os.path.isfile(outfile):
         # Just keep one backup file. This is useful for the testing.
         backup = '{}.bak-1'.format(outfile)
-        shutil.move(outfile, backup)
+        os.rename(outfile, backup)
     with open(outfile, 'w') as output:
         output.write('Some gibberish')
 
@@ -70,7 +69,7 @@ def write_cp2k_restart(filename, factorx, factorv, steps=10):
     if os.path.isfile(filename):
         # Just keep one backup file. This is useful for the testing.
         backup = '{}.bak-1'.format(filename)
-        shutil.move(filename, backup)
+        os.rename(filename, backup)
     with open(filename, 'w') as outfile:
         outfile.write('&FORCE_EVAL\n')
         outfile.write('&SUBSYS\n')

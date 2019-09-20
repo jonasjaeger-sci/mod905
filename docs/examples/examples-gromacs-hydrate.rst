@@ -70,6 +70,12 @@ by adding the following order parameter section to the input file:
 .. literalinclude:: /_static/examples/gromacs-hydrate/order.rst
    :language: rst
 
+In addition, we can add extra order parameters, for instance
+the position (z-coordinate) of the diffusing methane molecule:
+
+.. literalinclude:: /_static/examples/gromacs-hydrate/orderc.rst
+   :language: rst
+
 
 Creating the |pyretis| input file
 ---------------------------------

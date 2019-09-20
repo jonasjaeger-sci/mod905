@@ -195,6 +195,7 @@ class GromacsEngine2(GromacsEngine):
         remove = [val for key, val in out_files.items() if key not in ('trr',)]
         self._remove_files(self.exe_dir, remove)
         self._remove_gromacs_backup_files(self.exe_dir)
+        msg_file.flush()
         return success, status
 
     def integrate(self, system, steps, order_function=None, thermo='full'):

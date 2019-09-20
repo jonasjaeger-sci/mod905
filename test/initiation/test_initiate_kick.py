@@ -169,6 +169,11 @@ class TestInitiateKick(unittest.TestCase):
         self.assertEqual(len(kick_re), len(correct_kick))
         for i, j in zip(correct_kick, kick_re):
             self.assertAlmostEqual(i, j)
+        # Check that is gets the right interface for ensemble 0
+        simulation.path_ensembles[0].ensemble_number = 0
+        correct_kick = [-0.8893, -0.9016, -0.508]
+        self._help_with_initiation(simulation, initiate_kick_max,
+                                   correct_kick)
 
     def test_initiate_kicki(self):
         """Test the initiate_kicki method."""

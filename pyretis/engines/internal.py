@@ -13,6 +13,9 @@ Important classes defined here
 MDEngine (:py:class:`.MDEngine`)
     Base class for internal MDEngines.
 
+RandomWalk (:py:class:`.RandomWalk`)
+    A Random Walk integrator.
+
 Verlet (:py:class:`.Verlet`)
     A Verlet MD integrator.
 
@@ -36,7 +39,7 @@ logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 
-__all__ = ['MDEngine', 'Verlet', 'VelocityVerlet', 'Langevin']
+__all__ = ['MDEngine', 'RandomWalk', 'Verlet', 'VelocityVerlet', 'Langevin']
 
 
 class MDEngine(EngineBase):
@@ -522,6 +525,58 @@ class Verlet(MDEngine):
         particles.vel = (pos - self.previous_pos) * self.half_idt
         self.previous_pos, particles.pos = particles.pos, pos
         system.potential_and_force()
+
+
+class RandomWalk(MDEngine):
+    """A Random Walker integrator.
+
+    This class defines a Random walker integrator.
+
+    Attributes
+    ----------
+    timestep : float
+        The length of the step.
+
+    """
+
+    def __init__(self, timestep, rgen=None, seed=0):
+        """Set up the Random walker integrator.
+
+        Parameters
+        ----------
+        timestep : float
+            The time step in internal units.
+        rgen : string, optional
+            This string can be used to pick a particular random
+            generator, which is useful for testing.
+        seed : integer, optional
+            A seed for the random generator.
+
+        """
+        super().__init__(timestep, 'Random Walker integrator',
+                         dynamics='NoNe')
+        rgen_settings = {'seed': seed, 'rgen': rgen}
+        self.rgen = create_random_generator(rgen_settings)
+
+    def integration_step(self, system):
+        """Random Walker integration, one time step.
+
+        Parameters
+        ----------
+        system : object like :py:class:`.System`
+            The system to integrate/act on. Assumed to have a particle
+            list in ``system.particles``.
+
+        Returns
+        -------
+        out : None
+            Does not return anything, but alters the state of the given
+            `system`.
+
+        """
+        particles = system.particles
+        particles.vel, _ = self.rgen.draw_maxwellian_velocities(system)
+        particles.pos += self.timestep * particles.vel
 
 
 class VelocityVerlet(MDEngine):

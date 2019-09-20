@@ -375,7 +375,7 @@ class ExternalMDEngine(EngineBase):
     def _movefile(source, dest):
         """Move file from source to destination."""
         logger.debug('Moving: %s -> %s', source, dest)
-        shutil.move(source, dest)
+        os.rename(source, dest)
 
     @staticmethod
     def _copyfile(source, dest):
@@ -561,6 +561,7 @@ class ExternalMDEngine(EngineBase):
                 system.particles = previous.particles.copy()
                 curr = previous.order
                 self._removefile(curr_file)
+            msg_file.flush()
         msg_file.close()
         self._removefile(msg_file_name)
         return previous, system

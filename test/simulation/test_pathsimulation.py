@@ -154,8 +154,8 @@ class TestPathSimulation(unittest.TestCase):
         self.assertFalse(simulation.settings['tis']['aimless'])
         del settings['tis']
         with self.assertRaises(ValueError):
-            simulation = PathSimulation(system, order, engine, ensembles,
-                                        settings, rgen=rgen)
+            PathSimulation(system, order, engine, ensembles,
+                           settings, rgen=rgen)
 
     def test_restart_info(self):
         """Test generation of restart info."""

@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2019, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
-"""Test the GromacsEngine class."""
+"""Test the GROMACS Engine class."""
 import logging
+import numpy as np
 import os
+import shutil
 import tempfile
 import unittest
-import numpy as np
 from pyretis.core.path import Path
 from pyretis.engines import GromacsEngine
 from pyretis.inout.common import make_dirs
@@ -14,41 +15,64 @@ from pyretis.inout.formats.gromacs import read_gromacs_gro_file
 from pyretis.orderparameter.orderparameter import Position
 from .test_helpers.test_helpers import make_test_system
 
-
 logging.disable(logging.CRITICAL)
 HERE = os.path.abspath(os.path.dirname(__file__))
 GMX = os.path.join(HERE, 'mockgmx.py')
 MDRUN = os.path.join(HERE, 'mockmdrun.py')
 GMX_DIR = os.path.join(HERE, 'gmx_input')
+GMX_DIR2 = os.path.join(HERE, 'gmx_input2')
 GMX_DIR3 = os.path.join(HERE, 'gmx_input3')
+GMX_LOAD = os.path.join(HERE, '../initiation/gromacs/gmx_input')
 
 
 class GromacsEngineTest(unittest.TestCase):
-    """Run the tests for the GromacsEngine."""
+    """Run the tests for the GROMACS Engine."""
 
     def test_init(self):
         """Test that we can initiate the engine."""
-        eng = GromacsEngine('echo', 'echo', GMX_DIR, 0.002, 10,
-                            maxwarn=10, gmx_format='gro', write_vel=True,
+        eng = GromacsEngine(gmx='echo',
+                            mdrun='echo',
+                            input_path=GMX_DIR,
+                            timestep=0.002,
+                            subcycles=10,
+                            maxwarn=10,
+                            gmx_format='gro',
+                            write_vel=True,
                             write_force=False)
         eng.exe_dir = GMX_DIR
         with self.assertRaises(ValueError):
-            GromacsEngine('echo', 'echo', 'gmx_input', 0.002, 10,
+            GromacsEngine(gmx='echo',
+                          mdrun='echo',
+                          input_path='gmx_input',
+                          timestep=0.002,
+                          subcycles=10,
                           gmx_format='not-a-format')
-        with self.assertRaises(ValueError):
+        with self.assertRaises(FileNotFoundError):
             GromacsEngine('echo', 'echo', 'missing-files', 0.002, 10,
                           gmx_format='g96')
         # Test with an index.ndx file:
-        eng2 = GromacsEngine('echo', 'echo', GMX_DIR3, 0.002, 10,
-                             maxwarn=10, gmx_format='gro', write_vel=True,
+        eng2 = GromacsEngine(gmx='echo',
+                             mdrun='echo',
+                             input_path=GMX_DIR3,
+                             timestep=0.002,
+                             subcycles=10,
+                             maxwarn=10,
+                             gmx_format='gro',
+                             write_vel=True,
                              write_force=False)
         eng2.exe_dir = GMX_DIR3
 
     def test_single_step(self):
-        """Test a single step using the MOCK gromacs engine."""
+        """Test a single step using the MOCK GROMACS engine."""
         with tempfile.TemporaryDirectory() as tempdir:
-            eng = GromacsEngine(GMX, MDRUN, GMX_DIR, 0.002, 3,
-                                maxwarn=1, gmx_format='gro', write_vel=True,
+            eng = GromacsEngine(gmx=GMX,
+                                mdrun=MDRUN,
+                                input_path=GMX_DIR,
+                                timestep=0.002,
+                                subcycles=3,
+                                maxwarn=1,
+                                gmx_format='gro',
+                                write_vel=True,
                                 write_force=False)
             rundir = os.path.join(tempdir, 'generategmx')
             # Create the directory for running:
@@ -87,8 +111,14 @@ class GromacsEngineTest(unittest.TestCase):
     def test_modify_velocities(self):
         """Test the modify velocities method."""
         with tempfile.TemporaryDirectory() as tempdir:
-            eng = GromacsEngine(GMX, MDRUN, GMX_DIR, 0.002, 10,
-                                maxwarn=1, gmx_format='gro', write_vel=False,
+            eng = GromacsEngine(gmx=GMX,
+                                mdrun=MDRUN,
+                                input_path=GMX_DIR,
+                                timestep=0.002,
+                                subcycles=10,
+                                maxwarn=1,
+                                gmx_format='gro',
+                                write_vel=False,
                                 write_force=False)
             rundir = os.path.join(tempdir, 'generategmxvel')
             # Create the directory for running:
@@ -121,8 +151,13 @@ class GromacsEngineTest(unittest.TestCase):
     def test_propagate_forward(self):
         """Test the propagate method forward in time."""
         with tempfile.TemporaryDirectory() as tempdir:
-            eng = GromacsEngine(GMX, MDRUN, GMX_DIR, 0.002, 7,
-                                maxwarn=1, gmx_format='gro',
+            eng = GromacsEngine(gmx=GMX,
+                                mdrun=MDRUN,
+                                input_path=GMX_DIR,
+                                timestep=0.002,
+                                subcycles=7,
+                                maxwarn=1,
+                                gmx_format='gro',
                                 write_vel=True,
                                 write_force=False)
             rundir = os.path.join(tempdir, 'generategmxf')
@@ -149,8 +184,13 @@ class GromacsEngineTest(unittest.TestCase):
     def test_propagate_backward(self):
         """Test the propagate method backward in time."""
         with tempfile.TemporaryDirectory() as tempdir:
-            eng = GromacsEngine(GMX, MDRUN, GMX_DIR, 0.002, 3,
-                                maxwarn=1, gmx_format='gro',
+            eng = GromacsEngine(gmx=GMX,
+                                mdrun=MDRUN,
+                                input_path=GMX_DIR,
+                                timestep=0.002,
+                                subcycles=3,
+                                maxwarn=1,
+                                gmx_format='gro',
                                 write_vel=True,
                                 write_force=False)
             rundir = os.path.join(tempdir, 'generategmxb')
@@ -179,8 +219,13 @@ class GromacsEngineTest(unittest.TestCase):
     def test_integrate(self):
         """Test the integrate method."""
         with tempfile.TemporaryDirectory() as tempdir:
-            eng = GromacsEngine(GMX, MDRUN, GMX_DIR, 0.002, 3,
-                                maxwarn=1, gmx_format='gro',
+            eng = GromacsEngine(gmx=GMX,
+                                mdrun=MDRUN,
+                                input_path=GMX_DIR,
+                                timestep=0.002,
+                                subcycles=3,
+                                maxwarn=1,
+                                gmx_format='gro',
                                 write_vel=True,
                                 write_force=False)
             rundir = os.path.join(tempdir, 'gmxintegrate')
@@ -197,11 +242,17 @@ class GromacsEngineTest(unittest.TestCase):
                 self.assertAlmostEqual(step['order'][0],
                                        i * eng.subcycles + initial_x, places=3)
                 i += 1
+            # Clean
             eng.clean_up()
 
     def test_select_energy_term(self):
         """Test the select_energy_term method."""
-        eng = GromacsEngine(GMX, MDRUN, GMX_DIR, 0.002, 3, gmx_format='gro')
+        eng = GromacsEngine(gmx=GMX,
+                            mdrun=MDRUN,
+                            input_path=GMX_DIR,
+                            timestep=0.002,
+                            subcycles=3,
+                            gmx_format='gro')
         terms = 'full'
         self.assertEqual(
             str(eng.select_energy_terms(terms)),
@@ -220,7 +271,12 @@ class GromacsEngineTest(unittest.TestCase):
 
     def test_check_fails(self):
         """Test behavior if orderfunction not given."""
-        eng = GromacsEngine(GMX, MDRUN, GMX_DIR, 0.002, 1, gmx_format='gro')
+        eng = GromacsEngine(gmx=GMX,
+                            mdrun=MDRUN,
+                            input_path=GMX_DIR,
+                            timestep=0.002,
+                            subcycles=1,
+                            gmx_format='gro')
         with tempfile.TemporaryDirectory() as tempdir:
             rundir = os.path.join(tempdir, 'gmxintegrate')
             # Create the directory for running:
@@ -236,8 +292,8 @@ class GromacsEngineTest(unittest.TestCase):
             eng.ext = "notexistingextension"
             # Propagate:
             with self.assertRaises(Exception) as context:
-                for step in eng.integrate(system, 1,
-                                          order_function=order_function):
+                for _ in eng.integrate(system, 1,
+                                       order_function=order_function):
                     pass
             self.assertTrue("GROMACS engine does not support reading" in
                             str(context.exception))
@@ -247,29 +303,65 @@ class GromacsEngineTest(unittest.TestCase):
                               reverse=True)
             self.assertTrue("GROMACS engine does not support writing" in
                             str(context.exception))
+
+            # Add a non existing .ndx file and get an error
+            eng.input_files['index'] = 'ufo.ndx'
+            with self.assertRaises(Exception) as context:
+                eng._execute_grompp('should_be_a_grompp.mdp',
+                                    'configuration.gro', 'a_label')
+            self.assertTrue("(GROMACS engine) fail" in str(context.exception))
+
             eng.clean_up()
 
     def test_trjconv(self):
         """Test behavior when extracting frames."""
         # We only test the trajectory conversion here as the
         # other parts are tested elsewhere.
-        eng = GromacsEngine(GMX, MDRUN, GMX_DIR, 0.002, 1, gmx_format='gro')
+        eng = GromacsEngine(gmx=GMX,
+                            mdrun=MDRUN,
+                            input_path=GMX_DIR,
+                            timestep=0.002,
+                            subcycles=1,
+                            gmx_format='gro')
         with tempfile.TemporaryDirectory() as tempdir:
             eng.exe_dir = tempdir
-            # Create a fake TRR file:
-            fake_trr = os.path.join(tempdir, 'fake.trr')
+            # Use an already done TRR file:
+            any_trr = os.path.join(HERE, '..', 'tools', '2water.trr')
+            any_gro = os.path.join(HERE, '..', 'tools', '2water.gro')
+            eng.input_files['conf'] = any_gro
             out_gro = os.path.join(tempdir, 'output.gro')
-            with open(fake_trr, 'w') as output:
-                output.write('This is a fake TRR file')
-            eng._extract_frame(fake_trr, 10, out_gro)
+            eng._extract_frame(any_trr, 4, out_gro)
             # Check the created output file:
             self.assertTrue(os.path.isfile(out_gro))
-            data = []
             with open(out_gro, 'r') as infile:
                 data = [i.strip().split() for i in infile]
-            self.assertEqual(data[1][2], 'trjconv')
-            self.assertAlmostEqual(float(data[1][10]), 9 * 0.002)
-            self.assertAlmostEqual(float(data[1][12]), 10 * 0.002)
+            # Note: this is a fake output from a fake engine
+            self.assertEqual(data[0][1], 'froggy')
+
+            # This tests only the creation of the conf.g96
+            shutil.copytree(GMX_LOAD, tempdir+'2')
+            any_trr = os.path.join(GMX_LOAD, '../load/023/accepted/trajB.trr')
+            eng = GromacsEngine(gmx=GMX,
+                                mdrun=MDRUN,
+                                input_path=tempdir+'2',
+                                timestep=666,
+                                subcycles=1,
+                                gmx_format='g96')
+            out_gro = os.path.join(tempdir+'2', 'my_uncle_jonny.g96')
+            # Note, we use a fake engine and it will just copy the file
+            eng._extract_frame(any_trr, 0, out_gro)
+            self.assertTrue(os.path.isfile(out_gro))
+
+            shutil.rmtree(os.path.join(tempdir+'2'), 'conf.gro')
+            # A partial test to avoid the need to install GROMACS to run
+            with self.assertRaises(RuntimeError) as err:
+                GromacsEngine(gmx=GMX,
+                              mdrun=MDRUN,
+                              input_path=tempdir+'2',
+                              timestep=0.002,
+                              subcycles=1,
+                              gmx_format='g96')
+            self.assertTrue('GROMACS' in str(err.exception))
 
 
 if __name__ == '__main__':

@@ -13,6 +13,9 @@ SimulationNVE (:py:class:`.SimulationNVE`)
     Definition of a simple NVE simulation. The engine
     used for this simulation must have dynamics equal to NVE.
 
+SimulationMD (:py:class:`.SimulationMD`)
+    Definition of a simulation for running somply MD.
+
 SimulationMDFlux (:py:class:`.SimulationMDFlux`)
     Definition of a simulation for determining the initial flux.
     This is used for calculating rates in TIS simulations.

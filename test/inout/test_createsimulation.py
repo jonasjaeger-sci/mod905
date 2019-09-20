@@ -397,6 +397,34 @@ class TestMethods(unittest.TestCase):
         kwargs = {'system': system, 'engine': engine}
         sim = create_simulation(settings, kwargs)
         self.assertIsInstance(sim, SimulationRETIS)
+        self.assertEqual(sim.path_ensembles[0].interfaces, (float('-inf'),
+                                                            -1.0, -1.0))
+
+    def test_create_simulationretis_zero_left(self):
+        """Test create_simulation for SimulationRETIS with zero_lef defined."""
+        system = create_test_system()
+        engine = VelocityVerlet(0.002)
+        settings = {
+            'simulation': {
+                'steps': 10,
+                'task': 'retis',
+                'interfaces': [-1., 0., 1.],
+                'zero_left': -101
+            },
+            'tis': SECTIONS['tis'],
+            'retis': SECTIONS['retis'],
+            'orderparameter': {
+                'class': 'Position',
+                'dim': 'x',
+                'index': 0,
+                'periodic': False,
+            }
+        }
+        kwargs = {'system': system, 'engine': engine}
+        sim = create_simulation(settings, kwargs)
+        self.assertIsInstance(sim, SimulationRETIS)
+        self.assertEqual(sim.path_ensembles[0].interfaces, (-101,
+                                                            -1.0, -1.0))
 
 
 if __name__ == '__main__':

@@ -177,8 +177,29 @@ Keyword load_folder
 .. pyretis-keyword:: load_folder string
 
    The ``load_folder`` keyword specifies a directory containing the
-   initial paths to start from. It is assumed that this directory contains
-   folders named ``000``, ``001`` etc. and that these folders contains the
+   initial paths to start from. 
+   In this folder there are two possibilities: 
+   
+   -- FLEXIBLE OPTIION -- 
+   When only some frames and/or a trajectory is available, the load function
+   will copy all the trajectories and frames files in to the relevant folder
+   for each ensemble (e.g. 000 001 etc). It computes the order parameter and 
+   energy, printing the ``order.txt``, ``energy.txt`` and ``traj.txt`` 
+   needed to run the simulations, and it will consider only the frames
+   and the parts of the trajectories relevant for each ensemble.
+   In case the multiple initial trajectories are intended for different
+   ensembles, the load function will search in the `000`, `001`, `002`, etc. 
+   subdirectories (if present). If files are present, for that ensemble,
+   only such files will be used.  
+
+   -- RESUME OPTION -- 
+   Previous output can be copy and pasted in the 
+   load folder, or the here described files generated with the proper
+   formatting. This option is usefull when simulations need to be restarted
+   but some settings need to be changed, or when the restart files are corrupted. 
+
+   The presence of subfolders named ``000``, ``001`` etc. 
+   and that these folders contains the
    paths we are to load. The paths should be given as:
 
    * For internal engines:
@@ -203,6 +224,8 @@ Keyword load_folder
 
      4. A ``energy.txt`` file containing the energies. If this file is not given,
         the energies along the path will be ignored.
+
+
 
    Default:
        The default value is ``load_folder = load``.

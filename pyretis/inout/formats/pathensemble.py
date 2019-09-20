@@ -72,19 +72,21 @@ class PathEnsembleFormatter(OutputFormatter):
 
     16) The index in the new path for the shooting point: `'Idx-shN'`.
 
+    17) The statistical weight of the path: `'Weight'`.
+
     """
 
     PATH_FMT = (
         '{0:>10d} {1:>10d} {2:>10d} {3:1s} {4:1s} {5:1s} {6:>7d} '
         '{7:3s} {8:2s} {9:>16.9e} {10:>16.9e} {11:>7d} {12:>7d} '
-        '{13:>16.9e} {14:>7d} {15:7d}'
+        '{13:>16.9e} {14:>7d} {15:7d} {16:>16.9e}'
     )
     HEADER = {
         'labels': ['Step', 'No.-acc', 'No.-shoot',
                    'l', 'm', 'r', 'Length', 'Acc', 'Mc',
                    'Min-O', 'Max-O', 'Idx-Min', 'Idx-Max',
-                   'O-shoot', 'Idx-sh', 'Idx-shN'],
-        'width': [10, 10, 10, 1, 1, 1, 7, 3, 2, 16, 16, 7, 7, 16, 7, 7],
+                   'O-shoot', 'Idx-sh', 'Idx-shN', 'Weight'],
+        'width': [10, 10, 10, 1, 1, 1, 7, 3, 2, 16, 16, 7, 7, 16, 7, 7, 7],
     }
 
     def __init__(self):
@@ -130,7 +132,8 @@ class PathEnsembleFormatter(OutputFormatter):
             path_dict['ordermax'][1],
             path_dict['generated'][1],
             path_dict['generated'][2],
-            path_dict['generated'][3]
+            path_dict['generated'][3],
+            path_dict['weight']
         )
 
     @staticmethod
@@ -158,16 +161,31 @@ class PathEnsembleFormatter(OutputFormatter):
                 'Incorrect number of columns in path data, skipping line.'
             )
             return None
-        path_info = {
-            'cycle': int(data[0]),
-            'generated': [str(data[8]), float(data[13]),
-                          int(data[14]), int(data[15])],
-            'interface': (str(data[3]), str(data[4]), str(data[5])),
-            'length': int(data[6]),
-            'ordermax': (float(data[10]), int(data[12])),
-            'ordermin': (float(data[9]), int(data[11])),
-            'status': str(data[7]),
-        }
+        if len(data) == 16:
+            path_info = {
+                'cycle': int(data[0]),
+                'generated': [str(data[8]), float(data[13]),
+                              int(data[14]), int(data[15])],
+                'interface': (str(data[3]), str(data[4]), str(data[5])),
+                'length': int(data[6]),
+                'ordermax': (float(data[10]), int(data[12])),
+                'ordermin': (float(data[9]), int(data[11])),
+                'status': str(data[7]),
+            }
+            path_info['weight'] = 1.  # For backward compatibility
+
+        else:
+            path_info = {
+                'cycle': int(data[0]),
+                'generated': [str(data[8]), float(data[13]),
+                              int(data[14]), int(data[15])],
+                'interface': (str(data[3]), str(data[4]), str(data[5])),
+                'length': int(data[6]),
+                'ordermax': (float(data[10]), int(data[12])),
+                'ordermin': (float(data[9]), int(data[11])),
+                'status': str(data[7]),
+                'weight': float(data[16])
+            }
         return path_info
 
     def load(self, filename):

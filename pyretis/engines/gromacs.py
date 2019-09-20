@@ -14,13 +14,16 @@ GromacsEngine (:py:class:`.GromacsEngine`)
 import logging
 import os
 import shlex
+import tempfile
+from pyretis.core.box import box_matrix_to_list
 from pyretis.engines.external import ExternalMDEngine
 from pyretis.inout.formats.gromacs import (
     read_gromos96_file,
     read_gromacs_gro_file,
     write_gromacs_gro_file,
     write_gromos96_file,
-    read_xvg_file
+    read_xvg_file,
+    read_trr_frame,
 )
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
@@ -106,17 +109,36 @@ class GromacsEngine(ExternalMDEngine):
         self.energy_terms = self.select_energy_terms('path')
         # Add input path and the input files:
         self.input_path = os.path.abspath(input_path)
+
         input_files = {
             'conf': 'conf.{}'.format(self.ext),
             'input_o': 'grompp.mdp',  # "o" = original input file.
             'topology': 'topol.top',
+            'top': 'conf.gro'}
+        extra_files = {
             'index': 'index.ndx',
+            'top': 'conf.gro'
         }
-        self.input_files = self._look_for_input_files(
-            self.input_path,
-            input_files,
-            optional_files=('index', ),
-        )
+
+        # An user doesn't need to have problems with g96 and mdtraj.
+        file_g = os.path.join(self.input_path, 'conf.')
+        if self.ext == 'gro':
+            self.top, _, _, _ = read_gromacs_gro_file(file_g+self.ext)
+        elif self.ext == 'g96':
+            if not os.path.isfile(file_g+'gro'):
+                cmd = [self.gmx, 'editconf',
+                       '-f', file_g+self.ext,
+                       '-o', file_g+'gro']
+                self.execute_command(cmd, cwd=None)
+
+            self.top, _, _, _ = read_gromos96_file(file_g+self.ext)
+            self.top['VELOCITY'] = self.top['POSITION'].copy()
+
+        # Check the presence of the defaults input files or, if absent,
+        # try to find them by their expected extension.
+        self.input_files = self._look_for_input_files(self.input_path,
+                                                      input_files,
+                                                      extra_files)
         # Check the input file and create a PyRETIS version with
         # consistent settings:
         settings = {
@@ -132,6 +154,7 @@ class GromacsEngine(ExternalMDEngine):
         if not write_force:
             settings['nstfout'] = 0
 
+        # PyRETIS construct its own mdp file
         self.input_files['input'] = os.path.join(self.input_path,
                                                  'pyretis.mdp')
         self._modify_input(self.input_files['input_o'],
@@ -438,22 +461,23 @@ class GromacsEngine(ExternalMDEngine):
 
         logger.debug('Extracting frame, idx = %i', idx)
         logger.debug('Source file: %s, out file: %s', traj_file, out_file)
-        time1 = (idx - 1) * self.timestep * self.subcycles
-        time2 = idx * self.timestep * self.subcycles
         if traj_file[-4:] in trajexts:
-            cmd = [self.gmx, 'trjconv',
-                   '-f', traj_file,
-                   '-s', self.input_files['tpr'],
-                   '-o', out_file,
-                   '-b', '{}'.format(time1),
-                   '-dump', '{}'.format(time2)]
+            _, data = read_trr_frame(traj_file, idx)
+            xyz = data['x']
+            vel = data.get('v')
+            box = box_matrix_to_list(data['box'], full=True)
+            if out_file[-4:] == '.gro':
+                write_gromacs_gro_file(out_file, self.top, xyz, vel, box)
+            elif out_file[-4:] == '.g96':
+                write_gromos96_file(out_file, self.top, xyz, vel, box)
+
         else:
             cmd = [self.gmx, 'trjconv',
                    '-f', traj_file,
                    '-s', self.input_files['tpr'],
                    '-o', out_file]
 
-        self.execute_command(cmd, inputs=b'0', cwd=None)
+            self.execute_command(cmd, inputs=b'0', cwd=None)
 
     def get_energies(self, energy_file, begin=None, end=None):
         """Return energies from a GROMACS run.
@@ -530,7 +554,7 @@ class GromacsEngine(ExternalMDEngine):
         # Dumping of the initial config were done by the parent, here
         # we will just use it:
         initial_conf = system.particles.get_pos()[0]
-        # Get current order parameter:
+        # Get the current order parameter:
         order = self.calculate_order(order_function, system)
         msg_file.write(
             '# Initial order parameter: {}'.format(
@@ -583,9 +607,11 @@ class GromacsEngine(ExternalMDEngine):
             # We now have the order parameter, for GROMACS just remove the
             # config file to avoid the GROMACS #conf_abs# backup clutter:
             self._removefile(conf_abs)
+            msg_file.flush()
         logger.debug('GROMACS propagation done, obtaining energies')
         msg_file.write('# Propagation done.')
         msg_file.write('# Reading energies from: {}'.format(out_files['edr']))
+        msg_file.flush()
         energy = self.get_energies(out_files['edr'])
         path.update_energies(energy['kinetic en.'],
                              energy['potential'])
@@ -800,8 +826,8 @@ class GromacsEngine(ExternalMDEngine):
         Perform several integration steps.
 
         This method will perform several integration steps using
-        GROMACS. It will also calculate order parameter(s) and
-        energy terms if requested.
+        GROMACS. It will also calculate order parameter(s) and energy
+        terms if requested.
 
         Parameters
         ----------

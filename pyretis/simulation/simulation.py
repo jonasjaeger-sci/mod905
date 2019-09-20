@@ -277,7 +277,7 @@ class Simulation:
         self.restart_freq = settings['output'].get('restart-file', -1)
         if self.restart_freq < 1:
             self.restart_freq = None
-            logger.warning('Writing of restart file(s) disableled!')
+            logger.warning('Writing of restart file(s) disabled!')
         logger.debug('Setting restart frequency for simulation %s',
                      self.restart_freq)
         self.exe_dir = settings['simulation'].get('exe-path', os.getcwd())

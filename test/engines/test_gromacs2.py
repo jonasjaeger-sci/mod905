@@ -25,16 +25,29 @@ class GromacsEngineTest(unittest.TestCase):
 
     def test_init(self):
         """Test the initiation."""
-        eng = GromacsEngine2('echo', 'echo', GMX_DIR, 0.002, 10,
-                             maxwarn=10, gmx_format='g96', write_vel=True,
+        eng = GromacsEngine2(gmx='echo',
+                             mdrun='echo',
+                             input_path=GMX_DIR,
+                             timestep=0.002,
+                             subcycles=10,
+                             maxwarn=10,
+                             gmx_format='g96',
+                             write_vel=True,
                              write_force=False)
         eng.exe_dir = GMX_DIR
         with self.assertRaises(ValueError):
-            GromacsEngine2('echo', 'echo', 'gmx_input', 0.002, 10,
+            GromacsEngine2(gmx='echo',
+                           mdrun='echo',
+                           input_path='gmx_input',
+                           timestep=0.002,
+                           subcycles=10,
                            gmx_format='not-a-format')
-        with self.assertRaises(ValueError):
-            GromacsEngine2('echo', 'echo', 'missing-files', 0.002, 10,
-                           gmx_format='gro')
+        with self.assertRaises(FileNotFoundError):
+            GromacsEngine2(gmx='echo',
+                           mdrun='echo',
+                           input_path='missing-files',
+                           timestep=0.002,
+                           subcycles=10)
 
     def test_propagate_forward(self):
         """Test the propagate method, forward direction.
@@ -113,7 +126,9 @@ class GromacsEngineTest(unittest.TestCase):
         """Test the propagate method when engine crashes."""
         with tempfile.TemporaryDirectory() as tempdir:
             mdrun = '{} -crash'.format(MDRUN)
-            eng = GromacsEngine2(GMX, mdrun, GMX_DIR, 0.002, 7,
+            eng = GromacsEngine2(GMX, mdrun, GMX_DIR,
+                                 timestep=0.002,
+                                 subcycles=7,
                                  maxwarn=1, gmx_format='g96',
                                  write_vel=True,
                                  write_force=False)

@@ -3,6 +3,9 @@
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """This file contains common functions for the input/output.
 
+It contains some slave functions that are used in the in/output function
+of PyRETIS.
+
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -22,6 +25,9 @@ create_backup (:py:func:`.create_backup`)
 make_dirs (:py:func:`.make_dirs`)
     Create directories (for path simulation).
 
+create_empty_ensembles (:py:func:`.create_ensembles`)
+    A method to prepare the ensembles inputs in settings
+
 simplify_ensemble_name (:py:func:`.simplify_ensemble_name`)
     Simplify the name of ensembles for creating directories.
 
@@ -29,12 +35,12 @@ generate_file_name (:py:func:`.generate_file_name`)
     Generate file name for an output task, from settings.
 
 """
-from abc import ABCMeta, abstractmethod
+import logging
 import errno
 import os
 import re
 import sys
-import logging
+from abc import ABCMeta, abstractmethod
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
@@ -42,7 +48,9 @@ logger.addHandler(logging.NullHandler())
 __all__ = [
     'check_python_version',
     'create_backup',
+    'create_empty_ensembles',
     'make_dirs',
+    'OutputBase',
     'simplify_ensemble_name',
 ]
 
@@ -83,6 +91,8 @@ PATHFILES = {'pcross': '{}_pcross',
              'shoots_scaled': '{}_shoots_scaled'}
 # hard-coded patterns for matched files:
 PATH_MATCH = {'total': 'total-probability',
+              'progress': 'overall-rrun',
+              'error': 'overall-err',
               'match': 'matched-probability'}
 
 
@@ -375,3 +385,67 @@ class OutputBase(metaclass=ABCMeta):
         """Return basic info."""
         return '{}\n\t* Formatter: {}'.format(self.__class__.__name__,
                                               self.formatter)
+
+
+def create_empty_ensembles(settings):
+    """Create missing ensembles in the settings.
+
+    Checks the input and allocate it to the right ensemble. In theory
+    inouts shall include all these info, but it is not practical.
+
+    Parameters
+    ----------
+    settings : dict
+        The current input settings.
+
+    Returns
+    -------
+    None, but this method might add data to the input settings.
+
+    """
+    ints = settings['simulation']['interfaces']
+
+    # Determine how many ensembles are needed.
+    # (In PyRETIS 2 the flux and zero ensemble are always considered)
+    add0 = 1
+
+    # if some ensembles have inputs, they need to be kept.
+    if 'ensemble' in settings:
+        orig_set = settings['ensemble'].copy()
+    else:
+        orig_set = []
+
+    settings['ensemble'] = []
+    add = add0
+
+    # if in the main settings an ensemble_number is defined, then only
+    # that ensemble will be considered.
+    if 'tis' in settings:
+        idx = settings['tis'].get('ensemble_number')
+        if idx is not None:
+            settings['ensemble'].append({'interface': ints[1],
+                                         'tis': {'ensemble_number': idx}})
+            for sav in orig_set:
+                settings['ensemble'][0] = {**settings['ensemble'][0], **sav}
+            return
+    # if one wants to compute the flux, the 000 ensemble is for it
+    # todo remove this labelling mismatch, and give to the flux
+    # a flux name folder (instead of 000), and leave 000 for the O^+ ens.
+    settings['ensemble'].append({'interface': ints[0],
+                                 'tis': {'ensemble_number': 0}})
+    for i in range(add, len(ints)):
+        settings['ensemble'].append({'interface': ints[i - 1],
+                                     'tis': {'ensemble_number': i}})
+
+    # create the ensembles in setting, keeping eventual inputs.
+    # nb. in the settings, specific input for an ensemble can be now given.
+    for i_ens, ens in enumerate(settings['ensemble']):
+        for sav in orig_set:
+            if 'tis' in sav and 'ensemble_number' in sav['tis']:
+                if ens['tis']['ensemble_number'] ==\
+                        sav['tis']['ensemble_number']:
+                    settings['ensemble'][i_ens].update(sav)
+            elif ens['interface'] == sav['interface']:
+                settings['ensemble'][i_ens].update(sav)
+
+    return

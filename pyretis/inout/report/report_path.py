@@ -106,6 +106,8 @@ def generate_report_tis(analysis, output='rst'):
     matched_out = analysis['matched']['out']
     figures['matched'] = matched_fig.get('matched-probability', None)
     figures['total'] = matched_fig.get('total-probability', None)
+    figures['progress'] = matched_fig.get('overall-prun', None)
+    figures['error'] = matched_fig.get('overall-err', None)
     # Get numbers:
     report['numbers']['pcross'] = format_number(matched_out['prob'], 0.1, 1)
     report['numbers']['perr'] = format_number(matched_out['relerror'] * 100,
@@ -170,6 +172,8 @@ def generate_report_retis(analysis, output='rst'):
     matched_out = analysis['matched']['out']
     figures['matched'] = matched_fig.get('matched-probability', None)
     figures['total'] = matched_fig.get('total-probability', None)
+    figures['progress'] = matched_fig.get('overall-rrun', None)
+    figures['error'] = matched_fig.get('overall-err', None)
     # Get numbers:
     numbers = report['numbers']
     numbers['pcross'] = format_number(matched_out['prob'], 0.1, 1)

@@ -64,7 +64,7 @@ class Distance(OrderParameter):
 
         if file_gro[-4:] in ['.trr', '.xtc']:
             idx_frame = system.particles.config[1]
-            trj = md.load(file_gro, top=file_top)[idx_frame]
+            trj = md.load_frame(file_gro, idx_frame, top=file_top)
         else:
             trj = md.load(file_gro)
         atom_pair = combinations([self.idx1, self.idx2], 2)

@@ -6,11 +6,45 @@
 Here we test that we parse the input file correctly and also that
 we fail in predictable ways.
 """
-import os
 import logging
+import numpy as np
+import os
 import tempfile
 import unittest
-import numpy as np
+from io import StringIO
+from pyretis.core.common import big_fat_comparer
+from pyretis.core.units import create_conversion_factors, CONVERT
+from pyretis.engines import Verlet, VelocityVerlet, Langevin
+from pyretis.forcefield import PotentialFunction
+from pyretis.forcefield.potentials import (
+    DoubleWell,
+    DoubleWellWCA,
+    PairLennardJonesCut,
+    PairLennardJonesCutnp,
+    RectangularWell
+)
+from pyretis.inout.settings import (
+    copy_settings,
+    parse_settings_file,
+    settings_to_text,
+    write_settings_file,
+    _check_for_bullshitt,
+    _clean_settings,
+    _parse_raw_section,
+    _parse_all_raw_sections,
+    _parse_sections,
+)
+from pyretis.orderparameter import (
+    Angle,
+    Dihedral,
+    Distance,
+    Distancevel,
+    DistanceVelocity,
+    OrderParameter,
+    Position,
+    PositionVelocity,
+    Velocity,
+)
 from pyretis.inout.setup.common import (
     create_engine,
     create_orderparameter
@@ -20,39 +54,7 @@ from pyretis.inout.setup.createforcefield import (
     create_force_field
 )
 from pyretis.inout.setup.createsystem import create_initial_positions
-from pyretis.inout.settings import (
-    parse_settings_file,
-    _parse_raw_section,
-    _parse_all_raw_sections,
-    _parse_sections,
-    settings_to_text,
-    copy_settings,
-    write_settings_file,
-    _clean_settings,
-    _check_for_bullshitt
-)
-from pyretis.core.units import create_conversion_factors, CONVERT
-from pyretis.engines import Verlet, VelocityVerlet, Langevin
-from pyretis.orderparameter import (
-    OrderParameter,
-    Position,
-    Velocity,
-    PositionVelocity,
-    Distance,
-    Distancevel,
-    DistanceVelocity,
-    Angle,
-    Dihedral,
-)
-from pyretis.forcefield.potentials import (
-    PairLennardJonesCut,
-    PairLennardJonesCutnp,
-    DoubleWellWCA,
-    DoubleWell,
-    RectangularWell
-)
-from pyretis.forcefield import PotentialFunction
-from .help import turn_on_logging
+from unittest.mock import patch
 logging.disable(logging.CRITICAL)
 
 
@@ -800,28 +802,46 @@ class KeywordForcefield(unittest.TestCase):
         """Test that _check for bullshitt finds the inconsistent settings."""
         # Insufficient interfaces for TIS/RETIS:
         settings = {'simulation': {'task': 'tis', 'interfaces': [1]}}
-        with turn_on_logging():
-            with self.assertLogs('pyretis.inout.settings', level='CRITICAL'):
+        with patch('sys.stdout', new=StringIO()):
+            with self.assertRaises(ValueError) as err:
                 _check_for_bullshitt(settings)
+        self.assertTrue('Insufficient number of interfaces for tis' in
+                        str(err.exception))
+        # No references:
+        settings = {'simulation': {'task': 'tis', 'interfaces': [1, 2, 3]},
+                    'ensemble': [{'gino': 'strada'}, {'interface': 1},
+                                 {'interface': 3}]}
+        with patch('sys.stdout', new=StringIO()):
+            with self.assertRaises(ValueError) as err:
+                _check_for_bullshitt(settings)
+        self.assertTrue('An ensemble has been introduced without references'
+                        ' (interface in ensemble settings)' in
+                        str(err.exception))
+
+        settings = {'simulation': {'task': 'tis', 'interfaces': [1, 2, 3]},
+                    'ensemble': [{'ensemble_number': 0}, {'interface': 2},
+                                 {'interface': 3}]}
+        _check_for_bullshitt(settings)
+
         # Not Sorted interfaces:
         settings = {'simulation': {'task': 'tis', 'interfaces': [2, 5, 1]}}
-        with turn_on_logging():
-            with self.assertLogs('pyretis.inout.settings', level='CRITICAL'):
+        with patch('sys.stdout', new=StringIO()):
+            with self.assertRaises(ValueError) as err:
                 _check_for_bullshitt(settings)
+        self.assertTrue('Interface lambda positions in the simulation entry '
+                        'are NOT sorted (small to large)' in
+                        str(err.exception))
+
         # Wrong interfaces:
         settings = {'simulation': {'task': 'tis', 'interfaces': [1, 2, 3]},
                     'ensemble': [{'interface': 1}, {'interface': 2},
                                  {'interface': 4}]}
-        with turn_on_logging():
-            with self.assertLogs('pyretis.inout.settings', level='CRITICAL'):
+        with patch('sys.stdout', new=StringIO()):
+            with self.assertRaises(ValueError) as err:
                 _check_for_bullshitt(settings)
-        # Not sorted:
-        settings = {'simulation': {'task': 'tis', 'interfaces': [1, 2, 3]},
-                    'ensemble': [{'interface': 1}, {'interface': 3},
-                                 {'interface': 2}]}
-        with turn_on_logging():
-            with self.assertLogs('pyretis.inout.settings', level='CRITICAL'):
-                _check_for_bullshitt(settings)
+        self.assertTrue('An ensemble with declared interface is not present '
+                        'in the simulation interface list' in
+                        str(err.exception))
 
     def test_too_many(self):
         """Test what happens when we add too many potentials."""
@@ -829,7 +849,7 @@ class KeywordForcefield(unittest.TestCase):
             'forcefield': {'description': 'My force field mix'},
             'potential': [],
         }
-        for i in range(1001):
+        for i in range(66):
             settings['potential'].append(
                 {'class': 'DoubleWellWCA',
                  'parameter': {'types': [(i, i)],
@@ -840,6 +860,20 @@ class KeywordForcefield(unittest.TestCase):
         settings2 = _parse_all_raw_sections(raw)
         for i, pot in enumerate(settings2['potential']):
             self.assertEqual(pot['parameter']['types'][0], (i, i))
+
+        # Looking for troubles:
+        settings['ensemble'] = []
+        for i in range(66):
+            settings['ensemble'].append(
+                {'potential': [{'class': 'DoubleWellWCA',
+                                'parameter': {'types': [(i, i)],
+                                              'rzero': 16}}]})
+
+        txt = settings_to_text(settings)
+        raw = _parse_sections(txt.split('\n'))
+        settings3 = _parse_all_raw_sections(raw)
+        hidden = settings3['ensemble'][10]['potential'][0]
+        self.assertEqual(hidden['parameter']['rzero'], 16)
 
     def test_copy_settings(self):
         """Test that the copy method works as intended."""
@@ -870,7 +904,6 @@ class KeywordForcefield(unittest.TestCase):
         """Test that we can write settings to a file."""
         inputfile = os.path.join(LOCAL_DIR, 'settings-retis.rst')
         settings = parse_settings_file(inputfile)
-        settings2 = None
         with tempfile.TemporaryDirectory() as tempdir:
             out_file = os.path.join(tempdir, '_pyretis_settings_temp.rst')
             # Check that we can write a file:
@@ -879,16 +912,11 @@ class KeywordForcefield(unittest.TestCase):
             # Check that we can write a file and backup:
             write_settings_file(settings, out_file, backup=True)
             out_file2 = '{}_000'.format(out_file)
-            settings2 = parse_settings_file(out_file)
+            with open(out_file, 'r') as fileh:
+                raw_sections = _parse_sections(fileh)
+            settings2 = _parse_all_raw_sections(raw_sections)
             self.assertTrue(os.path.isfile(out_file2))
-        for key, val in settings.items():
-            if key != 'ensemble':
-                self.assertTrue(key in settings2)
-                self.assertEqual(val, settings2[key])
-                self.assertTrue(key in settings2['ensemble'][0])
-                self.assertTrue(key in settings['ensemble'][2])
-                self.assertTrue(key in settings2['ensemble'][2])
-                self.assertEqual(val, settings2[key])
+        self.assertTrue(big_fat_comparer(settings, settings2, hard=True))
 
     def test_clean_settings(self):
         """Test that we can clean settings."""
@@ -911,13 +939,26 @@ class KeywordEnsemble(unittest.TestCase):
         inputfile = os.path.join(LOCAL_DIR, 'settings-retis.rst')
         settings = parse_settings_file(inputfile)
 
+        self.assertEqual(settings['ensemble'][2]
+                         ['collective-variable'][3]['something']
+                         ['unexpected'], [1, 2, 3])
+        self.assertEqual(settings['ensemble'][6]['particles']
+                         ['velocity']['fantasy'], 'game')
+        self.assertEqual(settings['ensemble'][6]['particles']['velocity']
+                         ['generate'], 'Priapo')
         self.assertEqual(settings['ensemble'][5]['retis'], settings['retis'])
         self.assertEqual(settings['ensemble'][2]['box'], settings['box'])
-        self.assertEqual(
-            settings['ensemble'][1]['collective-variable'][5]['name'],
-            'Bugno'
-        )
+        self.assertTrue(settings['ensemble'][0]['tis']['ensemble_number'] !=
+                        settings['ensemble'][1]['tis']['ensemble_number'])
+        self.assertEqual(settings['ensemble'][2]
+                         ['collective-variable'][5]['name'], 'Bugno')
+        self.assertEqual(settings['ensemble'][2]
+                         ['collective-variable'][1]
+                         ['position']['nonsense'], 'pineapple_on_pizza')
+        self.assertEqual(settings['ensemble'][1]['particles']
+                         ['velocity']['generate'], 'maxwell')
         self.assertEqual(len(settings['ensemble']), 8)
+        self.assertEqual(settings['simulation']['zero_left'], -99)
 
 
 if __name__ == '__main__':

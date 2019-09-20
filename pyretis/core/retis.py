@@ -30,16 +30,26 @@ retis_swap_zero (:py:func:`.retis_swap_zero`)
     The function that performs the swapping for the
     ``[0^-] <-> [0^+]`` swap.
 
+high_acc_swap (:py:func:`.high_acc_wap`)
+    The function coputes if a path generated via SS can be accepted
+    for swapping in accordance to super detail balance.
+
 References
 ~~~~~~~~~~
 .. [RETIS] Titus S. van Erp,
    Phys. Rev. Lett. 98, 26830 (2007),
    http://dx.doi.org/10.1103/PhysRevLett.98.268301
 
+.. [SS+WT] Enrico Riccardi, Oda Dahlen, Titus S. van Erp,
+   J. Phys. Chem. letters, 8, 18, 4456, (2017),
+   https://doi.org/10.1021/acs.jpclett.7b01617
+
 """
 import copy
 import logging
-from pyretis.core.tis import make_tis_step_ensemble
+import numpy as np
+from pyretis.core.tis import make_tis_step_ensemble, compute_weight_ss
+from pyretis.core.common import crossing_counter
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
@@ -88,7 +98,6 @@ def make_retis_step(ensembles, order_function, engine, rgen,
 
     """
     if rgen.rand() < settings['retis']['swapfreq']:
-        # Do RETIS moves
         logger.info('Performing RETIS swapping move(s).')
         results = retis_moves(ensembles, order_function, engine,
                               rgen, settings, cycle)
@@ -134,7 +143,6 @@ def _relative_shoots_select(ensembles, rgen, relative):
         if freq < cumulative:
             idx = i
             break
-    # just a sanity check, we should crash if idx is None
     try:
         path_ensemble = ensembles[idx]
     except TypeError:
@@ -297,7 +305,7 @@ def retis_moves(ensembles, order_function, engine, rgen,
         for idx in range(scheme, len(ensembles) - 1, 2):
             accept, trial, status = retis_swap(
                 ensembles, idx, order_function, engine,
-                settings, cycle
+                settings, cycle, rgen
             )
             result = {
                 'ensemble': idx,
@@ -348,7 +356,7 @@ def retis_moves(ensembles, order_function, engine, rgen,
         idx = rgen.random_integers(0, len(ensembles) - 2)
         accept, trial, status = retis_swap(
             ensembles, idx, order_function, engine,
-            settings, cycle
+            settings, cycle, rgen
         )
         result = {
             'ensemble': idx,
@@ -385,7 +393,7 @@ def retis_moves(ensembles, order_function, engine, rgen,
 
 
 def retis_swap(ensembles, idx, order_function, engine,
-               settings, cycle):
+               settings, cycle, rgen=None):
     """Perform a RETIS swapping move for two ensembles.
 
     The RETIS swapping move will attempt to swap accepted paths between
@@ -411,6 +419,8 @@ def retis_swap(ensembles, idx, order_function, engine,
         The class used for calculating the order parameter(s).
     engine : object like :py:class:`.EngineBase`
         The engine to use for propagating a path.
+    rgen : object like :py:class:`.RandomGenerator`, optional
+        This is a random generator.
     settings : dict
         This dict contains the settings for the RETIS method.
     cycle : integer
@@ -438,6 +448,8 @@ def retis_swap(ensembles, idx, order_function, engine,
         ensembles[idx].ensemble_name,
         ensembles[idx+1].ensemble_name
     )
+    if rgen is None:
+        rgen = np.random.RandomState()
     if idx == 0:
         return retis_swap_zero(ensembles, order_function, engine,
                                settings, cycle)
@@ -448,33 +460,49 @@ def retis_swap(ensembles, idx, order_function, engine,
     # Check if path1 can be accepted in ensemble 2:
     cross = path1.check_interfaces(ensemble2.interfaces)[-1]
     accept = cross[1]
+
+    status = 'NCR'
+
+    if accept and 'high_accept' in settings['tis'] and \
+            settings['tis']['high_accept']:
+        accept, status = high_acc_swap(path1, path2, rgen,
+                                       ensemble1.interfaces[1],
+                                       ensemble2.interfaces[1],
+                                       ensemble2.interfaces[-1])
+
     if accept:  # Accept the swap:
         status = 'ACC'
         # Do the swap:
-        path1, path2 = path2, path1
+        for trial, ensemble in zip((path2, path1), (ensemble1, ensemble2)):
+            if trial.get_move() == 'ss':
+                trial.weight = compute_weight_ss(trial, ensemble.interfaces)
+            else:
+                trial.weight = 1
         # And set moves:
-        if path1.get_move() != 'ld':
-            path1.set_move('s+')  # Came from right.
         if path2.get_move() != 'ld':
-            path2.set_move('s-')  # Came from left.
+            path2.set_move('s+')  # Came from right.
+        if path1.get_move() != 'ld':
+            path1.set_move('s-')  # Came from left.
         logger.info('Swap was accepted.')
         # To avoid overwriting files, we move the paths to the
         # generate directory here. They will be moved into the
         # accepted directory by the `add_path_data` below.
-        ensemble1.move_path_to_generated(path1)
-        ensemble2.move_path_to_generated(path2)
-        ensemble1.add_path_data(path1, status, cycle=cycle)
-        ensemble2.add_path_data(path2, status, cycle=cycle)
-        return accept, (path1, path2), status
-    status = 'NCR'
+        ensemble1.move_path_to_generated(path2)
+        ensemble2.move_path_to_generated(path1)
+        ensemble1.add_path_data(path2, status, cycle=cycle)
+        ensemble2.add_path_data(path1, status, cycle=cycle)
+        return accept, (path2, path1), status
+
     logger.info('Swap was rejected. (%s)', status)
     # Make shallow copies:
     trial1 = copy.copy(path2)
     trial2 = copy.copy(path1)
+
     trial1.set_move('s+')  # Came from right:
     trial2.set_move('s-')  # Came from left:
     ensemble1.add_path_data(trial1, status, cycle=cycle)
     ensemble2.add_path_data(trial2, status, cycle=cycle)
+
     return accept, (trial1, trial2), status
 
 
@@ -561,6 +589,8 @@ def retis_swap_zero(ensembles, order_function, engine,
         path0.status = 'BTX'
     elif path0.length < 3:
         path0.status = 'BTS'
+    elif 'L' in path0.check_interfaces(ensemble0.interfaces)[:2]:
+        path0.status = '0-L'
     else:
         path0.status = 'ACC'
     # 2. Generate path for [0^+] from [0^-]:
@@ -606,6 +636,10 @@ def retis_swap_zero(ensembles, order_function, engine,
     # Final checks:
     status = 'ACC'  # We are optimistic and hope that this is the default.
     accept = True
+
+    # These should be 1 unless length of paths equals 3.
+    # This technicality is not yet fixed. (An issue in open as a remidner)
+    path0.weight, path1.weight = 1., 1.
     if path0.status != 'ACC':
         path1.status = path0.status
         status = path0.status
@@ -654,3 +688,71 @@ def null_move(path_ensemble, cycle):
         path.set_move('00')
     path_ensemble.add_path_data(path, status, cycle=cycle)
     return True, path, status
+
+
+def high_acc_swap(path1, path2, rgen, interface1, interface2, interfaceb):
+    """Accept or Reject a swap move with High Acceptance Stone Skipping.
+
+    Parameters
+    ----------
+    path1 : object like :py:class:`.PathBase`
+        The path in the LOWER ensemble to exchange.
+    path2 : object like :py:class:`.PathBase`
+        The path in the UPPER ensemble to exchange.
+    rgen : object like :py:class:`.RandomGenerator`
+        This is a random generator.
+    interface1: float
+        The position of the interface defining the LOWER ensemble.
+    interface2: float
+        The position of the interface defining the UPPER ensemble.
+    interfaceb: float
+        The position of the interface defining State B.
+
+    Returns
+    -------
+    out[0] : boolean
+        True if th move should be accepted.
+
+    Notes
+    -----
+     -  This function is needed only when paths generated via Stone Skipping
+            are involved.
+      - In the case that a path bears a flag 'ld', the swap is accepted,
+            but the flag will be unchanged.
+
+    """
+    if path1.generated[0] == 'ss' and path2.generated[0] == 'ss':
+        # Crossing before the move
+        c1_old = crossing_counter(path1, interface1)
+        c2_old = crossing_counter(path2, interface2)
+        # Crossing if the move would be accepted
+        c1_new = crossing_counter(path2, interface1)
+        c2_new = crossing_counter(path1, interface2)
+        p_swap_acc = c1_new*c2_new/(c1_old*c2_old)
+
+    elif path1.generated[0] == 'ss':
+        c1_old = crossing_counter(path1, interface1)
+        c1_new = crossing_counter(path2, interface1)
+        p_swap_acc = c1_new/c1_old
+        if path2.get_end_point(interfaceb) == 'R':
+            p_swap_acc *= 2
+        if path1.get_end_point(interfaceb) == 'R':
+            p_swap_acc *= 0.5
+
+    elif path2.generated[0] == 'ss':
+        c2_old = crossing_counter(path2, interface2)
+        c2_new = crossing_counter(path1, interface2)
+        p_swap_acc = c2_new/c2_old
+        if path1.get_end_point(interfaceb) == 'R':
+            p_swap_acc *= 2
+        if path2.get_end_point(interfaceb) == 'R':
+            p_swap_acc *= 0.5
+
+    else:
+        p_swap_acc = 1
+
+    # Finally, randomly decide what to do:
+    if rgen.rand() < p_swap_acc:
+        return True, 'ACC'  # Accepted
+
+    return False, 'HAS'  # Rejected

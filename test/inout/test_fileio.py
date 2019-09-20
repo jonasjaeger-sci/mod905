@@ -40,19 +40,20 @@ PATH_DATA = [
         'cycle': 0, 'generated': ['ki', 0.0, 0, 0],
         'interface': ('L', 'M', 'L'), 'length': 494,
         'ordermax': (-0.765171027, 255), 'ordermin': (-0.9002987171, 0),
-        'status': 'ACC'
+        'status': 'ACC', 'weight': 1.,
     },
     {
         'cycle': 1, 'generated': ['s-', 0.0, 0, 0],
         'interface': ('L', 'M', 'L'), 'length': 400,
         'ordermax': (-0.8643118362, 136),
-        'ordermin': (-0.9004062103, 399), 'status': 'ACC'
+        'ordermin': (-0.9004062103, 399),
+        'status': 'ACC', 'weight': 1.,
     },
     {
         'cycle': 2, 'generated': ['tr', 0.0, 0, 0],
         'interface': ('L', 'M', 'L'), 'length': 400,
         'ordermax': (-0.8643118362, 263), 'ordermin': (-0.9004062103, 0),
-        'status': 'ACC'
+        'status': 'ACC', 'weight': 1.,
     },
 ]
 
@@ -63,10 +64,8 @@ class TestFileIO(unittest.TestCase):
     def test_initiation(self):
         """Test initiation and opening of files."""
         with turn_on_logging():
-            with self.assertLogs('pyretis.inout.fileio',
-                                 level='INFO'):
-                fileio = FileIO('some-name', 'r', None,
-                                backup='not-an-option!')
+            with self.assertLogs('pyretis.inout.fileio', level='INFO'):
+                FileIO('some-name', 'r', None, backup='not-an-option!')
 
         # Test for completely new file:
         filename = os.path.join(HERE, 'a_new_file')
@@ -247,7 +246,7 @@ class TestEnergyFile(unittest.TestCase):
             with self.assertLogs('pyretis.inout.fileio',
                                  level='WARNING'):
                 with EnergyFile(filename, 'r') as efile:
-                    for block in efile.load():
+                    for _ in efile.load():
                         pass
 
 

@@ -58,10 +58,10 @@ energy-file = 100
 order-file = 100
 trajectory-file = 100
 backup = 'overwrite'
-screen = 10
 cross-file = 1
-restart-file = 10
 pathensemble-file = 1
+restart-file = 10
+screen = 10
 
 TIS settings
 ------------
@@ -73,7 +73,9 @@ zero_momentum = False
 rescale_energy = False
 sigma_v = -1
 seed = 16
-shooting-move = 'shoot'
+high_accept = False
+shooting_move = 'sh'
+shooting_moves = []
 ensemble_number = 6
 detect = -0.3
 
@@ -83,12 +85,12 @@ method = 'kick'
 
 Analysis settings
 -----------------
-skipcross = 1000
-maxblock = 1000
 blockskip = 1
 bins = 100
-ngrid = 1001
+maxblock = 1000
 maxordermsd = -1
+ngrid = 1001
 plot = {'output': 'png', 'plotter': 'mpl', 'style': 'pyretis'}
-txt-output = 'txt.gz'
 report = ['latex', 'rst', 'html']
+skipcross = 1000
+txt-output = 'txt.gz'

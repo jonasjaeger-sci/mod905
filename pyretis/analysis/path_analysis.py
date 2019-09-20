@@ -191,7 +191,7 @@ def _pcross_lambda_cumulative(orderparam, ordermin, ordermax, ngrid,
         # further this lambda will contribute up to and including lamb[idx]
         # this is accomplished by the idx+1 when summing weights below
         if weights is None:
-            weight = 1
+            weight = 1.
         else:
             weight = weights[i]
         sumw += weight
@@ -283,9 +283,9 @@ def _get_path_length(path, ensemble_number):
         if move == 's-' and ensemble_number == 1:
             return path['length'] - 2
         return return_table[move]
-    if move == 'sh':
+    if move in {'sh', 'ss', 'wt'}:
         return path['length'] - 1
-    if move == 'ki':
+    if move in {'ki', 'ld', 're'}:
         logger.info('Skipped initial path (move "%s")', move)
         return None
     logger.warning('Skipped path with unknown mc move: %s', move)
@@ -348,7 +348,7 @@ def _update_shoot_stats(shoot_stats, path):
 
     """
     move = path['generated'][0]
-    if move == 'sh':
+    if move in {'sh', 'ss', 'wt'}:
         orderp = path['generated'][1]
         status = path['status']
         if status not in shoot_stats:
@@ -463,6 +463,7 @@ def analyse_path_ensemble_object(path_ensemble, settings):
     # next get the running average of the crossing probability
     prun, pdata = _running_pcross(path_ensemble, path_ensemble.detect)
     result['prun'] = prun
+    result['pdata'] = pdata
     try:
         result['cycle'] = np.array(
             [path['cycle'] for path in path_ensemble.get_paths()]
@@ -546,6 +547,7 @@ def analyse_path_ensemble(path_ensemble, settings):
         return analyse_path_ensemble0(path_ensemble, settings)
     ensemble_number = path_ensemble.ensemble_number
     result = {'prun': [],
+              'pdata': [],
               'cycle': [],
               'detect': detect,
               'ensemble': path_ensemble.ensemble_name,
@@ -564,12 +566,12 @@ def analyse_path_ensemble(path_ensemble, settings):
         npath += 1
         if path['status'] == 'ACC':
             nacc += 1
-            weights.append(1)
+            weights.append(path.get('weight', 1.))
             orderparam.append(path['ordermax'][0])
             length_acc.append(path['length'])
             success = 1 if path['ordermax'][0] > detect else 0
             pdata.append(success)  # Store data for block analysis
-        else:  # just increase the weights
+        elif nacc != 0:  # just increase the weights
             weights[-1] += 1
         # we also update the running average of the probability here:
         if not result['prun']:
@@ -586,10 +588,18 @@ def analyse_path_ensemble(path_ensemble, settings):
             length_all.append(length)
         # update the shoot stats, this will only be done for shooting moves
         _update_shoot_stats(shoot_stats, path)
+
+    # When stacking multiple simulations together, the cycles might not be
+    # in order:
+    for i, cyc in enumerate(result['cycle'][1:]):
+        if cyc < result['cycle'][i-1]:
+            result['cycle'][i] += result['cycle'][i-1]
+
     # Perform the different analysis tasks:
     # 1) result['prun'] is already calculated.
     result['cycle'] = np.array(result['cycle'])
     result['prun'] = np.array(result['prun'])
+    result['pdata'] = np.array(pdata)
     # 2) lambda pcross:
     analysis = settings['analysis']
     orderparam = np.array(orderparam)
@@ -678,9 +688,9 @@ def analyse_path_ensemble0(path_ensemble, settings):
         npath += 1
         if path['status'] == 'ACC':
             nacc += 1
-            weights.append(1)
+            weights.append(path.get('weight', 1.))
             length_acc.append(path['length'])
-        else:  # just increase the weights
+        elif nacc != 0:  # just increase the weights
             weights[-1] += 1
         result['cycle'].append(path['cycle'])
         length = _get_path_length(path, ensemble_number)
@@ -717,7 +727,7 @@ def analyse_path_ensemble0(path_ensemble, settings):
     return result
 
 
-def match_probabilities(path_results, detect):
+def match_probabilities(path_results, detect, settings=None):
     """Match probabilities from several path ensembles.
 
     It will also calculate efficiencies and error for the matched
@@ -735,8 +745,26 @@ def match_probabilities(path_results, detect):
         * `prun`: The running average of the crossing probability.
         * `blockerror`: The output from the block error analysis.
         * `efficiency`: The output from the efficiency analysis.
+
     detect : list of floats
         These are the detect interfaces used in the analysis.
+    settings : dict
+        This dictionary contains settings for the analysis.
+        Here we make use of the following keys from the
+        analysis section:
+
+        * `ngrid`: The number of grid points for calculating the
+          crossing probability as a function of the order parameter.
+        * `maxblock`: The max length of the blocks for the block error
+          analysis. Note that this will maximum be equal the half of the
+          length of the data, see `block_error` in `.analysis`.
+        * `blockskip`: Can be used to skip certain block lengths.
+          A `blockskip` equal to `n` will consider every n'th block up
+          to `maxblock`, i.e. it will use block lengths equal to `1`,
+          `1+n`, `1+2n`, etc.
+        * `bins`: The number of bins to use for creating histograms.
+
+
 
     Returns
     -------
@@ -746,11 +774,14 @@ def match_probabilities(path_results, detect):
 
     """
     results = {'matched-prob': [],
+               'overall-prun': [],
+               'overall-err': [],
                'overall-prob': [[], []]}
     accprob = 1.0
     accprob_err = 0.0
     prob_simtime = 0.0
     prob_opt_eff = 0.0
+    maxlen_pdata, maxlen_prun = 0, 0
     for idet, result in zip(detect, path_results):
         # do matching only in part left of idetect:
         idx = np.where(result['pcross'][0] <= idet)[0]
@@ -764,6 +795,38 @@ def match_probabilities(path_results, detect):
         accprob_err += result['blockerror'][4]**2
         prob_simtime += result['efficiency'][1]
         prob_opt_eff += np.sqrt(result['efficiency'][2])
+        # Find the maximum number of cycles for ensemble
+        maxlen_pdata = max(maxlen_pdata, len(result['pdata']))
+        maxlen_prun = max(maxlen_prun, len(result['prun']))
+
+    # Let's make sure that each ensemble has the same cycle population
+    for i_ens, result in enumerate(path_results):
+        n_add = maxlen_prun - len(result['prun'])
+        result['prun'] = np.concatenate(([1 for _ in range(n_add)],
+                                         result['prun']))
+
+        n_add = maxlen_pdata - len(result['pdata'])
+        if n_add == 0:
+            ens_to_use = i_ens
+        result['pdata'] = np.concatenate(([1 for _ in range(n_add)],
+                                          result['pdata']))
+
+    # Finally Construct the comulative output now
+    results['overall-cycle'] = path_results[ens_to_use]['cycle']
+    results['overall-pdata'] = [1]*maxlen_pdata
+    results['overall-prun'] = [1]*maxlen_prun
+    for i_ens, result in enumerate(path_results):
+        results['overall-prun'] = np.multiply(result['prun'],
+                                              results['overall-prun'])
+        results['overall-pdata'] = np.multiply(result['pdata'],
+                                               results['overall-pdata'])
+
+    if settings is not None:
+        analysis = settings['analysis']
+        results['overall-error'] = block_error_corr(results['overall-pdata'],
+                                                    analysis['maxblock'],
+                                                    analysis['blockskip'])
+
     results['overall-prob'] = np.transpose(results['overall-prob'])
     results['prob'] = accprob
     results['relerror'] = np.sqrt(accprob_err)

@@ -56,7 +56,7 @@ class FileIO(OutputBase):
     """
 
     target = 'file'
-    FILE_FLUSH = 20  # Interval for flushing files in seconds.
+    FILE_FLUSH = 10  # Interval for flushing files in seconds.
 
     def __init__(self, filename, file_mode, formatter, backup=True):
         """Set up the file object.
@@ -192,6 +192,7 @@ class FileIO(OutputBase):
                                                         error.strerror)
                 logger.critical(msg)
             if self.last_flush is None:
+                self.flush()
                 self.last_flush = datetime.now()
             delta = datetime.now() - self.last_flush
             if delta.total_seconds() > self.FILE_FLUSH:  # pragma: no cover

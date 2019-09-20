@@ -76,10 +76,10 @@ class Particles:
     particle_type = 'internal'
 
     # Attributes to store when restarting/copying:
-    _copy_attr = {'npart', 'vpot', 'ekin', 'name', 'ptype', 'dim'}
+    _copy_attr = {'npart', 'name', 'ptype', 'dim'}
     # Attributes which are numpy arrays:
     _numpy_attr = {'pos', 'vel', 'force', 'virial', 'mass', 'imass',
-                   'ptype'}
+                   'ptype', 'ekin', 'vpot'}
 
     def __init__(self, dim=1):
         """Initialise the Particle list.
@@ -399,11 +399,11 @@ class ParticlesExt(Particles):
     particle_type = 'external'
 
     # Attributes to store when restarting/copying:
-    _copy_attr = {'npart', 'vpot', 'ekin', 'name', 'ptype', 'dim',
+    _copy_attr = {'npart', 'name', 'ptype', 'dim',
                   'config', 'vel_rev', 'top'}
     # Attributes which are numpy arrays:
     _numpy_attr = {'pos', 'vel', 'force', 'virial', 'mass', 'imass',
-                   'ptype'}
+                   'ptype', 'ekin', 'vpot'}
 
     def __init__(self, dim=1):
         """Create an empty ParticleExt list.

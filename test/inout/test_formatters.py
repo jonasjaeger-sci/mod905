@@ -457,7 +457,7 @@ class TestPathEnsembleFormatter(unittest.TestCase):
         corrects = [
             ('         0          1          1 L M R      10 ACC sh'
              '  0.000000000e+00  9.000000000e+00       0       9'
-             '  0.000000000e+00       0       0'),
+             '  0.000000000e+00       0       0  1.000000000e+00'),
         ]
         for line, correct in zip(formatter.format(0, ens), corrects):
             self.assertEqual(line, correct)
@@ -468,24 +468,26 @@ class TestPathEnsembleFormatter(unittest.TestCase):
         raw = [
             ('         2          1          0 L * L    1019 '
              'NCR sh -9.020623174e-01 -3.052974085e-01    1018'
-             '     554 -4.283683762e-01     721     292'),
+             '     554 -4.283683762e-01     721     292  2.000000000e+00'),
             ('         7          4          1 L M R    1140 '
              'ACC sh -9.018613917e-01  1.001603711e+00       0'
-             '    1139 -2.765514723e-01     498     322'),
+             '    1139 -2.765514723e-01     498     322  2.000000000e+00'),
         ]
         correct = [
             {
                 'cycle': 2, 'generated': ['sh', -0.4283683762, 721, 292],
                 'interface': ('L', '*', 'L'), 'length': 1019,
                 'ordermax': (-0.3052974085, 554),
-                'ordermin': (-0.9020623174, 1018), 'status': 'NCR'
+                'ordermin': (-0.9020623174, 1018), 'status': 'NCR',
+                'weight': 2.
             },
             {
                 'cycle': 7, 'generated': ['sh', -0.2765514723, 498, 322],
                 'interface': ('L', 'M', 'R'), 'length': 1140,
                 'ordermax': (1.001603711, 1139),
                 'ordermin': (-0.9018613917, 0),
-                'status': 'ACC'
+                'status': 'ACC',
+                'weight': 2.
             },
         ]
 
@@ -496,11 +498,29 @@ class TestPathEnsembleFormatter(unittest.TestCase):
                                  level='WARNING'):
                 formatter.parse('1 2 3')
         # Also test a line with a comment:
-        out = formatter.parse('1 2 3 A B C 4 ACC sh 5 6 7 8 9 8 7 # comment')
+        out = formatter.parse('1 2 3 A B C 4 ACC sh 5 6 7 8 9 8 7 2 # comment')
         cor = {'cycle': 1, 'generated': ['sh', 9.0, 8, 7],
-               'interface': ('A', 'B', 'C'), 'length': 4,
+               'interface': ('A', 'B', 'C'), 'length': 4, 'weight': 2.,
+               'ordermax': (6.0, 8), 'ordermin': (5.0, 7), 'status': 'ACC'}
+
+        assert_equal_path_dict(out, cor)
+
+        # Also test a shorter (old version) line:
+        out = formatter.parse('1 2 3 A B C 4 ACC sh 5 6 7 8 9 8 7')
+        cor = {'cycle': 1, 'generated': ['sh', 9.0, 8, 7],
+               'interface': ('A', 'B', 'C'), 'length': 4, 'weight': 1.,
                'ordermax': (6.0, 8), 'ordermin': (5.0, 7), 'status': 'ACC'}
         assert_equal_path_dict(out, cor)
+
+        # Let it fail just because:
+        out = formatter.parse('1 2 3 A B C 4 ACC sh 5 6 7 8 9 8 7')
+        cor = {'cycle': 1, 'generated': ['sh', 9.0, 8, 7],
+               'interface': ('A', 'B', 'C'), 'length': 4, 'weight': 2.,
+               'ordermax': (6.0, 8), 'ordermin': (5.0, 7), 'status': 'ACC'}
+
+        with self.assertRaises(AssertionError) as err:
+            assert_equal_path_dict(out, cor)
+        self.assertEqual(str(err.exception), 'Different weight')
 
 
 class TestMethods(unittest.TestCase):

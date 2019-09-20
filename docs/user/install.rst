@@ -28,7 +28,7 @@ Installing via ``pip``
 |pyretis| can be installed using `pip <https://pypi.org/project/pyretis/>`_
 with the following command:
 
-.. code-block:: pyretis
+.. _user-guide-prereq:
 
     pip install pyretis
 
@@ -40,6 +40,8 @@ installed **after** installing |pyretis|:
 
     pip install git+https://github.com/mdtraj/mdtraj.git
 
+|pyretis| requires `mdtraj <http://mdtraj.org>`_ and this has to be
+installed **after** installing |pyretis|:
 
 **Note:** Please make sure that you are using a Python environment
 of version 3.6 or newer. On some systems, **Python 2** may still be the default

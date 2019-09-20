@@ -165,7 +165,7 @@ def make_internal_system(order=None, pos=None, vel=None,
     return system
 
 
-def make_internal_path(start, end, maxorder, interface, points=100):
+def make_internal_path(start, end, maxorder, interface=None, points=100):
     """Return a dummy path.
 
     Parameters
@@ -183,11 +183,11 @@ def make_internal_path(start, end, maxorder, interface, points=100):
         The number of points to add to the path.
 
     """
-    x = [start[0], maxorder[0], end[0]]  # pylint: disable=invalid-name
-    y = [start[1], maxorder[1], end[1]]  # pylint: disable=invalid-name
+    xxx = [start[0], maxorder[0], end[0]]
+    yyy = [start[1], maxorder[1], end[1]]
     warnings.simplefilter('ignore', np.RankWarning)
-    par = np.polyfit(x, y, 2)
-    xre = np.linspace(0., x[-1], points)
+    par = np.polyfit(xxx, yyy, 2)
+    xre = np.linspace(0., xxx[-1], points)
     yre = np.polyval(par, xre)
     # Delete some points from "yre" so that the path will be ok:
     if interface is not None:
@@ -220,4 +220,5 @@ def make_internal_path(start, end, maxorder, interface, points=100):
         path.append(phasepoint)
         previous = order
     path.generated = ('fake', 0, 0, 0)
+    path.maxlen = 10000
     return path

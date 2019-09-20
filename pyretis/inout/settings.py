@@ -15,68 +15,68 @@ write_settings_file (:py:func:`.write_settings_file`)
     Method for writing settings from a simulation to a given file.
 """
 import ast
-from collections import OrderedDict
 import logging
 import pprint
 import re
-from pyretis.inout.common import create_backup
+from pyretis.inout.common import create_backup, create_empty_ensembles
 from pyretis.info import PROGRAM_NAME, URL
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
+__all__ = ['parse_settings_file', 'write_settings_file',
+           '_fill_up_tis_and_retis_settings']
 
-__all__ = ['parse_settings_file', 'write_settings_file']
 
-
-SECTIONS = OrderedDict()
+SECTIONS = dict()
 TITLE = '{} input settings'.format(PROGRAM_NAME)
 HEADING = '{}\n{}\nFor more info, please see: {}\nHave Fun!'
 SECTIONS['heading'] = {'text': HEADING.format(TITLE, '=' * len(TITLE), URL)}
 
 SECTIONS['simulation'] = {
-    'task': 'md',
-    'steps': None,
-    'startcycle': None,
     'endcycle': None,
-    'restart': None,
-    'exe-path': None,
+    'exe_path': None,
     'interfaces': None,
+    'restart': None,
     'rgen': None,
+    'startcycle': None,
+    'steps': None,
+    'task': 'md',
+    'zero_left': None
 }
 
 SECTIONS['system'] = {
     'dimensions': 3,
     'temperature': 1.0,
-    'units': 'lj'
+    'units': 'lj',
 }
 
 SECTIONS['unit-system'] = {
-    'name': None,
+    'charge': None,
+    'energy': None,
     'length': None,
     'mass': None,
-    'energy': None,
-    'charge': None
+    'name': None,
 }
 
 SECTIONS['engine'] = {
     'class': None,
-    'module': None
+    'module': None,
 }
 
 SECTIONS['box'] = {
-    'low': None,
-    'high': None,
     'cell': None,
-    'periodic': None
+    'high': None,
+    'low': None,
+    'periodic': None,
 }
 
 SECTIONS['particles'] = {
-    'position': None,
-    'velocity': None,
     'mass': None,
     'name': None,
+    'npart': None,
+    'position': None,
     'type': None,
-    'npart': None
+    'velocity': None,
 }
 
 SECTIONS['forcefield'] = {
@@ -100,34 +100,35 @@ SECTIONS['collective-variable'] = {
     'name': None
 }
 
-
 SECTIONS['output'] = {
     'backup': 'overwrite',
-    'prefix': None,
-    'screen': 10,
-    'energy-file': 10,
     'cross-file': 1,
-    'order-file': 10,
-    'trajectory-file': 100,
-    'restart-file': 10,
+    'energy-file': 1,
     'pathensemble-file': 1,
+    'prefix': None,
+    'order-file': 1,
+    'restart-file': 10,
+    'screen': 10,
+    'trajectory-file': 100,
 }
 
 SECTIONS['tis'] = {
-    'shooting-move': 'shoot',
+    'allowmaxlength': False,
+    'aimless': True,
     'ensemble_number': None,
     'detect': None,
     'freq': None,
     'maxlength': None,
-    'aimless': True,
-    'allowmaxlength': False,
-    'zero_momentum': False,
-    'rescale_energy': False,
     'n_jumps': None,
+    'high_accept': False,
     'interface_sour': None,
-    'sigma_v': -1,
-    'seed': 0,
+    'rescale_energy': False,
     'rgen': None,
+    'seed': 0,
+    'shooting_move': 'sh',
+    'shooting_moves': [],
+    'sigma_v': -1,
+    'zero_momentum': False,
 }
 
 SECTIONS['initial-path'] = {
@@ -135,10 +136,16 @@ SECTIONS['initial-path'] = {
 }
 
 SECTIONS['retis'] = {
-    'swapfreq': None,
-    'relative_shoots': None,
     'nullmoves': None,
-    'swapsimul': None
+    'relative_shoots': None,
+    'rgen': None,
+    'seed': None,
+    'swapfreq': None,
+    'swapsimul': None,
+}
+
+SECTIONS['ensemble'] = {
+    'interface': None
 }
 
 SECTIONS['ensemble'] = {
@@ -146,17 +153,17 @@ SECTIONS['ensemble'] = {
 }
 
 SECTIONS['analysis'] = {
-    'skipcross': 1000,
-    'maxblock': 1000,
     'blockskip': 1,
     'bins': 100,
-    'ngrid': 1001,
+    'maxblock': 1000,
     'maxordermsd': -1,
+    'ngrid': 1001,
     'plot': {'plotter': 'mpl', 'output': 'png',
              'style': 'pyretis'},
-    'txt-output': 'txt.gz',
     'report': ['latex', 'rst', 'html'],
-    'report-dir': None
+    'report-dir': None,
+    'skipcross': 1000,
+    'txt-output': 'txt.gz',
 }
 
 
@@ -168,21 +175,21 @@ SPECIAL_KEY = {'parameter'}
 # and that the user should have the freedom to define keywords
 # for these modules:
 ALLOW_MULTIPLE = {
-    'potential',
-    'orderparameter',
-    'engine',
     'collective-variable',
+    'engine',
+    'ensemble',
     'initial-path',
-    'ensemble'
+    'orderparameter',
+    'potential',
 }
 
 # This dictionary contains sections that can be defined
 # multiple times. When parsing, these sections will be
 # prefixed with a number to distinguish them.
 SPECIAL_MULTIPLE = {
-    'potential',
     'collective-variable',
-    'ensemble'
+    'ensemble',
+    'potential',
 }
 
 
@@ -210,10 +217,8 @@ def parse_settings_file(filename, add_default=True):
         raw_sections = _parse_sections(fileh)
     settings = _parse_all_raw_sections(raw_sections)
     if add_default:
-        logger.debug('Adding default settings to settings read from: %s',
-                     filename)
+        logger.debug('Adding default settings')
         add_default_settings(settings)
-        _check_for_bullshitt(settings)
     if settings['simulation']['task'] in {'retis'}:
         _fill_up_tis_and_retis_settings(settings)
     return _clean_settings(settings)
@@ -264,7 +269,7 @@ def look_for_keyword(line):
     -------
     out[0] : string
         The matched keyword. It may contain spaces and it will also
-        contain the matched `=` seperator.
+        contain the matched `=` separator.
     out[1] : string
         A lower-case, stripped version of `out[0]`.
     out[2] : boolean
@@ -279,6 +284,11 @@ def look_for_keyword(line):
         for i in SPECIAL_KEY:
             if keyword_low.startswith(i):
                 return keyword, i, True
+
+        # Here we assume that keys with len One or Two are Atoms names
+        if len(keyword_low) <= 2:
+            keyword_low = key.group(1).strip()
+
         return keyword, keyword_low, True
     return None, None, False
 
@@ -303,8 +313,7 @@ def _parse_sections(inputtxt):
 
     """
     multiple = {key: 0 for key in SPECIAL_MULTIPLE}
-    raw_data = OrderedDict()
-    raw_data['heading'] = []
+    raw_data = {'heading': []}
     previous_line = None
     add_section = 'heading'
     data = []
@@ -387,9 +396,6 @@ def _parse_section_default(raw_section):
     ----------
     raw_section : list of strings
         The text data for a given section which will be parsed.
-    section : string
-        A text identifying the section we are parsing for. This is
-        used to get a list over valid keywords for the section.
 
     Returns
     -------
@@ -405,7 +411,25 @@ def _parse_section_default(raw_section):
             raw = line[len(match):].strip()
             parsed, success = parse_primitive(raw)
             if success:
-                if keyword in SPECIAL_KEY:
+                special = None
+                for skey in SPECIAL_MULTIPLE:
+                    # To avoid a false True for ensemble_number
+                    if keyword.startswith(skey) and keyword[len(skey)] != '_':
+                        special = skey
+
+                if special is not None:
+                    var = [''.join(line.split(keyword.split()[0])[1])]
+                    new_setting = _parse_section_default(var)
+                    var = line.split(special)[1].split()[0]
+                    num = 0 if not var.isdigit() else int(var)
+
+                    if special not in setting:
+                        setting[special] = [{}]
+                    while num >= len(setting[special]):
+                        setting[special].append({})
+                    setting[special][num].update(new_setting)
+
+                elif keyword in SPECIAL_KEY:
                     if keyword not in setting:
                         setting[keyword] = {}
                     var = line.split(keyword)[1].split()[0]
@@ -416,8 +440,22 @@ def _parse_section_default(raw_section):
                         setting[keyword][int(var)] = parsed
                     else:
                         setting[keyword][var] = parsed
+
+                elif len(keyword.split()) > 1:
+                    key_0 = match.split()[0]
+                    var = [' '.join(line.split()[1:])]
+                    new_setting = _parse_section_default(var)
+                    if key_0 not in setting:
+                        setting[key_0] = {}
+                    for key in new_setting:
+                        if key in setting[key_0]:
+                            setting[key_0][key].update(new_setting[key])
+                        else:
+                            setting[key_0][key] = new_setting[key]
+
                 else:
                     setting[keyword] = parsed
+
             else:  # pragma: no cover
                 msg = ['Could read keyword {}'.format(keyword)]
                 msg += ['Keyword was skipped, please check your input!']
@@ -470,7 +508,7 @@ def _parse_all_raw_sections(raw_sections):
         The parsed settings, with one key for each section parsed.
 
     """
-    settings = OrderedDict()
+    settings = dict()
     for key, val in raw_sections.items():
         special = None
         for i in SPECIAL_MULTIPLE:
@@ -485,7 +523,8 @@ def _parse_all_raw_sections(raw_sections):
             new_setting = _parse_raw_section(val, key)
             if new_setting is None:
                 continue
-            settings[key] = {}
+            if key not in settings:
+                settings[key] = {}
             for sub_key in new_setting:
                 settings[key][sub_key] = new_setting[sub_key]
     return settings
@@ -513,34 +552,41 @@ def _check_for_bullshitt(settings):
 
     if settings['simulation']['task'] in {'tis', 'retis'}:
         if not is_sorted(settings['simulation']['interfaces']):
-            msg += ['Interface lambda positions in the simulation ']
-            msg += ['entry are NOT sorted (small to large)']
+            msg += ['Interface lambda positions in the simulation '
+                    'entry are NOT sorted (small to large)']
             success = False
 
         if 'ensemble' in settings:
             savelambda = []
-            for ens in settings['ensemble']:
-                try:
-                    savelambda.append(ens['interface'])
-                    if not ens['interface'] \
-                            in settings['simulation']['interfaces']:
-                        msg += ['An ensemble with declared interface ']
-                        msg += ['is not present in the simulation interface ']
-                        msg += ['list']
-                        success = False
-                except ImportError:
-                    msg += ['An ensemble has been introduced without (!!!)']
-                    msg += [' its interface']
+            for i_ens, ens in enumerate(settings['ensemble']):
+                if 'ensemble_number' not in ens and \
+                        'interface' not in ens:
+                    msg += ['An ensemble has been introduced without '
+                            'references (interface in ensemble settings)']
                     success = False
+                else:
+                    savelambda.append(settings['simulation']['interfaces']
+                                      [i_ens])
+                    if 'interface' in ens and ens['interface'] \
+                            not in settings['simulation']['interfaces']:
+                        msg += ['An ensemble with declared interface '
+                                'is not present in the simulation interface '
+                                'list']
+                        success = False
 
-            if not is_sorted(savelambda):
-                msg += ['Interface positions in ensemble entries are NOT ']
-                msg += ['sorted (small to large)']
-                success = False
+            # todo: finish this once the tis and retis
+            # interface re-numbering is completed.
+            # for i_ens, ens in enumerate(settings['ensemble']):
+            #    if {'interface', 'ensemble_number'} <= set(ens):
+            #        msg += ['interface and ensemble_number for ']
+            #        msg += ['ensemble {}'.format(i_ens)]
+            #        msg += ['are inconsistent']
+            #        success = False
 
     if not success:
         msgtxt = '\n'.join(msg)
         logger.critical(msgtxt)
+        raise ValueError(msgtxt)
 
 
 def _fill_up_tis_and_retis_settings(settings):
@@ -558,86 +604,30 @@ def _fill_up_tis_and_retis_settings(settings):
     None, but this method might add data to the input settings.
 
     """
-    if 'ensemble' in settings:
-        ensemble_to_add = len(settings['simulation']['interfaces'])\
-                          - len(settings['ensemble'])
+    create_empty_ensembles(settings)
+    ensemble_save = settings['ensemble'].copy()
 
-    else:
-        settings['ensemble'] = [{'interface': None}]
-        ensemble_to_add = len(settings['simulation']['interfaces']) - 1
-
-    for _ in range(ensemble_to_add):
-        settings['ensemble'].append({'interface': None})
-
-    assign = len(settings['simulation']['interfaces'])
-    for ens in reversed(settings['ensemble']):
-        assign -= 1
-        if ens['interface'] in settings['simulation']['interfaces']:
-            shbe = settings['simulation']['interfaces'].index(ens['interface'])
-            settings['ensemble'][assign], settings['ensemble'][shbe] =\
-                settings['ensemble'][shbe], settings['ensemble'][assign]
-
-    ensemble_save = []
-    for i_ens, ens in enumerate(settings['ensemble']):
-        ens['interface'] = settings['simulation']['interfaces'][i_ens]
-        ensemble_save.append(ens.copy())
-        settings['ensemble'][i_ens] = {}
-        del ens
-
+    # The previously constructed dictionary is inserted in the settings.
+    # This is done such that the specific input given per ensemble
+    # OVERWRITES the general input.
     for i_ens, ens in enumerate(ensemble_save):
-        for key in list(ens):
-            key_list = key.split()
-            if key_list[0] in SPECIAL_MULTIPLE:
-                key_list[0] += '0'
-
-            clean_key = re.sub('([0-9])', '', key_list[0])
-            if clean_key in SPECIAL_MULTIPLE:
-                clean_num = int(re.sub('[^0-9]', '', key_list[0]))
-                if clean_key not in ensemble_save[i_ens]:
-                    ensemble_save[i_ens][clean_key] = []
-                while len(ensemble_save[i_ens][clean_key]) < clean_num + 1:
-                    ensemble_save[i_ens][clean_key].append({})
-                if len(key.split()) == 2:
-                    enst = ensemble_save[i_ens][clean_key][clean_num]
-                    enst[key_list[1]] = ens[key]
-
-                if len(key.split()) == 3:
-                    for key_run in range(clean_num+1):
-                        if key_run == clean_num:
-                            enst = ensemble_save[i_ens][clean_key][key_run]
-                            if not key_list[1] in enst:
-                                enst[key_list[1]] = {}
-                            enst[key_list[1]][key_list[2]] = ens[key]
-                del ens[key]
-
-            else:
-                if len(key.split()) == 2:
-                    if not key_list[0] in ensemble_save:
-                        ensemble_save[i_ens][key_list[0]] = {}
-                    ensemble_save[i_ens][key_list[0]][key_list[1]] = ens[key]
-                    del ens[key]
-
-    for i_ens, ens in enumerate(ensemble_save):
-
         for key in settings:
             if key in ensemble_save[i_ens]:
                 if key not in SPECIAL_MULTIPLE:
-                    ensemble_save[i_ens] = {**{key: settings[key]}.copy(),
-                                            **ensemble_save[i_ens].copy()}
+                    ensemble_save[i_ens][key] =\
+                        {**settings[key].copy(),
+                         **ensemble_save[i_ens][key].copy()}
                 else:
-                    for i_sub in range(len(settings[key])):
-                        if i_sub < len(ensemble_save[i_ens][key]):
-                            ensemble_save[i_ens][key][i_sub] = {
-                                **settings[key][i_sub].copy(),
-                                **ensemble_save[i_ens][key][i_sub]
+                    for i_sub, sub in enumerate(settings[key]):
+                        while len(ensemble_save[i_ens][key])\
+                                < len(settings[key]):
+                            ensemble_save[i_ens][key].append({})
+                        ensemble_save[i_ens][key][i_sub] = {
+                            **sub.copy(),
+                            **ensemble_save[i_ens][key][i_sub].copy()
                             }
 
-                        # If the ensemble save has not the right length:
-                        else:
-                            ensemble_save[i_ens][key].append({
-                                **settings[key][i_sub].copy()})
-
-        ensemble_save[i_ens] = {**settings.copy(),
+        ensemble_save[i_ens] = {**copy_settings(settings),
                                 **ensemble_save[i_ens].copy()}
         del ensemble_save[i_ens]['ensemble']
 
@@ -736,7 +726,9 @@ def settings_to_text(settings):
                 title = section.capitalize()
                 line = '-' * len(title)
                 if section == 'ensemble':
-                    raw_data = double_section_to_text(sec)
+                    _, raw_data = multiple_section_to_text(sec,
+                                                           prefix=None,
+                                                           pure=True)
                 else:
                     raw_data = section_to_text(sec)
                 txt.append('{}\n{}\n{}\n\n'.format(title, line, raw_data))
@@ -754,6 +746,11 @@ def settings_to_text(settings):
 
 
 def double_section_to_text(settings):
+    """Just here to not break 2.0 API, will be removed in Pyretis3."""
+    return(multiple_section_to_text(settings)[1])
+
+
+def multiple_section_to_text(settings, prefix=None, pure=False):
     """Turn settings for the ensemble into text for output.
 
     Parameters
@@ -763,30 +760,56 @@ def double_section_to_text(settings):
     prefix : string, optional
         If this string is given, it will be prepended to
         the setting we are writing.
+    pure: boolean, optional
+        The flag is used to track if subroutine works on a
+        main section (True) or in a sub section (False).
+        In the first case, prefix has to be re-set.
 
     Returns
     -------
-    out : string
+    out[0] : string
+        Formatted text representing the prefix to use in
+        a recursive key-word search.
+    out[1] : string
         Formatted text representing the settings.
 
     """
     data = []
     for key in settings:
-        if key == 'interface':
+        prefix = None if pure else prefix
+        if key in SPECIAL_MULTIPLE:
+            for i, entry in enumerate(settings[key]):
+                temp_prefix = '{}{:d}'.format(key, i)
+                _, txt = multiple_section_to_text(entry,
+                                                  prefix=temp_prefix)
+                data.append(txt)
+
+        elif key == 'interface':
             pretty = pprint.pformat(settings[key], width=67)
             pretty = pretty.replace('\n', '\n' + ' ' * 67)
             txt = '{} = {}'.format(key, pretty)
             data.append(txt)
-        elif key not in SPECIAL_MULTIPLE:
-            txt = section_to_text(settings[key], prefix=key)
-            data.append(txt)
-        else:
-            for i, sub_key in enumerate(settings[key]):
-                txt = section_to_text(sub_key,
-                                      prefix=('{}{:02d}'.format(key, i)))
-                data.append(txt)
 
-    return '\n'.join(data)
+        elif key == 'heading':
+            txt = '{} = {}'.format(key, settings[key])
+            data.append(txt)
+
+        elif isinstance(settings[key], dict):
+            base = prefix
+            if prefix is None:
+                prefix = key
+            else:
+                base = prefix
+                prefix += ' ' + key
+            _, txt = multiple_section_to_text(settings[key], prefix=prefix)
+            prefix = base
+            data.append(txt)
+
+        else:
+            txt = '{} {} = {}'.format(prefix, key, settings[key])
+            data.append(txt)
+
+    return prefix, '\n'.join(data)
 
 
 def section_to_text(settings, prefix=None):
