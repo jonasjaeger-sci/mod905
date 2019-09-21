@@ -59,9 +59,7 @@ with the following commands:
 
     conda create --name pyretis
     conda activate pyretis
-    conda install pip
-    pip install pyretis
-    pip install git+https://github.com/mdtraj/mdtraj.git
+    conda install pyretis -c conda-forge
 
 **Note:** Since |pyretis| will **only work with Python 3.6 or newer**,
 please make sure that you are using an environment with a recent version
