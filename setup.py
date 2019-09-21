@@ -29,7 +29,7 @@ from shutil import SameFileError
 from setuptools import setup, find_namespace_packages
 
 
-FULL_VERSION = '2.2.0'  # Automatically set by setup_version.py
+FULL_VERSION = '2.2.1'  # Automatically set by setup_version.py
 
 
 def get_long_description():
