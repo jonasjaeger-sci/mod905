@@ -30,7 +30,7 @@ pydocstyle:
 	pydocstyle --count ./pyretis
 
 pycodestyle:
-	pycodestyle --filename=*.py --count --statistics --exclude=./docs
+	pycodestyle
 
 clean:
 	find -name \*.pyc -delete

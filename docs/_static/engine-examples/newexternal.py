@@ -62,7 +62,6 @@ class NewEngine(ExternalMDEngine):
         self._modify_input(self.input_files['ORIGINAL_INPUT'],
                            self.input_files['input'], settings, delim='=')
 
-
     def _run_program(self):
         """Method to execute the new engine.
 
@@ -217,7 +216,6 @@ class NewEngine(ExternalMDEngine):
                        'vel': False, 'vpot': vpot, 'ekin': ekin}
         system.particles.set_particle_state(phase_point)
         return config
-
 
     @staticmethod
     def _read_configuration(filename):

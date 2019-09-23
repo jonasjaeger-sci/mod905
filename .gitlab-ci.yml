@@ -58,7 +58,7 @@ pycodestyle:
   stage: style
   script:
   - pip install pycodestyle
-  - pycodestyle --filename=*.py --count --statistics --exclude=./docs
+  - pycodestyle
 
 pydocstyle:
   stage: style
