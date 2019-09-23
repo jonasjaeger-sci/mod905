@@ -24,4 +24,4 @@ Complete list of examples:
     examples-retis-wca.rst
     examples-cp2k-hydrogen.rst
     examples-lammps-wca.rst
-
+    examples-openmm.rst

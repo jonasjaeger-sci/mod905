@@ -186,6 +186,21 @@ the :ref:`example section <examples-index>`.
          we revisit the 2D WCA example and use LAMMPS as our molecular dynamics
          engine.
 
+   .. container:: col-lg-3 col-md-3 col-sm-3 col-xs-6 thumbnail thumbnail2
+
+      .. image:: http://openmm.org/img/logos/Icon.svg
+         :width: 94%
+         :class: img-responsive
+         :target: ../examples/examples-openmm.html
+
+      .. container:: caption
+
+         :header:`Using OpenMM`
+
+         This example demonstrates how we interface between OpenMM
+         and |pyretis| internal code.
+
+
 
 Examples of |pyretis| use
 -------------------------
