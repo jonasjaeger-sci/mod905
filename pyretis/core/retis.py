@@ -4,9 +4,10 @@
 """This module contains functions for RETIS.
 
 This module defines functions that are needed to perform Replica
-Exchange Transition Interface Sampling (RETIS). The algorithms
-implemented here and the description of RETIS was first described by
-van Erp [RETIS]_.
+Exchange Transition Interface Sampling (RETIS). The RETIS algorithm
+was first described by van Erp [RETIS]_ and the stone skipping and
+web throwing moves were first described by
+Riccardi et al. [SS+WT-RETIS]_.
 
 
 Important methods defined here
@@ -40,7 +41,7 @@ References
    Phys. Rev. Lett. 98, 26830 (2007),
    http://dx.doi.org/10.1103/PhysRevLett.98.268301
 
-.. [SS+WT] Enrico Riccardi, Oda Dahlen, Titus S. van Erp,
+.. [SS+WT-RETIS] Enrico Riccardi, Oda Dahlen, Titus S. van Erp,
    J. Phys. Chem. letters, 8, 18, 4456, (2017),
    https://doi.org/10.1021/acs.jpclett.7b01617
 

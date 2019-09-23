@@ -28,7 +28,7 @@ Installing via ``pip``
 |pyretis| can be installed using `pip <https://pypi.org/project/pyretis/>`_
 with the following command:
 
-.. _user-guide-prereq:
+.. code-block:: pyretis
 
     pip install pyretis
 
