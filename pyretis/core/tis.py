@@ -4,7 +4,8 @@
 """This file contains functions used in TIS.
 
 This module defines the functions needed to perform TIS simulations.
-The algorithms are implemented as described by van Erp et al. [TIS]_.
+The algorithms are implemented as described by van Erp et al. [TIS]_
+and Riccardi et al. [SS+WT]_.
 
 Methods defined here
 ~~~~~~~~~~~~~~~~~~~~

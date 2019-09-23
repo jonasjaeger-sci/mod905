@@ -53,7 +53,7 @@ The following keywords can be set for the TIS section:
 
 .. |tis_shooting_moves| replace:: :ref:`shooting_moves <user-section-tis-shooting-moves>`
 
-.. |tis_sigmav| replace:: :ref:`sigma_v <user-section-tis-sigma-v>`
+.. |tis_sigma_v| replace:: :ref:`sigma_v <user-section-tis-sigma-v>`
 
 .. |tis_rescale_energy| replace:: :ref:`rescale_energy <user-section-tis-rescale-energy>`
 
@@ -199,7 +199,7 @@ Keyword maxlength
        No default, this keyword **must** be specified.
 
 
-.. _user-section-n-jumps:
+.. _user-section-tis-n-jumps:
 
 Keyword n_jumps
 ^^^^^^^^^^^^^^^
@@ -272,6 +272,8 @@ Keyword shooting_move
    Default
        The default value is ``sh``.
 
+
+.. _user-section-tis-shooting-moves:
 
 Keyword shooting_moves
 ^^^^^^^^^^^^^^^^^^^^^^

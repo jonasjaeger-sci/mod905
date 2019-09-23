@@ -55,8 +55,9 @@ def recalculate_from_trj(order_parameter, trr_file, options):
         The order parameter to use.
     trr_file : string
         The path to the trr file we should read.
-    options: dict,
+    options: dict
         It contains:
+
         * `reverse`: boolean, optional
           If True, we reverse the velocities.
         * `maxidx`: integer, optional
@@ -129,8 +130,9 @@ def recalculate_from_xyz(order_parameter, traj_file, options):
         The order parameter to use.
     traj_file : string
         The path to the trajectory file we should read.
-    options: dict,
+    options: dict
         It contains:
+
         * `reverse`: boolean, optional
           If True, we reverse the velocities.
         * `maxidx`: integer, optional
@@ -228,9 +230,9 @@ def recalculate_order(order_parameter, traj_file, options):
         The order parameter to use.
     traj_file : string
         Path to the trajectory file to recalculate for.
-
-    options: dict,
+    options: dict
         It contains:
+
         * `reverse`: boolean, optional
           If True, we reverse the velocities.
         * `maxidx`: integer, optional
