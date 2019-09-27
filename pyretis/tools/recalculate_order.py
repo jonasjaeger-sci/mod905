@@ -82,7 +82,7 @@ def recalculate_from_trj(order_parameter, trr_file, options):
     msg = ('Re-calculate from {}:'.format(os.path.basename(trr_file)) +
            ' Step {}, time {}')
     minidx, maxidx = options.get('minidx'), options.get('maxidx')
-    reverse, top = options.get('reverse'), options.get('top')
+    top = options.get('top')
     idx = options.get('idx', -1)
     if top:  # This implies the use of mdtraj.
         system.particles = ParticlesExt(dim=3)
@@ -107,7 +107,7 @@ def recalculate_from_trj(order_parameter, trr_file, options):
                 system.particles = ParticlesExt(dim=data['x'].shape[1])
             system.particles.pos = data['x']
             if 'v' in data:
-                if reverse:
+                if options.get('reverse', False):
                     system.particles.vel = -1.0 * data['v']
                 else:
                     system.particles.vel = data['v']
@@ -169,7 +169,7 @@ def recalculate_from_xyz(order_parameter, traj_file, options):
         if reverse:
             vel *= -1
         if system.particles is None:
-            system.particles = ParticlesExt(dim=xyz.shape[1])
+            system.particles = ParticlesExt(dim=tuple(xyz.shape)[1])
         system.particles.config = (traj_file, i)
         system.particles.pos = xyz
         system.particles.vel = vel
@@ -189,7 +189,8 @@ def recalculate_from_frame(order_parameter, traj_file, options):
         The order parameter to use.
     traj_file : string
         The path to the trajectory file we should read.
-    options: dict,
+    options: dict
+        It contains:
         * `ext`: string
           File extension for the ``traj_file``.
         * `reverse`: boolean, optional

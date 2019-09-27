@@ -433,7 +433,7 @@ def read_xvg_file(filename):
                 else:
                     data.append([float(i) for i in lines.split()])
     data = np.array(data)
-    data_dict = {'step': np.arange(data.shape[0])}
+    data_dict = {'step': np.arange(tuple(data.shape)[0])}
     for i, key in enumerate(legends):
         data_dict[key] = data[:, i+1]
     return data_dict
