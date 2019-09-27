@@ -111,8 +111,8 @@ class EnergyFormatter(OutputFormatter):
         """
         for blocks in read_some_lines(filename, line_parser=self.parse):
             data = np.array(blocks['data'])
-            _, col = data.shape
-            col_max = min(col, len(self.ENERGY_TERMS) + 1)
+            col = tuple(data.shape)
+            col_max = min(col[1], len(self.ENERGY_TERMS) + 1)
             data_dict = {'comment': blocks['comment'],
                          'data': {'time': data[:, 0]}}
             for i in range(col_max-1):
