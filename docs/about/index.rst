@@ -1,5 +1,11 @@
 .. _about-index:
 
+.. toctree::
+    :maxdepth: 2
+    :hidden:
+
+    license.rst
+
 ###############
 About |pyretis|
 ###############
@@ -32,33 +38,39 @@ The |pyretis| team
 ------------------
 
 **Head authors & project leaders:**
-* `Titus van Erp <https://www.ntnu.edu/employees/titus.van.erp>`_
+
+* `Titus van Erp <https://www.ntnu.edu/employees/titus.van.erp>`__
+
 * `Enrico Riccardi <https://www.ntnu.edu/employees/enrico.riccardi>`_
 
 **Core Developers:**
+
 * `Anders Lervik <https://www.ntnu.edu/employees/anders.lervik>`_
+
 * `Sander Roet  <https://www.ntnu.no/ansatte/sander.roet>`_
 
 **Contributors:**
+
 * `Raffaela Cabriolu <https://www.ntnu.no/ansatte/raffaela.cabriolu>`_
 
 **Former Developers:**
+
 * `Ola Aarøen <https://www.ntnu.no/ansatte/ola.aaroen>`_
+
 * `Anastasia Maslechko <https://www.linkedin.com/in/anastasia-maslechko-87207b95/?originalSubdomain=ua>`_
+
 * `Sudi Jawahery <http://www.cchem.berkeley.edu/molsim/people/current-group/sudi-jawahery.html>`_
 
 **Acknowledgments:**
+
 * Oda Dahlen
+
 * Christopher Daub
+
 * An Ghysels
+
 * Mahmoud Moqadam
+
 * Jocelyne Vreede
+
 * Magnus Heskestad Waage
-
-
-
-.. toctree::
-    :maxdepth: 2
-    :hidden:
-
-    license.rst
