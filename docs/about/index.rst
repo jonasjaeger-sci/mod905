@@ -51,7 +51,7 @@ The |pyretis| team
 
 **Contributors:**
 
-* `Raffaela Cabriolu <https://www.ntnu.no/ansatte/raffaela.cabriolu>`_
+* `Raffaela Cabriolu <https://www.linkedin.com/in/raffaela-cabriolu-41ba5488/?originalSubdomain=it>`_
 
 **Former Developers:**
 
