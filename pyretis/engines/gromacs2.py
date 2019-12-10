@@ -433,7 +433,7 @@ class GromacsRunner:
     SLEEP = 0.1
 
     def __init__(self, cmd, trr_file, edr_file, exe_dir):
-        """Set-up the GROMACS command and the files we need.
+        """Set the GROMACS commands and the files we need.
 
         Parameters
         ----------

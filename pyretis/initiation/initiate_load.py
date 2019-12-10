@@ -549,7 +549,7 @@ def _check_path(path, path_ensemble):
 
 
 def _load_trajectory(dirname, filename='traj.txt'):
-    """Set-up and load a trajectory from a file.
+    """Load a trajectory from a file.
 
     Parameters
     ----------
@@ -615,7 +615,7 @@ def read_path_files(path, path_ensemble, dirname, system, order_function,
 
 
 def _load_external_trajectory(dirname, engine):
-    """Set-up and load an external trajectory.
+    """Load an external trajectory.
 
     Here, we also do some moving of files to set up for a path
     simulation.
