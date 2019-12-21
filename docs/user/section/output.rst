@@ -14,8 +14,8 @@ output files.
       ---------------
       backup = 'overwrite'
       pathensemble-file = 1
-      order-file = 100
-      energy-file = 100
+      order-file = 1
+      energy-file = 1
       screen = 10
 
 The following keywords can be set for the output section:
@@ -26,6 +26,7 @@ The following keywords can be set for the output section:
 .. |output_cross| replace:: :ref:`cross-file <user-section-output-keyword-cross-file>`
 .. |output_order| replace:: :ref:`order-file <user-section-output-keyword-order-file>`
 .. |output_path| replace:: :ref:`pathensemble-file <user-section-output-keyword-pathensemble-file>`
+.. |output_restart| replace:: :ref:`restart-file <user-section-output-keyword-restart-file>`
 .. |output_traj| replace:: :ref:`trajectory-file <user-section-output-keyword-trajectory-file>`
 .. |output_screen| replace:: :ref:`screen <user-section-output-keyword-screen>`
 
@@ -49,6 +50,8 @@ The following keywords can be set for the output section:
    | |output_order|   | Set frequency of output of order parameter data.      |
    +------------------+-------------------------------------------------------+
    | |output_path|    | Set frequency of output of path ensemble data.        |
+   +------------------+-------------------------------------------------------+
+   | |output_restart| | Set frequency of restart files overwriting.           |
    +------------------+-------------------------------------------------------+
    | |output_traj|    | Set frequency of output of trajectory data.           |
    +------------------+-------------------------------------------------------+
@@ -128,7 +131,7 @@ Keyword energy-file
    file every Nth step.
 
    Default
-        The default is ``energy-file = 10``.
+        The default is ``energy-file = 1``.
 
 
 .. _user-section-output-keyword-cross-file:
@@ -168,7 +171,26 @@ Keyword order-file
    file every Nth step.
 
    Default
-        The default is ``order-file = 10``.
+        The default is ``order-file = 1``.
+
+
+.. _user-section-output-keyword-restart-file:
+
+Keyword restart-file
+^^^^^^^^^^^^^^^^^^^^
+
+.. pyretis-keyword:: restart-file integer
+
+   Determines how often we will write out the restart file.
+
+   ``restart-file = N`` will make |pyretis| overwrite the restart files
+   every Nth step. The restart files are: ``pyretis.restart`` in the main
+   folder and ``ensemble.restart`` in the ensemble's pathfolders for 
+   path ensemble simulations.  
+
+   Default
+        The default is ``restart-file = 1``.
+
 
 .. _user-section-output-keyword-pathensemble-file:
 

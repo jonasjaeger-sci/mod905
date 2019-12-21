@@ -45,7 +45,8 @@ def analyse_flux(fluxdata, settings):
 
     """
     end_step = settings['simulation']['endcycle']
-    time_step = settings['engine']['timestep']
+    time_subcycles = settings['engine'].get('subcycles', 1)
+    time_step = settings['engine']['timestep']*time_subcycles
     interfaces = [i for i in settings['simulation']['interfaces']]
     results = {'eff_cross': [],  # effective crossings times
                'ncross': None,  # number of crossings

@@ -10,8 +10,8 @@ web throwing moves were first described by
 Riccardi et al. [SS+WT-RETIS]_.
 
 
-Important methods defined here
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Methods defined here
+~~~~~~~~~~~~~~~~~~~~
 
 make_retis_step (:py:func:`.make_retis_step`)
     Function to select and execute the RETIS move.
@@ -37,11 +37,11 @@ high_acc_swap (:py:func:`.high_acc_wap`)
 
 References
 ~~~~~~~~~~
-.. [RETIS] Titus S. van Erp,
+.. [RETIS] T. S. van Erp,
    Phys. Rev. Lett. 98, 26830 (2007),
    http://dx.doi.org/10.1103/PhysRevLett.98.268301
 
-.. [SS+WT-RETIS] Enrico Riccardi, Oda Dahlen, Titus S. van Erp,
+.. [SS+WT-RETIS] E. Riccardi, O. Dahlen, T. S. van Erp,
    J. Phys. Chem. letters, 8, 18, 4456, (2017),
    https://doi.org/10.1021/acs.jpclett.7b01617
 
@@ -99,6 +99,7 @@ def make_retis_step(ensembles, order_function, engine, rgen,
 
     """
     if rgen.rand() < settings['retis']['swapfreq']:
+        # Do RETIS moves
         logger.info('Performing RETIS swapping move(s).')
         results = retis_moves(ensembles, order_function, engine,
                               rgen, settings, cycle)
@@ -144,6 +145,7 @@ def _relative_shoots_select(ensembles, rgen, relative):
         if freq < cumulative:
             idx = i
             break
+    # just a sanity check, we should crash if idx is None
     try:
         path_ensemble = ensembles[idx]
     except TypeError:

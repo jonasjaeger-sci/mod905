@@ -19,6 +19,5 @@ User Guide
     orderparameters.rst
     engine.rst
     units.rst
-    errors.rst
     lammps.rst
-
+    errors.rst

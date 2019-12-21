@@ -36,7 +36,7 @@ this is described below for the following supported methods:
    | |kick|        | For initiating new trajectories from given initial      |
    |               | configuration(s).                                       |
    +---------------+---------------------------------------------------------+
-   | |load|        | For loading already generated trajectories              |
+   | |load|        | For loading previously generated frames/trajectories    |
    +---------------+---------------------------------------------------------+
    | |restart|     | For restarting |pyretis| simulations.                   |
    +---------------+---------------------------------------------------------+
@@ -177,28 +177,39 @@ Keyword load_folder
 .. pyretis-keyword:: load_folder string
 
    The ``load_folder`` keyword specifies a directory containing the
-   initial paths to start from. 
-   In this folder there are two possibilities: 
+   initial paths to start from.
+   In this folder there are two possibilities:
    
-   -- FLEXIBLE OPTIION -- 
-   When only some frames and/or a trajectory is available, the load function
-   will copy all the trajectories and frames files in to the relevant folder
-   for each ensemble (e.g. 000 001 etc). It computes the order parameter and 
-   energy, printing the ``order.txt``, ``energy.txt`` and ``traj.txt`` 
-   needed to run the simulations, and it will consider only the frames
-   and the parts of the trajectories relevant for each ensemble.
-   In case the multiple initial trajectories are intended for different
-   ensembles, the load function will search in the `000`, `001`, `002`, etc. 
-   subdirectories (if present). If files are present, for that ensemble,
-   only such files will be used.  
+   -- UNFORMATTED/LOAD GENERIC FILES OPTION --
+   When only a trajectory or/and some frames are available, they can be copied
+   in the ``load folder``. The load function
+   will copy all the trajectories and frames files from such a folder into
+   the respective folders for each ensemble (e.g. 000 001 etc).
+   Thereafter, the order parameter and the
+   energy will be computed and stored in the files ``order.txt`` and
+   ``energy.txt``, respectively. A third file, ``traj.txt`` containing the
+   list of the frames to be used by PyRETIS, will be then also generated.
+   Only the frames and the parts of the trajectories relevant for each ensemble
+   will be considered by the load function.
+   In the case that different trajectories are to be used to initialize
+   different ensembles, the relevant files can be stored in the respective
+   ensemble subfolders (e.g. '000', '001', etc) contained in the
+   ``load folder``. The load function searches in the ``load folder``\
+   [`000`, `001`, `002`, etc.] for usable files.
+   For each ensemble subfolder, if the files ``order.txt``,
+   ``energy.txt`` and ``traj.txt`` are present, they will be loaded, otherwise
+   they will be re-generated. Note that if the .txt files will be loaded, a
+   direct correspondence with the trajectory/frame files is expected (as
+   in the forthcoming resume option section).
 
-   -- RESUME OPTION -- 
-   Previous output can be copy and pasted in the 
+   -- FORMATTED/RESUME OPTION --
+   Previous output can be copy and pasted in the
    load folder, or the here described files generated with the proper
    formatting. This option is usefull when simulations need to be restarted
-   but some settings need to be changed, or when the restart files are corrupted. 
+   but some settings need to be changed, or when the restart files
+   are corrupted.
 
-   The presence of subfolders named ``000``, ``001`` etc. 
+   The presence of subfolders named ``000``, ``001`` etc.
    and that these folders contains the
    paths we are to load. The paths should be given as:
 
@@ -210,20 +221,21 @@ Keyword load_folder
      2. A ``order.txt`` file containing the order parameters for the path.
         If this file is not given, the order parameters will be re-calculated.
 
-     3. A ``energy.txt`` file containing the energies. If this file is not given,
-        the energies along the path will be ignored.
+     3. A ``energy.txt`` file containing the energies. If this file is not
+        given, the energies along the path will be ignored.
 
    * For external engines:
 
      1. A ``traj.txt`` file with the path.
 
-     2. A ``accepted`` folder containing the files referenced in the ``traj.txt`` file.
+     2. A ``accepted`` folder containing the files referenced in the
+        ``traj.txt`` file.
      
      3. A ``order.txt`` file containing the order parameters for the path.
         If this file is not given, the order parameters will be re-calculated.
 
-     4. A ``energy.txt`` file containing the energies. If this file is not given,
-        the energies along the path will be ignored.
+     4. A ``energy.txt`` file containing the energies. If this file is not
+        given, the energies along the path will be ignored.
 
 
 

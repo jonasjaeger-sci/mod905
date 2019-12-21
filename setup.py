@@ -23,29 +23,25 @@ along with PyRETIS. If not, see <http://www.gnu.org/licenses/>
 """
 import ast
 from codecs import open as openc
-import os
-import shutil
-from shutil import SameFileError
+import pathlib
 from setuptools import setup, find_namespace_packages
 
-
-FULL_VERSION = '2.2.1'  # Automatically set by setup_version.py
+FULL_VERSION = '2.3.0'  # Automatically set by setup_version.py
 
 
 def get_long_description():
     """Return the contents of README.rst as a string."""
-    here = os.path.abspath(os.path.dirname(__file__))
-    # Get the long description from the README file
+    here = pathlib.Path(__file__).absolute().parent
     long_description = ''
-    with openc(os.path.join(here, 'README.rst'), encoding='utf-8') as fileh:
+    with openc(here.joinpath('README.rst'), encoding='utf-8') as fileh:
         long_description = fileh.read()
     return long_description
 
 
 def get_version():
     """Return the version from version.py as a string."""
-    here = os.path.abspath(os.path.dirname(__file__))
-    filename = os.path.join(here, 'pyretis', 'version.py')
+    here = pathlib.Path(__file__).absolute().parent
+    filename = here.joinpath('pyretis', 'version.py')
     with openc(filename, encoding='utf-8') as fileh:
         for lines in fileh:
             if lines.startswith('FULL_VERSION ='):
@@ -56,10 +52,10 @@ def get_version():
 
 def get_requirements(docs=False):
     """Read requirements.txt and return a list of requirements."""
-    here = os.path.abspath(os.path.dirname(__file__))
+    here = pathlib.Path(__file__).absolute().parent
     requirements = []
     doc_package = ('sphinx', 'sphinx_bootstrap_theme')
-    filename = os.path.join(here, 'requirements.txt')
+    filename = here.joinpath('requirements.txt')
     with openc(filename, encoding='utf-8') as fileh:
         for lines in fileh:
             package = lines.split('>=')[1].strip()
@@ -69,22 +65,6 @@ def get_requirements(docs=False):
     return requirements
 
 
-def copy_exe_scripts():
-    """Copy and rename executable scripts."""
-    # create copies of scripts:
-    for filename in ('pyretisrun', 'pyretisanalyse'):
-        filepy = ''.join([filename, os.extsep, 'py'])
-        src = os.path.join('bin', filepy)
-        target = os.path.join('bin', filename)
-        try:
-            shutil.copy(src, target)
-        except FileNotFoundError:
-            pass
-        except SameFileError:
-            pass
-
-
-copy_exe_scripts()
 setup(
     name='pyretis',
     version=get_version(),
@@ -111,11 +91,18 @@ setup(
     keywords='rare-events md mc tps simulation tis retis',
     packages=find_namespace_packages(exclude=['docs']),
     package_data={
-        'pyretis': ['pyretis.mplstyle', 'pyretis/inout/report/templates/*']
+        'pyretis': [
+            'pyretis.mplstyle',
+            'pyretis/inout/report/templates/*',
+            'pyretis/visualization/pyretisVisualizeWindow.ui'
+        ]
     },
     include_package_data=True,
     install_requires=get_requirements(docs=False),
-    entry_points={'console_scripts':
-                  ['pyretisrun = pyretis.bin.pyretisrun:entry_point',
-                   'pyretisanalyse = pyretis.bin.pyretisanalyse:entry_point']},
+    entry_points={
+        'console_scripts': [
+            'pyretisrun = pyretis.bin.pyretisrun:entry_point',
+            'pyretisanalyse = pyretis.bin.pyretisanalyse:entry_point'
+        ]
+    },
 )

@@ -107,7 +107,7 @@ SECTIONS['output'] = {
     'pathensemble-file': 1,
     'prefix': None,
     'order-file': 1,
-    'restart-file': 10,
+    'restart-file': 1,
     'screen': 10,
     'trajectory-file': 100,
 }

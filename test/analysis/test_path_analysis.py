@@ -62,14 +62,14 @@ class AnalysePathEnsembleTest(unittest.TestCase):
                 'interfaces': [-float('inf'), -0.9, -0.9],
                 'detect': -0.9,
                 'file': 'pathensemble000.txt',
-                'test': {'fluxlength': (0, 1545.5524475524476)},
+                'test': {'fluxlength': (0, 1541.7987987987988)},
             },
             {
                 'ensemble_number': 1,
                 'interfaces': [-0.9, -0.9, 1],
                 'detect': -0.8,
                 'file': 'pathensemble001.txt',
-                'test': {'prun': (-1, 0.22377622)},
+                'test': {'prun': (-1, 0.22777222)},
             },
             {
                 'ensemble_number': 2,
@@ -105,13 +105,13 @@ class AnalysePathEnsembleTest(unittest.TestCase):
             results.append(analyse_path_ensemble(raw_data, settings))
             detect.append(ens['detect'])
         match = match_probabilities(results[1:], detect[1:], settings)
-        self.assertAlmostEqual(match['prob'], 0.0005227071693518608)
+        self.assertAlmostEqual(match['prob'], 0.0005320412259474298)
         flux = retis_flux(results[0], results[1], 0.002)
-        self.assertAlmostEqual(flux[0], 0.26513774978836657)
-        self.assertAlmostEqual(flux[1], 0.023855082020650387)
+        self.assertAlmostEqual(flux[0], 0.26572079970779655)
+        self.assertAlmostEqual(flux[1], 0.02422284635774688)
         rate = retis_rate(match['prob'], match['relerror'], flux[0], flux[1])
-        self.assertAlmostEqual(rate[0], 0.00013858940268019902)
-        self.assertAlmostEqual(rate[1], 0.4684306995194783)
+        self.assertAlmostEqual(rate[0], 0.00014137442003626753)
+        self.assertAlmostEqual(rate[1], 0.4724455526732373)
 
         # Re-check the last one:
         settings['analysis']['maxblock'] = 0
@@ -119,7 +119,7 @@ class AnalysePathEnsembleTest(unittest.TestCase):
         self.assertAlmostEqual(val[-1], res[key][val[0]])
 
     def test_path_analysisobject(self):
-        """Test analyse_path_ensemble_object."""
+        """Test analyse_path_ensemble_object"""
         filename = os.path.join(HERE, 'pathensemble001.txt')
         settings = {'analysis': SECTIONS['analysis']}
         interfaces = [-0.9, -0.9, 1.0]

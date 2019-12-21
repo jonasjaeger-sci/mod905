@@ -124,6 +124,21 @@ the :ref:`example section <examples-index>`.
 
    .. container:: col-lg-3 col-md-3 col-sm-3 col-xs-6 thumbnail thumbnail2
 
+      .. image:: http://openmm.org/img/logos/Icon.svg
+         :width: 94%
+         :class: img-responsive
+         :target: ../examples/examples-openmm.html
+
+      .. container:: caption
+
+         :header:`Using OpenMM`
+
+         This example demonstrates how we interface between OpenMM
+         and |pyretis| internal code.
+
+
+   .. container:: col-lg-3 col-md-3 col-sm-3 col-xs-6 thumbnail thumbnail2
+
       .. image:: /_static/img/examples/thumbnails/retis-2d-wca.png
          :width: 100%
          :class: img-responsive
@@ -186,26 +201,9 @@ the :ref:`example section <examples-index>`.
          we revisit the 2D WCA example and use LAMMPS as our molecular dynamics
          engine.
 
-   .. container:: col-lg-3 col-md-3 col-sm-3 col-xs-6 thumbnail thumbnail2
 
-      .. image:: http://openmm.org/img/logos/Icon.svg
-         :width: 94%
-         :class: img-responsive
-         :target: ../examples/examples-openmm.html
-
-      .. container:: caption
-
-         :header:`Using OpenMM`
-
-         This example demonstrates how we interface between OpenMM
-         and |pyretis| internal code.
-
-
-
-Examples of |pyretis| use
--------------------------
-
-Below are some examples which illustrate the use of |pyretis| for realistic systems.
+Main studies performed by |pyretis|
+-----------------------------------
 
 .. container:: row
 
@@ -219,14 +217,14 @@ Below are some examples which illustrate the use of |pyretis| for realistic syst
 
          :header:`Predicting the mechanism and rate of H-NS binding to AT-rich DNA.`
 
-         The adsorption of H-NS onto AT-rich DNA has been characterized and 
-         its rate quantified. Simulations have been performed with GROMACS at
-         full atomistic resolution. Metadynamics localized the stable states and
-         the RETIS approach was used to compute the transition rate between them.
-         
+         The adsorption of H-NS on DNA has been studied at full atomistic resolution
+         with the GROMACS simulation package. Local minima have been located by metadynamics
+         and the relative transition rates computed by RETIS.
          More information can be found in the paper
          `Predicting the mechanism and rate of H-NS binding to AT-rich DNA
          <https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1006845>`_.
+         
+         'Source Files: <http://pyretis.org/source_files/H-NS_2019>'
 
 
    .. container:: col-lg-4 col-md-4 col-sm-4 col-xs-6 thumbnail thumbnail3
@@ -244,7 +242,8 @@ Below are some examples which illustrate the use of |pyretis| for realistic syst
          quantified. Machine learning was applied to test the quality of 
          the order parameters. More information can be found in the paper
          `Local initiation conditions for water autoionization <https://www.pnas.org/content/115/20/E4569>`_.
-
+         
+         'Source Files: <http://pyretis.org/source_files/Water_2019>'
 
 
    .. container:: col-lg-4 col-md-4 col-sm-4 col-xs-6 thumbnail thumbnail3
@@ -260,3 +259,6 @@ Below are some examples which illustrate the use of |pyretis| for realistic syst
          Full atomistic simulations with GROMACS have been performed to sample
          and quantify the rate of the structural rearrangements of CyP-A and
          its muted confomer.
+        
+         Article in preparation. 
+         'Source Files: <http://pyretis.org/source_files/CyP-A_2019>'

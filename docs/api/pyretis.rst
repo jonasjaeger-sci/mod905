@@ -52,6 +52,9 @@ into sub-packages:
 * :ref:`pyretis.tools <api-tools>` for performing some simple
   tasks useful for setting up simulations.
 
+* :ref:`pyretis.visualization <api-visualization>` for visualizing and
+  analysing the simulation outputs. 
+
 
 The |pyretis| library can be imported by:
 
@@ -85,6 +88,7 @@ Contents: The |pyretis| sub-packages
     pyretis.simulation
     pyretis.testing
     pyretis.tools
+    pyretis.visualization
 
 In addition |pyretis| has the following submodules:
 

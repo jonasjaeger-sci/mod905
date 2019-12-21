@@ -212,7 +212,7 @@ class FileIO(OutputBase):
         """Close the file."""
         if self.fileh is not None and not self.fileh.closed:
             try:
-                self.fileh.flush()
+                self.flush()
             finally:
                 self.fileh.close()
 

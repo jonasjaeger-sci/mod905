@@ -1,0 +1,1154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>560</width>
+    <height>638</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Path visualization</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="resources.qrc">
+    <normaloff>:/icon/qrc/icon.png</normaloff>:/icon/qrc/icon.png</iconset>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <widget class="QFrame" name="mainFrame">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="frameShape">
+       <enum>QFrame::StyledPanel</enum>
+      </property>
+      <property name="frameShadow">
+       <enum>QFrame::Raised</enum>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QDockWidget" name="dockWidget">
+   <property name="features">
+    <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>8</number>
+   </attribute>
+   <widget class="QWidget" name="dockWidgetContents">
+    <layout class="QGridLayout" name="gridLayout_2">
+     <item row="0" column="1">
+      <layout class="QHBoxLayout" name="horizontalLayout_6">
+       <item>
+        <widget class="QCheckBox" name="showWidgetChk">
+         <property name="text">
+          <string>Show settings</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="filenameLine">
+         <property name="frame">
+          <bool>false</bool>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+         <property name="placeholderText">
+          <string>Data file</string>
+         </property>
+         <property name="clearButtonEnabled">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item row="2" column="1">
+      <widget class="QTabWidget" name="dockTabs">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+       <property name="toolTip">
+        <string/>
+       </property>
+       <property name="tabPosition">
+        <enum>QTabWidget::West</enum>
+       </property>
+       <property name="tabShape">
+        <enum>QTabWidget::Rounded</enum>
+       </property>
+       <property name="currentIndex">
+        <number>0</number>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>10</width>
+         <height>10</height>
+        </size>
+       </property>
+       <property name="elideMode">
+        <enum>Qt::ElideNone</enum>
+       </property>
+       <property name="tabsClosable">
+        <bool>false</bool>
+       </property>
+       <property name="movable">
+        <bool>false</bool>
+       </property>
+       <property name="tabBarAutoHide">
+        <bool>false</bool>
+       </property>
+       <widget class="QWidget" name="datasettingTab">
+        <attribute name="title">
+         <string>Data</string>
+        </attribute>
+        <layout class="QGridLayout" name="gridLayout_5">
+         <item row="0" column="0">
+          <layout class="QVBoxLayout" name="verticalLayout_3">
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_5">
+             <item>
+              <widget class="QLabel" name="label_10">
+               <property name="text">
+                <string>Plot type:</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QComboBox" name="plotTypeComBox">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Choose the plot type for illustration of the order parameter (OP) data values x,y (and z, depending).&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; text-decoration: underline;&quot;&gt;2D Density&lt;/span&gt;&lt;br/&gt;A 2-dimensional histogram, where data set is mapped to a X*X grid (X = grid resolution), and density of each gridpoint is mapped to a color gradient.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; text-decoration: underline;&quot;&gt;2D Density (weighted)&lt;/span&gt;&lt;br/&gt;Same as above, but accepted paths (if chosen) will be re-weighted statistically (re-counted) before plotting.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; text-decoration: underline;&quot;&gt;3D Surface&lt;/span&gt;&lt;br/&gt;An interpolated surface of x-, y-, and z-data mapped to a X*X grid and colored by a gradient of the interpolated z-values of the grid.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; text-decoration: underline;&quot;&gt;2D Contour&lt;/span&gt;&lt;br/&gt;An interpolated contour plot of x-, y- and z-data mapped to a X*X grid and colored by a gradient of the interpolated z-values of the grid&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; text-decoration: underline;&quot;&gt;2D Contour (filled)&lt;/span&gt;&lt;br/&gt;Same as above, but contour lines are now filled in, giving a rough 2-dimensional surface of the z-values.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; text-decoration: underline;&quot;&gt;3D Contour&lt;/span&gt;&lt;br/&gt;Same exact plot as the 2-dimensional, but projected in 3 dimensions.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; text-decoration: underline;&quot;&gt;3D Contour (filled)&lt;/span&gt;&lt;br/&gt;Same exact plot as the 2-dimensional, but projected in 3 dimensions.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; text-decoration: underline;&quot;&gt;2D Scatter&lt;/span&gt;&lt;br/&gt;A 2-dimensional scatter plot of x-, y- and z-data. The z-data is mapped to a color gradient. &lt;br/&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;NB!&lt;/span&gt; This plot shows &lt;span style=&quot; text-decoration: underline;&quot;&gt;all&lt;/span&gt; data points, and will therefore be much more resource-demanding than the other plots.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; text-decoration: underline;&quot;&gt;3D Scatter&lt;/span&gt;&lt;br/&gt;Same exact plot as the 2-dimensional, but projected in 3 dimensions.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <item>
+                <property name="text">
+                 <string>2D Density</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>2D Density (weight)</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>3D Surface</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>2D Contour</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>2D Contour (filled)</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>3D Contour</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>3D Contour (filled)</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>2D Scatter</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>3D Scatter</string>
+                </property>
+               </item>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_3">
+               <property name="text">
+                <string>Folder:</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QComboBox" name="folderComBox">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Choose the folder/ensemble that should be displayed in the plot. Folders are commonly named '00*', going from *=0 and up. In a RETIS simulation, folder '000' corresponds to the [0&lt;span style=&quot; vertical-align:super;&quot;&gt;-&lt;/span&gt;]-ensemble, folder '001' to [0&lt;span style=&quot; vertical-align:super;&quot;&gt;+&lt;/span&gt;], and so on..&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="whatsThis">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout">
+             <item>
+              <widget class="QLabel" name="label_11">
+               <property name="text">
+                <string>x:</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QComboBox" name="firstOpComBox">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Choice of first data value to use in plotting of the x-axis&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_5">
+               <property name="text">
+                <string>y:</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QComboBox" name="secondOpComBox">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Choice of second data value to use in plotting of the y-axis&lt;br/&gt;(Be careful when choosing data values below the separator in list, may not work for&lt;/p&gt;&lt;p&gt;all the different plots - Density in particular)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="label">
+               <property name="text">
+                <string>z:</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QComboBox" name="energyComBox">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Choice of third data value to use in plotting or the z-axis or map to color gradient in 2D cases (not density plots)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_2">
+             <item>
+              <widget class="QLabel" name="label_2">
+               <property name="text">
+                <string>Cycles:</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QSpinBox" name="minCyclSpin">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The lower bound of cycle number span used in plotting. Data from cycles equal to or higher than this number will be used.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_13">
+               <property name="text">
+                <string>- to -</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QSpinBox" name="maxCyclSpin">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The upper bound of cycle number span used in plotting. Data from cycles between lower bound and up to and including this number will be used.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_6">
+               <property name="text">
+                <string>Paths:</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QComboBox" name="accComBox">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Choose types of path shown in plotting. &lt;br/&gt;ACC - Returns only &amp;quot;accepted&amp;quot; paths by the RETIS/TIS algorithm to plotting.&lt;/p&gt;&lt;p&gt;REJ - Returns only &amp;quot;rejected&amp;quot; paths by the algorithm. Being too long, not connecting/crossing relevant interfaces, etc.&lt;/p&gt;&lt;p&gt;BOTH - Returns both cases, all paths, to plotting.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <item>
+                <property name="text">
+                 <string>ACC</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>REJ</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>BOTH</string>
+                </property>
+               </item>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_3">
+             <item>
+              <widget class="QCheckBox" name="dataShiftChkBtn">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If checked will allow the program to shift the data periodically in order to reduce spread / increase linear correlation along either x- or y-axis, or both.&lt;br/&gt;Mostly useful in cases where one order parameter (OP) is an angle, and values loop from min to max, i.e. 180=-180 (or in radians, etc.)&lt;/p&gt;&lt;p&gt;Since the very first OP is used to define the reaction, this parameter - if chosen for plotting - will &lt;span style=&quot; font-weight:600;&quot;&gt;never&lt;/span&gt; be shifted, as this can cause major visual inconsistencies.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="text">
+                <string>Data shift</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="intShowChkBtn">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If checked will plot a set of interface lines (if 2D case) or planes (if 3D case) &lt;span style=&quot; font-weight:600;&quot;&gt;only&lt;/span&gt; when x-axis uses the order parameter defining the reaction (the very first OP).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="text">
+                <string>Interfaces</string>
+               </property>
+               <property name="tristate">
+                <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="regLineChkBtn">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If checked, will plot a linear regression line in the plot (only 2D cases), showing general correlation of data between the two chosen order parameters.&lt;br/&gt;Plots a legend in the plot, with the linear function derived from the regression and the &amp;quot;R squared&amp;quot;-value of correlation.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="text">
+                <string>Reg. line</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_4">
+             <item>
+              <widget class="QLabel" name="label_4">
+               <property name="text">
+                <string>Resolution:</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QSpinBox" name="resSpinBox">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Used in two different cases:&lt;/p&gt;&lt;p&gt;1. The resolution used by density plots to map all data values to a grid of size N*N, and the density of each gridpoint calculated and mapped.&lt;br/&gt;2. The resolution of a similar grid as in 1., but instead of calculating (counting) number of points at each gridpoint, attempt to interpolate the z-value at each gridpoint from all values located at the gridpoint in order to create a surface for plotting in Surface/Contour plots.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="wrapping">
+                <bool>false</bool>
+               </property>
+               <property name="minimum">
+                <number>50</number>
+               </property>
+               <property name="maximum">
+                <number>4000</number>
+               </property>
+               <property name="singleStep">
+                <number>10</number>
+               </property>
+               <property name="value">
+                <number>500</number>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_3">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <widget class="QPushButton" name="updateBtn">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;When the desired settings are set, press button to update plot.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="text">
+                <string>Update plot</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="plotsettingsTab">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
+        <attribute name="title">
+         <string>Plot</string>
+        </attribute>
+        <layout class="QGridLayout" name="gridLayout">
+         <item row="1" column="0" rowspan="2" colspan="2">
+          <layout class="QGridLayout" name="gridLayout_3">
+           <item row="2" column="3">
+            <widget class="QLineEdit" name="xmaxLine">
+             <property name="text">
+              <string>0</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="0">
+            <widget class="QLabel" name="label_16">
+             <property name="text">
+              <string>ymin</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0" colspan="4">
+            <widget class="QLabel" name="label_14">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Zoom in the plot by defining min and max values of x and y coordinates&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="text">
+              <string>Zoom:</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignBottom|Qt::AlignHCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QLineEdit" name="xminLine">
+             <property name="text">
+              <string>0</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="4">
+            <layout class="QHBoxLayout" name="horizontalLayout_7">
+             <item>
+              <spacer name="horizontalSpacer_2">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <widget class="QPushButton" name="previewBtn">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Updates the figure in the plot.&lt;br/&gt;(just the visuals defined here, not changing any data loaded)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="text">
+                <string>Update plot</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </item>
+           <item row="3" column="1">
+            <widget class="QLineEdit" name="yminLine">
+             <property name="text">
+              <string>0</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="2">
+            <widget class="QLabel" name="label_17">
+             <property name="text">
+              <string>ymax</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="label_12">
+             <property name="text">
+              <string>xmin</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="2">
+            <widget class="QLabel" name="label_15">
+             <property name="text">
+              <string>xmax</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="4">
+            <layout class="QHBoxLayout" name="horizontalLayout_8">
+             <item>
+              <spacer name="horizontalSpacer_4">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <widget class="QPushButton" name="saveFigBtn">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Save current figure as a *.png file&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="text">
+                <string>Save</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_5">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </item>
+           <item row="3" column="3">
+            <widget class="QLineEdit" name="ymaxLine">
+             <property name="text">
+              <string>0</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="4">
+            <widget class="QComboBox" name="cmapComBox">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Some choices of colormaps to use when plotting.&lt;br/&gt;For more choices, enter the name of the matplotlib.cm&lt;br/&gt;colormap you would like, and press &amp;lt;ENTER&amp;gt; or Update plot.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="editable">
+              <bool>true</bool>
+             </property>
+             <item>
+              <property name="text">
+               <string>viridis</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>jet</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>plasma</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>inferno</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>magma</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>YlOrBr</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>YlOrRd</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>YlGnBu</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>YlGn</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>cool</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>hot</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>copper</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>PiYG</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Spectral</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>coolwarm</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>seismic</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>gist_rainbow</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>rainbow</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>brg</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>terrain</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>binary</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>BuGn</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>hot_r</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>bone_r</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>pink_r</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+           <item row="0" column="2" colspan="2">
+            <widget class="QLabel" name="label_7">
+             <property name="text">
+              <string>Colormap:</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="0" colspan="2">
+            <widget class="QCheckBox" name="cbarChkBtn">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Show/hide the colorbar in the plot&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="text">
+              <string>Show colorbar</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item row="3" column="0" rowspan="2" colspan="2">
+          <layout class="QGridLayout" name="gridLayout_4">
+           <item row="1" column="0">
+            <layout class="QHBoxLayout" name="horizontalLayout_14">
+             <item>
+              <widget class="QLabel" name="label_18">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
+               <property name="text">
+                <string>Title:</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QSpinBox" name="titleSizeSpin">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Font size of title text in plot&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="value">
+                <number>12</number>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_8">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="text">
+              <string>Font size:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <layout class="QHBoxLayout" name="horizontalLayout_13">
+             <item>
+              <widget class="QLabel" name="label_9">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
+               <property name="text">
+                <string>Axes:</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QSpinBox" name="axesSizeSpin">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Font size of axis labels (and colorbar) in plot&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="value">
+                <number>10</number>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item row="0" column="1">
+            <widget class="QCheckBox" name="showTitleChkBtn">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Show/hide titles of axes and title of plot&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="text">
+              <string>Show titles/labels</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QLineEdit" name="titleLine">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Title shown in plot.&lt;br/&gt;To edit, change text and press &amp;lt;ENTER&amp;gt;, &lt;br/&gt;or press Update Plot.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <layout class="QHBoxLayout" name="horizontalLayout_10">
+             <item>
+              <widget class="QLineEdit" name="xaxisLabel">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Name/text on x-axis in plot.&lt;br/&gt;To edit, change text and press &amp;lt;ENTER&amp;gt;, &lt;br/&gt;or press Update Plot.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="yaxisLabel">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Name/text on x-axis in plot.&lt;br/&gt;To edit, change text and press &amp;lt;ENTER&amp;gt;, &lt;br/&gt;or press Update Plot.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="zaxisLabel">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Name/text on x-axis in plot.&lt;br/&gt;To edit, change text and press &amp;lt;ENTER&amp;gt;, &lt;br/&gt;or press Update Plot.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </widget>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>560</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <widget class="QMenu" name="menuSave_figure_as">
+     <property name="title">
+      <string>Save figure as...</string>
+     </property>
+     <addaction name="action_PNG"/>
+     <addaction name="action_pickle"/>
+    </widget>
+    <addaction name="menuSave_figure_as"/>
+    <addaction name="action_Load_data"/>
+    <addaction name="actionExit"/>
+   </widget>
+   <addaction name="menuFile"/>
+  </widget>
+  <action name="actionExit">
+   <property name="text">
+    <string>Exit</string>
+   </property>
+  </action>
+  <action name="action_PNG">
+   <property name="text">
+    <string>.png</string>
+   </property>
+  </action>
+  <action name="action_Load_data">
+   <property name="text">
+    <string>Load data</string>
+   </property>
+  </action>
+  <action name="action_pickle">
+   <property name="text">
+    <string>.pickle</string>
+   </property>
+  </action>
+ </widget>
+ <tabstops>
+  <tabstop>plotTypeComBox</tabstop>
+  <tabstop>folderComBox</tabstop>
+  <tabstop>firstOpComBox</tabstop>
+  <tabstop>secondOpComBox</tabstop>
+  <tabstop>energyComBox</tabstop>
+  <tabstop>minCyclSpin</tabstop>
+  <tabstop>maxCyclSpin</tabstop>
+  <tabstop>accComBox</tabstop>
+  <tabstop>dataShiftChkBtn</tabstop>
+  <tabstop>intShowChkBtn</tabstop>
+  <tabstop>regLineChkBtn</tabstop>
+  <tabstop>dockTabs</tabstop>
+ </tabstops>
+ <connections>
+  <connection>
+   <sender>showWidgetChk</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>dockTabs</receiver>
+   <slot>setVisible(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>135</x>
+     <y>345</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>331</x>
+     <y>425</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>showTitleChkBtn</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>axesSizeSpin</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>286</x>
+     <y>524</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>141</x>
+     <y>593</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>showTitleChkBtn</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>titleSizeSpin</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>286</x>
+     <y>524</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>141</x>
+     <y>558</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>showTitleChkBtn</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>titleLine</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>286</x>
+     <y>524</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>285</x>
+     <y>547</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>showTitleChkBtn</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>xaxisLabel</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>286</x>
+     <y>524</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>255</x>
+     <y>593</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>showTitleChkBtn</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>yaxisLabel</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>286</x>
+     <y>524</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>385</x>
+     <y>593</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>showTitleChkBtn</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>zaxisLabel</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>286</x>
+     <y>524</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>537</x>
+     <y>590</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>cbarChkBtn</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>cmapComBox</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>131</x>
+     <y>385</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>426</x>
+     <y>385</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>cbarChkBtn</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>label_7</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>96</x>
+     <y>385</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>339</x>
+     <y>389</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>showTitleChkBtn</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>label_18</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>186</x>
+     <y>520</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>85</x>
+     <y>540</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>showTitleChkBtn</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>label_9</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>203</x>
+     <y>520</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>87</x>
+     <y>576</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>showTitleChkBtn</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>label_8</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>237</x>
+     <y>512</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>98</x>
+     <y>513</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

@@ -107,3 +107,4 @@ Other statistics:
 * :math:`\tau_{\text{eff}} = @{{ numbers['teff']}}@`
 
 * :math:`\tau_{\text{eff}}^{\text{opt}} = @{{ numbers['opteff']}}@`
+

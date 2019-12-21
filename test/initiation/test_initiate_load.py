@@ -960,7 +960,7 @@ class TestInitiateLoad(unittest.TestCase):
             self.assertTrue(os.path.exists(os.path.join(load_dir, '004',
                                                         'traj.txt')))
 
-            exp_len = [None, 11, 11, 11]
+            exp_len = [None, 9, 11, 11]
             for i in range(1, 4):
                 path = simulation.path_ensembles[i].last_path
                 self.assertEqual(path.length, exp_len[i])
