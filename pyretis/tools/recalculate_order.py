@@ -15,7 +15,7 @@ recalculate_from_trj (:py:func:`.recalculate_from_trj`)
 recalculate_from_xyz (:py:func:`.recalculate_from_xyz`)
     Recalculate order parameters using a .xyz file.
 
-recalculate_from_gro (:py:func:`.recalculate_from_gro`)
+recalculate_from_frame (:py:func:`.recalculate_from_frame`)
     Recalculate order parameters using a .gro or .g96 file.
 
 """
@@ -191,6 +191,7 @@ def recalculate_from_frame(order_parameter, traj_file, options):
         The path to the trajectory file we should read.
     options: dict
         It contains:
+
         * `ext`: string
           File extension for the ``traj_file``.
         * `reverse`: boolean, optional

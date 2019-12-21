@@ -139,7 +139,7 @@ def get_path_ensemble_files(ensemble, settings, detect,
         further, using the settings in `out[0]`.
 
     """
-    sim_task = settings['simulation']['task']
+    sim_task = settings['simulation']['task'].lower()
     lsetting = copy_settings(settings)
     lsetting['simulation']['interfaces'] = interfaces
     lsetting['tis']['detect'] = detect

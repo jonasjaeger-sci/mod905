@@ -57,10 +57,10 @@ Output settings
 energy-file = 100
 order-file = 100
 trajectory-file = 100
+restart-file = 10
 backup = 'overwrite'
 cross-file = 1
 pathensemble-file = 1
-restart-file = 10
 screen = 10
 
 TIS settings

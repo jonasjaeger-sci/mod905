@@ -38,6 +38,10 @@ __all__ = ['analyse_path_ensemble', 'analyse_path_ensemble_object',
            'match_probabilities', 'retis_flux', 'retis_rate']
 
 
+SHOOTING_MOVES = {'sh', 'ss', 'wt'}
+INITIAL_MOVES = {'ki', 'ld'}
+
+
 def _get_successful(path_ensemble, idetect):
     """Build the data of accepted (successful) paths.
 
@@ -283,9 +287,9 @@ def _get_path_length(path, ensemble_number):
         if move == 's-' and ensemble_number == 1:
             return path['length'] - 2
         return return_table[move]
-    if move in {'sh', 'ss', 'wt'}:
+    if move in SHOOTING_MOVES:
         return path['length'] - 1
-    if move in {'ki', 'ld', 're'}:
+    if move in INITIAL_MOVES:
         logger.info('Skipped initial path (move "%s")', move)
         return None
     logger.warning('Skipped path with unknown mc move: %s', move)
@@ -348,7 +352,7 @@ def _update_shoot_stats(shoot_stats, path):
 
     """
     move = path['generated'][0]
-    if move in {'sh', 'ss', 'wt'}:
+    if move in SHOOTING_MOVES:
         orderp = path['generated'][1]
         status = path['status']
         if status not in shoot_stats:
@@ -562,8 +566,16 @@ def analyse_path_ensemble(path_ensemble, settings):
     shoot_stats = {'REJ': [], 'ALL': []}
     nacc = 0
     npath = 0
+    production_run = True
     for path in path_ensemble.get_paths():  # loop over all paths
         npath += 1
+        if path['generated'][0] in INITIAL_MOVES:
+            production_run = False
+        if not production_run and path['status'] == 'ACC' and \
+                path['generated'][0] in SHOOTING_MOVES:
+            production_run = True
+        if not production_run:
+            continue
         if path['status'] == 'ACC':
             nacc += 1
             weights.append(path.get('weight', 1.))
@@ -589,15 +601,10 @@ def analyse_path_ensemble(path_ensemble, settings):
         # update the shoot stats, this will only be done for shooting moves
         _update_shoot_stats(shoot_stats, path)
 
-    # When stacking multiple simulations together, the cycles might not be
-    # in order:
-    for i, cyc in enumerate(result['cycle'][1:]):
-        if cyc < result['cycle'][i-1]:
-            result['cycle'][i] += result['cycle'][i-1]
-
-    # Perform the different analysis tasks:
+    # When restarting a simulations, or by stacking together different
+    # simulations, the cycles might not be in order. We thus reset the counter.
+    result['cycle'] = np.arange(len(result['cycle']))
     # 1) result['prun'] is already calculated.
-    result['cycle'] = np.array(result['cycle'])
     result['prun'] = np.array(result['prun'])
     result['pdata'] = np.array(pdata)
     # 2) lambda pcross:
@@ -684,8 +691,16 @@ def analyse_path_ensemble0(path_ensemble, settings):
     length_acc, length_all, weights = [], [], []
     shoot_stats = {'REJ': [], 'ALL': []}
     nacc, npath = 0, 0
+    production_run = True
     for path in path_ensemble.get_paths():  # loop over all paths
         npath += 1
+        if path['generated'][0] in INITIAL_MOVES:
+            production_run = False
+        if not production_run and path['status'] == 'ACC' and \
+                path['generated'][0] in SHOOTING_MOVES:
+            production_run = True
+        if not production_run:
+            continue
         if path['status'] == 'ACC':
             nacc += 1
             weights.append(path.get('weight', 1.))
@@ -740,19 +755,16 @@ def match_probabilities(path_results, detect, settings=None):
         contains the output from `analyse_path_ensemble` applied to
         ensemble no. `i`. Here we make use of the following keys from
         `path_results[i]`:
-
         * `pcross`: The crossing probability.
         * `prun`: The running average of the crossing probability.
         * `blockerror`: The output from the block error analysis.
         * `efficiency`: The output from the efficiency analysis.
-
     detect : list of floats
         These are the detect interfaces used in the analysis.
     settings : dict
         This dictionary contains settings for the analysis.
         Here we make use of the following keys from the
         analysis section:
-
         * `ngrid`: The number of grid points for calculating the
           crossing probability as a function of the order parameter.
         * `maxblock`: The max length of the blocks for the block error
@@ -763,8 +775,6 @@ def match_probabilities(path_results, detect, settings=None):
           to `maxblock`, i.e. it will use block lengths equal to `1`,
           `1+n`, `1+2n`, etc.
         * `bins`: The number of bins to use for creating histograms.
-
-
 
     Returns
     -------

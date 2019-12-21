@@ -42,6 +42,10 @@ from pyretis.inout.formats.formatter import (
 from pyretis.inout import print_to_screen
 from pyretis.inout.report import generate_report
 from pyretis.inout.settings import parse_settings_file
+from pyretis.visualization.orderparam_density import PathDensity
+from pyretis.visualization import HAS_PYQT5
+if HAS_PYQT5:
+    from pyretis.visualization.visualize import visualize_main
 
 logger = logging.getLogger('')
 runpath = os.getcwd()
@@ -201,7 +205,7 @@ def write_traceback(filename):
         out.write(traceback.format_exc())
 
 
-def main(input_file, run_path, report_dir):
+def main(input_file, run_path, report_dir, pyvisa_dict=None):
     """Run the analysis.
 
     Parameters
@@ -212,28 +216,56 @@ def main(input_file, run_path, report_dir):
         The location from which we are running the analysis.
     report_dir : string
         The location where we will write the report.
+    pyvisa_dict : dictionary, optional
+        It determines the section of pyvisa to use, it contains:
+
+         * `pyvisa`, boolean
+           If true, the compressor followed by the GUI will be executed
+           if an .rst file will be provided as an input (-i option),
+           while only the GUI will be executed if a pickle file will
+           be providedd as a input.
+         * `pyvisa-cmp`, boolean
+           If true, only the compressor tool will be executed. A pickle
+           file will be produced.
 
     """
     try:
-        print_to_screen('Reading input file "{}"'.format(input_file))
-        settings = parse_settings_file(input_file)
-        # override exe-path to the one we are executing in now:
-        settings['simulation']['exe-path'] = run_path
-        units = settings['system']['units']
-        # set derived properties:
-        settings['system']['beta'] = (settings['system']['temperature'] *
-                                      CONSTANTS['kB'][units])**-1
-        settings['analysis']['report-dir'] = report_dir
-        msg_dir = make_dirs(report_dir)
-        print_to_screen(msg_dir)
-        task = settings['simulation']['task']
-        print_to_screen('Simulation task was: "{}"'.format(task))
-        print_to_screen()
-        results = run_analysis(settings)
-        print_to_screen()
-        for outfile in create_reports(settings, results, report_dir):
-            relfile = os.path.relpath(outfile, start=runpath)
-            print_to_screen('Report created: {}'.format(relfile), level='info')
+        if pyvisa_dict.get('pyvisa_compressor', False):
+            only_ops = pyvisa_dict['only_orderp']
+            p_data = PathDensity(iofile=input_file)
+            p_data.walk_dirs(only_ops=only_ops)
+            p_data.pickle_data()
+
+        elif pyvisa_dict.get('pyvisa_all', False):
+            if not HAS_PYQT5:
+                msg = ('PyQt5 is not installed. You can still generate the '
+                       'pickle by using the -pyvisa-cmp flag instead')
+                raise ImportError(msg)
+            runpath = os.path.dirname(os.path.realpath(input_file))
+            visualize_main(runpath, input_file)
+        else:
+            print_to_screen('Reading input file "{}"'.format(input_file))
+            settings = parse_settings_file(input_file)
+            # override exe-path to the one we are executing in now:
+            settings['simulation']['exe-path'] = run_path
+            units = settings['system']['units']
+            # set derived properties:
+            settings['system']['beta'] = (settings['system']['temperature'] *
+                                          CONSTANTS['kB'][units])**-1
+            settings['analysis']['report-dir'] = report_dir
+            msg_dir = make_dirs(report_dir)
+            print_to_screen(msg_dir)
+            task = settings['simulation']['task']
+            print_to_screen('Simulation task was: "{}"'.format(task))
+            print_to_screen()
+
+            results = run_analysis(settings)
+            print_to_screen()
+            for outfile in create_reports(settings, results, report_dir):
+                relfile = os.path.relpath(outfile, start=run_path)
+                print_to_screen('Report created: {}'.format(relfile),
+                                level='info')
+
     except FileNotFoundError as error:
         errtxt = '{}: {}'.format(error.strerror, error.filename)
         print_to_screen(errtxt, level='error')
@@ -257,13 +289,26 @@ def entry_point():
         '-i',
         '--input',
         help=('Location of {} input file'.format(PROGRAM_NAME)),
-        required=True
+        required=False,
+        default='retis.rst'
     )
     parser.add_argument('-V', '--version', action='version',
                         version='{} {}'.format(PROGRAM_NAME, VERSION))
+    parser.add_argument('-pyvisa', '--pyvisa-all', action='store_true',
+                        help='Run PyVisA',
+                        default=False)
+    parser.add_argument('-pyvisa-cmp', '--pyvisa-compressor',
+                        action='store_true',
+                        help='Run PyVisA compressor tool',
+                        default=False)
+    parser.add_argument('-O', '--only_orderp', action='store_true',
+                        help=('Use only data from order.txt files'),
+                        default=False)
+
     args_dict = vars(parser.parse_args())
 
     # set up for logging:
+    logger = logging.getLogger('')
     logger.setLevel(logging.DEBUG)
     # Define a console logger. This will log to sys.stderr:
     console = logging.StreamHandler()
@@ -281,7 +326,7 @@ def entry_point():
     reportdir = os.path.join(runpath, 'report')
 
     hello_world(inputfile, runpath, reportdir)
-    main(inputfile, runpath, reportdir)
+    main(inputfile, runpath, reportdir, args_dict)
 
 
 if __name__ == '__main__':

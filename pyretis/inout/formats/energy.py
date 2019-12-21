@@ -153,7 +153,8 @@ class EnergyPathFormatter(EnergyFormatter):
         path, status = data[0], data[1]
         if not path:  # when nullmoves = False
             return
-        yield '# Cycle: {}, status: {}'.format(step, status)
+        move = path.generated
+        yield '# Cycle: {}, status: {}, move: {}'.format(step, status, move)
         yield self.header
         for i, phasepoint in enumerate(path.phasepoints):
             energy = {}

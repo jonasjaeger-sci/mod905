@@ -73,4 +73,4 @@ Output
 energy-file = 100
 order-file = 100
 trajectory-file = 100
-
+restart-file = 10

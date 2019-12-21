@@ -32,6 +32,9 @@ logger.addHandler(logging.NullHandler())
 
 __all__ = ['initiate_load']
 
+# Supported load formats # TODO (LAMMPS missing)
+FORMATS = ['.xyz', '.gro', '.xtc', '.trr', '.txt']
+
 
 def initiate_load(simulation, cycle, settings):
     """Initialise paths by loading already generated ones.
@@ -54,6 +57,33 @@ def initiate_load(simulation, cycle, settings):
         raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT),
                                 folder)
 
+    # Check if there is data in the main folder
+    if not os.path.exists(os.path.join(folder, 'traj.txt')):
+        listoffiles = [i.name for i in os.scandir(folder) if i.is_file()]
+        traj_files = [i for i in listoffiles if i[-4:] in FORMATS]
+
+        # If there are files, we shall compute their traj.txt and order.txt
+        # to be used, if needed, later.
+        if traj_files and 'order.txt' not in listoffiles:
+            # This generated the traj.txt in the main load folder
+            # We here borrow the 000 ensemble functions. It is a rather
+            # safe assumption.
+            engine = simulation.engine
+            system = simulation.system
+            order_function = simulation.order_function
+            if 'traj.txt' not in listoffiles:
+                _generate_traj_txt_from_ext(folder, system, engine,
+                                            accepted=False)
+
+            # This generated the order.txt in the main load folder
+            if engine.engine_type == 'internal':
+                traj = _load_trajectory(folder)
+                _load_order_parameters(traj, folder, system, order_function)
+            else:
+                traj = _load_external_trajectory(folder, engine, copy=False)
+                _load_order_parameters_ext(traj, folder, order_function,
+                                           system, engine)
+
     for path_ensemble in simulation.path_ensembles:
         name = path_ensemble.ensemble_name
         logger.info('Loading data for path path ensemble %s:', name)
@@ -64,18 +94,17 @@ def initiate_load(simulation, cycle, settings):
         edir = os.path.join(
             folder,
             generate_ensemble_name(path_ensemble.ensemble_number))
-
-        if not os.path.exists(os.path.join(edir, 'traj.txt')):
+        if not os.path.exists(os.path.join(edir, 'order.txt')):
             logger.info('Input Load missing')
-            print_to_screen('No traj.txt file found in {}, attempt generate!'
+            print_to_screen('No order.txt file found in {}, attempt generate!'
                             .format(edir))
             # Make sure the files are where they are supposed to be:
             _do_the_dirty_load_job(folder, edir)
-            # Generate a traj.txt file for the path ensemble:
+            path.set_move('ld')
 
-            logger.warning('Input Load missing')
-            print_to_screen('No traj.txt file found in {}, attempt generate!'
-                            .format(edir))
+            # Generate a traj.txt file for the path ensemble:
+        if not os.path.exists(os.path.join(edir, 'traj.txt')):
+            # Generate a traj.txt file for the path ensemble:
             _generate_traj_txt_from_ext(edir, simulation.system,
                                         simulation.engine)
             path.set_move('ld')
@@ -103,9 +132,10 @@ def initiate_load(simulation, cycle, settings):
 
         # If a path is not acceptable, than here we try to rearrange it such
         # to satisfy each ensemble definition
-        if not accept and path.get_move() == 'ld':  # Let's try to fix the path
+        if not accept:  # Let's try to fix the path
             path, (accept, status) = reorderframes(path, path_ensemble)
             path.status = status
+            path.set_move('ld')
             if status != 'ACC':
                 msg = 'Path stored in folder {} does not satisfy the relative'\
                       ' ensemble ({}) definition. ' \
@@ -232,6 +262,10 @@ def clean_path(path, path_ensemble):
 def _do_the_dirty_load_job(mainfolder, edir):
     """Copy the files to a place where PyRETIS expects them to be.
 
+    The function checks if in the destiantion folder some suitable files
+    are already present. If not, it tries to copy them from the main load
+    folder.
+
     Parameters
     ----------
     mainfolder : string
@@ -242,47 +276,68 @@ def _do_the_dirty_load_job(mainfolder, edir):
         frame/trajectory files.
 
     """
-    formats = ['.xyz', '.gro', '.xtc', '.trr', '.txt']
-
     listoffiles = [i.name for i in os.scandir(mainfolder) if i.is_file()]
-    traj_files = [i for i in listoffiles if i[-4:] in formats]
+    traj_files = [i for i in listoffiles if i[-4:] in FORMATS]
 
-    if not os.path.exists(edir):
-        if not traj_files:
-            logger.critical('No files to load in %s', mainfolder)
-            raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT),
-                                    mainfolder)
-        else:
-            make_dirs(os.path.join(edir, 'accepted'))
-            for filei in traj_files:
-                shutil.copy(
-                    os.path.join(mainfolder, filei),
-                    os.path.join(edir, 'accepted', filei)
-                )
-    elif not os.path.exists(os.path.join(edir, 'accepted')):
+    # If there is an ensemble folder, let's check what there is inside.
+    if os.path.exists(edir):
+        # First in the main ensemble folder
         listoffiles = [i.name for i in os.scandir(edir) if i.is_file()]
-        traj_files_ens = [i for i in listoffiles if i[-4:] in formats]
-        if not traj_files_ens and not traj_files:
+        traj_files_ens = [i for i in listoffiles if i[-4:] in FORMATS]
+
+        # Then in an eventual accepted folder
+        traj_ens_acc = []
+        if os.path.exists(os.path.join(edir, 'accepted')):
+            listoffiles = [i.name for i in os.scandir(os.path.join(edir,
+                                                                   'accepted'))
+                           if i.is_file()]
+            traj_ens_acc = [i for i in listoffiles if i[-4:] in FORMATS]
+
+        # If we pass the following, it means no input exist.
+        if not traj_files_ens and not traj_ens_acc and not traj_files:
             logger.critical('No files to load in %s', edir)
             raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT),
                                     edir)
-        else:
+
+        # Here we are sure that there are inputs, we shall act being carefull
+        # to not overwrite eventual info.
+        # Starting from the outermost directory:
+        if traj_ens_acc or traj_files_ens:
+            # If there are files in the accepted folder, we just keep them.
+            # If they are in the edir folder,
+            # they shall be moved to the accepted folder.
             make_dirs(os.path.join(edir, 'accepted'))
-            if not traj_files_ens:
-                for filei in traj_files:
-                    shutil.copy(
-                        os.path.join(mainfolder, filei),
-                        os.path.join(edir, 'accepted', filei)
-                    )
-            else:
-                for filei in traj_files_ens:
-                    os.rename(
+            for filei in traj_files_ens:
+                if filei not in {'order.txt', 'traj.txt', 'energy.txt',
+                                 'pathensemble.txt'}:
+                    shutil.move(
                         os.path.join(edir, filei),
                         os.path.join(edir, 'accepted', filei)
                     )
+            return
+
+    # If we arrived here, it means that we have to use the files
+    # present in the main folder. So let's do the dirty copy.
+    if not traj_files:
+        logger.critical('No files to load in %s', mainfolder)
+        raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT),
+                                mainfolder)
+
+    make_dirs(os.path.join(edir, 'accepted'))
+    for filei in traj_files:
+        if filei in {'order.txt', 'traj.txt', 'energy.txt'}:
+            shutil.copy(
+                os.path.join(mainfolder, filei),
+                os.path.join(edir, filei)
+            )
+        else:
+            shutil.copy(
+                os.path.join(mainfolder, filei),
+                os.path.join(edir, 'accepted', filei)
+            )
 
 
-def _generate_traj_txt_from_ext(dirname, system, engine):
+def _generate_traj_txt_from_ext(dirname, system, engine, accepted=True):
     """Generate a traj.txt file in the path ensemble folder.
 
     Parameters
@@ -296,14 +351,18 @@ def _generate_traj_txt_from_ext(dirname, system, engine):
     engine : object like :py:class:`.Engine`
         The engine used for the simulation. It is used here to
         reference a topology, if needed, for mdtraj.
+    accepted : boolean, opt
+        It controls where the traj files shall be located,
+        if True in the accepted folder, if False in the main folder.
 
     """
-    trajexts = ['.xyz', '.gro', '.trr', '.xtc', '.txt']
     load_file = os.path.join(dirname, 'traj.txt')
 
-    traj_files = sorted([i for i in
-                         os.listdir(os.path.join(dirname, 'accepted'))
-                         if i[-4:] in trajexts])
+    if accepted:
+        dirname = os.path.join(dirname, 'accepted')
+
+    traj_files = sorted([i for i in os.listdir(dirname)
+                         if i[-4:] in FORMATS])
 
     path = Path()
     # Load Sparse works also from multiple initial trajectories
@@ -311,15 +370,13 @@ def _generate_traj_txt_from_ext(dirname, system, engine):
     if system.particles.particle_type == 'internal':
         for filei in traj_files:
             if filei[-4:] == '.xyz':
-                for snap in read_xyz_file(os.path.join(dirname,
-                                                       'accepted', filei)):
+                for snap in read_xyz_file(os.path.join(dirname, filei)):
                     _, pos, vel, _ = convert_snapshot(snap)
                     snapshot = {'pos': pos, 'vel': vel}
                     phase_point = system_from_snapshot(system, snapshot)
                     path.append(phase_point)
             if filei[-4:] == '.txt':
-                traj = _load_trajectory(os.path.join(dirname, 'accepted'),
-                                        filei)
+                traj = _load_trajectory(dirname, filei)
                 for snapshot in traj['data']:
                     snapshot = {'pos': snapshot['pos'],
                                 'vel': snapshot['vel']}
@@ -332,7 +389,7 @@ def _generate_traj_txt_from_ext(dirname, system, engine):
         for tfile in traj_files:
             if tfile[-4:] == '.txt':
                 continue
-            all_tfile = os.path.join(dirname, 'accepted', tfile)
+            all_tfile = os.path.join(dirname, tfile)
             if tfile[-4:] == '.xyz':
                 for i, snap in enumerate(read_xyz_file(all_tfile)):
                     snapshot = {'pos': (tfile, i), 'vel': False}
@@ -422,20 +479,11 @@ def _load_order_parameters_ext(traj, dirname, order_function, system, engine):
         a time frame.
 
     """
-    order_file_main_name = os.path.join(dirname, '../', 'order.txt')
     order_file_name = os.path.join(dirname, 'order.txt')
     if os.path.isfile(order_file_name):
         with OrderPathFile(order_file_name, 'r') as orderfile:
             print_to_screen('Loading order parameters.')
             order = next(orderfile.load())
-            return order['data'][:, 1:]
-    elif os.path.isfile(order_file_main_name):
-        with OrderPathFile(order_file_main_name, 'r') as orderfile:
-            print_to_screen('Loading order parameters from main directory.')
-            order = next(orderfile.load())
-            # Store the re-calculated order parameters so we don't have
-            # to re-calculate again later:
-            write_order_parameters(order_file_name, order['data'][:, 1:])
             return order['data'][:, 1:]
     else:
         print_to_screen('Could not read file: {}'.format(order_file_name))
@@ -469,8 +517,6 @@ def _load_order_parameters_ext(traj, dirname, order_function, system, engine):
     # Store the re-calculated order parameters so we don't have
     # to re-calculate again later:
     write_order_parameters(order_file_name, orderdata)
-    # Make a copy in the main load folder
-    write_order_parameters(order_file_main_name, orderdata)
     return orderdata
 
 
@@ -614,11 +660,11 @@ def read_path_files(path, path_ensemble, dirname, system, order_function,
     return _check_path(path, path_ensemble)
 
 
-def _load_external_trajectory(dirname, engine):
+def _load_external_trajectory(dirname, engine, copy=True):
     """Load an external trajectory.
 
     Here, we also do some moving of files to set up for a path
-    simulation.
+    simulation (if copy=True).
 
     Parameters
     ----------
@@ -627,6 +673,8 @@ def _load_external_trajectory(dirname, engine):
     engine : object like :py:class:`.ExternalMDEngine`
         The engine we use, here it is used to access the directories
         for the new simulation.
+    copy : boolean, opt
+        If true, it copies the files to the main ensemble folders.
 
     Returns
     -------
@@ -649,12 +697,17 @@ def _load_external_trajectory(dirname, engine):
                                     'accepted', snapshot[1])
             files.add(filename)
         print_to_screen('Copying trajectory files.')
-        for filename in files:
-            logger.debug('Copying %s -> %s', filename, engine.exe_dir)
-            shutil.copy(filename, engine.exe_dir)
+
+        # If the files are not copied, the location has to be consistent (loc)
+        loc = dirname
+        if copy:
+            loc = engine.exe_dir
+            for filename in files:
+                logger.debug('Copying %s -> %s', filename, engine.exe_dir)
+                shutil.copy(filename, engine.exe_dir)
         # Update trajectory to use full path names:
         for i, snapshot in enumerate(traj['data']):
-            config = os.path.join(engine.exe_dir, snapshot[1])
+            config = os.path.join(loc, snapshot[1])
             traj['data'][i][1] = config
             reverse = (int(snapshot[3]) == -1)
             idx = int(snapshot[2])

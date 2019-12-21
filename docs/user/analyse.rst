@@ -9,7 +9,28 @@ The general syntax for executing is:
 
 .. code-block:: pyretis
 
-   pyretisanalyse [-h] -i INPUT [-V]
+   pyretisanalyse [-h] [-i INPUT] [-V] [-pyvisa] [-pyvisa-cmp]
+
+
+where ``INPUT`` is the input file for the analysis. It can be of two types:
+A pickle, that can be used with the PyVisA tool, or the 
+standard input file used by |pyretis| 
+:ref:`application <user-guide-application>` with the 
+settings for the analysis, defined via the 
+:ref:`analysis section <user-section-analysis>`.
+
+
+.. container:: panel panel-info
+
+   .. container:: panel-heading
+   
+      **Note**
+
+   .. container:: panel-body
+   
+      The ``INPUT`` file for the analysis is created automatically
+      by running the |pyretis| application. This file is named ``out.rst``
+      and can be directly used as input for the analysis program.
 
 
 where ``INPUT`` is the input file for the analysis. This file is
@@ -57,10 +78,17 @@ Input arguments
    +-------------------------------------+--------------------------------------------------+
    | Argument                            | Description                                      |
    +=====================================+==================================================+
-   | -h, --help                          | Show the help message and exit                   |
+   | -h, --help                          | Show the help message and exit.                  |
    +-------------------------------------+--------------------------------------------------+
    | -i INPUT, --input INPUT             | Location of the input file containing analysis   |
    |                                     | settings.                                        |
    +-------------------------------------+--------------------------------------------------+
    | -V, --version                       | Show the version number and exit.                |
+   +-------------------------------------+--------------------------------------------------+
+   | -pyvisa, --pyvisa-all               | Call the GUI of PyVisA visualization tool.       |
+   |                                     | If a pickle has to be loaded, it can be selected |
+   |                                     | as the INPUT file following the -i flag.         |
+   +-------------------------------------+--------------------------------------------------+
+   | -pyvisa-cmp, --pyvisa-compressor    | Call the PyVisA compressor tool and generate a   |
+   |                                     | pickle file that can be loaded by the GUI tool.  |
    +-------------------------------------+--------------------------------------------------+

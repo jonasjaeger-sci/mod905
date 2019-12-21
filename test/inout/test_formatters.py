@@ -146,7 +146,8 @@ class TestEnergyPathFormatter(unittest.TestCase):
         """Test that we can format energy data from paths."""
         formatter = EnergyPathFormatter()
         paths, _ = create_test_paths(npath=1)
-        correct = ['# Cycle: 0, status: ACC',
+        paths[0].generated = 'Cha-Cha'
+        correct = ['# Cycle: 0, status: ACC, move: Cha-Cha',
                    '#     Time      Potential        Kinetic']
         for i, line in enumerate(formatter.format(0, [paths[0], 'ACC'])):
             if i < 2:
@@ -187,7 +188,8 @@ class TestOrderPathFormatter(unittest.TestCase):
         """Test that we can format order parameter data for paths."""
         formatter = OrderPathFormatter()
         paths, _ = create_test_paths(npath=1)
-        correct = ['# Cycle: 0, status: ACC',
+        paths[0].generated = 'ld'
+        correct = ['# Cycle: 0, status: ACC, move: ld',
                    '#     Time       Orderp']
         for i, line in enumerate(formatter.format(0, [paths[0], 'ACC'])):
             if i < 2:
