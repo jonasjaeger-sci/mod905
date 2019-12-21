@@ -97,8 +97,7 @@ When using |pyretis|, or one of our libraries, please cite us!
 
 **Theory papers from our group:**
 
-* `Stone Skipping & Web Throwing
-   <https://doi.org/10.1021/acs.jpclett.7b01617>`_
+* `Stone Skipping & Web Throwing <https://doi.org/10.1021/acs.jpclett.7b01617>`_
 
 * `RETIS <https://doi.org/10.1103/PhysRevLett.98.268301>`_
 
