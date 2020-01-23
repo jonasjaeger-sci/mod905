@@ -56,7 +56,7 @@ Here, we make use of the following keywords:
 
 * ``timestep = 0.5`` which is the time step to use in the CP2K simulations.
 
-* ``subcycles = 3`` which is the number of subcycles CP2K will complete
+* ``subcycles = 1`` which is the number of subcycles CP2K will complete
   before |pyretis| re-calculates the order parameter.
 
 * ``extra_files = ['BASIS_SET', 'GTH_POTENTIALS']`` which contain extra
