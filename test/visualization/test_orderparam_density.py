@@ -2,15 +2,16 @@
 # Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Test the common methods in pyretis.visualization.common."""
-
-import os
+import argparse
 import logging
+import os
 import unittest
+from io import StringIO
 from pyretis.visualization.orderparam_density import (PathDensity,
                                                       PathVisualize,
-                                                      main)
+                                                      remove_nan)
 from unittest import mock
-import argparse
+
 logging.disable(logging.CRITICAL)
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -38,13 +39,15 @@ CORRECT_LENGTHS_SLOW = {
 
 def init_PathDensity(ifile=INPUTFILE):
     """Initialize PathDensity with input file"""
-    data_dict = PathDensity(ifile)
+    with mock.patch('sys.stdout', new=StringIO()):
+        data_dict = PathDensity(ifile)
     return data_dict
 
 
 def init_PathVisualize(pfile=None):
     """Initialize PathVisualize"""
-    data = PathVisualize(pfile=pfile)
+    with mock.patch('sys.stdout', new=StringIO()):
+        data = PathVisualize(pfile=pfile)
     return data
 
 
@@ -60,7 +63,8 @@ class TestMethods(unittest.TestCase):
 
     def test_PathDensity_blank(self):
         """Testing initiate PathDensity without a compatible inputfile"""
-        _ = init_PathDensity(ifile='blank')
+        with mock.patch('sys.stdout', new=StringIO()):
+            _ = init_PathDensity(ifile='blank')
 
     def test_PathDensity(self):
         """Testing the PathDensity class creation from file."""
@@ -81,54 +85,66 @@ class TestMethods(unittest.TestCase):
     def test_walk_Dirs(self):
         """Testing the walk_Dirs function of PathDensity"""
         d = init_PathDensity()
-        d.walk_dirs()
-
-    def test_write_lengths(self):
-        d = init_PathDensity()
-        d.walk_dirs()
-        d.write_lengths()
-        self.assertTrue(os.path.isfile('pathdens.txt'))
-        f = open('pathdens.txt', 'r')
-        lines = f.readlines()
-        f.close()
-        os.remove('pathdens.txt')
-
-        for line in lines[8:12]:
-            data = line.replace('\t', '').split('|')
-            key = data[0].rstrip()
-            eops = [int(i) for i in data[1].split()]
-            ops = [int(i) for i in data[2].split()]
-            self.assertEqual(
-                CORRECT_LENGTHS_SLOW[key],
-                eops+ops
-                )
+        with mock.patch('sys.stdout', new=StringIO()):
+            d.walk_dirs()
 
     def test_pickle(self):
         """Testing the pickling to a file"""
         d = init_PathDensity()
-        d.walk_dirs()
-        d.pickle_data()
-        self.assertTrue(os.path.isfile('pathdens.pickle'))
-        os.remove('pathdens.pickle')
+        with mock.patch('sys.stdout', new=StringIO()):
+            d.walk_dirs()
+            d.pickle_data()
+        self.assertTrue(os.path.isfile('pyvisa_compressed_data.pickle'))
+        os.remove('pyvisa_compressed_data.pickle')
+
+    def test_deepdish(self):
+        """Testing the deepdish saving to a file"""
+        d = init_PathDensity()
+        with mock.patch('sys.stdout', new=StringIO()):
+            d.walk_dirs()
+            # This is to remove the Deprecation Worning due to pandas
+            with mock.patch('sys.stderr', new=StringIO()):
+                d.deepdish_data()
+        self.assertTrue(os.path.isfile('pyvisa_compressed_data.hdf5'))
+        os.remove('pyvisa_compressed_data.hdf5')
 
     def test_pickling_and_loading(self):
         """Test for pickling data to file and load with PathVisualize"""
         d = init_PathDensity()
-        d.walk_dirs()
-        d.pickle_data()
-        self.assertTrue(os.path.isfile('pathdens.pickle'))
-        _ = init_PathVisualize('pathdens.pickle')
-        os.rename('pathdens.pickle', 'mypickle.pickle')
+        with mock.patch('sys.stdout', new=StringIO()):
+            d.walk_dirs()
+            d.pickle_data()
+        self.assertTrue(os.path.isfile('pyvisa_compressed_data.pickle'))
+        _ = init_PathVisualize('pyvisa_compressed_data.pickle')
+        os.rename('pyvisa_compressed_data.pickle', 'mypickle.pickle')
         _ = init_PathVisualize('mypickle.pickle')
         os.remove('mypickle.pickle')
+        with self.assertRaises(ValueError) as err:
+            _ = init_PathVisualize('not.existing')
+            self.assertTrue('Format not recognised' in err)
+
+    def test_hdf5ing_and_loading(self):
+        """Test for pickling data to file and load with PathVisualize"""
+        d = init_PathDensity()
+        with mock.patch('sys.stdout', new=StringIO()):
+            d.walk_dirs()
+            # This is to remove the Deprecation Worning due to pandas
+            with mock.patch('sys.stderr', new=StringIO()):
+                d.deepdish_data()
+        self.assertTrue(os.path.isfile('pyvisa_compressed_data.hdf5'))
+        _ = init_PathVisualize('pyvisa_compressed_data.hdf5')
+        os.rename('pyvisa_compressed_data.hdf5', 'myhdf5.hdf5')
+        _ = init_PathVisualize('myhdf5.hdf5')
+        os.remove('myhdf5.hdf5')
 
     def test_get_Odata(self):
         """Test for loading pickle and getting data from compiled dictionary"""
         d = init_PathDensity()
-        d.walk_dirs()
-        d.pickle_data()
-        w = init_PathVisualize('pathdens.pickle')
-        os.remove('pathdens.pickle')
+        with mock.patch('sys.stdout', new=StringIO()):
+            d.walk_dirs()
+            d.pickle_data()
+        w = init_PathVisualize('pyvisa_compressed_data.pickle')
+        os.remove('pyvisa_compressed_data.pickle')
 
         for fol in d.infos['path']:
             accw, _ = w.get_Odata(fol, ['cycO', 'timo', 'ACC'])
@@ -149,9 +165,10 @@ class TestMethods(unittest.TestCase):
     def test_get_Edata(self):
         """Test for loading pickle and getting data from compiled dictionary"""
         d = init_PathDensity()
-        d.walk_dirs()
-        d.pickle_data()
-        w = init_PathVisualize('pathdens.pickle')
+        with mock.patch('sys.stdout', new=StringIO()):
+            d.walk_dirs()
+            d.pickle_data()
+        w = init_PathVisualize('pyvisa_compressed_data.pickle')
         for fol in d.infos['path']:
             xa, _, _ = w.get_Edata(fol, ['cycO', 'timo', 'potE'], 'ACC')
             xr, _, _ = w.get_Edata(fol, ['cycO', 'timo', 'potE'], 'REJ')
@@ -185,7 +202,6 @@ class TestMethods(unittest.TestCase):
         d.eops['rcycO', fol] = []
         d.eops['rop1', fol] = []
         d.eops['rop2', fol] = []
-
         d.get_EOP(fol=fol,
                   files=[os.path.join(fol, 'order.txt'),
                          os.path.join(fol, 'energy.txt')],
@@ -221,7 +237,9 @@ class TestMethods(unittest.TestCase):
         d.eops['apotE', fol] = [0, 0, 0]
         d.eops['akinE', fol] = [0, 0, 0]
         d.eops['atotE', fol] = [0, 0, 0]
-        d.compare_and_cut(fol, 'a', (3, 2))
+        with mock.patch('sys.stdout', new=StringIO()):
+            with mock.patch('sys.stderr', new=StringIO()):
+                d.compare_and_cut(fol, 'a', (3, 2))
 
         # More OPs than energies
         d.eops['atimo', fol] = [1, 2, 3]
@@ -233,7 +251,9 @@ class TestMethods(unittest.TestCase):
         d.eops['apotE', fol] = [0, 0]
         d.eops['akinE', fol] = [0, 0]
         d.eops['atotE', fol] = [0, 0]
-        d.compare_and_cut(fol, 'a', (2, 3))
+        with mock.patch('sys.stdout', new=StringIO()):
+            with mock.patch('sys.stderr', new=StringIO()):
+                d.compare_and_cut(fol, 'a', (2, 3))
 
         # Missing center energies
         d.eops['atimo', fol] = [1, 2, 3]
@@ -245,7 +265,9 @@ class TestMethods(unittest.TestCase):
         d.eops['apotE', fol] = [0, 0]
         d.eops['akinE', fol] = [0, 0]
         d.eops['atotE', fol] = [0, 0]
-        d.compare_and_cut(fol, 'a', (2, 3))
+        with mock.patch('sys.stdout', new=StringIO()):
+            with mock.patch('sys.stderr', new=StringIO()):
+                d.compare_and_cut(fol, 'a', (2, 3))
 
         # Missin center orderps , match on time
         d.eops['atime', fol] = [1, 2, 3]
@@ -257,13 +279,16 @@ class TestMethods(unittest.TestCase):
         d.eops['apotE', fol] = [0, 0, 0]
         d.eops['akinE', fol] = [0, 0, 0]
         d.eops['atotE', fol] = [0, 0, 0]
-        d.compare_and_cut(fol, 'a', (3, 2), target='time')
+        with mock.patch('sys.stdout', new=StringIO()):
+            with mock.patch('sys.stderr', new=StringIO()):
+                d.compare_and_cut(fol, 'a', (3, 2), target='time')
 
     def test_get_Odata_uneven(self):
         d = init_PathDensity()
-        d.walk_dirs()
-        d.pickle_data()
-        v = init_PathVisualize('pathdens.pickle')
+        with mock.patch('sys.stdout', new=StringIO()):
+            d.walk_dirs()
+            d.pickle_data()
+        v = init_PathVisualize('pyvisa_compressed_data.pickle')
         fol = os.path.join(HERE, "/test_simulation_dir/000")
         v.ops['acycO', fol] = [0, 0, 0, 0]
         v.ops['rcycO', fol] = []
@@ -274,9 +299,10 @@ class TestMethods(unittest.TestCase):
 
     def test_get_Edata_uneven(self):
         d = init_PathDensity()
-        d.walk_dirs()
-        d.pickle_data()
-        v = init_PathVisualize('pathdens.pickle')
+        with mock.patch('sys.stdout', new=StringIO()):
+            d.walk_dirs()
+            d.pickle_data()
+        v = init_PathVisualize('pyvisa_compressed_data.pickle')
         fol = os.path.join(HERE, "/test_simulation_dir/000")
         v.eops['acycE', fol] = [0, 0, 0, 0]
         v.eops['rcycE', fol] = []
@@ -285,11 +311,24 @@ class TestMethods(unittest.TestCase):
         v.get_Edata(fol, ['time', 'timo'], ACC='ACC',
                     min_max=(0, 4))
 
-    @mock.patch('argparse.ArgumentParser.parse_args',
-                return_value=argparse.Namespace(input=INPUTFILE,
-                                                only_orderp=True))
-    def test_main(self, mock_args):
-        main()
+    def test_remove_nan(self):
+        # Test for stability in the most drammatic case. Nothing should
+        # happen here.
+        data = [float('nan'), float('nan'), float('nan'), float('nan')]
+        remove_nan(data)
+        self.assertFalse(data[0]*0 == 0)
+
+        # Test nan at the end only, nothing should happen.
+        data = [0, float('nan'), float('nan'), float('nan')]
+        remove_nan(data)
+        self.assertEqual(data[0], 0)
+        self.assertFalse(data[3]*0 == 0)
+
+        # Test nan at the beginning, it should be fixed.
+        data = [float('nan'), float('nan'), float('nan'), 0]
+        remove_nan(data)
+        self.assertEqual(data[0], 0)
+        self.assertEqual(data[3], 0)
 
 
 if __name__ == '__main__':

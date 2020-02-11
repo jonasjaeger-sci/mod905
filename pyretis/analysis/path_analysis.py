@@ -745,7 +745,7 @@ def analyse_path_ensemble0(path_ensemble, settings):
 def match_probabilities(path_results, detect, settings=None):
     """Match probabilities from several path ensembles.
 
-    It will also calculate efficiencies and error for the matched
+    It calculates the efficiencies and errors for the matched
     probability.
 
     Parameters
@@ -761,10 +761,11 @@ def match_probabilities(path_results, detect, settings=None):
         * `efficiency`: The output from the efficiency analysis.
     detect : list of floats
         These are the detect interfaces used in the analysis.
-    settings : dict
+    settings : dict, optional
         This dictionary contains settings for the analysis.
         Here we make use of the following keys from the
         analysis section:
+
         * `ngrid`: The number of grid points for calculating the
           crossing probability as a function of the order parameter.
         * `maxblock`: The max length of the blocks for the block error

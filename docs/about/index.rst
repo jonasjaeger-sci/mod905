@@ -35,6 +35,9 @@ The current |pyretis| version is |version|.
 For an overview of the official |pyretis| releases,
 please visit our git repository: `<https://gitlab.com/pyretis/pyretis/-/releases>`_.
 
+Since version 2.4, |pyretis| includes |pyvisa|, a program created to
+facilitate post processing and data analysis.
+
 
 The |pyretis| team
 ------------------
@@ -57,10 +60,12 @@ The |pyretis| team
 
 * `Raffaela Cabriolu <https://www.linkedin.com/in/raffaela-cabriolu-41ba5488/?originalSubdomain=it>`_
 
+* `Ola Aarøen <https://www.ntnu.no/ansatte/ola.aaroen>`_
+
+* `Henrik Kiær <https://www.linkedin.com/in/henrikkiaer/?originalSubdomain=no>`_
+
 
 **Former Developers:**
-
-* `Ola Aarøen <https://www.ntnu.no/ansatte/ola.aaroen>`_
 
 * `Anastasia Maslechko <https://www.linkedin.com/in/anastasia-maslechko-87207b95/?originalSubdomain=ua>`_
 

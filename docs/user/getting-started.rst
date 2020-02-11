@@ -25,8 +25,9 @@ and in the :ref:`detailed reference section <api-doc>`.
 
 A more extensive overview can be found in
 the :ref:`full user guide <user-guide-index>`.
-Here, we will now rather jump into some examples
-showing the use of |pyretis|.
+Since version 2.4, |pyvisa| is automatically installed with
+|pyretis|.
+Here, we report some examples showing the use of |pyretis| and |pyvisa|.
 
 
 |pyretis| examples
@@ -201,9 +202,25 @@ the :ref:`example section <examples-index>`.
          we revisit the 2D WCA example and use LAMMPS as our molecular dynamics
          engine.
 
+   .. container:: col-lg-3 col-md-3 col-sm-3 col-xs-6 thumbnail thumbnail2
 
-Main studies performed by |pyretis|
------------------------------------
+      .. image:: /_static/img/examples/thumbnails/contour-400x400.png
+         :width: 100%
+         :class: img-responsive
+         :target: ../examples/examples-pyvisa.html
+
+      .. container:: caption
+
+         :header:`PyVisA`
+
+         In this example, we show the usage of |pyvisa|. First, the optional
+         requisite, PyQt5, is installed to enable |pyvisa| GUI. 
+         The compressor tool, and the visualization tool usage is then
+         demostrated. A few sample pictures are reported.
+
+
+Main studies performed with |pyretis|
+-------------------------------------
 
 .. container:: row
 
@@ -217,14 +234,15 @@ Main studies performed by |pyretis|
 
          :header:`Predicting the mechanism and rate of H-NS binding to AT-rich DNA.`
 
-         The adsorption of H-NS on DNA has been studied at full atomistic resolution
-         with the GROMACS simulation package. Local minima have been located by metadynamics
-         and the relative transition rates computed by RETIS.
-         More information can be found in the paper
+         The adsorption of H-NS on DNA is studied at atomistic resolution
+         with GROMACS. Local minima have been located by metadynamics
+         and the transition rates computed by RETIS.
+
+         Paper:
          `Predicting the mechanism and rate of H-NS binding to AT-rich DNA
-         <https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1006845>`_.
+         <https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1006845>`_
          
-         'Source Files: <http://pyretis.org/source_files/H-NS_2019>'
+         `Source Files <http://pyretis.org/source_files/H-NS_2019>`__
 
 
    .. container:: col-lg-4 col-md-4 col-sm-4 col-xs-6 thumbnail thumbnail3
@@ -240,10 +258,11 @@ Main studies performed by |pyretis|
          BO-DFT simulations, via the RETIS approach, were used to study water
          autoionization. The mechanism(s) have been highlighted and their rate(s)
          quantified. Machine learning was applied to test the quality of 
-         the order parameters. More information can be found in the paper
-         `Local initiation conditions for water autoionization <https://www.pnas.org/content/115/20/E4569>`_.
+         the order parameters.
+
+         Paper: `Local initiation conditions for water autoionization <https://www.pnas.org/content/115/20/E4569>`_
          
-         'Source Files: <http://pyretis.org/source_files/Water_2019>'
+         `Source Files <http://pyretis.org/source_files/Water_2019>`__
 
 
    .. container:: col-lg-4 col-md-4 col-sm-4 col-xs-6 thumbnail thumbnail3
@@ -260,5 +279,25 @@ Main studies performed by |pyretis|
          and quantify the rate of the structural rearrangements of CyP-A and
          its muted confomer.
         
-         Article in preparation. 
-         'Source Files: <http://pyretis.org/source_files/CyP-A_2019>'
+         Paper in preparation.
+
+         `Source Files <http://pyretis.org/source_files/CyP-A_2019>`__
+
+
+   .. container:: col-lg-4 col-md-4 col-sm-4 col-xs-6 thumbnail thumbnail3
+
+      .. image:: /_static/img/examples/thumbnails/trimer-400x400.png
+         :width: 100%
+         :class: img-responsive
+
+      .. container:: caption
+
+         :header:`Proton transfer in a water trimer.`
+
+         A study on the proton transfer reaction with a polarizable potential
+         is included. The various features of |pyvisa| can be tested
+         on the simulation outputs.
+        
+         Paper in preparation.
+
+         `Source Files <http://pyretis.org/source_files/Water_trimer_2020>`__

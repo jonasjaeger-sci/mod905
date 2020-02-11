@@ -2,64 +2,66 @@
 # pylint: skip-file
 # Copyright (c) 2019, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
-"""orderparam_density - An application for compiling PyRETIS simulation data.
+"""Compiler of PyRETIS simulation data.
 
 This module is part of the PyRETIS library and can be used both for compiling
-the simulation data into a *.pickle dump, and load the data for later
+the simulation data into a compressed file and/or load the data for later
 visualization.
-
-usage : orderparam_density.py [-h] -i INPUT [-s]
-
-PyRETIS
-
-optional arguments:
-  -h, --help        show this help message and exit.
-  -i INPUT, --input INPUT
-                    Location of PyRETIS input/output file and simulation
-                    directory with subfolders (ensembles).
 """
 import argparse
-import os
-import timeit
-import pickle
 import colorama
-from tqdm import tqdm
-from pyretis.info import PROGRAM_NAME
+import deepdish as dd
+import os
+import pickle
+import timeit
 from pyretis import __version__ as VERSION
+from pyretis.info import PROGRAM_NAME
 from pyretis.inout import print_to_screen
 from pyretis.inout.settings import parse_settings_file
 from pyretis.visualization.common import (get_min_max,
                                           get_startat,
-                                          diff_matching,
-                                          hello_pathdensity_world)
+                                          diff_matching)
+from tqdm import tqdm
 
 # Hard-coded labels for energies and time/cycle steps
 ENERGYLABELS = ['time', 'cycE', 'potE', 'kinE', 'totE']
 
 
+def remove_nan(data):
+    """Remove nan from data.
+
+    The function shall remove initial nan, assuming that they are originated
+    by incomplete initial conditions (e.g. no energy file). In the case that
+    nan appears as last cycle, it will not be fixed and an error shall rise
+    up later in the code.
+
+    Parameters
+    ----------
+    data : list
+        Input list. If nan are present, they are replaced by the following
+        entry. The method accounts for multiple consecutive nan occourence.
+
+    """
+    NAN = True
+    iNAN = -1
+    while NAN:
+        NAN = False
+        for i, d in reversed(list(enumerate(data))):
+            if d*0 != 0:
+                NAN = True
+                iNAN = i
+                break
+        if NAN and iNAN == len(data)-1:
+            NAN = False
+        if NAN:
+            data[iNAN] = data[iNAN+1]
+
+
 class PathDensity():
     """Perfrom the path density analysis.
 
-    This class defines the path density analysis for completed simulations with
-    several order parameters.
-
-    Attributes
-    ----------
-    walk_dirs : Function which searches through subfolders 00* for energy.txt
-        and order.txt files and appends the values to dictionaries. Function is
-        currently called by default during initialization of PathDensityVisual
-        class.
-    pickle_data : Function which dumps data of all three dictionaries
-                  (ops, eops,infos)
-                  to a *.pickle file for later visualization.
-    get_startat : Function that return the latest restart point of a ensemble
-                  file (order.txt or energy.txt).
-    get_OP, get_EOP : Functions which scan order.txt and energy.txt,
-                      respectively, within a given folder. Used by
-                      function walk_Dirs.
-    check_Steps : Function checking the lengths of all lists in dictionaries
-    compare_and_cut : Function that finds indeces of lists to delete when
-                      cycle number and time step values does not match.
+    This class defines the path density analysis for completed simulations
+    with several order parameters.
 
     """
 
@@ -96,15 +98,10 @@ class PathDensity():
                 path.append(fol)
         # Getting order parameters from order-file of first folder in path
         with open(os.path.join(path[0], 'order.txt')) as temp:
-            # #TODO implement new from dev, with OP names.
+            # If implemented, use OP names as labels instead.
             tail = temp.read().split('\n')[-2]
             op_line = tail.split()
             num_op = len(op_line)-1
-            """
-            head = [next(temp) for x in range(3)]
-            op = head[-1].rstrip('\n').split()
-            self.num_op = len(op)-1
-            """
         op_labels = []
         for i in range(1, num_op+1):
             op_labels.append('op{}'.format(i))
@@ -118,7 +115,7 @@ class PathDensity():
         self.infos['num_op'] = num_op
 
     def walk_dirs(self, only_ops=False):
-        """Create a lists in acc/rej dictionary for all order parameters.
+        """Create a lists in acc or rej dictionary for all order parameters.
 
         First generate list of folders/ensembles to iterate through.
         Then search for number of orderparameters(columns) in file in one
@@ -130,8 +127,8 @@ class PathDensity():
 
         Parameters
         ----------
-        only_ops : boolean, default=False
-               If true, PathDensity will not collect data from energy files.
+        only_ops : boolean, optional
+            If true, PathDensity will not collect data from energy files.
 
         Returns/Updates
         ---------------
@@ -147,7 +144,7 @@ class PathDensity():
             Parameters
             ----------
             fol : string
-                  Name of subfolder (0**).
+                Name of subfolder.
 
             """
             # Creating lists of statistical weigth for accepted paths
@@ -204,7 +201,6 @@ class PathDensity():
             print_to_screen('='*len(line) + '\n' + line, level='success')
 
         maxcl = '000'
-        uselist = 'O'  # Default OP lists
 
         if not (only_ops):
             c_e = len(self.eops['acycE', '000'] +
@@ -218,24 +214,12 @@ class PathDensity():
                           self.ops['rcycO', fol])
                 if n_o > c_o and n_e > c_e:
                     maxcl = fol
-                    # Untestable
-                    # if n_o > n_e:
-                    #     uselist = 'O'
-                    # else:
-                    #     uselist = 'E'
-        if uselist == 'O':
-            full_cycle_list = sorted(
-                self.ops['acycO', maxcl] + self.ops['rcycO', maxcl]
-                )
-            self.infos['long_cycle'] = [full_cycle_list[0],
-                                        full_cycle_list[-1]]
-        # Untestable
-        # elif uselist == 'E':
-        #     full_cycle_list = sorted(
-        #         self.eops['acycO', maxcl] + self.eops['rcycO', maxcl]
-        #         )
-        #     self.infos['long_cycle'] = [full_cycle_list[0],
-        #                                full_cycle_list[-1]]
+
+        full_cycle_list = sorted(
+            self.ops['acycO', maxcl] + self.ops['rcycO', maxcl])
+        self.infos['long_cycle'] = [full_cycle_list[0],
+                                    full_cycle_list[-1]]
+
         print_to_screen('###################################################',
                         level='success')
         print_to_screen('# Data successfully retrieved, in cycles:',
@@ -249,100 +233,56 @@ class PathDensity():
                         + '\n', level='success')
 
     def pickle_data(self):
-        """Pickles the data to a *.pickle file."""
+        """Pickles the data to a .pickle file."""
         print_to_screen('###################################################',
                         level='message')
         print_to_screen('# Pickling dictionaries to file', level='message')
         data = (self.ops, self.eops, self.infos)
-        self.pfile = 'pathdens.pickle'
+        self.pfile = 'pyvisa_compressed_data.pickle'
         with open(self.pfile, 'wb') as out:
             pickle.dump(data, out, protocol=pickle.HIGHEST_PROTOCOL)
         print_to_screen('# {}'.format(self.pfile), level='message')
         print_to_screen('###################################################'
                         + '\n', level='message')
 
-    def write_lengths(self):
-        """Write the lengths of the ops and eops dict to a txt file.
-
-        Function that writes lengths of some of the data lists in
-        dictionaries ops and eops to a *.txt file.
-
-        Parameters
-        ----------
-        fast : Boolean, default=True
-               Speed of data compile, if True is fast, else is slow.
-
-        """
-        outfile = 'pathdens.txt'
+    def deepdish_data(self):
+        """Compresses the data to a .hdf5 file."""
         print_to_screen('###################################################',
-                        level='info')
-        print_to_screen('# Writing data shape to file:', level='info')
-        print_to_screen('# {}'.format(outfile), level='info')
-        print_to_screen("# OP's: {}".format(self.infos['op_labels']),
-                        level='info')
-        print_to_screen('# E labels: {}'.format(ENERGYLABELS), level='info')
+                        level='message')
+        print_to_screen('# Compress dictionaries to file', level='message')
+        data = (self.ops, self.eops, self.infos)
+        self.pfile = 'pyvisa_compressed_data.hdf5'
+        dd.io.save(self.pfile, data)
+        print_to_screen('# {}'.format(self.pfile), level='message')
         print_to_screen('###################################################'
-                        + '\n', level='info')
-
-        with open(outfile, 'w') as out:
-            out.write('###################################\n')
-            out.write('# Output of path density from      \n')
-            l1 = '# {}'.format(os.getcwd())
-            out.write(l1+'\n')
-            out.write('###################################\n\n')
-            l1 = '        | {:>6}\t      \t      \t      \t| {:>6} ({})\n'
-            out.write(l1.format('eops', 'ops', self.infos['num_op']))
-            lp = ['cycE', 'time', 'cycO', 'timo', 'op1', 'op2']
-            l1 = 'Fol acc | {:>6}\t{:>6}\t{:>6}\t{:>6}\t|'
-            l1 = l1.format(lp[0], lp[1], lp[2], lp[3])
-            l2 = '{:>6}\t{:>6}\t{:>6}\t{:>6}\n'
-            l2 = l2.format(lp[2], lp[3], lp[4], lp[5])
-            out.write(l1+l2)
-            for fol in self.infos['path']:
-                for acc in ['a', 'r']:
-                    lp = [len(self.eops[acc+'cycE', fol]),
-                          len(self.eops[acc+'time', fol]),
-                          len(self.eops[acc+'cycO', fol]),
-                          len(self.eops[acc+'timo', fol]),
-                          len(self.ops[acc+'cycO', fol]),
-                          len(self.ops[acc+'timo', fol]),
-                          len(self.ops[acc+'op1', fol]),
-                          len(self.ops[acc+'op2', fol])]
-                    l1 = '{} {} \t| {:>6}\t{:>6}\t{:>6}\t{:>6}\t'\
-                         '|'.format(fol, acc.upper(), lp[0], lp[1], lp[2],
-                                    lp[3])
-                    l2 = '{:>6}\t{:>6}\t{:>6}\t{:>6}\n'
-                    l2 = l2.format(lp[4], lp[5], lp[6], lp[7])
-                    out.write(l1+l2)
+                        + '\n', level='message')
 
     def get_EOP(self, fol, files, file_starts):
-        """Funcion that reads two files, and saves frames only if in both.
+        """Read order and energy files, save frames only if present in both.
 
         Parameters
         ----------
         fol : string
-              Name of folder - e.g. "000". Used in dictionaries for allocating
-              values from read to correct list.
+            Name of folder - e.g. "000". Used in dictionaries for allocating
+            values from read to correct list.
         files : list of strings
-                Name of files in subfolder path.
+            Name of files in subfolder path.
         file_starts : list of integers
-                      Index of files with latest restart of simulation
+            Index of files with latest restart of simulation.
 
         Returns/Updates
         ---------------
-        In:
-        eops : [atime, rtime, apotE, rpotE,
-             akinE, rkinE, atotE, rtotE]
-             Lists of floats. Contains accepted/rejected steps and energy
-             from files efile and ofile in folder fol.
-        eops : [atimo, rtimo, aop{x}, rop{x}] - x in range(0,#orderP)
-             Lists of floats. Contains accepted/rejected steps and order param
-             from file ofile in folder fol. aop{x}/rop{x} loops through the
-             total number of order parameters found in the order param file.
+        eops : [atime, rtime, apotE, rpotE, akinE, rkinE, atotE, rtotE,
+                atimo, rtimo, aop{x}, rop{x}] for x in range(0, #orderP)
+            Lists of floats, it contains accepted/rejected steps and energy
+            from files efile and ofile in folder fol and the order param
+            from file ofile in folder fol. aop{x}/rop{x} loops through the
+            total number of order parameters found in the order param file.
 
         """
         ACC = None
         cycle = []
+        flag = ''
 
         # Start with energy file
         with open(files[1], 'r+') as temp:
@@ -354,39 +294,34 @@ class PathDensity():
                         data = line[:line.index('#')].split()  # before comment
                     else:
                         data = line.split()
-                    if len(data) == 0:
+                    if not data:
                         continue
                     if data[0] == '#':
                         if data[1] == 'Time':
                             continue
                         try:
                             cycle_t = int(data[2].rstrip(','))
-                        except ValueError:
-                            ACC = 'cycle not here'
+                        except (ValueError, IndexError):
                             continue
                         if 'ACC' in data[4]:
-                            cycle.append(cycle_t)
-                            ACC = True
+                            flag = 'a'
                         else:
-                            ACC = False
-                            cycle.append(cycle_t)
+                            flag = 'r'
+                        cycle.append(cycle_t)
                         continue
-                    if ACC is True:
-                        self.eops['acycE', fol].append(cycle[-1])
-                        self.eops['atime', fol].append(int(data[0]))
-                        self.eops['apotE', fol].append(float(data[1]))
-                        self.eops['akinE', fol].append(float(data[2]))
-                        self.eops['atotE', fol].append(float(data[1]) +
-                                                       float(data[2]))
-                    elif ACC is False:
-                        self.eops['rcycE', fol].append(cycle[-1])
-                        self.eops['rtime', fol].append(int(data[0]))
-                        self.eops['rpotE', fol].append(float(data[1]))
-                        self.eops['rkinE', fol].append(float(data[2]))
-                        self.eops['rtotE', fol].append(float(data[1]) +
+
+                    self.eops[flag+'cycE', fol].append(cycle[-1])
+                    self.eops[flag+'time', fol].append(int(data[0]))
+                    self.eops[flag+'potE', fol].append(float(data[1]))
+                    self.eops[flag+'kinE', fol].append(float(data[2]))
+                    self.eops[flag+'totE', fol].append(float(data[1]) +
                                                        float(data[2]))
 
+        for key in self.eops:
+            remove_nan(self.eops[key])
+
         WRITE = False
+        flag = ''
         # Continue with orderp file
         with open(files[0], 'r') as temp:
             for i, line in enumerate(temp):
@@ -397,46 +332,31 @@ class PathDensity():
                         data = line[:line.index('#')].split()
                     else:
                         data = line.split()
-                    if len(data) == 0:
+                    if not data:
                         continue
                     elif data[0] == '#':
                         if data[1] == 'Time':
                             continue
                         try:
                             cycle_t = int(data[2].rstrip(','))
-                        except ValueError:
-                            ACC = 'cycle not here'
-                            continue
-                        except IndexError:
-                            ACC = 'Only 1 OP'
+                        except (ValueError, IndexError):
                             continue
                         if 'ACC' in data[4]:
-                            ACC = True
-                            WRITE = bool(cycle_t in cycle)
+                            flag = 'a'
                         else:
-                            ACC = False
-                            WRITE = bool(cycle_t in cycle)
-
+                            flag = 'r'
+                        WRITE = bool(cycle_t in cycle)
                         continue
-                    if WRITE is True:
-                        if ACC is True:
-                            self.eops['acycO', fol].append(cycle_t)
-                            self.eops['atimo', fol].append(int(data[0]))
-                            for j in range(1, self.infos['num_op']+1):
-                                try:
-                                    x = float(data[j])
-                                except IndexError:
-                                    x = None
-                                self.eops['aop{}'.format(j), fol].append(x)
-                        elif ACC is False:
-                            self.eops['rtimo', fol].append(int(data[0]))
-                            self.eops['rcycO', fol].append(cycle_t)
-                            for j in range(1, self.infos['num_op']+1):
-                                try:
-                                    x = float(data[j])
-                                except IndexError:
-                                    x = None
-                                self.eops['rop{}'.format(j), fol].append(x)
+
+                    if WRITE:
+                        self.eops[flag+'cycO', fol].append(cycle_t)
+                        self.eops[flag+'timo', fol].append(int(data[0]))
+                        for j in range(1, self.infos['num_op']+1):
+                            try:
+                                x = float(data[j])
+                            except IndexError:
+                                x = None
+                            self.eops[flag+'op{}'.format(j), fol].append(x)
 
     def get_OP(self, ofile, fol, ostart):
         """Read order params from file and append to the lists in dict.
@@ -447,17 +367,16 @@ class PathDensity():
         Parameters
         ----------
         ofile : string
-                Name of orderP file in subfolder path - e.g. "000/order.txt".
+            Name of orderP file in subfolder path - e.g. "000/order.txt".
         fol : string
-              Name of folder - e.g. "000". Used in dictionaries for allocating
-              values from read to correct list.
+            Name of folder - e.g. "000". Used in dictionaries for allocating
+            values from read to correct list.
         ostart : integer
-                 Index of ofile with latest restart of simulation
+            Index of ofile with latest restart of simulation.
 
         Returns/Updates
         ---------------
-        In:
-        ops : a/r[timo, aop{x}, cycl] - x in range(0,#orderP)
+        ops : a/r[timo, aop{x}, cycl] for x in range(0, #orderP)
             Lists of floats. Contains accepted/rejected steps and order param
             from file ofile in folder fol. aop{x}/rop{x} loops through the
             total number of order parameters found in the order param file.
@@ -467,6 +386,7 @@ class PathDensity():
         cycle = []
         statw = []
         weight = []
+        flag = ''
 
         with open(ofile, 'r') as o:
             for i, line in enumerate(o):
@@ -477,49 +397,35 @@ class PathDensity():
                         data = line[:line.index('#')].split()
                     else:
                         data = line.split()
-                    if len(data) == 0:
+                    if not data:
                         continue
                     if data[0] == '#':
                         if data[1] == 'Time':
                             continue
                         try:
                             cycle_t = int(data[2].rstrip(','))
-                        except ValueError:
-                            ACC = 'cycle not here'
+                        except (ValueError, IndexError):
                             continue
-                        except IndexError:
-                            ACC = 'Only 1 OP'
-                            continue
+                        cycle.append(cycle_t)
                         if 'ACC' in data[4]:
-                            ACC = True
-                            cycle.append(cycle_t)
+                            flag = 'a'
                             statw.append(1)
                             weight.append(1)
                         else:
-                            ACC = False
-                            cycle.append(cycle_t)
-                            if len(weight) != 0:
+                            flag = 'r'
+                            if weight:
                                 weight[-1] += 1
                             statw.append(0)
                         continue
-                    if ACC is True:
-                        self.ops['atimo', fol].append(int(data[0]))
-                        self.ops['acycO', fol].append(cycle[-1])
-                        for j in range(1, self.infos['num_op']+1):
-                            try:
-                                v = float(data[j])
-                            except IndexError:
-                                v = None
-                            self.ops['aop{}'.format(j), fol].append(v)
-                    elif ACC is False:
-                        self.ops['rtimo', fol].append(int(data[0]))
-                        self.ops['rcycO', fol].append(cycle[-1])
-                        for j in range(1, self.infos['num_op'] + 1):
-                            try:
-                                v = float(data[j])
-                            except IndexError:
-                                v = None
-                            self.ops['rop{}'.format(j), fol].append(v)
+
+                    self.ops[flag+'timo', fol].append(int(data[0]))
+                    self.ops[flag+'cycO', fol].append(cycle[-1])
+                    for j in range(1, self.infos['num_op']+1):
+                        try:
+                            v = float(data[j])
+                        except IndexError:
+                            v = None
+                        self.ops[flag+'op{}'.format(j), fol].append(v)
 
         # Creating list of statistical weights of paths
         for t in self.ops['acycO', fol]:
@@ -537,7 +443,7 @@ class PathDensity():
         Parameters
         ----------
         fol : string
-              Name of folder currently reading files from.
+            Name of folder currently reading files from.
 
         Returns/Updates
         ---------------
@@ -556,14 +462,14 @@ class PathDensity():
 
             Parameters
             ----------
-            acc : Boolean
-                  True/False for accepted/rejected paths.
+            acc : boolean
+                True/False for accepted/rejected paths.
             fol : string
-                  Name of folder.
+                Name of folder.
 
             Returns
             -------
-            errors : Boolean
+            errors : boolean
                 True if errors were encountered, else False.
             level : string
                 The level-string for print_to_file function.
@@ -596,28 +502,29 @@ class PathDensity():
             else:
                 prc = str('{0:.2f}'.format(100.*lenop/lentot))
 
-            errors, l, where_err = _check_timesteps(acc, fol)
+            errors, lev, where_err = _check_timesteps(acc, fol)
             print_to_screen((txt.format(acc.upper(), lenep, lenop, lentot, prc)
-                             ), level=l)
+                             ), level=lev)
 
-            if errors is True:
+            if errors:
                 txt = 'Found error in {}; '
                 txt += 'Comparing data in folder {}, paths: {}'
                 print_to_screen(txt.format(where_err, fol, acc.upper()),
-                                level=l)
+                                level=lev)
                 self.compare_and_cut(fol,
                                      acc,
                                      [lenep, lenop],
                                      target=where_err
                                      )
 
-            errors, l, where_err = _check_timesteps(acc, fol)
-            if errors is True:
+            errors, lev, where_err = _check_timesteps(acc, fol)
+            if errors:
                 nlenep = len(self.eops[acc+'time', fol])
                 nlenop = len(self.eops[acc+'timo', fol])
                 txt = 'Found error in {}; '
                 txt += 'Re-checking data: E: {}, OP: {}'
-                print_to_screen(txt.format(where_err, nlenep, nlenop), level=l)
+                print_to_screen(txt.format(where_err, nlenep, nlenop),
+                                level=lev)
                 self.compare_and_cut(fol,
                                      acc,
                                      [nlenep, nlenop],
@@ -633,14 +540,14 @@ class PathDensity():
         Parameters
         ----------
         fol : string
-              Name of folder where difference occured.
+            Name of folder where difference occured.
         acc : string
-              'r'/'a' for accepted/rejected paths.
+            'r'/'a' for accepted/rejected paths.
         lenp : list
-               Length of energy time-step list in eops dictionary.
-               [0] = length of E-list, [1] = length of OP-list.
+            Length of energy time-step list in eops dictionary.
+            [0] = length of E-list, [1] = length of OP-list.
         target : string
-                 The target lists to compare for deletion of lines.
+            The target lists to compare for deletion of lines.
 
         Returns
         -------
@@ -648,39 +555,39 @@ class PathDensity():
         equal length lists, with correctly matched values.
 
         """
-        def _del_curr_op(acc, fol, i):
+        def _del_curr_op(acc, fol, idx):
             """Delete the current line in list.
 
             Parameters
             ----------
             fol : string
-                  Name of folder where difference occured.
+                Name of folder where difference occured.
             acc : string
-                  'r'/'a' for accepted/rejected paths.
-            i : integer OR tuple
+                'a'/'r' for accepted/rejected paths.
+            idx : integer OR tuple
                 index of lines to delete, or tuple of "from-to" indeces.
 
             """
             for key in self.infos['op_labels']:
-                del self.eops[acc+key, fol][i]
+                del self.eops[acc+key, fol][idx]
             # 'timo' not in op_labels, include:
-            del self.eops[acc+'timo', fol][i]
+            del self.eops[acc+'timo', fol][idx]
 
-        def _del_curr_en(acc, fol, i):
+        def _del_curr_en(acc, fol, idx):
             """Delete the current line in list.
 
             Parameters
             ----------
             fol : string
-                  Name of folder where difference occured.
+                Name of folder where difference occured.
             acc : string
-                  'r'/'a' for accepted/rejected paths.
-            i : integer OR tuple
+                'a'/'r' for accepted/rejected paths.
+            idx : integer OR tuple
                 index of lines to delete, or tuple of "from-to" indices.
 
             """
             for key in ENERGYLABELS:
-                del self.eops[acc+key, fol][i]
+                del self.eops[acc+key, fol][idx]
 
         def _del_last_op(acc, fol):
             """Delete the last lines of lists in OP dict.
@@ -688,7 +595,7 @@ class PathDensity():
             Parameters
             ----------
             fol : string
-                  Name of folder where difference occured.
+                Name of folder where difference occured.
 
             """
             for key in self.infos['op_labels']:
@@ -702,7 +609,7 @@ class PathDensity():
             Parameters
             ----------
             fol : string
-                  Name of folder where difference occured.
+                Name of folder where difference occured.
 
             """
             for key in ENERGYLABELS:
@@ -763,42 +670,48 @@ class PathVisualize():
     Class definition of the visualization of data gathered from simulation
     directory using the PathDensity class.
 
-    Attributes
-    ----------
-    load_pickle : Function that loads pre-compiled simulation results from
-                  a *.pickle file.
-    plot_Combs : Plots the 1D and 2D density of order parameter combinations
-    get_Edata : Load data (3) from eops dictionary using current settings.
-    get_SingleOdata : Load data (1) from eops dictonary using curent settings
-    get_Odata : Load data (2) from ops dictionary using current settings.
-    plot_SingleDensity : Function that generates plot of the distribution
-                         (histogram) of just one order parameter.
-    plot_Density : Function that generates plot of the density of two
-                   order parameters.
-    plot_Surface : Function that generates different plots for combinations
-                   of three order parameters/energies/other.
-
     """
 
     def __init__(self, pfile=None):
         """Initialize the PathVisualize class.
 
-        If an input file (*.pickle) is present, loads the pre-compiled data
-        from it. Else, must use func load_pickle explicitly.
+        If an input fil .pickle or .hdf5 is present, loads the pre-compiled
+        data from it. Else, must use specific functions explicitly.
         """
         self.pfile = pfile
         if self.pfile is not None:
-            self.load_pickle()
+            if 'pickle' in self.pfile:
+                self.load_pickle()
+            elif 'hdf5' in self.pfile:
+                self.load_dd()
+            else:
+                raise ValueError('Format not recognised')
 
     def load_pickle(self):
-        """Load pre-compiled data from *.pickle file.
+        """Load precompiled data from pickle file.
 
-        Function that loads pre-compiled data from *.pickle file. Depending
+        Function that loads precompiled data from .pickle file. Depending
         on file name, will define data as being created using fast or slow
-        post-processing. Defaults to 'fast'.
+        post-processing.
+
         """
         with open(self.pfile, 'rb') as pdata:
             data = pickle.load(pdata)
+        # Unpacking dictionaries
+        self.ops = data[0]
+        self.eops = data[1]
+        self.infos = data[2]
+        # Unpacking lists of info from infos dict
+        self.op_labels = self.infos['op_labels']
+
+    def load_dd(self):
+        """Load precompiled data from a hdf5 file.
+
+        Function that loads precompiled data from a .hdf5 file made
+        using deepdish.
+
+        """
+        data = dd.io.load(self.pfile)
         # Unpacking dictionaries
         self.ops = data[0]
         self.eops = data[1]
@@ -816,22 +729,22 @@ class PathVisualize():
         Parameters
         ----------
         fol : string
-              Name of folder, 000,001,etc.
+            Name of folder, 000, 001, etc.
         XYACC : list
-                 [0:1] : strings, names of x/y order parameter.
-                 [2] : bool, True/False for acc/rej paths.
-        weight : boolean, default=True
-                 If True, trajectories are
-                 statistically weighted when read from dict.
+            [0:1] : strings, names of x/y order parameter.
+            [2] : bool, True/False for acc/rej paths.
+        weight : boolean, optional
+            If True, trajectories are
+            statistically weighted when read from dict.
         min_max : list
-                  Minimum and maximum cycle number of simulation data.
+            Minimum and maximum cycle number of simulation data.
 
         Returns
         -------
         x : list
-            Floats with values of op2, from dict ops[op2,fol].
+            Floats with values of op2, from dict ops[op2, fol].
         y : list
-            Floats with values of op1, from dict ops[op1,fol].
+            Floats with values of op1, from dict ops[op1, fol].
 
         """
         x, y = [], []
@@ -898,22 +811,22 @@ class PathVisualize():
         Parameters
         ----------
         XYZ : list
-              Names of order parameter and energy labels, for x/y/z-axis.
+            Names of order parameter and energy labels, for x/y/z-axis.
         ACC : boolean OR string
-              True/False for acc/rej paths, "BOTH" for both.
+            True/False for acc/rej paths, "BOTH" for both.
         fol : string
-              Name of folder, 000,001,etc.
+            Name of folder, 000,001,etc.
         min_max : list
-                  Minimum and maximum cycle of simulation data.
+            Minimum and maximum cycle of simulation data.
 
         Returns
         -------
         x : list
-            Floats with values of op2, from dict eops[op2,fol].
+            Floats with values of op2, from dict eops[op2, fol].
         y : list
-            Floats with values of op1, from dict eops[op1,fol].
+            Floats with values of op1, from dict eops[op1, fol].
         z : list
-            Floats with values of E from eops[E,fol].
+            Floats with values of E from eops[E, fol].
 
         """
         x, y, z = [], [], []
@@ -961,40 +874,3 @@ class PathVisualize():
             del y[d]
             del z[d]
         return x, y, z
-
-
-def main():
-    """Run the Compressor application."""
-    # Initializing colorama
-    colorama.init(autoreset=True)
-    # Creating argument parser
-    parser = argparse.ArgumentParser(description='Path Density Analysis')
-    parser.add_argument(
-        '-i',
-        '--input',
-        help=('Location of {} input/output file'.format(PROGRAM_NAME)),
-        required=True
-        )
-    parser.add_argument(
-        '-O',
-        '--only_orderp',
-        action='store_true',
-        help=('Use only data from order.txt files')
-        )
-    parser.add_argument('-V', '--version', action='version',
-                        version='{} {}'.format(PROGRAM_NAME, VERSION))
-    args_dict = vars(parser.parse_args())
-
-    # TODO set up for logging..?
-
-    inputfile = args_dict['input']
-    only_ops = args_dict['only_orderp']
-
-    hello_pathdensity_world()
-    p_data = PathDensity(iofile=inputfile)
-    p_data.walk_dirs(only_ops=only_ops)
-    p_data.pickle_data()
-
-
-if __name__ == '__main__':
-    main()  # pragma: no cover

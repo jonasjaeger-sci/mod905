@@ -42,8 +42,8 @@ def plot_regline(ax, x, y):
     Parameters
     ----------
     x, y : list
-           Floats, coordinates of data regression lines
-           are calculated from.
+        Floats, coordinates of data regression lines
+        are calculated from.
     ax : Matplotlib subplot, where reg.line is to be plotted.
 
     Returns/Updates
@@ -66,11 +66,11 @@ def plot_int_plane(ax, pos, ymin, ymax, zmin, zmax, visible=False):
     ----------
     ax : The matplotlib.axes object where the planes will be plotted.
     pos : float
-          The x-axis position of the interface plane.
+        The x-axis position of the interface plane.
     ymin, ymax, zmin, zmax : float
-                            The limits of the plane in the 3D canvas.
-    visible : boolean, default=False
-              If True, shows interface planes.
+        The limits of the plane in the 3D canvas.
+    visible : boolean, optional
+        If True, shows interface planes.
 
     Returns
     -------
@@ -89,28 +89,26 @@ def plot_int_plane(ax, pos, ymin, ymax, zmin, zmax, visible=False):
 
 
 def gen_surface(x, y, z, fig, ax, cbar_ax=None, dim=3, method='contour',
-                resX=400, resY=400, scat_size=3, colormap='viridis'):
+                resX=400, resY=400, colormap='viridis'):
     """Generate the chosen surface/contour/scatter plot.
 
     Parameters
     ----------
     x, y, z : list
-              Coordinates of data points. (x,y) the chosen orderP pairs, and
-              z is the chosen energy value of the two combinations.
+        Coordinates of data points. (x,y) the chosen orderP pairs, and
+        z is the chosen energy value of the two combinations.
     fig, ax, cbar_ax : Matplotlib objects; figure, main canvas axes and axes
-                       for plotting colorbar.
-    dim : interger, default=3
-          Dimension of plot.
-    method : string, default='contour'
-             Method used for plotting data, default is contour lines.
-    resX, resY : integer, integer
-                 Resolution of plot, either as N*N bins in 2D histogram
-                 (Density plot) or as gridpoints for interpolation of data
-                 (Surface and contour plots).
-    scat_size : integer, default=3
-                Size/diameter(?) of scatter points (in pixels).
-    colormap : string, default='viridis'
-               Name of the colormap/color scheme to use when plotting.
+        for plotting colorbar.
+    dim : interger, optional
+        Dimension of plot.
+    method : string, optional
+        Method used for plotting data, default is contour lines.
+    resX, resY : integer, optional
+        Resolution of plot, either as N*N bins in 2D histogram
+        (Density plot) or as gridpoints for interpolation of data
+        (Surface and contour plots).
+    colormap : string, optional
+        Name of the colormap/color scheme to use when plotting.
 
     Returns
     -------
@@ -127,6 +125,10 @@ def gen_surface(x, y, z, fig, ax, cbar_ax=None, dim=3, method='contour',
         colors = [CMAP((z[i]-zmin)/(zmax-zmin)) for i in range(len(z))]
     else:
         colors = [CMAP(z[i]) for i in range(len(z))]
+
+    # When scatter plots, use resolution to make size for dots.
+    if method == 'scatter':
+        scat_size = resX / 100.0
 
     if dim == 3:
         # 3d plot settings
@@ -150,9 +152,11 @@ def gen_surface(x, y, z, fig, ax, cbar_ax=None, dim=3, method='contour',
             surf = ax.contourf(X, Y, Z, cmap=CMAP)
             cbar = fig.colorbar(surf, cax=cbar_ax)
         elif method == 'scatter':
-            surf = ax.scatter(x, y, z, c=colors, s=scat_size)
+            surf = ax.scatter(x, y, z, c=colors, s=scat_size, cmap=CMAP)
             norm = mpl.colors.Normalize(vmin=zmin, vmax=zmax)
-            cbar = mpl.colorbar.ColorbarBase(cbar_ax, cmap=CMAP, norm=norm)
+            cbar = fig.colorbar(
+                    mpl.cm.ScalarMappable(norm=norm, cmap=CMAP),
+                    cax=cbar_ax)
         else:
             print_to_screen('Method not recognized!', level='error')
             return None, None
@@ -162,9 +166,11 @@ def gen_surface(x, y, z, fig, ax, cbar_ax=None, dim=3, method='contour',
         ax.set_ylim(ymin, ymax)
         # Grid-mapping and interpolation
         if method == 'scatter':
-            surf = ax.scatter(x, y, c=colors, s=scat_size)
+            surf = ax.scatter(x, y, c=colors, s=scat_size, cmap=CMAP)
             norm = mpl.colors.Normalize(vmin=zmin, vmax=zmax)
-            cbar = mpl.colorbar.ColorbarBase(cbar_ax, cmap=CMAP, norm=norm)
+            cbar = fig.colorbar(
+                    mpl.cm.ScalarMappable(norm=norm, cmap=CMAP),
+                    cax=cbar_ax)
         elif method == 'contourf':
             X, Y, Z = _grid_it_up(x, y, z, resX=resX, resY=resY)
             surf = ax.contourf(X, Y, Z, cmap=CMAP)
@@ -183,20 +189,22 @@ def gen_surface(x, y, z, fig, ax, cbar_ax=None, dim=3, method='contour',
     return surf, cbar
 
 
-def _grid_it_up(x, y, z, resX=200, resY=200):
+def _grid_it_up(x, y, z, resX=200, resY=200, fill='max'):
     """Map x, y and z data values to a numpy meshgrid by interpolation.
 
     Parameters
     ----------
-    x,y,z : list
-            Lists of data values.
-    resX, resY : integer
-                 Resolution (number of points in a axis range).
+    x, y, z : list
+        Lists of data values.
+    resX, resY : integer, optional
+        Resolution (number of points in a axis range).
+    fill : string, optional
+        Criteria to color the un-explored regions.
 
     Returns
     -------
     X, Y, Z : list
-              Numpy.arrays of mapped data.
+        Numpy.arrays of mapped data.
 
     """
     # Convert 3 columns of data to grid for matplotlib"""
@@ -205,8 +213,12 @@ def _grid_it_up(x, y, z, resX=200, resY=200):
     X, Y = np.meshgrid(xi, yi)
 
     # Scipy griddata """ # Works
+    if fill == 'max':
+        fill_value = max(z)
+    elif fill == 'min':
+        fill_value = min(z)
     Z = scgriddata((x, y), np.array(z), (X, Y),
-                   method='linear', fill_value=min(z))
+                   method='linear', fill_value=fill_value)
     # other options: 'linear'/'cubic'/'nearest'
 
     return X, Y, Z

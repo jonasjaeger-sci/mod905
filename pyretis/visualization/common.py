@@ -31,30 +31,31 @@ import scipy
 from pyretis.inout import print_to_screen
 
 
-def hello_pathdensity_world(noprint=False):
-    """Print the word art."""
-    msgtxt = ['Starting the']
-    msgtxt += [r"+-------------------------------------------------+"]
-    msgtxt += [r"| The PyRETIS 3.0 tool:                           |"]
-    msgtxt += [r"|  _____     _   _   ____              _ _        |"]
-    msgtxt += [r"| |  _  |___| |_| |_|    \ ___ ___ ___|_| |_ _ _  |"]
-    msgtxt += [r"| |   __| .'|  _|   |  |  | -_|   |_ -+ |  _| | | |"]
-    msgtxt += [r"| |__|  |__,|_| |_|_|____/|___|_|_|___|_|_| |_  | |"]
-    msgtxt += [r"|                                           |___| |"]
-    msgtxt += [r"|     ,       ,       ,       ,       ,      ,    |"]
-    msgtxt += [r"|   .'|     .'|     .'|     .'|     .'|    .'|    |"]
-    msgtxt += [r"|   |*****  | :     | :     | :     | :    | :    |"]
-    msgtxt += [r"|   : '   **: '     : '     : '     : '    : '    |"]
-    msgtxt += [r"|   | |     |**  ***|****   | |     | |    | |    |"]
-    msgtxt += [r"|   ' :     ' :**   ' :  ***'*:     ' :    ' :    |"]
-    msgtxt += [r"|   ; |     ; |     ; |     ; ***** ; |    ; |    |"]
-    msgtxt += [r"|   | :     | :     | :     | :    *| :    | :    |"]
-    msgtxt += [r"|   : '     :*******: '     : ' *** : '    : '    |"]
-    msgtxt += [r"|   | |  ***| |     |*******|***    | |    | |    |"]
-    msgtxt += [r"|   :****   : ;     : ;     : ;     : ;    : ;    |"]
-    msgtxt += [r"|   ,/      ,/      ,/      ,/      ,/     ,/     |"]
-    msgtxt += [r"|   '       '       '       '       '      '      |"]
-    msgtxt += [r"+-------------------------------------------------+"]
+def hello_pyvisa(noprint=False):
+    """Pyvisa logo printing to screen."""
+    msgtxt = ['Starting']
+    msgtxt += [r"+------------------------------------------+"]
+    msgtxt += [r"|   _______                                |"]
+    msgtxt += [r"|  /   ___ \        _    ___         ___   |"]
+    msgtxt += [r"| /_/\ \_/ /_  __  | |  / (_)____   /   |  |"]
+    msgtxt += [r"|    /  __  / / /  | | / / / ___/  / /| |  |"]
+    msgtxt += [r"|   / /   \ \/ /   | |/ / (__  )  / ___ |  |"]
+    msgtxt += [r"|  /_/    _\  /    |___/_/____/  /_/  |_|  |"]
+    msgtxt += [r"|        /___/                             |"]
+    msgtxt += [r"|     ,       ,       ,       ,       ,    |"]
+    msgtxt += [r"|   .'|     .'|     .'|     .'|     .'|    |"]
+    msgtxt += [r"|   |*****  | :     | :     | :     | :    |"]
+    msgtxt += [r"|   : '   **: '     : '     : '     : '    |"]
+    msgtxt += [r"|   | |     |**  ***|****   | |     | |    |"]
+    msgtxt += [r"|   ' :     ' :**   ' :  ***'*:     ' :    |"]
+    msgtxt += [r"|   ; |     ; |     ; |     ; ***** ; |    |"]
+    msgtxt += [r"|   | :     | :     | :     | :    *| :    |"]
+    msgtxt += [r"|   : '     :*******: '     : ' *** : '    |"]
+    msgtxt += [r"|   | |  ***| |     |*******|***    | |    |"]
+    msgtxt += [r"|   :****   : ;     : ;     : ;     : ;    |"]
+    msgtxt += [r"|   ,/      ,/      ,/      ,/      ,/     |"]
+    msgtxt += [r"|   '       '       '       '       '      |"]
+    msgtxt += [r"+------------------------------------------+"]
     msgtxt += ' '
     if not noprint:
         for txt in msgtxt:
@@ -110,12 +111,12 @@ def get_startat(myfile, noprint=False):
     Parameters
     ----------
     myfile : string
-          Filename of file that is checked for restart line
+        Filename of file that is checked for restart line
 
     Returns
     -------
     startat : integer
-              Index of file (line) with last restart line
+        Index of file (line) with last restart line
 
     """
     startat = 0
@@ -137,12 +138,13 @@ def diff_matching(l1, l2, lenp):
     Parameters
     ----------
     l1, l2 : Lists
-    lenp : List with lengths of l1 and l2
+    lenp : list
+        lengths of l1 and l2
 
     Returns
     -------
     d1, d2 : Lists
-             Indeces of lists l1 and l2, respectively, to be deleted
+        Indeces of lists l1 and l2, respectively, to be deleted
 
     """
     d1, d2 = [], []
@@ -241,15 +243,15 @@ def try_data_shift(x, y, op1):
     Parameters
     ----------
     x, y : list
-           Floats, data values
+        Floats, data values
     op1 : string
-          Label of x values in PathDensity dictionary
+        Label of x values in PathDensity dictionary
 
     Returns
     -------
     x, y : list
-           Floats, updated (or unchanged) data values
-           (If changed, returns x_temp or y_temp or both)
+        Floats, updated (or unchanged) data values
+        (If changed, returns x_temp or y_temp or both)
 
     """
     # The unshifted data
@@ -269,8 +271,6 @@ def try_data_shift(x, y, op1):
     _, _, r_xy, _, _ = scipy.stats.linregress(x_temp, y_temp)
     r_xy2 = r_xy**2
     xyshift = bool(r_xy2 > r_2 and r_xy2 > r_y2 and r_xy2 > r_x2)
-
-    # TODO find better way with properly named op's
 
     # If first op is op1, don't shift data
     if (xyshift) and op1 != 'op1':
@@ -298,8 +298,8 @@ def shift_data(x):
     Returns
     -------
     xnorm : list
-            Floats where some values are shifted values of x,
-            and some are left unchanged.
+        Floats where some values are shifted values of x,
+        and some are left unchanged.
 
     """
     xmin, xmax = min(x), max(x)

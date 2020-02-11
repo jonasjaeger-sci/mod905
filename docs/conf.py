@@ -24,6 +24,7 @@ sys.path.append(os.path.abspath('ext'))
 # If your documentation needs a minimal Sphinx version, state it here.
 needs_sphinx = '1.6'  # Reason: imgmath, and new way of adding css
 PYRETIS = 'PyRETIS'
+PYVISA = 'PyVisA'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
@@ -74,7 +75,10 @@ project = '{}'.format(PYRETIS)
 copyright = '2019, The {} team'.format(PYRETIS)
 author = 'The {} team'.format(PYRETIS)
 
-rst_epilog = '.. |pyretis| replace:: {}'.format(PYRETIS)
+rst_epilog = """
+.. |pyretis| replace:: {}
+.. |pyvisa| replace:: {}
+""".format(PYRETIS, PYVISA)
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
