@@ -14,7 +14,7 @@ from pyretis.visualization.common import (
     get_startat,
     diff_matching,
     try_data_shift,
-    hello_pathdensity_world
+    hello_pyvisa
 )
 logging.disable(logging.CRITICAL)
 
@@ -30,60 +30,62 @@ def del_list_ind(l, d):
 
 class TestMethods(unittest.TestCase):
     """Test some of the methods from pyretis.visualization.common."""
-    def test_hello_pathdensity_world(self):
+    def test_hello_pyvisa(self):
         """Test of the hello-message of pathdensity module"""
-        hello_pathdensity_world(noprint=True)
+        hello_pyvisa(noprint=True)
         # Does nothing but print, always ok!
 
-    def test_hello_pathdensity_word_print(self):
+    def test_hello_pyvisa_print(self):
         with patch('sys.stdout', new=StringIO()) as fakeOutput:
-            hello_pathdensity_world(noprint=False)
+            hello_pyvisa(noprint=False)
             color = colorama.Fore.CYAN
-            msgtxt = color+'Starting the\n'
+            msgtxt = color+'Starting\n'
             msgtxt += color
-            msgtxt += "+-------------------------------------------------+\n"
+            msgtxt += r"+------------------------------------------+"+"\n"
             msgtxt += color
-            msgtxt += "| The PyRETIS 3.0 tool:                           |\n"
+            msgtxt += r"|   _______                                |"+"\n"
             msgtxt += color
-            msgtxt += "|  _____     _   _   ____              _ _        |\n"
+            msgtxt += r"|  /   ___ \        _    ___         ___   |"+"\n"
             msgtxt += color
-            msgtxt += r"| |  _  |___| |_| |_|    \ ___ ___ ___|_| |_ _ _  |"
-            msgtxt += "\n"
+            msgtxt += r"| /_/\ \_/ /_  __  | |  / (_)____   /   |  |"+"\n"
             msgtxt += color
-            msgtxt += "| |   __| .'|  _|   |  |  | -_|   |_ -+ |  _| | | |\n"
+            msgtxt += r"|    /  __  / / /  | | / / / ___/  / /| |  |"+"\n"
             msgtxt += color
-            msgtxt += "| |__|  |__,|_| |_|_|____/|___|_|_|___|_|_| |_  | |\n"
+            msgtxt += r"|   / /   \ \/ /   | |/ / (__  )  / ___ |  |"+"\n"
             msgtxt += color
-            msgtxt += "|                                           |___| |\n"
+            msgtxt += r"|  /_/    _\  /    |___/_/____/  /_/  |_|  |"+"\n"
             msgtxt += color
-            msgtxt += "|     ,       ,       ,       ,       ,      ,    |\n"
+            msgtxt += r"|        /___/                             |"+"\n"
             msgtxt += color
-            msgtxt += "|   .'|     .'|     .'|     .'|     .'|    .'|    |\n"
+            msgtxt += r"|     ,       ,       ,       ,       ,    |"+"\n"
             msgtxt += color
-            msgtxt += "|   |*****  | :     | :     | :     | :    | :    |\n"
+            msgtxt += r"|   .'|     .'|     .'|     .'|     .'|    |"+"\n"
             msgtxt += color
-            msgtxt += "|   : '   **: '     : '     : '     : '    : '    |\n"
+            msgtxt += r"|   |*****  | :     | :     | :     | :    |"+"\n"
             msgtxt += color
-            msgtxt += "|   | |     |**  ***|****   | |     | |    | |    |\n"
+            msgtxt += r"|   : '   **: '     : '     : '     : '    |"+"\n"
             msgtxt += color
-            msgtxt += "|   ' :     ' :**   ' :  ***'*:     ' :    ' :    |\n"
+            msgtxt += r"|   | |     |**  ***|****   | |     | |    |"+"\n"
             msgtxt += color
-            msgtxt += "|   ; |     ; |     ; |     ; ***** ; |    ; |    |\n"
+            msgtxt += r"|   ' :     ' :**   ' :  ***'*:     ' :    |"+"\n"
             msgtxt += color
-            msgtxt += "|   | :     | :     | :     | :    *| :    | :    |\n"
+            msgtxt += r"|   ; |     ; |     ; |     ; ***** ; |    |"+"\n"
             msgtxt += color
-            msgtxt += "|   : '     :*******: '     : ' *** : '    : '    |\n"
+            msgtxt += r"|   | :     | :     | :     | :    *| :    |"+"\n"
             msgtxt += color
-            msgtxt += "|   | |  ***| |     |*******|***    | |    | |    |\n"
+            msgtxt += r"|   : '     :*******: '     : ' *** : '    |"+"\n"
             msgtxt += color
-            msgtxt += "|   :****   : ;     : ;     : ;     : ;    : ;    |\n"
+            msgtxt += r"|   | |  ***| |     |*******|***    | |    |"+"\n"
             msgtxt += color
-            msgtxt += "|   ,/      ,/      ,/      ,/      ,/     ,/     |\n"
+            msgtxt += r"|   :****   : ;     : ;     : ;     : ;    |"+"\n"
             msgtxt += color
-            msgtxt += "|   '       '       '       '       '      '      |\n"
+            msgtxt += r"|   ,/      ,/      ,/      ,/      ,/     |"+"\n"
             msgtxt += color
-            msgtxt += "+-------------------------------------------------+\n"
+            msgtxt += r"|   '       '       '       '       '      |"+"\n"
             msgtxt += color
+            msgtxt += r"+------------------------------------------+"+"\n"
+            msgtxt += color
+
             self.assertEqual(fakeOutput.getvalue().strip(), str(msgtxt))
 
     def test_get_min_max(self):

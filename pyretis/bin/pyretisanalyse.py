@@ -43,6 +43,7 @@ from pyretis.inout import print_to_screen
 from pyretis.inout.report import generate_report
 from pyretis.inout.settings import parse_settings_file
 from pyretis.visualization.orderparam_density import PathDensity
+from pyretis.visualization.common import hello_pyvisa
 from pyretis.visualization import HAS_PYQT5
 if HAS_PYQT5:
     from pyretis.visualization.visualize import visualize_main
@@ -218,23 +219,26 @@ def main(input_file, run_path, report_dir, pyvisa_dict=None):
         The location where we will write the report.
     pyvisa_dict : dictionary, optional
         It determines the section of pyvisa to use, it contains:
-
          * `pyvisa`, boolean
            If true, the compressor followed by the GUI will be executed
            if an .rst file will be provided as an input (-i option),
            while only the GUI will be executed if a pickle file will
            be providedd as a input.
          * `pyvisa-cmp`, boolean
-           If true, only the compressor tool will be executed. A pickle
+           If true, only the compressor tool will be executed. A compressed
            file will be produced.
 
     """
     try:
         if pyvisa_dict.get('pyvisa_compressor', False):
-            only_ops = pyvisa_dict['only_orderp']
+            hello_pyvisa()
+            only_ops = pyvisa_dict['only_order']
             p_data = PathDensity(iofile=input_file)
             p_data.walk_dirs(only_ops=only_ops)
-            p_data.pickle_data()
+            if pyvisa_dict['pickle']:
+                p_data.pickle_data()
+            else:
+                p_data.deepdish_data()
 
         elif pyvisa_dict.get('pyvisa_all', False):
             if not HAS_PYQT5:
@@ -242,7 +246,18 @@ def main(input_file, run_path, report_dir, pyvisa_dict=None):
                        'pickle by using the -pyvisa-cmp flag instead')
                 raise ImportError(msg)
             runpath = os.path.dirname(os.path.realpath(input_file))
-            visualize_main(runpath, input_file)
+            hello_pyvisa()
+            if not any(('pickle' in input_file,
+                        'hdf5' in input_file)):
+                p_data = PathDensity(iofile=input_file)
+                p_data.walk_dirs()
+                if pyvisa_dict['pickle']:
+                    p_data.pickle_data()
+                else:
+                    p_data.deepdish_data()
+                visualize_main(runpath, p_data.pfile)
+            else:
+                visualize_main(runpath, input_file)
         else:
             print_to_screen('Reading input file "{}"'.format(input_file))
             settings = parse_settings_file(input_file)
@@ -301,8 +316,11 @@ def entry_point():
                         action='store_true',
                         help='Run PyVisA compressor tool',
                         default=False)
-    parser.add_argument('-O', '--only_orderp', action='store_true',
-                        help=('Use only data from order.txt files'),
+    parser.add_argument('-oo', '--only_order', action='store_true',
+                        help=('PyVisA: Use only data from order.txt files'),
+                        default=False)
+    parser.add_argument('-p', '--pickle', action='store_true',
+                        help=('PyVisA: Output pickle file, default is hdf5.'),
                         default=False)
 
     args_dict = vars(parser.parse_args())

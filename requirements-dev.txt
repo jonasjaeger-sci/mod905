@@ -18,3 +18,4 @@ bokeh>=0.12.9
 pycodestyle>=2.3.1
 pydocstyle>=2.1.0
 pyqt5>=4.19.19
+deepdish>=0.3.6

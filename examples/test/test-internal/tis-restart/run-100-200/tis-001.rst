@@ -11,12 +11,12 @@ restart = ../run-100/pyretis.restart
 System settings
 ---------------
 dimensions = 1
-temperature = 0.07
+temperature = 0.7
 units = reduced
 
 Engine settings
 ---------------
-timestep = 0.002
+timestep = 0.02
 class = Langevin
 seed = 0
 gamma = 0.3

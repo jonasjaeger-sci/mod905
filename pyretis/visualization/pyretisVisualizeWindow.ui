@@ -14,7 +14,7 @@
    <string>Path visualization</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="resources.qrc">
+   <iconset>
     <normaloff>:/icon/qrc/icon.png</normaloff>:/icon/qrc/icon.png</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
@@ -39,6 +39,10 @@
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QDockWidget" name="dockWidget">
+   <property name="windowIcon">
+    <iconset>
+     <normaloff>:/icon/qrc/icon.png</normaloff>:/icon/qrc/icon.png</iconset>
+   </property>
    <property name="features">
     <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
    </property>
@@ -391,13 +395,13 @@
              <item>
               <widget class="QSpinBox" name="resSpinBox">
                <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Used in two different cases:&lt;/p&gt;&lt;p&gt;1. The resolution used by density plots to map all data values to a grid of size N*N, and the density of each gridpoint calculated and mapped.&lt;br/&gt;2. The resolution of a similar grid as in 1., but instead of calculating (counting) number of points at each gridpoint, attempt to interpolate the z-value at each gridpoint from all values located at the gridpoint in order to create a surface for plotting in Surface/Contour plots.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Used as:&lt;/p&gt;&lt;p&gt;1. The resolution used by density plots to map all data values to a grid of size N*N, and the density of each gridpoint calculated and mapped.&lt;br/&gt;2. The resolution of a similar grid as in 1., but instead of calculating (counting) number of points at each gridpoint, attempt to interpolate the z-value at each gridpoint from all values located at the gridpoint in order to create a surface for plotting in Surface/Contour plots.&lt;br/&gt;3. As a value to be used for scatter plot dot size: scat_size = N/100&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="wrapping">
                 <bool>false</bool>
                </property>
                <property name="minimum">
-                <number>50</number>
+                <number>10</number>
                </property>
                <property name="maximum">
                 <number>4000</number>
@@ -452,6 +456,19 @@
         <layout class="QGridLayout" name="gridLayout">
          <item row="1" column="0" rowspan="2" colspan="2">
           <layout class="QGridLayout" name="gridLayout_3">
+           <item row="1" column="4">
+            <widget class="QCheckBox" name="cbarChkBtn">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Show/hide the colorbar in the plot&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="text">
+              <string>Show colorbar</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
            <item row="2" column="3">
             <widget class="QLineEdit" name="xmaxLine">
              <property name="text">
@@ -463,19 +480,6 @@
             <widget class="QLabel" name="label_16">
              <property name="text">
               <string>ymin</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="0" colspan="4">
-            <widget class="QLabel" name="label_14">
-             <property name="toolTip">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Zoom in the plot by defining min and max values of x and y coordinates&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-             </property>
-             <property name="text">
-              <string>Zoom:</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignBottom|Qt::AlignHCenter</set>
              </property>
             </widget>
            </item>
@@ -746,16 +750,44 @@
              </property>
             </widget>
            </item>
-           <item row="0" column="0" colspan="2">
-            <widget class="QCheckBox" name="cbarChkBtn">
+           <item row="1" column="0" colspan="4">
+            <widget class="QLabel" name="label_14">
              <property name="toolTip">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Show/hide the colorbar in the plot&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Zoom in the plot by defining min and max values of x and y coordinates&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
              <property name="text">
-              <string>Show colorbar</string>
+              <string>Axes range:</string>
              </property>
-             <property name="checked">
-              <bool>true</bool>
+             <property name="alignment">
+              <set>Qt::AlignBottom|Qt::AlignHCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="0">
+            <widget class="QLabel" name="label_19">
+             <property name="text">
+              <string>zmin</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="2">
+            <widget class="QLabel" name="label_20">
+             <property name="text">
+              <string>zmax</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="1">
+            <widget class="QLineEdit" name="zminLine">
+             <property name="text">
+              <string>0</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="3">
+            <widget class="QLineEdit" name="zmaxLine">
+             <property name="text">
+              <string>0</string>
              </property>
             </widget>
            </item>
@@ -902,22 +934,34 @@
      <x>0</x>
      <y>0</y>
      <width>560</width>
-     <height>25</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
     <property name="title">
      <string>File</string>
     </property>
+    <widget class="QMenu" name="menuSave_data_as">
+     <property name="title">
+      <string>Save data as...</string>
+     </property>
+     <addaction name="action_sim_hdf5"/>
+     <addaction name="action_sim_pickle"/>
+    </widget>
     <widget class="QMenu" name="menuSave_figure_as">
      <property name="title">
       <string>Save figure as...</string>
      </property>
-     <addaction name="action_PNG"/>
+     <addaction name="action_datafile"/>
+     <addaction name="action_hdf5"/>
+     <addaction name="action_makefig_script"/>
      <addaction name="action_pickle"/>
+     <addaction name="action_png"/>
+     <addaction name="action_json"/>
     </widget>
-    <addaction name="menuSave_figure_as"/>
     <addaction name="action_Load_data"/>
+    <addaction name="menuSave_data_as"/>
+    <addaction name="menuSave_figure_as"/>
     <addaction name="actionExit"/>
    </widget>
    <addaction name="menuFile"/>
@@ -927,7 +971,7 @@
     <string>Exit</string>
    </property>
   </action>
-  <action name="action_PNG">
+  <action name="action_png">
    <property name="text">
     <string>.png</string>
    </property>
@@ -942,8 +986,39 @@
     <string>.pickle</string>
    </property>
   </action>
+  <action name="action_sim_pickle">
+   <property name="text">
+    <string>.pickle</string>
+   </property>
+  </action>
+  <action name="action_hdf5">
+   <property name="text">
+    <string>.hdf5</string>
+   </property>
+  </action>
+  <action name="action_sim_hdf5">
+   <property name="text">
+    <string>.hdf5</string>
+   </property>
+  </action>
+  <action name="action_json">
+   <property name="text">
+    <string>.json</string>
+   </property>
+  </action>
+  <action name="action_makefig_script">
+   <property name="text">
+    <string>.py script</string>
+   </property>
+  </action>
+  <action name="action_datafile">
+   <property name="text">
+    <string>.txt</string>
+   </property>
+  </action>
  </widget>
  <tabstops>
+  <tabstop>filenameLine</tabstop>
   <tabstop>plotTypeComBox</tabstop>
   <tabstop>folderComBox</tabstop>
   <tabstop>firstOpComBox</tabstop>
@@ -955,8 +1030,29 @@
   <tabstop>dataShiftChkBtn</tabstop>
   <tabstop>intShowChkBtn</tabstop>
   <tabstop>regLineChkBtn</tabstop>
+  <tabstop>resSpinBox</tabstop>
+  <tabstop>updateBtn</tabstop>
+  <tabstop>cmapComBox</tabstop>
+  <tabstop>cbarChkBtn</tabstop>
+  <tabstop>xminLine</tabstop>
+  <tabstop>xmaxLine</tabstop>
+  <tabstop>yminLine</tabstop>
+  <tabstop>ymaxLine</tabstop>
+  <tabstop>zminLine</tabstop>
+  <tabstop>zmaxLine</tabstop>
+  <tabstop>previewBtn</tabstop>
+  <tabstop>saveFigBtn</tabstop>
+  <tabstop>showTitleChkBtn</tabstop>
+  <tabstop>titleSizeSpin</tabstop>
+  <tabstop>titleLine</tabstop>
+  <tabstop>axesSizeSpin</tabstop>
+  <tabstop>xaxisLabel</tabstop>
+  <tabstop>yaxisLabel</tabstop>
+  <tabstop>zaxisLabel</tabstop>
   <tabstop>dockTabs</tabstop>
+  <tabstop>showWidgetChk</tabstop>
  </tabstops>
+ <resources/>
  <connections>
   <connection>
    <sender>showWidgetChk</sender>
@@ -965,8 +1061,8 @@
    <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>135</x>
-     <y>345</y>
+     <x>130</x>
+     <y>325</y>
     </hint>
     <hint type="destinationlabel">
      <x>331</x>
@@ -985,7 +1081,7 @@
      <y>524</y>
     </hint>
     <hint type="destinationlabel">
-     <x>141</x>
+     <x>139</x>
      <y>593</y>
     </hint>
    </hints>
@@ -1001,8 +1097,8 @@
      <y>524</y>
     </hint>
     <hint type="destinationlabel">
-     <x>141</x>
-     <y>558</y>
+     <x>139</x>
+     <y>559</y>
     </hint>
    </hints>
   </connection>
@@ -1033,8 +1129,8 @@
      <y>524</y>
     </hint>
     <hint type="destinationlabel">
-     <x>255</x>
-     <y>593</y>
+     <x>273</x>
+     <y>592</y>
     </hint>
    </hints>
   </connection>
@@ -1049,8 +1145,8 @@
      <y>524</y>
     </hint>
     <hint type="destinationlabel">
-     <x>385</x>
-     <y>593</y>
+     <x>405</x>
+     <y>592</y>
     </hint>
    </hints>
   </connection>
@@ -1077,12 +1173,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>131</x>
-     <y>385</y>
+     <x>492</x>
+     <y>398</y>
     </hint>
     <hint type="destinationlabel">
-     <x>426</x>
-     <y>385</y>
+     <x>538</x>
+     <y>369</y>
     </hint>
    </hints>
   </connection>
@@ -1093,12 +1189,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>96</x>
-     <y>385</y>
+     <x>457</x>
+     <y>398</y>
     </hint>
     <hint type="destinationlabel">
-     <x>339</x>
-     <y>389</y>
+     <x>372</x>
+     <y>369</y>
     </hint>
    </hints>
   </connection>
@@ -1129,8 +1225,8 @@
      <y>520</y>
     </hint>
     <hint type="destinationlabel">
-     <x>87</x>
-     <y>576</y>
+     <x>85</x>
+     <y>593</y>
     </hint>
    </hints>
   </connection>

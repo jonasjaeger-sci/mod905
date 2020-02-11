@@ -20,7 +20,7 @@ periodic = [False]
 Engine
 ------
 class = Langevin
-timestep = 0.002
+timestep = 0.02
 gamma = 0.3
 high_friction = False
 seed = 0

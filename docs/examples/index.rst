@@ -25,3 +25,4 @@ Complete list of examples:
     examples-cp2k-hydrogen.rst
     examples-lammps-wca.rst
     examples-openmm.rst
+    examples-pyvisa.rst

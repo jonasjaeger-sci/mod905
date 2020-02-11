@@ -3,43 +3,38 @@
 # pylint: skip-file
 # Copyright (c) 2019, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
-"""visualize.py - A custom GUI application for visualizing simulation data.
+"""GUI application for visualizing simulation data.
 
 This is a PyQt5 file, using a custom made ui layout, with a window which
 displays different plots created by the path density tool. Window can either
-display data of a pre-compiled *.pickle file generated with the
+display data of a pre-compiled compressed file generated with the
 orderparam_density.py module, or compile on in/out files by importing
 orderparam_density and executing before displaying the results.
 
-usage : visualize.py [-h] [-i INPUT]
-
-optional arguments:
-    -h, --help      show this help message and exit
-    -i INPUT, --input INPUT
-                    Location of PyRETIS input/output file and simulation
-                    directory, or location of compiled data in *.pickle
-                    format.
 """
-import sys
-import os
-import argparse
-import pickle
+# Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 import colorama
-from PyQt5 import QtCore, QtGui, QtWidgets, uic
-# import matplotlib
-# matplotlib.use('TkAgg')
+import codecs
+import deepdish as dd
+import matplotlib as mpl
 import matplotlib.pyplot as plt  # noqa: E402
-from matplotlib.figure import Figure  # noqa: E402
+import numpy as np
+import os
+import pickle
+import sys
+import json
 from matplotlib.backends.backend_qt5agg import (  # noqa: E402
         FigureCanvasQTAgg as FigureCanvas
         )
+from matplotlib.figure import Figure  # noqa: E402
+from pyretis.info import PROGRAM_NAME  # noqa: E402
+from pyretis.visualization.common import try_data_shift  # noqa: E402
 from pyretis.visualization.orderparam_density import (PathDensity,  # noqa: E402
                                                       PathVisualize)
-from pyretis.visualization.common import try_data_shift  # noqa: E402
 from pyretis.visualization.plotting import (gen_surface,  # noqa: E402
                                             plot_regline,
                                             plot_int_plane)
-from pyretis.info import PROGRAM_NAME  # noqa: E402
+from PyQt5 import QtCore, QtGui, QtWidgets, uic
 
 # Hard-coded labels for energies and time/cycle steps
 ENERGYLABELS = ['time', 'cycE', 'potE', 'kinE', 'totE']
@@ -60,54 +55,61 @@ class VisualApp(QtWidgets.QMainWindow, Ui_VisualWindow):
     Attributes
     ----------
     mainworker : A QThread object that stores (and executes) the path density
-                 data back-end, initialized by the VisualApp window. When
-                 called will update the data lists and return to VisualApp
-                 for plotting.
+        data back-end, initialized by the VisualApp window. When
+        called will update the data lists and return to VisualApp
+        for plotting.
 
     Div. functions
     --------------
     closeEvent, action_reload, centerOnScreen, toggle_buttons :
-                Functions that relate to closing of window, reloading data,
-                centering the window on screen and disable key buttons while
-                updating data/figure.
+        Functions that relate to closing of window, reloading data,
+        centering the window on screen and disable key buttons while
+        pdating data/figure.
     _update_canvas_{title/text} :
-                Functions that update the title and label text of plot settings
-                and in the figure.
+        Functions that update the title and label text of plot settings
+        and in the figure.
     _get_settings : Gets plot settings from VisualApp dropwidget.
     _get_savename : Generate generic savename based on current settings.
-    save_pickle, save_png :
-                Functions that store the current figure shown in VisualApp
-                window as either a pickle-dump (!!!NOT FINISHED!!!) or a
-                *.png image, with generic names generated from data settings.
+    save_png : Function that store the current figure shown in VisualApp
+        window as a .png image, with name generated from data settings.
+    save_pickle : Function that store the current figure shown in VisualApp
+        window a pickle-dump, with name generated from data settings.
+    save_hdf5 : Function that store the current figure shown in VisualApp
+        window a hdf5 save, with name generated from data settings.
+    save_json : Function that store the current figure shown in VisualApp
+        window a json save, with name generated from data settings.
+    save_script : Function that generates a script to reconstruct the current
+        plot from the compressed file.
     _load_file : Opens QFileDialog for choosing file to load in VisualApp.
-    _load_data_pickle : Loads data from pickle dump.
+    _load_data : Loads data from hdf5 or pickle save.
     _load_data_output : Executes a PathDensity on input/output file before
-                        displaying results.
+        displaying results.
     _reload : Clears old data and initializes loading new data from file.
     _change_{cmap/zoom} :
-                Updates figure with different colormap, and with xlims+ylims
+        Updates figure with different colormap, and with xlims+ylims
     toggle_{intf/regl/cbar/titles} :
-                Functions that shows/hides interfaces, regression line,
-                colorbar, and titles/labes, respectively.
+        Functions that shows/hides interfaces, regression line,
+        colorbar, and titles/labes, respectively.
     emit_settings : Function that is called when pressing a QPushButton labeled
-                    'Update' after choosing desired settings for plot.
-                    Sends settings to mainworker, which updates the data of
-                    x, y (and z) lists before sending back to VisualApp for
-                    plotting.
+        'Update' after choosing desired settings for plot.
+        Sends settings to mainworker, which updates the data of
+        x, y (and z) lists before sending back to VisualApp for
+        plotting.
 
     Signals
     -------
-    start_cmd : PyQt Signal, tells worker thread to start using string, cmd.
-    send_settings : PyQt Signal, sends settings for data_get
-                    to worker thread.
+    start_cmd : PyQt Signal
+        It tells worker to start using string, cmd.
+    send_settings : PyQt Signal
+        It sends settings for data_get to worker thread.
 
     Slots
     -----
     update_cycle : A function bound to a pyqtSignal sent by the mainworker
-                   thread. Signal sets upper and lower bounds for max/min
-                   cycles used in plotting.
+        thread. Signal sets upper and lower bounds for max/min
+        cycles used in plotting.
     update_fig : PyQt Slot, worker thread calls function by sending 3 lists
-                 of floats for plotting in this function.
+        of floats for plotting in this function.
 
     """
 
@@ -146,7 +148,7 @@ class VisualApp(QtWidgets.QMainWindow, Ui_VisualWindow):
         load = QtWidgets.QMessageBox.question(
             self,
             "Reload data from file",
-            "Are you sure you want to delete data and reload ?",
+            "Are you sure to discard the current data and reload a new set ?",
             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
         if load == QtWidgets.QMessageBox.Yes:
             self.statusbar.showMessage('Deleting old data')
@@ -167,7 +169,7 @@ class VisualApp(QtWidgets.QMainWindow, Ui_VisualWindow):
     def toggle_buttons(self, onoff):
         """Toggles enable-state of key buttons of VisualApp.
 
-        to avoid user-created conflicts while busy updating data and drawing
+        avoid user-created conflicts while busy updating data and drawing
         figure.
         """
         self.updateBtn.setEnabled(onoff)
@@ -218,6 +220,15 @@ class VisualApp(QtWidgets.QMainWindow, Ui_VisualWindow):
         self.myfig.xaxis.set_fontsize(axesfont)
         self.myfig.yaxis.set_fontsize(axesfont)
         self.myfig.zaxis.set_fontsize(axesfont)
+        self.myfig.cbar.ax.tick_params(labelsize=axesfont)
+        for tick in self.myfig.ax.xaxis.get_major_ticks():
+            tick.label.set_fontsize(axesfont)
+        for tick in self.myfig.ax.yaxis.get_major_ticks():
+            tick.label.set_fontsize(axesfont)
+        # Default pyplot tick size: lenght=3.5, width=1.0
+        tick_l = round(axesfont/4, 2)
+        tick_w = round(axesfont/10, 2)
+        self.myfig.ax.tick_params(length=tick_l, width=tick_w)
         self.myfig.fig.canvas.draw()
 
     def _update_canvas_text(self):
@@ -228,7 +239,6 @@ class VisualApp(QtWidgets.QMainWindow, Ui_VisualWindow):
         """
         self.settings['show titles'] = self.showTitleChkBtn.isChecked()
         show = self.settings['show titles']
-        # TODO change to suptitle?
         self.myfig.title = self.myfig.ax.set_title(
             self.titleLine.text(),
             fontsize=self.settings['title font'],
@@ -338,6 +348,8 @@ class VisualApp(QtWidgets.QMainWindow, Ui_VisualWindow):
                          float(self.xmaxLine.text())),
             'y-limits': (float(self.yminLine.text()),
                          float(self.ymaxLine.text())),
+            'z-limits': (float(self.zminLine.text()),
+                         float(self.zmaxLine.text())),
             'show titles': self.showTitleChkBtn.isChecked()
             }
 
@@ -345,33 +357,216 @@ class VisualApp(QtWidgets.QMainWindow, Ui_VisualWindow):
         """Pickle current figure.
 
         Function that pickles the current pyplot.figure object of
-        VisualApp and CustomFigCanvas to a *.pickle file. Function creates
+        VisualApp and CustomFigCanvas to a .pickle file. Function creates
         title and name for file by the current settings for the plot.
         """
-        name = self._get_savename()
-        outfile = name+'.pickle'
+        if self.settings is None:
+            self.statusbar.showMessage('No data selected')
+            return
+        name = self._get_savename()+'.pickle'
+        outfile = os.path.join(self.folder, name)
         with open(outfile, 'wb') as out:
             pickle.dump(self.myfig.fig, out, protocol=pickle.HIGHEST_PROTOCOL)
         self.statusbar.showMessage('Figure pickled to file {}'.format(outfile))
+
+    def save_hdf5(self):
+        """Save in hdf5 format the current figure.
+
+        Function that saves the current pyplot.figure object of
+        VisualApp and CustomFigCanvas to a .hdf5 file. Function creates
+        title and name for file by the current settings for the plot.
+        """
+        if self.settings is None:
+            self.statusbar.showMessage('No data selected')
+            return
+        name = self._get_savename()+'.hdf5'
+        outfile = os.path.join(self.folder, name)
+        dd.io.save(outfile, self.myfig.fig)
+        self.statusbar.showMessage('Figure saved as {}'.format(outfile))
+
+    def save_json(self):
+        """Save in json format the current figure.
+
+        Function that saves the current pyplot.figure object of
+        VisualApp and CustomFigCanvas to a .json file. Function creates
+        title and name for file by the current settings for the plot.
+        """
+        if self.settings is None:
+            self.statusbar.showMessage('No data selected')
+            return
+        name = self._get_savename()+'.json'
+        outfile = os.path.join(self.folder, name)
+        if self.settings['fol'] == 'All':
+            x, y, z = self.dataobject._get_from_all()
+        else:
+            x, y, z = self.dataobject._get_from_single(self.settings['fol'])
+
+        data = {'x': x, 'y': y, 'z': z, 'settings': self.settings}
+
+        json.dump(data,
+                  codecs.open(outfile, 'w', encoding='utf-8'),
+                  separators=(',', ':'), sort_keys=True, indent=4)
+        self.statusbar.showMessage('Figure saved as {}'.format(outfile))
 
     def save_png(self):
         """Save current figure as png.
 
         Function that saves the current plotted figure of VisualApp
-        and CustomFigCanvas as a *.png file.
+        and CustomFigCanvas as a .png file.
         Function creates title and name for file by the current settings
         for the plot.
         """
-        name = self._get_savename()
-        outfile = name+'.png'
+        if self.settings is None:
+            self.statusbar.showMessage('No data selected')
+            return
+        name = self._get_savename()+'.png'
+        outfile = os.path.join(self.folder, name)
         self.myfig.fig.savefig(outfile)
         self.statusbar.showMessage('Figure saved: {}'.format(outfile))
+
+    def save_textdata(self):
+        """Save x, y, z data to file.
+
+        Function that saves the current x, y, z data of the visualizer to
+        a textfile for use in other operations, plotting, etc.
+        """
+        if self.settings is None:
+            self.statusbar.showMessage('No data selected')
+            return
+        self.statusbar.showMessage('Saving figure data to file...')
+        name = self._get_savename()+'.txt'
+        outfile = os.path.join(self.folder, name)
+        if self.settings['fol'] == 'All':
+            x, y, z = self.dataobject._get_from_all()
+        else:
+            x, y, z = self.dataobject._get_from_single(self.settings['fol'])
+
+        if not z:
+            line = '\t{}\t\t{}\n'
+            header = line.format(self.settings['op1'],
+                                 self.settings['op2'])
+        else:
+            line = '\t{}\t\t{}\t\t{}\n'
+            header = line.format(self.settings['op1'],
+                                 self.settings['op2'],
+                                 self.settings['E'])
+
+        self.statusbar.showMessage('Writing file: {}'.format(outfile))
+        with open(os.path.join(self.folder, outfile), 'w') as f:
+            f.write(header)
+            if not z:
+                for i, j in zip(x, y):
+                    f.write(line.format(i, j))
+            else:
+                for i, j, l in zip(x, y, z):
+                    f.write(line.format(i, j, l))
+        self.statusbar.showMessage('Figure data saved: {}!'.format(outfile))
+
+    def save_script(self):
+        """Make makefigure.py script.
+
+        Function that generate and store the current plot from the GUI to
+        a separate script file, that can re-generate a fairly similar
+        figure to the GUI using stored settings.
+        """
+        if self.settings is None:
+            self.statusbar.showMessage('No data selected')
+            return
+        datafile = self.iofile
+        scriptfileformat = 'makefigure_{}_{}_{}_{}.py'
+        self._get_settings()
+        settings = self.settings
+        # Text writes to makefigure.py
+        txt = "# Makefigure script\n"
+        if settings.get('fol') != 'All':
+            if 'hdf5' in datafile:
+                txt += "import deepdish\n"
+            else:
+                txt += "import pickle"
+        txt += "import numpy as np\n"
+        txt += "import matplotlib.pyplot as plt\n"
+        txt += "from scipy.interpolate import griddata as scgriddata\n"
+        txt += "\n"
+
+        txt += "datafile = '{}'\n".format(datafile)
+        if 'hdf5' in datafile:
+            txt += "data = deepdish.io.load(datafile)\n"
+        else:
+            txt += "with open(datafile, 'rb') as pdata:\n"
+            txt += "    data = pickle.load(pdata)\n"
+        txt += "\n"
+
+        txt += "# Dictionary with settings for data load and plotting:\n"
+        txt += "settings = {}\n".format(settings)
+        txt += "\n"
+
+        if settings['fol'] == 'All':
+            fol = []
+            for f in next(os.walk(self.folder))[1]:
+                if f[0] == '0':
+                    fol.append(f)
+        else:
+            fol = [settings['fol']]
+        txt += "fol = {}\n".format(fol)
+
+        if settings['ACC'] == 'REJ':
+            txt += "acc = 'r'\n"
+        else:
+            txt += "acc = 'a'\n"
+        txt += "xl = '{}'\n".format(settings['op1'])
+        txt += "yl = '{}'\n".format(settings['op2'])
+        if settings['method'][0] == 'Density':
+            index_data = 0
+        else:
+            index_data = 1
+            txt += "zl = '{}'\n".format(settings['E'])
+        txt += "\n"
+        txt += "fig = plt.figure()\n"
+        txt += "ax = fig.add_subplot(111)\n"
+        txt += "fig.subplots_adjust(left=0.1, right=0.85, "
+        txt += "bottom=0.1, top=0.9)\n"
+        txt += "cbar_ax = fig.add_axes([0.86, 0.1, 0.03, 0.8])\n"
+        txt += "\n"
+        txt += "# Get x,y,z data\n"
+        txt += "x, y, z = [], [], []\n"
+        txt += "for f in fol:\n"
+        txt += "    x.extend(data[{}][acc+xl, f])\n".format(index_data)
+        txt += "    y.extend(data[{}][acc+yl, f])\n".format(index_data)
+        res = settings['res']
+        cmap = settings['colormap']
+        if index_data == 1:
+            txt += "    z.extend(data[{}][acc+zl, f])\n".format(index_data)
+            txt += "\n"
+            txt += "xi = np.linspace(min(x), max(x), {})\n".format(res)
+            txt += "yi = np.linspace(min(y), max(y), {})\n".format(res)
+            txt += "X, Y = np.meshgrid(xi, yi)\n"
+            txt += "Z = scgriddata((x, y), np.array(z), (X, Y), "
+            txt += "method='linear', fill_value=max(z))\n"
+            txt += "\n"
+            txt += "surf = ax.contourf(X,Y,Z, cmap='{}')\n".format(cmap)
+            txt += "cbar = fig.colorbar(surf, cax=cbar_ax)\n"
+        else:
+            txt += "surf = ax.hist2d(x, y, bins={},".format(res)
+            txt += " cmap='{}', density=True)\n".format(cmap)
+            txt += "cbar = fig.colorbar(surf[3], cax=cbar_ax)\n"
+
+        txt += "plt.show()"
+
+        if index_data == 0:
+            zl = 'Density'
+        else:
+            zl = settings['E']
+        scriptfile = scriptfileformat.format(
+            settings['op1'], settings['op2'], zl, settings['fol'])
+        with open(os.path.join(self.folder, scriptfile), 'w') as f:
+            f.write(txt)
+        self.statusbar.showMessage('Script file saved: {}'.format(scriptfile))
 
     def _load_file(self):
         """Load data file.
 
         Function that sets up QObject, moves to QThread, and begins the
-        data extract. Or, loads pre-processed data from a *.pickle file and
+        data extract. Or, loads pre-processed data from file and
         moves to a QThread.
         """
         if self.folder is None and self.iofile is None:
@@ -383,15 +578,16 @@ class VisualApp(QtWidgets.QMainWindow, Ui_VisualWindow):
             folder = os.path.dirname(os.path.realpath(self.iofile))
             self.folder = folder
             os.chdir(self.folder)
-        else:
-            pass
         # Setting name of file to QLineEdit of VisualApp
         self.filenameLine.setText(self.iofile)
-        # Checking iofile type, *.rst or *.pickle.
-        if self.iofile != '' and 'pickle' not in self.iofile:
+        # Checking iofile type, *.rst, *hdf5 or *.pickle
+        if 'rst' in self.iofile:
             self._load_data_output()
-        elif self.iofile != '' and 'pickle' in self.iofile:
-            self._load_data_pickle(self.iofile)
+        elif any(('pickle' in self.iofile, 'hdf5' in self.iofile)):
+            self._load_data(self.iofile)
+        else:
+            msg = 'Format Error, file {} not recognized.'.format(self.iofile)
+            raise ValueError(msg)
 
     def _load_data_output(self):
         """Load simulation data.
@@ -415,20 +611,21 @@ class VisualApp(QtWidgets.QMainWindow, Ui_VisualWindow):
         # Starting QObject's walk_Dirs in thread
         self.start_cmd.emit('')
 
-    def _load_data_pickle(self, pfile):
-        """Load pickle data.
+    def _load_data(self, pfile):
+        """Load saved data.
 
-        Function that loads simulation data from a pre-compiled *.pickle
+        Function that loads simulation data from a pre-compiled
         file and initializes the VisualApp window for plotting said data.
         """
-        self.statusbar.showMessage('Loading data from pickle dump')
+        self.statusbar.showMessage('Loading data from compressed file.')
         # Set-up data object using PathDensity class and moving to thread
         self.thread = QtCore.QThread()
         self.dataobject = VisualObject()
         # Connecting cycle print to update_cycle func
         self.dataobject.cycle_printed.connect(self.update_cycle)
         self.dataobject.return_coords.connect(self.update_fig)
-        self.start_cmd.connect(self.dataobject.get_pickle)
+        # Function takes pickle and hdf5 formats
+        self.start_cmd.connect(self.dataobject.get_data)
         self.send_settings.connect(self.dataobject.get)
         self.dataobject.moveToThread(self.thread)
         # Starting thread
@@ -457,8 +654,14 @@ class VisualApp(QtWidgets.QMainWindow, Ui_VisualWindow):
         """
         # Actions and menubar
         self.actionExit.triggered.connect(self.close)
-        self.action_PNG.triggered.connect(self.save_png)
+        # Save figure as ...
+        self.action_png.triggered.connect(self.save_png)
+        self.action_makefig_script.triggered.connect(self.save_script)
         self.action_pickle.triggered.connect(self.save_pickle)
+        self.action_hdf5.triggered.connect(self.save_hdf5)
+        self.action_json.triggered.connect(self.save_json)
+        # Save figure data as ...
+        self.action_datafile.triggered.connect(self.save_textdata)
         self.action_Load_data.triggered.connect(self.action_reload)
         self.statusbar.showMessage('No data loaded')
         # Connect show reg.line and interfaces, and method check
@@ -506,11 +709,14 @@ class VisualApp(QtWidgets.QMainWindow, Ui_VisualWindow):
             # Test if entered colormap is valid
             _ = plt.get_cmap(col)
             if meth[0] == 'Density':
-                # Method is 2dhist-plot/list where 4th item is the plot/surf
+                # Method is 2dhist-plot/list where 4th item is the plot/surf.
                 self.myfig.surf[3].set_cmap(col)
+            elif meth[0] == 'Scatter':
+                # If scatter, replot.
+                self.statusbar.showMessage(
+                    'Scatter plots have to be re-drawn to update colors!')
             else:
-                # Should work for most surf-objects
-                # TODO not if scatter; no change
+                # Should work for most surf-objects.
                 self.myfig.surf.set_cmap(col)
         except AttributeError:
             # If surf has no .set_cmap()
@@ -528,16 +734,27 @@ class VisualApp(QtWidgets.QMainWindow, Ui_VisualWindow):
 
     def _change_zoom(self):
         """Set the zoom/x-&y-limits of the plot."""
+        self.statusbar.showMessage('Drawing figure...')
         if self.settings['dim'] == 3:
             self.myfig.ax.set_xlim3d(self.settings['x-limits'][0],
                                      self.settings['x-limits'][1])
             self.myfig.ax.set_ylim3d(self.settings['y-limits'][0],
                                      self.settings['y-limits'][1])
+            self.myfig.ax.set_zlim3d(self.settings['z-limits'][0],
+                                     self.settings['z-limits'][1])
         elif self.settings['dim'] == 2:
             self.myfig.ax.set_xlim(self.settings['x-limits'][0],
                                    self.settings['x-limits'][1])
             self.myfig.ax.set_ylim(self.settings['y-limits'][0],
                                    self.settings['y-limits'][1])
+        # Change range on colorbar
+        # Colorbar of contour plots does not scale, but color is updated
+        norm = mpl.colors.Normalize(vmin=self.settings['z-limits'][0],
+                                    vmax=self.settings['z-limits'][1])
+        self.myfig.cbar.mappable.set_norm(norm=norm)
+        self.myfig.cbar.draw_all()
+        self.myfig.fig.canvas.draw()
+        self.statusbar.showMessage('Plot ready!')
 
     def update_preview(self):
         """Update the visual of the plot.
@@ -545,7 +762,6 @@ class VisualApp(QtWidgets.QMainWindow, Ui_VisualWindow):
         Button function, updates visual of plot based on all settings of
         'Plot'-tab in VisualApp.
         """
-        # TODO Currently, only way to update zoom.
         self.statusbar.showMessage('Drawing figure...')
         self._get_settings()
         self._update_canvas_text()
@@ -676,12 +892,12 @@ class VisualApp(QtWidgets.QMainWindow, Ui_VisualWindow):
         Parameters
         ----------
         x,y,z : list
-                Floats, the coordinates used in plotting.
+            Floats, the coordinates used in plotting.
 
         Updates/Draws
         -------------
         self.myfig.fig : Re-draws canvas with method, data, and possible
-                         interfaces, reg.line and legend.
+            interfaces, reg.line and legend.
         self.myfig.ax : As above. (Axes containing plot, legend, lines, etc)
         self.myfig.cbar_ax : Axes with colorbar of plot.
 
@@ -720,10 +936,16 @@ class VisualApp(QtWidgets.QMainWindow, Ui_VisualWindow):
         # Setting default xlim and ylim
         xmin, xmax = min(x), max(x)
         ymin, ymax = min(y), max(y)
+        if len(z) > 0:
+            zmin, zmax = min(z), max(z)
+        else:
+            zmin, zmax = 0, 0
         self.xminLine.setText(str(xmin))
         self.xmaxLine.setText(str(xmax))
         self.yminLine.setText(str(ymin))
         self.ymaxLine.setText(str(ymax))
+        self.zminLine.setText(str(zmin))
+        self.zmaxLine.setText(str(zmax))
 
         if self.settings['dim'] == 3:
             plot = self.settings['method'][0].lower()
@@ -738,14 +960,18 @@ class VisualApp(QtWidgets.QMainWindow, Ui_VisualWindow):
                 cbar_ax=self.myfig.cbar_ax,
                 dim=self.settings['dim'],
                 method=plot,
+                resX=self.settings['res'],
+                resY=self.settings['res'],
                 colormap=self.settings['colormap'])
         elif self.settings['dim'] == 2:
             if self.settings['method'][0] == 'Density':
                 self.myfig.surf = self.myfig.ax.hist2d(
                     x, y, (self.settings['res'], self.settings['res']),
-                    cmap=self.settings['colormap'])
-                self.myfig.cb = self.myfig.fig.colorbar(self.myfig.surf[3],
-                                                        cax=self.myfig.cbar_ax)
+                    cmap=self.settings['colormap'], density=True)
+                self.myfig.cbar = self.myfig.fig.colorbar(
+                        self.myfig.surf[3], cax=self.myfig.cbar_ax)
+                # Set zmax equal to max value in histogram
+                self.zmaxLine.setText(str(self.myfig.surf[0].max()))
             else:
                 plot = self.settings['method'][0].lower()
                 if self.settings['method'][-1] == '(filled)':
@@ -759,6 +985,8 @@ class VisualApp(QtWidgets.QMainWindow, Ui_VisualWindow):
                     cbar_ax=self.myfig.cbar_ax,
                     dim=self.settings['dim'],
                     method=plot,
+                    resX=self.settings['res'],
+                    resY=self.settings['res'],
                     colormap=self.settings['colormap'])
         # TODO make function "update extras" or similar of code below here
         # Showing interface planes(3D)/lines(2D)
@@ -871,20 +1099,20 @@ class DataSlave(QtCore.QObject, PathVisualize):
     Signals
     -------
     cycle_printed : PyQt Signal, sends a list of min and max cycle number to
-                    the VisualApp to update the dropwidget with correct values.
+        the VisualApp to update the dropwidget with correct values.
     returns_coords : PyQt Signal, sends three lists of coords (or empty)
-                     to the VisualApp to update the figure.
+        to the VisualApp to update the figure.
 
     Slots
     -----
     walk : PyQt Slot connected to VisualApp. When activated with a string,
-           initializes the walk_Dirs() function of DataObject/PathDensity
-           class. At end of function, emits list of cycles to signal
-           cycle_printed.
+        initializes the walk_Dirs() function of DataObject/PathDensity
+        class. At end of function, emits list of cycles to signal
+        cycle_printed.
     get : PyQt Slot connected to VisualApp. When activated with a dictionary
-          with relevant plotting settings, preforms a data fetch of either
-          get_Edata or get_Odata on DataObject/PathDensity class.
-          At end of function, emits lists of coords to signal return_coords.
+        with relevant plotting settings, preforms a data fetch of either
+        get_Edata or get_Odata on DataObject/PathDensity class.
+        At end of function, emits lists of coords to signal return_coords.
 
     """
 
@@ -950,7 +1178,7 @@ class DataSlave(QtCore.QObject, PathVisualize):
 
 
 class VisualObject(DataSlave):
-    """DataSlave class used by VisualApp to load data from pickle file."""
+    """DataSlave class used by VisualApp to load data from compressed file."""
 
     cycle_printed = QtCore.pyqtSignal(list)
 
@@ -961,10 +1189,16 @@ class VisualObject(DataSlave):
         self.settings = {}
 
     @QtCore.pyqtSlot(str)
-    def get_pickle(self, pfile):
-        """Signal emission for loading data from *.pickle file."""
+    def get_data(self, pfile):
+        """Signal emission for loading data from file."""
         self.pfile = pfile
-        self.load_pickle()
+        if 'pickle' in pfile:
+            self.load_pickle()
+        elif 'hdf5' in pfile:
+            self.load_dd()
+        else:
+            raise ValueError('Format not recognized')
+
         cycles = [int(self.infos['long_cycle'][0]),
                   int(self.infos['long_cycle'][-1])]
         self.cycle_printed.emit(cycles)
@@ -989,31 +1223,19 @@ class DataObject(DataSlave, PathDensity):
         self.cycle_printed.emit(cycles)
 
 
+class NumpyEncoder(json.JSONEncoder):
+    """Set json codecs for numpy."""
+
+    def default(self, obj):
+        """Fix ndarray."""
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return json.JSONEncoder.default(self, obj)
+
+
 def visualize_main(rpath, infile):
     """Run the VisualApp application."""
     app = QtWidgets.QApplication(sys.argv)
     window = VisualApp(folder=rpath, iofile=infile)
     window.show()
     sys.exit(app.exec_())
-
-
-if __name__ == "__main__":
-    # Initializing colorama
-    colorama.init(autoreset=True)
-    parser = argparse.ArgumentParser(description='Path Density Visualization')
-    parser.add_argument(
-        '-i',
-        '--input',
-        default=None,
-        help=('Location of data file (*pickle), '
-              'or {} input/output'.format(PROGRAM_NAME)),
-        required=False
-        )
-
-    args_dict = vars(parser.parse_args())
-    inputfile = None
-    runpath = None
-    if args_dict['input'] is not None:
-        inputfile = args_dict['input']
-        runpath = os.path.dirname(os.path.realpath(inputfile))
-    visualize_main(runpath, inputfile)
