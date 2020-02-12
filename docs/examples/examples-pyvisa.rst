@@ -19,6 +19,7 @@ packages (e.g. PyQt5), we opted to **not** include PyQt5 as a prerequisite
 for |pyretis| and |pyvisa|. This means that, to operate the GUI visualizer tool
 of |pyvisa|, PyQt5 has to be manually installed, e.g. via pip.
 
+|
 
 Compressor
 ==========
@@ -57,6 +58,7 @@ by multiple independent runs.
 The source files are not touched by this operation. If the data consistency is
 very low, a manual check would be thus required to import the data.
 
+|
 
 Visualization
 =============
@@ -80,8 +82,7 @@ and :ref:`plotting <fig_data_settings>`.
     :width: 60%
     :align: center
 
-    The panel allows an intuitive selection of different plotting types
-    and data selection.
+    Data panel: select the plotting type and data sub-set.
 
 
 The plot types are defined by: 
@@ -96,18 +97,18 @@ Data selection and manipulation criteria are:
 * X, Y, Z: list of OPs, cycles and timesteps. 
   Also, Y, Z allows the selection of the kinetic, potential,
   and total energy (kinetic+potential).
-* Folder: choose ensemble number of select all of them.
-  the case of cyclic OP like angle or dihedral.
+* Folder: choose ensemble number or select all of them.
 * Paths: accepted (’ACC’), rejected (’REJ’) or both (’BOTH’).
-* Cycles: selects the minimum and maximum cycle number, where a
-  cycle is a Monte Carlo move, i.e. a trajectory, for each ensemble.
-* Data shift: it attempt to shift the X - Y data in
-* Interfaces: toggles interface lines (2D plot) or planes (3D plot)
+* Cycles: select the minimum and maximum cycle number, where a
+  cycle is a Monte Carlo move, i.e. a trajectory for each ensemble.
+* Data shift: shift the X - Y data. It can be userful in
+  the case of cyclic OP like angle or dihedral.
+* Interfaces: toggle interface lines (2D plot) or planes (3D plot)
   It requires that X is the main order parameter (OP1).
-* Reg.line: plot a linear regression line with slope,
+* Reg.line: plot a linear regression line and report its slope,
   intercept and r–squared values.
-* Resolution: number of pixels or grid–points to use for density or
-  surface plot types.
+* Resolution: number of pixels or grid–points to use for density,
+  surface plot types. For scatter plots, it controls the dot size.
 
 
 .. _fig_plot_settings:
@@ -117,20 +118,21 @@ Data selection and manipulation criteria are:
     :width: 60%
     :align: center
 
-    The panel allows the selection of various plotting preferences.
+    Plotting panel: select the various plotting preferences.
 
 
 
-From the GUI, and without to have to reload the data, it is possible to manipulate
+From the GUI, without reloading the data, it is possible to manipulate
 the picture. The options are:
 
 * Colormap: the colormaps to use for the plot.
-* xmin/xmax: minimum and maximum x–values in the plot, respectively.
-* ymin/ymax: minimum and maximum y–values in the plot, respectively.
-* Save: quick–saves figure with name generated from current data load settings.
-* Font size, Titles/Axes: set font size of plot title and axis labels, respectively.
-* Show titles/labels: toggles the visibility of plot title and axis labels.
+* xmin/xmax: minimum and maximum x–values in the plot.
+* ymin/ymax: minimum and maximum y–values in the plot.
+* Save: save the figure in a .png file.
+* Font size, Titles/Axes: the font size of plot titles and axis labels.
+* Show titles/labels: display the plot titles and axis labels.
 
+|
 
 Further options can be accessed from the drop-down panel labeled 
 :ref:`**File** <fig_file>`.
@@ -142,7 +144,7 @@ Further options can be accessed from the drop-down panel labeled
     :width: 60%
     :align: center
 
-    A drop-down menu that allows a set of file operation.
+    A drop-down menu for file operations.
 
 
 The drop-down menu contains a few options:
@@ -153,19 +155,19 @@ The drop-down menu contains a few options:
 * Figure save:  save the current data selection/picture.
   Several options are here available. To further facilitate data handling,
   |pyvisa| can save the selected data in very different ways.
-  The idea is to minimize an user efforts in data manipulation.
-  In all the following selection, the file name is automatically
-  generated such to contain all the information needed to (manually)
-  reconstruct the plot.
+  The idea is to minimize user efforts in data manipulation.
+  In all the following selections, the file name is automatically
+  generated to contain all the information for (manually)
+  reconstructing the plot.
 
 
   The figure's data can be saved in:
 
-  * Raw format: a .txt file is generated. Other visualization
-    software can be thus directly used (e.g. xmgrace, gnuplot). 
-  * JSON format: a .json file is generated. This allow an user to
-    directly access to the numbers correspondent to a plot and
-    load them directly via the JSON package.
+  * Raw format: .txt file. Other visualization
+    software can directly be used (e.g. xmgrace, gnuplot). 
+  * JSON format: .json file. This allows users to
+    directly access to the numbers corresponding to a plot and/or
+    load them via the JSON package.
 
 
   The figure's object can be saved in:
@@ -179,12 +181,12 @@ The drop-down menu contains a few options:
 
   The figure itself can be saved as:
 
-  * figure.png: a .png file is directly created.
+  * figure.png: .png file.
   * script.py: a Python program is generated to reproduce the
-    selected plot from the compressed data. Simply by typing
-    python <name_file.py> the plot is regenerated.
+    selected plot from the compressed data simply by typing
+    python <name_file.py>.
 
 
-A large variety of plots can be thus generated via |pyvisa|, the respective
-data can be saved in different format such t further facilitate
+A large variety of plots can thus be generated via |pyvisa|. The respective
+data can be saved in different formats such to further facilitate
 post-processing and analysis in different programming languages.

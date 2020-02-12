@@ -352,9 +352,11 @@ def run_retis_analysis(settings, plotter, txt_plotter):
             print_to_screen(''.join(report_txt))
             print_to_screen()
     # flux first:
+    time_subcycles = settings['engine'].get('subcycles', 1)
+    timestep = settings['engine']['timestep'] * time_subcycles
     flux, flux_error = retis_flux(results['pathensemble0']['out'],
                                   results['pathensemble'][0]['out'],
-                                  settings['engine']['timestep'])
+                                  timestep)
     results['flux'] = {'value': flux, 'error': flux_error,
                        'unit': units}
     # match probabilities:
