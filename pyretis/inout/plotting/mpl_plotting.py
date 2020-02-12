@@ -790,7 +790,7 @@ def mpl_plot_path(results, path_ensemble):
          'label': labfmt.format('All', results['pathlength'][1][2][0],
                                 results['pathlength'][1][2][1])},
     ]
-    figset = {'xlabel': 'No. of MD steps', 'ylabel': 'Frequency',
+    figset = {'xlabel': 'No. of PyRETIS engine steps', 'ylabel': 'Frequency',
               'title': r'Ensemble ${0}$'.format(ens)}
     canvas[out['pathlength']] = mpl_simple_plot(series, fig_settings=figset)
     # Plot shoots-histogram
