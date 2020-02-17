@@ -3,7 +3,6 @@
 .. role:: header
    :class: h4
 
-
 Getting started with |pyretis|
 ==============================
 
@@ -29,6 +28,7 @@ Since version 2.4, |pyvisa| is automatically installed with
 |pyretis|.
 Here, we report some examples showing the use of |pyretis| and |pyvisa|.
 
+|
 
 |pyretis| examples
 ------------------
@@ -218,6 +218,7 @@ the :ref:`example section <examples-index>`.
          The compressor tool, and the visualization tool usage is then
          demostrated. A few sample pictures are reported.
 
+|
 
 Main studies performed with |pyretis|
 -------------------------------------
@@ -301,3 +302,23 @@ Main studies performed with |pyretis|
          Paper in preparation.
 
          `Source Files <http://pyretis.org/source_files/Water_trimer_2020>`__
+
+
+   .. container:: col-lg-4 col-md-4 col-sm-4 col-xs-6 thumbnail thumbnail3
+
+      .. image:: /_static/img/examples/thumbnails/formic-400x400.png
+         :width: 100%
+         :class: img-responsive
+
+      .. container:: caption
+
+         :header:`Formic acid catalysed formation of sulfuric acid`. 
+
+         A study on the formic acid catalysed conversion of
+         sulfur trioxide and water to sulfuric acid.
+         The mechanism(s) have been highlighted and their rate(s) estimated
+         as a function of the temperature.
+
+         Paper: `Path sampling for atmospheric reactions: formic acid catalysed conversion <https://doi.org/10.7717/peerj-pchem.7>`_
+
+         `Source Files <http://pyretis.org/source_files/Formic_acid_2020>`__
