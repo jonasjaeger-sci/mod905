@@ -11,6 +11,8 @@ We also describe how |pyretis| can be installed in a
 :ref:`virtual environment <user-guide-install-virtual-environment>` and how it
 can be installed directly from the source code :ref:`using git <user-guide-install-git>`.
 
+|
+
 .. _user-guide-prereq:
 
 Prerequisites
@@ -23,6 +25,7 @@ of the installation of |pyretis|. A  list of the dependencies :ref:`can be found
 
 .. _user-guide-install-pip:
 
+|
 
 Installing via ``pip``
 ----------------------
@@ -41,8 +44,8 @@ installed **after** installing |pyretis|:
 
     pip install git+https://github.com/mdtraj/mdtraj.git
 
-|pyretis| offers an analysis tool, named PyVISA. It is a package which
-requires PyQt5 to be executed. To install PyQt5 to use PyVISA via pip:
+|pyretis| offers an analysis tool, named |pyvisa|. Its GUI requires
+PyQt5 to be executed. To install PyQt5 via pip:
 
 .. code-block:: pyretis
 
@@ -52,6 +55,8 @@ requires PyQt5 to be executed. To install PyQt5 to use PyVISA via pip:
 of version 3.6 or newer. On some systems, **Python 2** may still be the default
 version and ``pip`` might actually try to install for **Python 2**.
 In this case, use ``pip3`` in the command above.
+
+|
 
 .. _user-guide-install-conda:
 
@@ -67,10 +72,18 @@ with the following commands:
     conda activate pyretis
     conda install pyretis -c conda-forge
 
+|pyretis| offers an analysis tool, named |pyvisa|. Its GUI requires
+PyQt5 to be executed. To install PyQt5 via conda:
+
+.. code-block:: pyretis
+
+    conda install pyqt -c conda-forge
+
 **Note:** Since |pyretis| will **only work with Python 3.6 or newer**,
 please make sure that you are using an environment with a recent version
 of Python.
 
+|
 
 .. _user-guide-install-virtual-environment:
 
@@ -138,7 +151,7 @@ set up a virtual environment:
 
     pip install git+https://github.com/mdtraj/mdtraj.git
 
-7. (Optional) PyVISA's requisites:
+7. (Optional) |pyvisa|'s GUI requisites:
 
    .. code-block:: pyretis
 
@@ -154,6 +167,7 @@ installed inside the folder ``~/name-of-environment-folder/pyretis-env``.
 **Note:** that you will have to source the environment each time you want to make use of it
 using the ``source`` command given above.
 
+|
 
 .. _user-guide-install-git:
 
@@ -193,7 +207,7 @@ Then, install ``mdtraj``:
 
     pip install git+https://github.com/mdtraj/mdtraj.git
 
-and, to be able to run PyVISA, add ``pyqt5``:
+and, to be able to run |pyvisa|'s GUI, add ``pyqt5``:
 
 .. code-block:: pyretis
 
@@ -201,6 +215,7 @@ and, to be able to run PyVISA, add ``pyqt5``:
 
 .. _user-guide-install-develop:
 
+|
 
 Optional: Installing a development version from the |pyretis| git repository
 ----------------------------------------------------------------------------
@@ -213,7 +228,7 @@ branch you are interested in, e.g.:
    git checkout develop 
 
 Then install the development requirements (these are defined in the file
-``requirements-dev.txt``, note that they include pyqt5, which can be not 
+``requirements-dev.txt``, note that they include pyqt5, which is not 
 supported in some environments):
 
 .. code-block:: pyretis
@@ -234,6 +249,7 @@ Finally, install |pyretis| using:
 
 .. _user-guide-install-test:
 
+|
 
 Testing your installation
 -------------------------
@@ -247,6 +263,7 @@ tested by running the tests from the main directory:
 
 .. _user-guide-install-requirements:
 
+|
 
 Requirements for |pyretis|
 --------------------------
@@ -267,4 +284,4 @@ This should be automatically done if you
 are installing |pyretis| using ``pip``/``conda``. 
 Notes: (1) the `mdtraj <http://mdtraj.org>`_
 requirement may have to be installed separately as described above;
-(2) the analysis package PyVISA requires PyQt5, which has to be installed separately as described above.
+(2) the analysis package |pyvisa| requires PyQt5, which has to be installed separately as described above.

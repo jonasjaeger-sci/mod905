@@ -30,7 +30,7 @@ The **compressor** tool can be executed with:
 
       pyretisanalyse -i <input_file> -pyvisa-cmp
 
-where the <input_file> is the same filei (.rst) used to execute the |pyretis|
+where the <input_file> is the same file (.rst) used to execute the |pyretis|
 simulations.
 
 |pyvisa| will read, for each folder, the energy and the order parameter files.
@@ -94,18 +94,18 @@ The plot types are defined by:
 
 Data selection and manipulation criteria are:
 
-* X, Y, Z: list of OPs, cycles and timesteps. 
-  Also, Y, Z allows the selection of the kinetic, potential,
+* x, y, z: list of OPs, cycles and timesteps. 
+  Also, y, z allows the selection of the kinetic, potential,
   and total energy (kinetic+potential).
 * Folder: choose ensemble number or select all of them.
 * Paths: accepted (’ACC’), rejected (’REJ’) or both (’BOTH’).
 * Cycles: select the minimum and maximum cycle number, where a
   cycle is a Monte Carlo move, i.e. a trajectory for each ensemble.
-* Data shift: shift the X - Y data. It can be userful in
+* Data shift: shift the x - y data. It can be userful in
   the case of cyclic OP like angle or dihedral.
 * Interfaces: toggle interface lines (2D plot) or planes (3D plot)
-  It requires that X is the main order parameter (OP1).
-* Reg.line: plot a linear regression line and report its slope,
+  It requires that x is the main order parameter (OP1).
+* Reg. line: plot a linear regression line and report its slope,
   intercept and r–squared values.
 * Resolution: number of pixels or grid–points to use for density,
   surface plot types. For scatter plots, it controls the dot size.
@@ -188,5 +188,5 @@ The drop-down menu contains a few options:
 
 
 A large variety of plots can thus be generated via |pyvisa|. The respective
-data can be saved in different formats such to further facilitate
+data can be saved in different formats to further facilitate
 post-processing and analysis in different programming languages.
