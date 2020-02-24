@@ -438,7 +438,7 @@ class CP2KEngine(ExternalMDEngine):
                                      append=False)
                 return
         logger.error('CP2K could not extract index %i from %s!',
-                     idx, out_file)
+                     idx, traj_file)
 
     def _name_output(self, basename):
         """Return the name of the output file."""
