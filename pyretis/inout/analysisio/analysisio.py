@@ -511,7 +511,7 @@ def output_results(file_type, plotter, result, rawdata):
     file_type : string
         This determines what we are going to plot.
     plotter : object like :py:class:`.Plotter`
-            This is the object that handles the plotting.
+        This is the object that handles the plotting.
     result : list of lists or dicts
         This contains the results from a specific analysis.
     rawdata : list of floats, lists or objects
@@ -616,6 +616,7 @@ def analyse_and_output_matched(raw_data, plotter, txt_plotter,
           to `maxblock`, i.e. it will use block lengths equal to `1`,
           `1+n`, `1+2n`, etc.
         * `bins`: The number of bins to use for creating histograms.
+
     flux : float, optional
         The computed flux to be used only in RETIS if the running average
         of the computed rate is desired.

@@ -777,7 +777,7 @@ def mpl_plot_path(results, path_ensemble):
                                                      fig_settings=figset)
 
     # Plot length-histogram:
-    labfmt = r'{0}: {1:6.2f} $\pm$  {2:6.2f}'
+    labfmt = r'{0}: {1:6.2f} st.dev. {2:6.2f}'
     series = [
         {'type': 'xy',
          'x': results['pathlength'][0][1],
