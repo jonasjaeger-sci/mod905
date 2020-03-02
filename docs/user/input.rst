@@ -212,6 +212,9 @@ The following sections are recognised by |pyretis|:
 * :ref:`retis <user-section-retis>`:
   For defining settings for a RETIS simulation.
 
+* :ref:`initial-path <user-section-initial-path>`:
+  For defining settings to initialize a RETIS simulation.
+
 * :ref:`tis <user-section-tis>`:
   For defining settings for a TIS simulation.
 

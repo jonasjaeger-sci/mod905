@@ -148,10 +148,6 @@ SECTIONS['ensemble'] = {
     'interface': None
 }
 
-SECTIONS['ensemble'] = {
-    'interface': None
-}
-
 SECTIONS['analysis'] = {
     'blockskip': 1,
     'bins': 100,

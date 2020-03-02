@@ -91,9 +91,7 @@ class Xpos1partExt(OrderParameter):
         super().__init__(description='X pos particle 1')
 
     def calculate(self, system):
-        trj = md.load_frame(system.particles.config[0],
-                            int(system.particles.config[1]),
-                            top=system.particles.top)
+        trj = md.load(system.particles.config[0])
 
         return trj.xyz[0][0][0]
 
@@ -278,13 +276,13 @@ class TestRecalculateOrder(unittest.TestCase):
         orderf = Xpos1partExt()
         sim_file = os.path.join(HERE, '2water')
 
-        ordercheck = [0.12596679, 0.12572690, 0.125513270,
-                      0.12531899, 0.12513746, 0.124962576]
+        ordercheck = [0.126, 0.126, 0.126, 0.125, 0.125, 0.125]
 
         with patch('sys.stdout', new=StringIO()):
             order = [i for i in recalculate_order(
-                orderf, sim_file + '.trr',
-                {'top': sim_file + '.gro'})]
+                order_parameter=orderf,
+                traj_file=sim_file+'.trr',
+                options={'top': sim_file+'.gro'})]
 
         for orderi, orderj in zip(order, ordercheck):
             self.assertAlmostEqual(orderi, orderj)
@@ -300,6 +298,7 @@ class TestRecalculateOrder(unittest.TestCase):
         one_op = recalculate_from_trj(orderf, sim_file + '.trr',
                                       {'top': sim_file + '.gro',
                                        'idx': 3})
+
         self.assertAlmostEqual(next(one_op), ordercheck[3])
 
 

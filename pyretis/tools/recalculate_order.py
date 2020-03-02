@@ -24,13 +24,15 @@ import logging
 import os
 import numpy as np
 import mdtraj as md
+import tempfile
 from pyretis.core import System, ParticlesExt
 from pyretis.core.box import box_matrix_to_list
 from pyretis.inout import print_to_screen
 from pyretis.inout.formats.gromacs import (
     read_trr_file,
     read_gromos96_file,
-    read_gromacs_gro_file
+    read_gromacs_gro_file,
+    write_gromacs_gro_file
 )
 from pyretis.inout.formats.xyz import read_xyz_file, convert_snapshot
 from pyretis.inout.formats.path import PathExtFile
@@ -66,6 +68,8 @@ def recalculate_from_trj(order_parameter, trr_file, options):
         * `minidx`: integer, optional
           This is the first frame we will read. Can be used in case we
           want to skip some frames from the .trr file.
+        * `idx`: integer, optional
+          This allows the selection of a single frame to recompute.
         * `top`: string, optional
           This is the name of a top_file to instruct the external tool
           (e.g. mdtraj, top= option) to properly read the trajectory.
@@ -82,43 +86,43 @@ def recalculate_from_trj(order_parameter, trr_file, options):
     msg = ('Re-calculate from {}:'.format(os.path.basename(trr_file)) +
            ' Step {}, time {}')
     minidx, maxidx = options.get('minidx'), options.get('maxidx')
-    top = options.get('top')
-    idx = options.get('idx', -1)
-    if top:  # This implies the use of mdtraj.
-        system.particles = ParticlesExt(dim=3)
-        system.particles.top = top
-        trj = md.load(trr_file, top=top)
-        for i, _ in enumerate(trj):
-            if idx < 0:
-                system.particles.config = (trr_file, i)
-                yield order_parameter.calculate(system)
-            elif idx == i:
-                system.particles.config = (trr_file, idx)
-                yield order_parameter.calculate(system)
-
-    else:
-        for i, (header, data) in enumerate(read_trr_file(trr_file)):
-            if maxidx is not None and i > maxidx:
-                break
-            if minidx is not None and i < minidx:
-                continue
-            print_to_screen(msg.format(header['step'], header['time']))
-            if system.particles is None:
-                system.particles = ParticlesExt(dim=data['x'].shape[1])
-            system.particles.pos = data['x']
-            if 'v' in data:
-                if options.get('reverse', False):
-                    system.particles.vel = -1.0 * data['v']
-                else:
-                    system.particles.vel = data['v']
+    if options.get('idx', False):
+        maxidx = options['idx']
+        minidx = options['idx']
+    for i, (header, data) in enumerate(read_trr_file(trr_file)):
+        if maxidx is not None and i > maxidx:
+            break
+        if minidx is not None and i < minidx:
+            continue
+        print_to_screen(msg.format(header['step'], header['time']))
+        if system.particles is None:
+            system.particles = ParticlesExt(dim=data['x'].shape[1])
+        system.particles.pos = data['x']
+        if 'v' in data:
+            if options.get('reverse', False):
+                system.particles.vel = -1.0 * data['v']
             else:
-                logger.warning('No velocities found in .trr file! Set to 0.')
-                system.particles.vel = np.zeros_like(data['x'])
-            length = box_matrix_to_list(data['box'])
-            system.update_box(length)
+                system.particles.vel = data['v']
+        else:
+            logger.warning('No velocities found in .trr file! Set to 0.')
+            data['v'] = np.zeros_like(data['x'])
+            system.particles.vel = data['v']
+        length = box_matrix_to_list(data['box'])
+        system.update_box(length)
+        if options.get('top', False):
+            info, _, _, _ = read_gromacs_gro_file(options['top'])
+            system.particles.top = options['top']
+            with tempfile.NamedTemporaryFile() as tmp:
+                system.particles.config = (tmp.name+'.gro', i)
+                write_gromacs_gro_file(tmp.name+'.gro', info,
+                                       data['x'], data['v'], length)
+                order = order_parameter.calculate(system)
+
+            system.particles.config = (trr_file, i)
+        else:
             system.particles.config = (trr_file, i)
             order = order_parameter.calculate(system)
-            yield order
+        yield order
 
 
 def recalculate_from_xyz(order_parameter, traj_file, options):
@@ -178,22 +182,22 @@ def recalculate_from_xyz(order_parameter, traj_file, options):
         yield order
 
 
-def recalculate_from_frame(order_parameter, traj_file, options):
+def recalculate_from_frame(order_parameter, frame_file, options):
     """Re-calculate order parameters from a .g96/.gro file.
 
-    Here we assume that there is *ONE* frame in the ``traj_file``.
+    Here we assume that there is *ONE* frame in the ``frame_file``.
 
     Parameters
     ----------
     order_parameter : object like :py:class:`.OrderParameter`
         The order parameter to use.
-    traj_file : string
-        The path to the trajectory file we should read.
+    frame_file : string
+        The path to the frame file we should read.
     options: dict
         It contains:
 
         * `ext`: string
-          File extension for the ``traj_file``.
+          File extension for the ``frame_file``.
         * `reverse`: boolean, optional
           If True, we reverse the velocities.
 
@@ -204,19 +208,19 @@ def recalculate_from_frame(order_parameter, traj_file, options):
 
     """
     system = System(box=None)
-    msg = 'Re-calculate from {}:'.format(os.path.basename(traj_file))
+    msg = 'Re-calculate from {}:'.format(os.path.basename(frame_file))
     print_to_screen(msg)
     if options['ext'] == '.g96':
-        _, xyz, vel, box = read_gromos96_file(traj_file)
+        _, xyz, vel, box = read_gromos96_file(frame_file)
     elif options['ext'] == '.gro':
-        _, xyz, vel, box = read_gromacs_gro_file(traj_file)
+        _, xyz, vel, box = read_gromacs_gro_file(frame_file)
     else:
         raise ValueError('Unknown format {}'.format(options['ext']))
     if options.get('reverse'):
         vel *= -1
     if system.particles is None:
         system.particles = ParticlesExt(dim=xyz.shape[1])
-    system.particles.config = (traj_file, 0)
+    system.particles.config = (frame_file, 0)
     system.particles.pos = xyz
     system.particles.vel = vel
     system.update_box(box)

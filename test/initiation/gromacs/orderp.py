@@ -62,11 +62,7 @@ class Distance(OrderParameter):
             file_gro = '{}.gro'.format(file_g96[:-4])
             os.system('gmx', 'editconf', '-f', file_g96, '-o', file_gro)
 
-        if file_gro[-4:] in ['.trr', '.xtc']:
-            idx_frame = system.particles.config[1]
-            trj = md.load_frame(file_gro, idx_frame, top=file_top)
-        else:
-            trj = md.load(file_gro)
+        trj = md.load(file_gro)
         atom_pair = combinations([self.idx1, self.idx2], 2)
         orderp = md.compute_distances(trj, atom_pair, periodic=True)
         print('GROMACS ORDER', orderp[0])
