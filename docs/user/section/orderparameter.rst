@@ -281,6 +281,13 @@ In addition, user-defined keywords can be specified, e.g.:
 
 .. _user-section-orderp-user-class:
 
+In the example the file ´orderp.py´ shall contain the class ´MyOrderParameter´.
+The class can use the |pyretis| `system` object, which contains the
+various information to compute the order parameter(s) (position, velocities, etc).
+Furthermore, when using an external engine, the name of the file where the
+latest frame is stored is included in `system.particles.config[0]`.
+The index of the frame can be found in `system.particles.config[1]`.
+
 Keyword class
 .............
 

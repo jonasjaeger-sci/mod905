@@ -444,7 +444,7 @@ def check_kick(shooting_point, interfaces, trial_path, rgen, dek,
     """
     # 1) Check if the kick was too violent:
     left, _, right = interfaces
-    if not left < shooting_point.order[0] < right:
+    if not left <= shooting_point.order[0] < right:
         # Shooting point was velocity dependent and was kicked outside
         # of boundaries when modifying velocities.
         trial_path.append(shooting_point)
@@ -665,11 +665,6 @@ def make_path(path, order_function, interfaces, engine,
 
     """
     path_back = path.empty_path(maxlen=maxlen-1)
-
-    # A simple check before to start
-    if not (interfaces[-1] > shooting_point.order[0] >= interfaces[0]):
-        path_back.status = 'KOB'
-        return False, path_back, path_back.status
 
     # Since the forward path must be at least one step, the maximum
     # length for the backward path is maxlen-1.

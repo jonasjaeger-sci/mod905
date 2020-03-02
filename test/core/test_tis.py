@@ -715,8 +715,8 @@ class TISTestMethod(unittest.TestCase):
                                        tis_settings, maxlen=1000,
                                        shooting_point=shooting_point,
                                        start_cond='L')
-        self.assertEqual(status, 'KOB')
-        self.assertFalse(success)
+        self.assertEqual(status, 'ACC')
+        self.assertTrue(success)
 
         # Generate a B to A path
         path = make_internal_path((5, 5), (-5, -5), (5, 5))

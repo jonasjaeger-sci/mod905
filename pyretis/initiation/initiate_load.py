@@ -383,8 +383,8 @@ def _generate_traj_txt_from_ext(dirname, system, engine, accepted=True):
                     phase_point = system_from_snapshot(system, snapshot)
                     path.append(phase_point)
 
-        with PathIntFile(load_file, 'w', backup=True) as trajfile:
-            trajfile.output(0, (path, 'ACC'))
+        with PathIntFile(load_file, 'w', backup=True) as pathfile:
+            pathfile.output(0, (path, 'ACC'))
     else:
         for tfile in traj_files:
             if tfile[-4:] == '.txt':
