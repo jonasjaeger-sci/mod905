@@ -40,7 +40,7 @@ binary file, .hdf5 by default, where all the input files are condensed,
 compressed and organized such to simplify the following post-processing
 operations.
 
-The compressor tool indicate eventual file inconsistencies, e.g. corrupted
+The compressor tool indicates eventual file inconsistencies, e.g. corrupted
 files or not corresponding cycles. This situation might happen when
 the simulation data have been produced by multiple machines and/or
 by multiple independent runs.
@@ -150,9 +150,9 @@ Further options can be accessed from the drop-down panel labeled
 The drop-down menu contains a few options:
 
 * Data Loading: re-load the simulation compressed data. 
-* Data Saving: re-save the simulation data, eventually in a different
-  format (.hdf5 and .pickle are currently supported). 
-* Figure save:  save the current data selection/picture.
+* Data Saving: save the simulation data, (e.g. use the
+  compressor tool) in a .hdf5 or .pickle format. 
+* Figure save: save the current data selection/picture.
   Several options are here available. To further facilitate data handling,
   |pyvisa| can save the selected data in very different ways.
   The idea is to minimize user efforts in data manipulation.
@@ -173,8 +173,7 @@ The drop-down menu contains a few options:
   The figure's object can be saved in:
 
   * .hdf5: a versatile compressed format that can be loaded
-    also by other programming languages (e.g. R). If handled with
-    Python, it requires the deepdish package.
+    also by other programming languages (e.g. R).
   * .pickle: a standard Python compressed file. It requires the
     pickle python package.
   

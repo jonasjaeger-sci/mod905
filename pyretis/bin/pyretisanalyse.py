@@ -247,17 +247,7 @@ def main(input_file, run_path, report_dir, pyvisa_dict=None):
                 raise ImportError(msg)
             runpath = os.path.dirname(os.path.realpath(input_file))
             hello_pyvisa()
-            if not any(('pickle' in input_file,
-                        'hdf5' in input_file)):
-                p_data = PathDensity(iofile=input_file)
-                p_data.walk_dirs()
-                if pyvisa_dict['pickle']:
-                    p_data.pickle_data()
-                else:
-                    p_data.deepdish_data()
-                visualize_main(runpath, p_data.pfile)
-            else:
-                visualize_main(runpath, input_file)
+            visualize_main(runpath, input_file)
         else:
             print_to_screen('Reading input file "{}"'.format(input_file))
             settings = parse_settings_file(input_file)

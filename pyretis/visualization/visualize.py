@@ -15,13 +15,14 @@ orderparam_density and executing before displaying the results.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 import colorama
 import codecs
-import deepdish as dd
 import matplotlib as mpl
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np
 import os
+import pandas as pd
 import pickle
 import sys
+import warnings
 import json
 from matplotlib.backends.backend_qt5agg import (  # noqa: E402
         FigureCanvasQTAgg as FigureCanvas
@@ -35,6 +36,8 @@ from pyretis.visualization.plotting import (gen_surface,  # noqa: E402
                                             plot_regline,
                                             plot_int_plane)
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
+
+warnings.filterwarnings('ignore', category=pd.io.pytables.PerformanceWarning)
 
 # Hard-coded labels for energies and time/cycle steps
 ENERGYLABELS = ['time', 'cycE', 'potE', 'kinE', 'totE']
@@ -381,7 +384,19 @@ class VisualApp(QtWidgets.QMainWindow, Ui_VisualWindow):
             return
         name = self._get_savename()+'.hdf5'
         outfile = os.path.join(self.folder, name)
-        dd.io.save(outfile, self.myfig.fig)
+        if self.settings['fol'] == 'All':
+            x, y, z = self.dataobject._get_from_all()
+        else:
+            x, y, z = self.dataobject._get_from_single(self.settings['fol'])
+
+        if z:
+            data = pd.DataFrame.from_dict({'x': x, 'y': y, 'z': z})
+        else:
+            data = pd.DataFrame.from_dict({'x': x, 'y': y})
+
+        data.to_hdf(outfile, key='data')
+        info = pd.DataFrame.from_dict({'settings': self.settings})
+        info.to_hdf(outfile, key='info')
         self.statusbar.showMessage('Figure saved as {}'.format(outfile))
 
     def save_json(self):
@@ -472,30 +487,24 @@ class VisualApp(QtWidgets.QMainWindow, Ui_VisualWindow):
         if self.settings is None:
             self.statusbar.showMessage('No data selected')
             return
-        datafile = self.iofile
+        datafile = "pyvisa_compressed_data.hdf5"
+        self._save_sim_data_hdf5()
         scriptfileformat = 'makefigure_{}_{}_{}_{}.py'
         self._get_settings()
         settings = self.settings
         # Text writes to makefigure.py
         txt = "# Makefigure script\n"
-        if settings.get('fol') != 'All':
-            if 'hdf5' in datafile:
-                txt += "import deepdish\n"
-            else:
-                txt += "import pickle"
+        txt += "import pandas as pd\n"
         txt += "import numpy as np\n"
+        txt += "import os.path\n"
         txt += "import matplotlib.pyplot as plt\n"
         txt += "from scipy.interpolate import griddata as scgriddata\n"
         txt += "\n"
-
         txt += "datafile = '{}'\n".format(datafile)
-        if 'hdf5' in datafile:
-            txt += "data = deepdish.io.load(datafile)\n"
-        else:
-            txt += "with open(datafile, 'rb') as pdata:\n"
-            txt += "    data = pickle.load(pdata)\n"
         txt += "\n"
-
+        txt += "data_l = pd.read_hdf(datafile, key='data')\n"
+        txt += "data = [data_l['ops'], data_l['eops'], data_l['infos']]\n"
+        txt += "\n"
         txt += "# Dictionary with settings for data load and plotting:\n"
         txt += "settings = {}\n".format(settings)
         txt += "\n"
@@ -527,7 +536,7 @@ class VisualApp(QtWidgets.QMainWindow, Ui_VisualWindow):
         txt += "bottom=0.1, top=0.9)\n"
         txt += "cbar_ax = fig.add_axes([0.86, 0.1, 0.03, 0.8])\n"
         txt += "\n"
-        txt += "# Get x,y,z data\n"
+        txt += "# Get x, y, z data\n"
         txt += "x, y, z = [], [], []\n"
         txt += "for f in fol:\n"
         txt += "    x.extend(data[{}][acc+xl, f])\n".format(index_data)
@@ -587,7 +596,27 @@ class VisualApp(QtWidgets.QMainWindow, Ui_VisualWindow):
             self._load_data(self.iofile)
         else:
             msg = 'Format Error, file {} not recognized.'.format(self.iofile)
-            raise ValueError(msg)
+            self.statusbar.showMessage(msg)
+            return
+
+    def _save_sim_data_hdf5(self):
+        """Save the data to hdf5 file."""
+        file_o = 'pyvisa_compressed_data.hdf5'
+        self.statusbar.showMessage('Saving data to {}'.format(file_o))
+        data = pd.DataFrame.from_dict({'ops': self.dataobject.ops,
+                                       'eops': self.dataobject.eops,
+                                       'infos': self.dataobject.infos})
+        data.to_hdf(file_o, key='data')
+
+    def _save_sim_data_pickle(self):
+        """Save the data to hdf5 file."""
+        file_o = 'pyvisa_compressed_data.pickle'
+        self.statusbar.showMessage('Saving data to {}'.format(file_o))
+        data = (self.dataobject.ops,
+                self.dataobject.eops,
+                self.dataobject.infos)
+        with open(file_o, 'wb') as out:
+            pickle.dump(data, out, protocol=pickle.HIGHEST_PROTOCOL)
 
     def _load_data_output(self):
         """Load simulation data.
@@ -652,18 +681,21 @@ class VisualApp(QtWidgets.QMainWindow, Ui_VisualWindow):
         If no folder or file is given when initializing VisualApp, a
         QFileDialog is opened to get file/folder.
         """
+        self.statusbar.showMessage('No data loaded')
         # Actions and menubar
         self.actionExit.triggered.connect(self.close)
         # Save figure as ...
         self.action_png.triggered.connect(self.save_png)
         self.action_makefig_script.triggered.connect(self.save_script)
         self.action_pickle.triggered.connect(self.save_pickle)
+        # Save figure data as ...
         self.action_hdf5.triggered.connect(self.save_hdf5)
         self.action_json.triggered.connect(self.save_json)
-        # Save figure data as ...
         self.action_datafile.triggered.connect(self.save_textdata)
         self.action_Load_data.triggered.connect(self.action_reload)
-        self.statusbar.showMessage('No data loaded')
+        # Save data as ...
+        self.action_sim_hdf5.triggered.connect(self._save_sim_data_hdf5)
+        self.action_sim_pickle.triggered.connect(self._save_sim_data_pickle)
         # Connect show reg.line and interfaces, and method check
         self.intShowChkBtn.stateChanged.connect(self.toggle_intf)
         self.regLineChkBtn.stateChanged.connect(self.toggle_regl)
@@ -823,17 +855,22 @@ class VisualApp(QtWidgets.QMainWindow, Ui_VisualWindow):
 
         Function calls for an update of data/plot settings before sending
         dictionary to dataobject in mainworker to update the data lists
-        x,y,(z).
+        x, y, (z).
         """
         self.toggle_buttons(False)
         # Updating statusbar of VisualApp window
         self.statusbar.showMessage('Updating data...')
         self._get_settings()
-
         if 'Contour' in self.settings['method'] and \
            self.settings['E'] == 'None':
             self.statusbar.showMessage('Invalid combination, '
                                        'contours need z-values')
+            self.toggle_buttons(True)
+        elif self.settings['op1'] == self.settings['op2'] or \
+                self.settings['op1'] == self.settings['E'] or \
+                self.settings['op2'] == self.settings['E']:
+            self.statusbar.showMessage('Invalid combination, '
+                                       'two axes are identical')
             self.toggle_buttons(True)
         else:
             self.send_settings.emit(self.settings)
@@ -891,7 +928,7 @@ class VisualApp(QtWidgets.QMainWindow, Ui_VisualWindow):
 
         Parameters
         ----------
-        x,y,z : list
+        x, y, z : list
             Floats, the coordinates used in plotting.
 
         Updates/Draws
@@ -1221,16 +1258,6 @@ class DataObject(DataSlave, PathDensity):
         cycles = [int(self.infos['long_cycle'][0]),
                   int(self.infos['long_cycle'][-1])]
         self.cycle_printed.emit(cycles)
-
-
-class NumpyEncoder(json.JSONEncoder):
-    """Set json codecs for numpy."""
-
-    def default(self, obj):
-        """Fix ndarray."""
-        if isinstance(obj, np.ndarray):
-            return obj.tolist()
-        return json.JSONEncoder.default(self, obj)
 
 
 def visualize_main(rpath, infile):
