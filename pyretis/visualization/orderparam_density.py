@@ -10,9 +10,10 @@ visualization.
 """
 import argparse
 import colorama
-import deepdish as dd
 import os
+import pandas as pd
 import pickle
+import warnings
 import timeit
 from pyretis import __version__ as VERSION
 from pyretis.info import PROGRAM_NAME
@@ -22,6 +23,8 @@ from pyretis.visualization.common import (get_min_max,
                                           get_startat,
                                           diff_matching)
 from tqdm import tqdm
+
+warnings.filterwarnings('ignore', category=pd.io.pytables.PerformanceWarning)
 
 # Hard-coded labels for energies and time/cycle steps
 ENERGYLABELS = ['time', 'cycE', 'potE', 'kinE', 'totE']
@@ -76,7 +79,6 @@ class PathDensity():
         except FileNotFoundError:
             line = 'Found no input file, "iofile = {}"'
             print_to_screen(line.format(self.iofile), level='error')
-            # TODO pass Error to __main__?
             return
         # Setting up empty dictionaries for the orderP and energy values
         self.eops = {}
@@ -250,9 +252,11 @@ class PathDensity():
         print_to_screen('###################################################',
                         level='message')
         print_to_screen('# Compress dictionaries to file', level='message')
-        data = (self.ops, self.eops, self.infos)
         self.pfile = 'pyvisa_compressed_data.hdf5'
-        dd.io.save(self.pfile, data)
+        data = pd.DataFrame.from_dict({'ops': self.ops,
+                                       'eops': self.eops,
+                                       'infos': self.infos})
+        data.to_hdf(self.pfile, key='data')
         print_to_screen('# {}'.format(self.pfile), level='message')
         print_to_screen('###################################################'
                         + '\n', level='message')
@@ -708,14 +712,14 @@ class PathVisualize():
         """Load precompiled data from a hdf5 file.
 
         Function that loads precompiled data from a .hdf5 file made
-        using deepdish.
+        using pandas.
 
         """
-        data = dd.io.load(self.pfile)
         # Unpacking dictionaries
-        self.ops = data[0]
-        self.eops = data[1]
-        self.infos = data[2]
+        data = pd.read_hdf(self.pfile, key='data')
+        self.ops = data['ops']
+        self.eops = data['eops']
+        self.infos = data['infos']
         # Unpacking lists of info from infos dict
         self.op_labels = self.infos['op_labels']
 

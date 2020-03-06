@@ -299,7 +299,8 @@ class TestRecalculateOrder(unittest.TestCase):
                                       {'top': sim_file + '.gro',
                                        'idx': 3})
 
-        self.assertAlmostEqual(next(one_op), ordercheck[3])
+        with patch('sys.stdout', new=StringIO()):
+            self.assertAlmostEqual(next(one_op), ordercheck[3])
 
 
 if __name__ == '__main__':
