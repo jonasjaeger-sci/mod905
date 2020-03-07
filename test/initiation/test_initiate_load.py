@@ -510,8 +510,10 @@ class TestInitiateLoad(unittest.TestCase):
             self.assertEqual(simulation.path_ensembles[0].ensemble_number, 1)
             # Check that the path contains what it should:
             path = simulation.path_ensembles[0].last_path
+            # The path is cleaned
+            clean_path(path, simulation.path_ensembles[0])
             self.assertTrue(compare_trajs_int(load_dir, path))
-            # Check that we created an ensemble dir:
+            # Check that we created an ensemble dir
             ensemble_dir = os.path.join(tempdir, '001')
             self.assertTrue(os.path.isdir(ensemble_dir))
             # Just delete simulation to force closing of files:

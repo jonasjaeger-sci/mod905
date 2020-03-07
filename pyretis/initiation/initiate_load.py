@@ -132,7 +132,9 @@ def initiate_load(simulation, cycle, settings):
 
         # If a path is not acceptable, than here we try to rearrange it such
         # to satisfy each ensemble definition
-        if not accept:  # Let's try to fix the path
+        if accept:  # Clean eventual snapshots outside boundaries.
+            clean_path(path, path_ensemble)
+        else:  # Let's try to fix the path
             path, (accept, status) = reorderframes(path, path_ensemble)
             path.status = status
             path.set_move('ld')
