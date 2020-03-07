@@ -1,6 +1,6 @@
-# Cycle: 100, status: ACC
+# Cycle: 0, status: ACC
 Snapshot: 0
-   -0.900738241     0.587560214
+   -0.900383040    -0.571497419
 Snapshot: 1
    -0.899561020     0.593282273
 Snapshot: 2
