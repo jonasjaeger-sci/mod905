@@ -23,7 +23,6 @@ import collections
 import logging
 import os
 import numpy as np
-import mdtraj as md
 import tempfile
 from pyretis.core import System, ParticlesExt
 from pyretis.core.box import box_matrix_to_list
@@ -112,12 +111,11 @@ def recalculate_from_trj(order_parameter, trr_file, options):
         if options.get('top', False):
             info, _, _, _ = read_gromacs_gro_file(options['top'])
             system.particles.top = options['top']
-            with tempfile.NamedTemporaryFile() as tmp:
-                system.particles.config = (tmp.name+'.gro', i)
-                write_gromacs_gro_file(tmp.name+'.gro', info,
+            with tempfile.NamedTemporaryFile(suffix='.gro') as tmp:
+                system.particles.config = (tmp.name, i)
+                write_gromacs_gro_file(tmp.name, info,
                                        data['x'], data['v'], length)
                 order = order_parameter.calculate(system)
-
             system.particles.config = (trr_file, i)
         else:
             system.particles.config = (trr_file, i)
