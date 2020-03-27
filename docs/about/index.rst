@@ -82,6 +82,8 @@ The |pyretis| team
 
 * Mahmoud Moqadam
 
+* `César A. Urbina-Blanco <https://www.lct.ugent.be/people/c-sar-alejandro-urbina-blanco>`_ 
+
 * Jocelyne Vreede
 
 * Magnus Heskestad Waage
