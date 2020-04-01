@@ -41,6 +41,7 @@ this is described below for the following supported methods:
    | |restart|     | For restarting |pyretis| simulations.                   |
    +---------------+---------------------------------------------------------+
 
+|
 
 .. _user-section-initial-path-kick:
 
@@ -129,6 +130,7 @@ Keyword kick-from
    Default:
        The default value is ``kick-from = initial``.
 
+|
 
 .. _user-section-initial-path-load:
 
@@ -143,6 +145,7 @@ Keywords for the load method
 For the load method, the following keywords can be set:
 
 .. |load_method| replace:: :ref:`method <user-section-initial-load-method>`
+.. |load_and_kick| replace:: :ref:`load_and_kick <user-section-initial-load-and-kick>`
 .. |load_folder| replace:: :ref:`load_folder <user-section-initial-load-load-folder>`
 
 .. _table-keyword-load:
@@ -150,14 +153,17 @@ For the load method, the following keywords can be set:
 .. table:: Keywords for the load method.
    :class: table-striped table-hover
 
-   +---------------+----------------------------------------------------------+
-   | Keyword       | Description                                              |
-   +===============+==========================================================+
-   | |load_method| | Selects the load method.                                 |
-   +---------------+----------------------------------------------------------+
-   | |load_folder| | Selects the directory where the paths we will load are   |
-   |               | stored.                                                  |
-   +---------------+----------------------------------------------------------+
+   +-----------------+--------------------------------------------------------+
+   | Keyword         | Description                                            |
+   +=================+========================================================+
+   | |load_method|   | Selects the load method.                               |
+   +-----------------+--------------------------------------------------------+
+   | |load_and_kick| | Generate a new path by the kick method from the        |
+   |                 | loaded data.                                           |
+   +-----------------+--------------------------------------------------------+
+   | |load_folder|   | Selects the directory where the paths we will load are |
+   |                 | stored.                                                |
+   +-----------------+--------------------------------------------------------+
 
 .. _user-section-initial-load-method:
 
@@ -168,6 +174,16 @@ Keyword method
    :specific: yes
 
    The ``method`` keyword selects the load initialization.
+
+.. _user-section-initial-load-and-kick:
+
+Keyword load_and_kick
+.....................
+
+.. pyretis-keyword:: load_and_kick boolean
+
+   The use of ``load_and_kick`` initialization method 
+   if the keyword is set to True.
 
 .. _user-section-initial-load-load-folder:
 
@@ -242,6 +258,7 @@ Keyword load_folder
    Default:
        The default value is ``load_folder = load``.
 
+|
 
 .. _user-section-initial-path-restart:
 

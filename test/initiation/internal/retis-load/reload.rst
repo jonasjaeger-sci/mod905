@@ -11,7 +11,7 @@ System
 ------
 units = reduced
 dimensions = 1
-temperature = 0.07
+temperature = 0.7
 
 Box
 ---
@@ -20,7 +20,7 @@ periodic = [False]
 Engine
 ------
 class = Langevin
-timestep = 0.002
+timestep = 0.02
 gamma = 0.3
 high_friction = False
 seed = 0

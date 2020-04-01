@@ -561,6 +561,33 @@ class TestInitiateLoad(unittest.TestCase):
             for i in range(1, 2):
                 self.assertEqual(path[i].status, 'ACC')
 
+    def test_internal_load_sparse_and_kick(self):
+        """Test the load initialise that fixes paths."""
+        settings = parse_settings_file(os.path.join(HERE, 'internal',
+                                                    'retis-load',
+                                                    'reload.rst'))
+        settings['simulation']['interfaces'] = [-1.2, -0.4, -0.2]
+        # Load poor initial paths
+        with tempfile.TemporaryDirectory() as tempdirbase:
+            tempdir = os.path.join(tempdirbase, 'internal', 'retis-load')
+
+            with patch('sys.stdout', new=StringIO()):
+                simulation = self._set_up_for_load_2(settings, tempdir)
+                # Check that we fail first
+                with self.assertRaises(ValueError) as cm:
+                    simulation.initiate(settings)
+                self.assertIn("load_and_kick", str(cm.exception))
+
+        settings['initial-path']['load_and_kick'] = True
+
+        with tempfile.TemporaryDirectory() as tempdirbase:
+            tempdir = os.path.join(tempdirbase, 'internal', 'retis-load')
+
+            with patch('sys.stdout', new=StringIO()):
+                simulation = self._set_up_for_load_2(settings, tempdir)
+                init = simulation.initiate(settings)
+                self.assertTrue(init)
+
     def test_initiate_load_fail(self):
         """Test that the initiate load fails for non-existing load folder."""
         settings = parse_settings_file(

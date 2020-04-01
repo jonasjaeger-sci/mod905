@@ -18,6 +18,7 @@ import shutil
 import mdtraj
 from pyretis.inout.formats.xyz import read_xyz_file, convert_snapshot
 from pyretis.core.pathensemble import generate_ensemble_name
+from pyretis.initiation.initiate_kick import initiate_path_ensemble_kick
 from pyretis.inout import print_to_screen
 from pyretis.inout.common import make_dirs
 from pyretis.inout.formats.order import OrderPathFile, OrderFile
@@ -139,17 +140,38 @@ def initiate_load(simulation, cycle, settings):
             path.status = status
             path.set_move('ld')
             if status != 'ACC':
-                msg = 'Path stored in folder {} does not satisfy the relative'\
-                      ' ensemble ({}) definition. ' \
-                      'The given path has a min of {} and a max of {} while '\
-                      'the relative interface are located at {}, {} and {}. '\
-                      'NOTE: points withing state B are not used.'\
-                      .format(edir, path_ensemble.ensemble_number,
-                              path.ordermin[0], path.ordermax[0],
-                              path_ensemble.interfaces[0],
-                              path_ensemble.interfaces[1],
-                              path_ensemble.interfaces[2])
-                raise ValueError(msg)
+                if settings['initial-path'].get('load_and_kick', False):
+                    best_frame = path.phasepoints[0]
+                    target = path_ensemble.interfaces[1]
+                    for i, pp in enumerate(path.phasepoints):
+                        if abs(best_frame.order[0] - target) > \
+                                abs(pp.order[0] - target):
+                            best_frame = pp
+
+                    accept, path, status = initiate_path_ensemble_kick(
+                            path_ensemble,
+                            best_frame,
+                            order_function,
+                            engine,
+                            simulation.rgen,
+                            settings['tis'],
+                            cycle)
+                else:
+                    msg = 'Path stored in folder {} does not satisfy the' \
+                          ' relative ensemble ({}) definition. \n' \
+                          'The given path has a min of {} and a max of {} ' \
+                          'while the relative interface are located at {},' \
+                          ' {} and {}. \n' \
+                          'You might try to add the load_and_kick = True' \
+                          ' option in the initial path section to try to fix'\
+                          ' this. \n' \
+                          'NOTE: points within state B are not used.' \
+                        .format(edir, path_ensemble.ensemble_number,
+                                path.ordermin[0], path.ordermax[0],
+                                *path_ensemble.interfaces)
+                    raise ValueError(msg)
+
+        path.status = status
         path_ensemble.add_path_data(path, status, cycle)
         path_ensemble.last_path = path
         yield accept, path, status, path_ensemble
@@ -248,8 +270,10 @@ def clean_path(path, path_ensemble):
     # Erase the largest elements first to avoid counting problems.
     erase_list.reverse()
 
-    # Happy Ending.
+    # Happy Ending, but make sure to do not kill it all.
     for i in erase_list:
+        if path.length == 0:
+            raise RuntimeError('All frames of the path are invalid')
         path.delete(i)
 
     # The path has to cope with the ensemble requirements.
