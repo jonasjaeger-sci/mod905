@@ -5,7 +5,7 @@ Simulation
 ----------
 task = retis
 steps = 5
-interfaces = [-0.290, -0.285, -0.280, -0.270]
+interfaces = [-0.305, -0.285, -0.280, -0.270]
 
 System
 ------
@@ -36,6 +36,7 @@ Initial-path
 ------------
 method = load
 load_folder = pippo
+load_and_kick = True
 
 RETIS settings
 --------------
