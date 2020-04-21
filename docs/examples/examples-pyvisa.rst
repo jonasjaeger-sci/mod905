@@ -22,7 +22,7 @@ of |pyvisa|, PyQt5 has to be manually installed, e.g. via pip.
 |
 
 Compressor
-==========
+----------
 
 The **compressor** tool can be executed with:
 
@@ -61,7 +61,7 @@ very low, a manual check would be thus required to import the data.
 |
 
 Visualization
-=============
+-------------
 
 The **visualization** tool can be executed with:
 
@@ -92,6 +92,11 @@ The plot types are defined by:
   When plotting density maps, path weighting of accepted trajectories
   is an option. 
 
+|
+
+Data sub-sets selection
+-----------------------
+
 Data selection and manipulation criteria are:
 
 * x, y, z: list of OPs, cycles and timesteps. 
@@ -110,6 +115,10 @@ Data selection and manipulation criteria are:
 * Resolution: number of pixels or grid–points to use for density,
   surface plot types. For scatter plots, it controls the dot size.
 
+|
+
+Plotting
+--------
 
 .. _fig_plot_settings:
 
@@ -133,6 +142,9 @@ the picture. The options are:
 * Show titles/labels: display the plot titles and axis labels.
 
 |
+
+Data handling
+-------------
 
 Further options can be accessed from the drop-down panel labeled 
 :ref:`**File** <fig_file>`.
@@ -185,7 +197,17 @@ The drop-down menu contains a few options:
     selected plot from the compressed data simply by typing
     python <name_file.py>.
 
+|
+
+Analysis
+--------
+
 
 A large variety of plots can thus be generated via |pyvisa|. The respective
 data can be saved in different formats to further facilitate
 post-processing and analysis in different programming languages.
+By storing the data as a pandas dataframe, other packages can be direcly used
+to perform statistical analysis on the results (i.e. sklearn, scipy). 
+A direct implementation of some of the most promising statistical analysis
+for path sampling in |pyvisa| is currently under development (PCA analisys and clustering).
+
