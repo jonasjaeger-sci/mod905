@@ -151,8 +151,8 @@ def initiate_load(simulation, cycle, settings):
                     accept, path, status = initiate_path_ensemble_kick(
                             path_ensemble,
                             best_frame,
-                            order_function,
-                            engine,
+                            simulation.order_function,
+                            simulation.engine,
                             simulation.rgen,
                             settings['tis'],
                             cycle)

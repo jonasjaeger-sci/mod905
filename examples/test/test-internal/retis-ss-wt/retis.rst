@@ -4,14 +4,14 @@ Retis 1D example
 Simulation
 ----------
 task = retis
-steps = 10000
-interfaces = [-0.9, -0.8, -0.7, -0.6]
+steps = 1000000
+interfaces = [-0.9, -0.8, -0.78]
 
 System 
 ------
 units = reduced
 dimensions = 1
-temperature = 0.07
+temperature = 0.7
 
 Box 
 ---
@@ -20,7 +20,7 @@ periodic = [False]
 Engine
 ------
 class = Langevin
-timestep = 0.002
+timestep = 0.02
 gamma = 0.3
 high_friction = False
 seed = 0
@@ -35,7 +35,7 @@ zero_momentum = False
 rescale_energy = False
 sigma_v = -1
 seed = 0
-shooting_moves = ['sh', 'sh', 'sh', 'sh']
+shooting_moves = ['sh', 'sh', 'sh']
 n_jumps = 6
 interface_sour = -0.85
 high_accept = False
