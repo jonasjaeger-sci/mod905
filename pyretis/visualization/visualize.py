@@ -807,11 +807,11 @@ class VisualApp(QtWidgets.QMainWindow, Ui_VisualWindow):
     def toggle_intf(self):
         """Toggle interface visibility."""
         if self.intShowChkBtn.isChecked():
-            for l in self.myfig.intf:
-                l.set_visible(True)
+            for lll in self.myfig.intf:
+                lll.set_visible(True)
         else:
-            for l in self.myfig.intf:
-                l.set_visible(False)
+            for lll in self.myfig.intf:
+                lll.set_visible(False)
         self.myfig.fig.canvas.draw()
 
     def toggle_regl(self):
@@ -893,9 +893,9 @@ class VisualApp(QtWidgets.QMainWindow, Ui_VisualWindow):
         self.secondOpComBox.insertSeparator(
             len(self.dataobject.infos['op_labels']) + 1)
         la = []
-        for l in ENERGYLABELS:
-            if l not in self.dataobject.infos['op_labels']:
-                la.append(l)
+        for lll in ENERGYLABELS:
+            if lll not in self.dataobject.infos['op_labels']:
+                la.append(lll)
         self.secondOpComBox.addItems(la)
         self.energyComBox.clear()
         self.energyComBox.addItems(ENERGYLABELS)
