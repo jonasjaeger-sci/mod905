@@ -847,8 +847,9 @@ class PathVisualize():
 
         # Deciding x,y,z index span using cycle number
         if min_max is not None:
-            for l in ['a', 'r']:
-                get_min_max(self.eops[l+'cycE', fol], min_max, mini, maxi, l)
+            for lll in ['a', 'r']:
+                get_min_max(self.eops[lll+'cycE', fol],
+                            min_max, mini, maxi, lll)
 
         if ACC == 'BOTH':
             x = (self.eops['a'+XYZ[0], fol][mini['a']:maxi['a']] +

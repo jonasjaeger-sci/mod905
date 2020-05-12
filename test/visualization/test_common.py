@@ -22,10 +22,10 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 color = colorama.Fore.CYAN
 
 
-def del_list_ind(l, d):
+def del_list_ind(lll, ddd):
     """Function deleting indeces in list"""
-    for i in reversed(d):
-        del l[i]
+    for i in reversed(ddd):
+        del lll[i]
 
 
 class TestMethods(unittest.TestCase):
