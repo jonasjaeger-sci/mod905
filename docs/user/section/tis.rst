@@ -140,12 +140,11 @@ Keyword freq
 .. pyretis-keyword:: freq float
 
    This defines how often time reversal moves are performed:
-   It corresponds to the percentage of the TIS moves that should be
-   shooting moves. E.g. if ``freq = 0.5`` then 50% of the TIS moves
+   E.g. if ``freq = 0.4`` then 40% of the TIS moves
    are time reversal. Note that if you are running a RETIS simulation,
    then the percentage of TIS moves will be modified by the percentage
    of swapping moves, e.g. the percentage of shooting moves will then
-   be given by :math:`(1 - swapfreq) \times freq`.
+   be given by :math:`(1 - swapfreq) \times (1 - freq)`.
 
    Default
        No default, this keyword **must** be specified.
@@ -176,9 +175,9 @@ Keyword high_accept
 
    This select the version of Stone Skipping that is going to be used.
    Potential High Accept should always been choosen since it is more
-   efficient. Note that this version DOES NOT ALLOW (in the present 
-   implementation, due to detailed balance) to have multiple shooting
-   methods used in the same ensemble. 
+   efficient. Note that the current implementation,
+   due to detailed balance, DOES NOT ALLOW to have multiple shooting
+   methods in the same ensemble. 
 
    Default
        The default is ``high_accept = True``.
@@ -192,8 +191,8 @@ Keyword maxlength
 .. pyretis-keyword:: maxlength integer
 
    This determines the maximum length of the paths generated.
-   Generally, this should be set so that only a few paths are longer than
-   this value.
+   Ideally, no paths should be longer than this value. A value too
+   ristrictive can invalidate detailed balance.
 
    Default
        No default, this keyword **must** be specified.
@@ -207,7 +206,6 @@ Keyword n_jumps
 .. pyretis-keyword:: n_jumps integer
 
    The number of jumps for Stone Skipping and of web for Web Throwing. 
-   The number is the same for all the ensembles. 
 
    Default
        No default, this keyword **must** be specified if Stone Skipping
