@@ -20,11 +20,11 @@ Welcome to |pyretis|!
   :ref:`transition interface sampling <user-guide-tis-theory>`
   and :ref:`replica exchange transition interface sampling <user-guide-retis-theory>`.
 
-  |pyretis| contains |pyvisa|, a Python library to on-the-fly/post-processing
-  analysis, plotting and visualizations with a GUI interface.
+  |pyretis| contains |pyvisa|, a Python library for on-the-fly/post-processing
+  analysis, plotting, and visualizations with a GUI interface.
 
-  |pyretis| is :ref:`open source <pyretis-license>`, easy to use
-  and can be interfaced with other simulation packages such as GROMACS, LAMMPS
+  |pyretis| is :ref:`open source <pyretis-license>`, easy to use,
+  and can be interfaced with other simulation packages such as GROMACS, LAMMPS,
   or CP2K.
 
   You can use the |pyretis| :ref:`library <api-doc>` to set up tailored

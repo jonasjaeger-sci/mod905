@@ -36,7 +36,7 @@ For an overview of the official |pyretis| releases,
 please visit our git repository: `<https://gitlab.com/pyretis/pyretis/-/releases>`_.
 
 Since version 2.4, |pyretis| includes |pyvisa|, a program created to
-facilitate post processing and data analysis.
+facilitate post-processing and data analysis.
 
 
 The |pyretis| team

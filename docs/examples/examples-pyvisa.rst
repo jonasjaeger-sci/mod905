@@ -3,11 +3,11 @@
 PyVisA: Visualization and Analysis of Path Sampling results
 ===========================================================
 
-In this example, we are going to familiarize with the use
-of |pyvisa|. Every examples reported in the website can
+In this example, we are going to familiarize ourselves with the use
+of |pyvisa|. Every example reported on the website can
 be used to generate the data to feed the analysis. 
 
-|pyvisa| is composed by two units: a **compressor** tool and a
+|pyvisa| is composed of two units: a **compressor** tool and a
 **visualization** tool (NB. the latter requires the additional
 installation of PyQt5). Both units can be executed directly via
 the pyretisanalyse command or used as a Python library.
@@ -16,8 +16,9 @@ We illustrate here the usage of |pyvisa| components as a command line.
 
 Please remember that, since clusters might not support GUI ad the relative
 packages (e.g. PyQt5), we opted to **not** include PyQt5 as a prerequisite
-for |pyretis| and |pyvisa|. This means that, to operate the GUI visualizer tool
-of |pyvisa|, PyQt5 has to be manually installed, e.g. via pip.
+for |pyretis| and |pyvisa|. This means that to operate the GUI visualizer tool
+of |pyvisa|, PyQt5 has to be manually installed, e.g. via pip as
+described in the :ref:`installation instructions <user-guide-install-pip>`.
 
 |
 
@@ -34,7 +35,7 @@ where the <input_file> is the same file (.rst) used to execute the |pyretis|
 simulations.
 
 |pyvisa| will read, for each folder, the energy and the order parameter files.
-It will check the consistency and the integrity of each file and discard
+It will check the consistency and integrity of each file and discard
 eventual corrupted data. The compressor tool will then generate a
 binary file, .hdf5 by default, where all the input files are condensed,
 compressed and organized such to simplify the following post-processing
@@ -99,15 +100,15 @@ Data sub-sets selection
 
 Data selection and manipulation criteria are:
 
-* x, y, z: list of OPs, cycles and timesteps. 
+* x, y, z: list of order parameters, cycles and timesteps. 
   Also, y, z allows the selection of the kinetic, potential,
   and total energy (kinetic+potential).
-* Folder: choose ensemble number or select all of them.
-* Paths: accepted (’ACC’), rejected (’REJ’) or both (’BOTH’).
+* Folder: choose an ensemble number or select all of them.
+* Paths: accepted (`ACC`), rejected (`REJ`), or both (`BOTH`).
 * Cycles: select the minimum and maximum cycle number, where a
   cycle is a Monte Carlo move, i.e. a trajectory for each ensemble.
-* Data shift: shift the x - y data. It can be userful in
-  the case of cyclic OP like angle or dihedral.
+* Data shift: shift the x - y data. This can be useful in
+  the case of a cyclic order parameter such as an angle or dihedral.
 * Interfaces: toggle interface lines (2D plot) or planes (3D plot)
   It requires that x is the main order parameter (OP1).
 * Reg. line: plot a linear regression line and report its slope,
@@ -178,7 +179,7 @@ The drop-down menu contains a few options:
   * Raw format: .txt file. Other visualization
     software can directly be used (e.g. xmgrace, gnuplot). 
   * JSON format: .json file. This allows users to
-    directly access to the numbers corresponding to a plot and/or
+    directly access the numbers corresponding to a plot and/or
     load them via the JSON package.
 
 
@@ -187,7 +188,7 @@ The drop-down menu contains a few options:
   * .hdf5: a versatile compressed format that can be loaded
     also by other programming languages (e.g. R).
   * .pickle: a standard Python compressed file. It requires the
-    pickle python package.
+    pickle Python package.
   
 
   The figure itself can be saved as:
@@ -206,8 +207,7 @@ Analysis
 A large variety of plots can thus be generated via |pyvisa|. The respective
 data can be saved in different formats to further facilitate
 post-processing and analysis in different programming languages.
-By storing the data as a pandas dataframe, other packages can be direcly used
+By storing the data as a pandas dataframe, other packages can be directly used
 to perform statistical analysis on the results (i.e. sklearn, scipy). 
 A direct implementation of some of the most promising statistical analysis
-for path sampling in |pyvisa| is currently under development (PCA analisys and clustering).
-
+for path sampling in |pyvisa| is currently under development (PCA and clustering).
