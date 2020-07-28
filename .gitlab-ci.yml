@@ -136,8 +136,7 @@ test_openmm:
 build_docs:
   stage: style
   script:
-  - apt-cache policy texlive-full
-  - apt-get install -y texlive-full
+  - apt-get install -y texlive-latex-extra dvipng
   - pip install sphinx
   - pip install sphinx_bootstrap_theme
   - cd docs
