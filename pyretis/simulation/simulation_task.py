@@ -97,8 +97,6 @@ class SimulationTask(Task):
     first : boolean
         True if this task should be executed before the first
         step of the simulation.
-    result : string
-        This is a label for the result created by the task.
 
     """
 

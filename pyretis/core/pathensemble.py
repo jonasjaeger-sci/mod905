@@ -340,7 +340,7 @@ class PathEnsemble:
 
         It is included here in order to have a simple compatibility
         between the :py:class:`.PathEnsemble` object and the
-        py:class:`.PathEnsembleFile` object. This is useful for the
+        :py:class:`.PathEnsembleFile` object. This is useful for the
         analysis.
 
         Yields
@@ -462,7 +462,7 @@ class PathEnsembleExt(PathEnsemble):
 
         Returns
         -------
-        out : object like py:class:`.PathBase`
+        out : object like :py:class:`.PathBase`
             A copy of the input path.
 
         """

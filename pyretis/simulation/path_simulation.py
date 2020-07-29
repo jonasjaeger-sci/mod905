@@ -75,14 +75,13 @@ class PathSimulation(Simulation):
         * `nullmoves`: Should we perform null moves.
         * `swapsimul`: Should we just swap a single pair or several
           pairs.
-    required_settings : tuple of strings
-        This is just a list of the settings that the simulation
-        requires. Here it is used as a check to see that we have
-        all we need to set up the simulation.
 
     """
 
     required_settings = ('tis',)
+    """tuple of strings : This is a list of the settings that the
+    simulation requires. Here it is used as a check to see that we
+    have all that we need to set up the simulation."""
     name = 'Generic path simulation'
     simulation_type = 'generic-path'
     simulation_output = [

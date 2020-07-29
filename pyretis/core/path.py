@@ -229,14 +229,6 @@ class PathBase:
         This is the maximum path length. Some algorithms require this
         to be set. Others don't, which is indicated by setting `maxlen`
         equal to None.
-    ordermax : tuple
-        This is the (current) maximum order parameter for the path.
-        `ordermax[0]` is the value, `ordermax[1]` is the index in
-        `self.path`.
-    ordermin : tuple
-        This is the (current) minimum order parameter for the path.
-        `ordermin[0]` is the value, `ordermin[1]` is the index in
-        `self.path`.
     phasepoints : list of objects like :py:class:`.System`
         The phase points the path is made up of.
     rgen : object like :py:class:`.RandomGenerator`
@@ -286,18 +278,38 @@ class PathBase:
 
     @property
     def ordermin(self):
-        """Compute the minimum order parameter of the path."""
+        """Compute the minimum order parameter of the path.
+
+        This is the (current) minimum order parameter for the path.
+
+        Returns
+        -------
+        float
+            The current minimum order parameter.
+        int
+            The index in the path for the current minimum order parameter.
+        """
         idx = np.argmin([i.order[0] for i in self.phasepoints])
         return (self.phasepoints[idx].order[0], idx)
 
     @property
     def ordermax(self):
-        """Compute the maximum order parameter of the path."""
+        """Compute the maximum order parameter of the path.
+
+        This is the (current) maximum order parameter for the path.
+
+        Returns
+        -------
+        float
+            The current maximum order parameter.
+        int
+            The index in the path for the current maximum order parameter.
+        """
         idx = np.argmax([i.order[0] for i in self.phasepoints])
         return (self.phasepoints[idx].order[0], idx)
 
     def check_interfaces(self, interfaces):
-        """Check current status of the path.
+        """Check the current status of the path.
 
         Get the current status of the path with respect to the
         interfaces. This is intended to determine if we have crossed
@@ -307,19 +319,22 @@ class PathBase:
         ----------
         interfaces : list of floats
             This list is assumed to contain the three interface values
-            left, middle and right.
+            left, middle and, right.
 
         Returns
         -------
-        out[0] : str, 'L' or 'R' or None
-            Start condition: did the trajectory start at the left ('L')
-            or right ('R') interface.
-        out[1] : str, 'L' or 'R' or None
-            Ending condition: did the trajectory end at the left ('L')
-            or right ('R') interface or None of them.
-        out[2] str, 'M' or '*'
-            'M' if the middle interface is crossed, '*' otherwise.
-        out[3] : list of boolean
+        start : str, 'L' or 'R' or None
+            The starting condition for the path: 'L' if the trajectory
+            starts at the left interface, 'R' if it starts at the right
+            interface.
+        end : str, 'L' or 'R' or None
+            The ending condition for the path: 'L' if the trajectory
+            ends at the left interface, 'R' if it ends at the right
+            interface.
+        middle : str, 'M' or '`*`'
+            The status with respect to the middle interface: 'M' if the
+            middle interface is crossed, '`*`' otherwise.
+        cross : list of boolean
             These values are given by
             `ordermin < interfaces[i] <= ordermax`.
 

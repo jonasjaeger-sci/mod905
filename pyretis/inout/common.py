@@ -321,11 +321,8 @@ class OutputBase(metaclass=ABCMeta):
 
     Attributes
     ----------
-    formatter : object like py:class:`.OutputFormatter`
+    formatter : object like :py:class:`.OutputFormatter`
         The object responsible for formatting output.
-    target : string
-        Determines where the target for the output, for
-        instance "screen" or "file".
     first_write : boolean
         Determines if we have written something yet, or
         if this is the first write.
@@ -333,9 +330,18 @@ class OutputBase(metaclass=ABCMeta):
     """
 
     target = None
+    """string or None : Determines the target for the output,
+    for instance "screen" or "file"."""
 
     def __init__(self, formatter):
-        """Create the object and attach a formatter."""
+        """Create the object and attach a formatter.
+
+        Parameters
+        ----------
+        formatter : object like :py:class:`.OutputFormatter`
+            The object responsible for formatting output.
+
+        """
         self.formatter = formatter
         self.first_write = True
 

@@ -51,18 +51,16 @@ class Simulation:
         True if the first step has not been executed yet.
     system : object like :py:class:`.System`
         This is the system the simulation will act on.
-    simulation_output : list of dicts
-        This list defines the output tasks associated
-        with the simulation.
-    simulation_type : string
-        An identifier for the simulation.
     tasks : list of objects like :py:class:`.SimulationTask`
         This is the list of simulation tasks to execute.
 
     """
 
     simulation_type = 'generic'
+    """string : An identifier for the type of simulation."""
     simulation_output = []
+    """list of dicts : This list defines the output tasks associated
+    with the simulation."""
 
     def __init__(self, steps=0, startcycle=0):
         """Initialise the simulation object.
@@ -167,7 +165,7 @@ class Simulation:
         """Add a new simulation task.
 
         A task can still be added manually by simply appending to
-        py:attr:`.tasks`. This function will, however, do some
+        :py:attr:`.tasks`. This function will, however, do some
         checks so that the task added can be executed.
 
         Parameters

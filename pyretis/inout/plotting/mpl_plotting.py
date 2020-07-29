@@ -129,9 +129,9 @@ class MplPlotter(Plotter):
         return outputfiles
 
     def output_flux(self, results):
-        """Plot flux results using py:func:`.mpl_plot_flux`.
+        """Plot flux results using :py:func:`.mpl_plot_flux`.
 
-        The parameters for this method is described in
+        The parameters for this method are described in
         :py:func:`.mpl_plot_flux`.
 
         Returns

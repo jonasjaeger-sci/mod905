@@ -34,23 +34,29 @@ class EngineBase(metaclass=ABCMeta):
     description : string
         Short string description of the engine. Used for printing
         information about the integrator.
-    exe_dir : string
+    _exe_dir : string
         A directory where the engine is going to be executed.
-    engine_type : string or None
-        Describe the type of engine as an "internal" or "external"
-        engine. If this is undefined, this variable is set to None.
-    needs_order : boolean
-        Determines if the engine needs an internal order parameter
-        or not. If not, it is assumed that the order parameter is
-        calculated by the engine.
 
     """
 
     engine_type = None
+    """string or None : Describe the type of engine as an "internal"
+    or "external" engine. If this is undefined, this variable is set
+    to None."""
     needs_order = True
+    """boolean : Determines if the engine needs an internal order
+    parameter or not. If not, it is assumed that the order parameter
+    is calculated by the engine."""
 
     def __init__(self, description):
-        """Just add the description."""
+        """Just add the description.
+
+        Parameters
+        ----------
+        description : string
+            A short string description of the engine.
+
+        """
         self.description = description
         self._exe_dir = None
 
@@ -61,7 +67,14 @@ class EngineBase(metaclass=ABCMeta):
 
     @exe_dir.setter
     def exe_dir(self, exe_dir):
-        """Set the directory for executing."""
+        """Set the directory for executing.
+
+        Parameters
+        ----------
+        exe_dir : string
+            The path to the directory to execute in.
+
+        """
         self._exe_dir = exe_dir
         if exe_dir is not None:
             logger.debug('Setting exe_dir to "%s"', exe_dir)
@@ -85,7 +98,7 @@ class EngineBase(metaclass=ABCMeta):
         ----------
         path : object like :py:class:`.PathBase`
             The path to add to.
-        phase_point : object like py:class:`.System`
+        phase_point : object like :py:class:`.System`
             The phase point to add to the path.
         left : float
             The left interface.
