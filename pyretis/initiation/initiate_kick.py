@@ -19,7 +19,7 @@ initiate_kicki (:py:func:`.initiate_kicki`)
     velocities to find the crossing with the interfaces.
 
 initiate_kick_max (:py:func:`.initiate_kick_max`)
-    A method similar to py:meth:`.initiate_kick`. Here, if possible,
+    A method similar to :py:meth:`.initiate_kick`. Here, if possible,
     we will use points from the previous paths, closest to the target
     interface.
 
@@ -164,7 +164,7 @@ def initiate_path_ensemble_kick(path_ensemble, system, order_function,
     -------
     out[0] : boolean
         True if the initial path was accepted.
-    out[1] : object like py:class:`.PathBase`
+    out[1] : object like :py:class:`.PathBase`
         The initial path.
     out[2] : string
         The status of the path.

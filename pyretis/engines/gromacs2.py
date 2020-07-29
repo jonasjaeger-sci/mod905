@@ -420,9 +420,6 @@ class GromacsRunner:
         The current inode we are using for the file.
     stop_read : boolean
         If this is set to True, we will stop the reading.
-    SLEEP : float
-        How long we wait after an unsuccessful read before
-        reading again.
     data_size : integer
         The size of the data (x, v, f, box, etc.) in the TRR file.
     header_size : integer
@@ -431,6 +428,8 @@ class GromacsRunner:
     """
 
     SLEEP = 0.1
+    """float : How long we wait (seconds) after an unsuccessful read
+    from a TRR file before we attempt reading again."""
 
     def __init__(self, cmd, trr_file, edr_file, exe_dir):
         """Set the GROMACS commands and the files we need.

@@ -48,15 +48,15 @@ class FileIO(OutputBase):
         The file handle we are interacting with.
     last_flush : object like :py:class:`datetime.datetime`
         The previous time for flushing to the file.
-    FILE_FLUSH : integer
-        The interval for flushing to the file. That is, we will
-        flush if the time since the last flush is larger than this
-        value. Note that this is only checked in relation to writing.
 
     """
 
     target = 'file'
-    FILE_FLUSH = 10  # Interval for flushing files in seconds.
+    FILE_FLUSH = 10
+    """int : The interval for flushing to the file. That is, we will
+    flush if the time since the last flush is larger than this
+    value. Note that this is only checked when the writing method
+    (:py:meth:`.write`) is called."""
 
     def __init__(self, filename, file_mode, formatter, backup=True):
         """Set up the file object.
@@ -67,7 +67,7 @@ class FileIO(OutputBase):
             The path to the file to open or read.
         file_mode : string
             Specifies the mode for opening the file.
-        formatter : object like py:class:`.OutputFormatter`
+        formatter : object like :py:class:`.OutputFormatter`
             The object responsible for formatting output.
         backup : boolean, optional
             Defines how we handle cases where we write to a

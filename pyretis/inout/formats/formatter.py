@@ -155,7 +155,7 @@ class OutputFormatter:
     ----------
     name : string
         A string which identifies the formatter.
-    header : string
+    _header : string
         A header (or table heading) with information about the
         output data.
     print_header : boolean

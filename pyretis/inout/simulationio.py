@@ -69,7 +69,7 @@ The output tasks are defined as dictionaries with the following keys:
 * when : string
     Determines what input setting from the "output" section is used to
     define the output frequency. Default values are defined by the
-    output section, see: py:mod:`pyretis.inout.settings.settings`.
+    output section, see :py:mod:`.settings`.
 * formatter : object like :py:class:`.OutputFormatter`
     Selects the formatter for the output.
 * writer : object like :py:class:`.OutputBase`
@@ -190,7 +190,7 @@ class Task:
 
     Attributes
     ----------
-    when : dict
+    _when : dict
         Determines when the task should be executed.
 
     """

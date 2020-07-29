@@ -170,15 +170,10 @@ class PathExtFormatter(OutputFormatter):
 
     The external trajectories as stored as files and this path
     formatter includes the location of these files.
-
-    Attributes
-    ----------
-    FMT : string
-        The string to use for the formatting.
-
     """
 
     FMT = '{:>10}  {:>20s}  {:>10}  {:>5}'
+    """string : The string to use for the formatting."""
 
     def __init__(self):
         """Initialise the PathExtFormatter formatter."""

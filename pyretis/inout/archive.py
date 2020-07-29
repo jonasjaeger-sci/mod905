@@ -93,40 +93,30 @@ def generate_traj_names(path, target_dir):
 
 
 class PathStorage(OutputBase):
-    """A class for handling storage of external trajectories.
-
-    Attributes
-    ----------
-    target : string
-        Determines the target for this output class. Here it will
-        be a file archive (i.e. a directory based collection of
-        files).
-    archive_acc : string
-        Basename for the archive with accepted trajectories.
-    archive_rej : string
-        Basename for the archive with rejected trajectories.
-    archive_traj : string
-        Basename for a sub-folder containing the actual files
-        for a trajectory.
-    formatters : dict
-        This dict contains the formatters for writing path data,
-        with default filenames used for them.
-    out_dir_fmt : string
-        A format to use for creating directories within the archive.
-        This one is applied to the step number for the output.
-
-    """
+    """A class for handling storage of external trajectories."""
 
     target = 'file-archive'
+    """string : Determines the target for this output class.
+    Here it will be a file archive (i.e. a directory based
+    collection of files).
+    """
     archive_acc = 'traj-acc'
+    """string : Basename for the archive with accepted trajectories."""
     archive_rej = 'traj-rej'
+    """string : Basename for the archive with rejected trajectories."""
     archive_traj = 'traj'
+    """string : Basename for a sub-folder containing the actual files
+    for a trajectory."""
     formatters = {
         'order': {'fmt': OrderPathFormatter(), 'file': 'order.txt'},
         'energy': {'fmt': EnergyPathFormatter(), 'file': 'energy.txt'},
         'traj': {'fmt': PathExtFormatter(), 'file': 'traj.txt'},
     }
+    """dict : This dict contains the formatters for writing path data,
+    with default filenames used for them."""
     out_dir_fmt = '{}'
+    """string : A format to use for creating directories within the
+    archive. This one is applied to the step number for the output."""
 
     def __init__(self):
         """Set up the storage.
