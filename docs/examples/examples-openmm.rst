@@ -24,6 +24,7 @@ and ``OpenMMEngine`` objects
     from pyretis.core import System, Particles
     from pyretis.core.box import create_box, box_matrix_to_list
     from pyretis.engines import OpenMMEngine
+    
     def make_pyretis_system(simulation):                                            
         """Makes PyRETIS system from OpenMM Simulation."""                          
         state = simulation.context.getState(getPositions=True, getVelocities=True)  
@@ -48,42 +49,44 @@ and ``OpenMMEngine`` objects
     system = make_pyretis_system(simulation=simulation)
     engine = OpenMMEngine(simulation=simulation)
 
-From this point on we can define an order parameter, interfaces and propagate
-with this ``engine`` inside the TIS ensemble.
+
+From this point we use :download:`this altered rst</_static/engine-examples/openmm_retis.rst>` to set up the rest of the `RETIS` simulation.
 
 .. code-block:: python
 
-    from pyretis.core.random_gen import RandomGenerator
-    from pyretis.core.path import Path
-    from pyretis.orderparameter import Distance
-    import numpy as np
-
-    # Get a random number generator
-    rgen = RandomGenerator(seed=1)
+    # Load the settings
+    from pyretis.inout.settings import parse_settings_file
+    from pyretis.inout.setup import create_simulation
+    settings = parse_settings_file('openmm_retis.rst') 
     
-    # Define an empty path of a specific max length (10 in this case)
-    path = Path(None, maxlen=10)
+    # Now we need to override some things due to pyretis internals
+    def mock_potential_and_force():                                                 
+        pass                                                                        
+                                                                                
+    system.potential_and_force = mock_potential_and_force # Not used, but legacy requirement
+    engine.engine_type = 'internal' # was OpenMM                                    
+                                                                                
+    kwargs = {"system": system,                                                     
+              "engine": engine}                                                     
+    pyretis_simulation = create_simulation(settings=settings, kwargs=kwargs)        
+
+Now that we have set up the ``pyretis_simulation``, we can setup the outputs,
+initiate the ensmebles and run it. (Make sure you have write
+permisions in the running directory)
+
+.. code-block:: python
+
+    # If the default output colors are too flamboyant you can reset the colors
+    # import colorama
+    # colorama.init(autoreset=True)
+
+    # Setup the outputs                                                          
+    pyretis_simulation.set_up_output(settings=settings)                             
+                                                     
+    # Initiate the simulation
+    pyretis_simulation.initiate(settings=settings)
     
-    # Define the order parameter, the distance between the two water oxygens
-    order_parameter = Distance((0, 3), periodic=False)
-
-    # Define state A, Interface and state B of the sampled TIS ensemble.
-    ifaces = (1, 2, 3)
-    
-    # Modify the velocities of the shooting point 
-    engine.modify_velocities(system, rgen=rgen,
-                             sigma_v=None, aimless=True,
-                             momentum=False, rescale=None)
-
-    # Propegate forward
-    engine.propagate(path=path, initial_system=system,
-                     order_function=order_parameter,
-                     interfaces=ifaces , reverse=False)
-
-
-The ``path`` variable now will have the newly generated path for the user to apply
-acceptance criteria on. The communication to and from the OpenMM kernel
-has been reduced to a minimum, as communication can be expensive for simulations
-on GPUs. Further integration with the |pyretis| application 
-layer is envisioned for later |pyretis| releases.
+    # Run through the simulation generator to run the simulation
+    for step in pyretis_simulation.run():
+        pass    
 
