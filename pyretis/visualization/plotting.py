@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-# pylint: skip-file
-# Copyright (c) 2019, PyRETIS Development Team.
+# Copyright (c) 2020, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """This file contains common functions for the visualization.
 
@@ -30,10 +29,8 @@ _grid_it_up (:py:func:`._grid_it_up`)
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 from scipy.interpolate import griddata as scgriddata
 from scipy.stats import linregress as linreg
-from pyretis.inout import print_to_screen
 
 
 def plot_regline(ax, x, y):
@@ -89,7 +86,7 @@ def plot_int_plane(ax, pos, ymin, ymax, zmin, zmax, visible=False):
 
 
 def gen_surface(x, y, z, fig, ax, cbar_ax=None, dim=3, method='contour',
-                resX=400, resY=400, colormap='viridis'):
+                res_x=400, res_y=400, colormap='viridis'):
     """Generate the chosen surface/contour/scatter plot.
 
     Parameters
@@ -97,13 +94,15 @@ def gen_surface(x, y, z, fig, ax, cbar_ax=None, dim=3, method='contour',
     x, y, z : list
         Coordinates of data points. (x,y) the chosen orderP pairs, and
         z is the chosen energy value of the two combinations.
-    fig, ax, cbar_ax : Matplotlib objects; figure, main canvas axes and axes
-        for plotting colorbar.
-    dim : interger, optional
-        Dimension of plot.
+    fig : Matplotlib object
+        main canvas.
+    ax : Matplotlib object
+        axes of the plot.
+    cbar_ax : Matplotlib object, optional
+        plot colorbar.
     method : string, optional
         Method used for plotting data, default is contour lines.
-    resX, resY : integer, optional
+    res_x, res_y : integer, optional
         Resolution of plot, either as N*N bins in 2D histogram
         (Density plot) or as gridpoints for interpolation of data
         (Surface and contour plots).
@@ -112,7 +111,10 @@ def gen_surface(x, y, z, fig, ax, cbar_ax=None, dim=3, method='contour',
 
     Returns
     -------
-    surf, cbar : The chosen surface/contour/plot object, and the colorbar.
+    surf : Matplotlib object
+         The chosen surface/contour/plot object.
+    cbar : Matplotlib object
+         The chosen colorbar.
 
     """
     xmin, xmax = min(x), max(x)
@@ -128,75 +130,50 @@ def gen_surface(x, y, z, fig, ax, cbar_ax=None, dim=3, method='contour',
 
     # When scatter plots, use resolution to make size for dots.
     if method == 'scatter':
-        scat_size = resX / 100.0
+        scat_size = res_x / 100.0
 
+    ax.set_xlim(xmin, xmax)
+    ax.set_ylim(ymin, ymax)
     if dim == 3:
         # 3d plot settings
-        ax.set_xlim3d(xmin, xmax)
-        ax.set_ylim3d(ymin, ymax)
         ax.set_zlim3d(zmin, zmax)
         ax.zaxis.set_ticklabels([])
-        # Methods for plotting in 3D
-        if method == 'surface':
-            X, Y, Z = _grid_it_up(x, y, z, resX=resX, resY=resY)
-            surf = ax.plot_surface(X, Y, Z, cmap=CMAP, vmin=zmin, vmax=zmax,
-                                   facecolor=colors, shade=True,
-                                   antialiased=False)
-            cbar = fig.colorbar(surf, cax=cbar_ax)
-        elif method == 'contour':
-            X, Y, Z = _grid_it_up(x, y, z, resX=resX, resY=resY)
-            surf = ax.contour(X, Y, Z, cmap=CMAP)
-            cbar = fig.colorbar(surf, cax=cbar_ax)
-        elif method == 'contourf':
-            X, Y, Z = _grid_it_up(x, y, z, resX=resX, resY=resY)
-            surf = ax.contourf(X, Y, Z, cmap=CMAP)
-            cbar = fig.colorbar(surf, cax=cbar_ax)
-        elif method == 'scatter':
+
+    # Methods for plotting in 3D
+    if method == 'scatter':
+        if dim == 3:
             surf = ax.scatter(x, y, z, c=colors, s=scat_size, cmap=CMAP)
-            norm = mpl.colors.Normalize(vmin=zmin, vmax=zmax)
-            cbar = fig.colorbar(
-                    mpl.cm.ScalarMappable(norm=norm, cmap=CMAP),
-                    cax=cbar_ax)
         else:
-            print_to_screen('Method not recognized!', level='error')
-            return None, None
-    elif dim == 2:
-        # 2d plot settings
-        ax.set_xlim(xmin, xmax)
-        ax.set_ylim(ymin, ymax)
-        # Grid-mapping and interpolation
-        if method == 'scatter':
             surf = ax.scatter(x, y, c=colors, s=scat_size, cmap=CMAP)
-            norm = mpl.colors.Normalize(vmin=zmin, vmax=zmax)
-            cbar = fig.colorbar(
-                    mpl.cm.ScalarMappable(norm=norm, cmap=CMAP),
-                    cax=cbar_ax)
-        elif method == 'contourf':
-            X, Y, Z = _grid_it_up(x, y, z, resX=resX, resY=resY)
-            surf = ax.contourf(X, Y, Z, cmap=CMAP)
-            cbar = fig.colorbar(surf, cax=cbar_ax)
-        elif method == 'contour':
-            X, Y, Z = _grid_it_up(x, y, z, resX=resX, resY=resY)
-            surf = ax.contour(X, Y, Z, cmap=CMAP)
-            cbar = fig.colorbar(surf, cax=cbar_ax)
-        else:
-            print_to_screen('Method not recognized!', level='error')
-            return None, None
-    else:
-        print_to_screen('Error! Dimension: {}, '.format(dim), level='error')
-        return None, None
+
+        norm = mpl.colors.Normalize(vmin=zmin, vmax=zmax)
+        cbar = fig.colorbar(
+            mpl.cm.ScalarMappable(norm=norm, cmap=CMAP),
+            cax=cbar_ax)
+        return surf, cbar
+
+    X, Y, Z = _grid_it_up(x, y, z, res_x=res_x, res_y=res_y)
+    if method == 'surface':
+        surf = ax.plot_surface(X, Y, Z, cmap=CMAP, vmin=zmin, vmax=zmax,
+                               facecolor=colors, shade=True,
+                               antialiased=False)
+    elif method == 'contour':
+        surf = ax.contour(X, Y, Z, cmap=CMAP)
+    elif method == 'contourf':
+        surf = ax.contourf(X, Y, Z, cmap=CMAP)
+    cbar = fig.colorbar(surf, cax=cbar_ax)
 
     return surf, cbar
 
 
-def _grid_it_up(x, y, z, resX=200, resY=200, fill='max'):
+def _grid_it_up(x, y, z, res_x=200, res_y=200, fill='max'):
     """Map x, y and z data values to a numpy meshgrid by interpolation.
 
     Parameters
     ----------
     x, y, z : list
         Lists of data values.
-    resX, resY : integer, optional
+    res_x, res_y : integer, optional
         Resolution (number of points in a axis range).
     fill : string, optional
         Criteria to color the un-explored regions.
@@ -208,8 +185,8 @@ def _grid_it_up(x, y, z, resX=200, resY=200, fill='max'):
 
     """
     # Convert 3 columns of data to grid for matplotlib"""
-    xi = np.linspace(min(x), max(x), resX)
-    yi = np.linspace(min(y), max(y), resY)
+    xi = np.linspace(min(x), max(x), res_x)
+    yi = np.linspace(min(y), max(y), res_y)
     X, Y = np.meshgrid(xi, yi)
 
     # Scipy griddata """ # Works

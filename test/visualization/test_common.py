@@ -14,7 +14,8 @@ from pyretis.visualization.common import (
     get_startat,
     diff_matching,
     try_data_shift,
-    hello_pyvisa
+    hello_pyvisa,
+    where_from_to
 )
 logging.disable(logging.CRITICAL)
 
@@ -22,10 +23,10 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 color = colorama.Fore.CYAN
 
 
-def del_list_ind(lll, ddd):
+def del_list_ind(data_list, to_delete):
     """Function deleting indeces in list"""
-    for i in reversed(ddd):
-        del lll[i]
+    for i in reversed(to_delete):
+        del data_list[i]
 
 
 class TestMethods(unittest.TestCase):
@@ -233,6 +234,26 @@ class TestMethods(unittest.TestCase):
         nx, ny = try_data_shift(sx, sy, 'op1')
         self.assertEqual(sx, nx)
         self.assertFalse(np.average(sy) == np.average(ny))
+
+    def test_where_to_from(self):
+        """Test to get the right L and R and * trj start and end labels"""
+        trj = [1, 2, 3, 4, 5, 6, 4]
+        int_as, int_bs = [0, 2, 2, 0, 5, 3], [7, 7, 3, 0, 5, 2]
+        results = [('*', '*'), ('L', '*'), ('L', 'R'),
+                   ('R', 'R'), ('L', 'L'), ('L', 'R')]
+
+        # For a certain trj, we test different interfaces.
+        for int_a, int_b, result in zip(int_as, int_bs,  results):
+            start, end = where_from_to(trj, int_a, int_b)
+            self.assertEqual((start, end), result)
+
+        # Let's check the zero ensemble.
+        trjs = [[0, 2], [6, 5], [1, 6]]
+        results = [('*', '*'), ('R', 'R'), ('*', 'R')]
+
+        for trj, result in zip(trjs, results):
+            start, end = where_from_to(trj, int_a=3)
+            self.assertEqual((start, end), result)
 
 
 if __name__ == '__main__':

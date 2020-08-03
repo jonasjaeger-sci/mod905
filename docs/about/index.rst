@@ -17,7 +17,7 @@ with emphasis on methods based on
 and :ref:`replica exchange transition interface sampling <user-guide-retis-theory>`.
 The papers describing the |pyretis| program
 can be found here: `<https://doi.org/10.1002/jcc.24900>`_ (|pyretis| 1, 2017)
-and here: `<http://doi.org/10.1002/jcc.26112>`_ (|pyretis| 2, 2019).
+and here: `<https://doi.org/10.1002/jcc.26112>`_ (|pyretis| 2, 2019).
 
 The work on |pyretis| was initiated by `Titus van Erp <http://www.van-erp.org>`_ and is used in
 the research and teaching activities in the
@@ -88,7 +88,7 @@ The |pyretis| team
 
 * Magnus Heskestad Waage
 
-
+|
 
 To cite us:
 -----------

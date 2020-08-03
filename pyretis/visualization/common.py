@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-# pylint: skip-file
-# Copyright (c) 2015, PyRETIS Development Team.
+# Copyright (c) 2020, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """This file contains common functions for the path density.
 
@@ -25,6 +24,10 @@ try_data_shift (:py:func: `.try_data_shift`
 shift_data (:py:func: `.shift_data`)
     Finds the median value of a given list of floats, and shifts the
     lower half of the data by the median.
+
+where_from_to (:py:func: `.where_from_to`)
+    Check the initial and final steps of a trj in respect to the interfaces.
+
 """
 # pylint: disable=C0103
 import scipy
@@ -153,7 +156,7 @@ def diff_matching(l1, l2, lenp):
     # Early return if one of the lists is 0
     if lenp[0] == 0:
         return [], list(range(lenp[1]))
-    elif lenp[1] == 0:
+    if lenp[1] == 0:
         return list(range(lenp[0])), []
 
     c1 = l1[0]
@@ -176,13 +179,13 @@ def diff_matching(l1, l2, lenp):
             break
     if t1 == lenp[0] or t2 == lenp[1]:
         # Case if lists don't match at all
-        d1 = [i for i in range(len(l1))]
-        d2 = [i for i in range(len(l2))]
+        d1 = list(range(len(l1)))
+        d2 = list(range(len(l2)))
         return d1, d2
-    else:
-        # Add delete before commmon start
-        d1 = [i for i in range(t1)]
-        d2 = [i for i in range(t2)]
+
+    # Add delete before commmon start
+    d1 = list(range(t1))
+    d2 = list(range(t2))
 
     # Continue looping from common start
     while t1 < lenp[0] and t2 < lenp[1]:
@@ -237,8 +240,8 @@ def try_data_shift(x, y, op1):
     If linear correlation increases (r-squared value), data sets are
     updated.
 
-    As a precoursion, no shift
-    is performed on x values if they are of the first order parameter 'op1'
+    As a precaution, no shift
+    is performed on x values if they are of the first order parameter 'op1'.
 
     Parameters
     ----------
@@ -254,7 +257,7 @@ def try_data_shift(x, y, op1):
         (If changed, returns x_temp or y_temp or both)
 
     """
-    # The unshifted data
+    # The non shifted data
     _, _, r_val, _, _ = scipy.stats.linregress(x, y)
     r_2 = r_val**2
     # The Y-shifted data
@@ -273,11 +276,11 @@ def try_data_shift(x, y, op1):
     xyshift = bool(r_xy2 > r_2 and r_xy2 > r_y2 and r_xy2 > r_x2)
 
     # If first op is op1, don't shift data
-    if (xyshift) and op1 != 'op1':
+    if xyshift and op1 != 'op1':
         return x_temp, y_temp
-    elif (xshift) and op1 != 'op1':
+    if xshift and op1 != 'op1':
         return x_temp, y
-    elif yshift:
+    if yshift:
         return x, y_temp
     return x, y
 
@@ -315,3 +318,47 @@ def shift_data(x):
         else:
             xnorm.append(i)
     return xnorm
+
+
+def where_from_to(trj, int_a, int_b=float('-inf')):
+    r"""Detect L∕R starts and L / R / \* ends.
+
+    Given a list of order parameters (a trj), the function
+    will try to establish where the path started (L or R or \*)
+    and where it ended.
+    Note: for the 'REJ' paths, this function results might differ
+    from PyRETIS.
+
+    Parameters
+    ----------
+    trj: list
+        The order parameters of the trj.
+    int_a: float
+        The interface that defines state A.
+    int_b: float, optional
+        The interface that defines state B. If not given, it is assumed
+        that the 0^- ensemble is in use without the 0^- L interface.
+
+    Returns
+    -------
+    start: string\*1
+        The initial position of the trajectory in respect to the
+        interfaces given (L eft, R ight or \* for nothing).
+    end: string\*1
+        The final position of the trajectory in respect to the
+        interfaces given (L eft, R ight or \* for nothing).
+
+    """
+    start, end = '*', '*'
+    int_l = min(int_a, int_b)
+    int_t = max(int_a, int_b)
+    if trj[0] >= int_t:
+        start = 'R'
+    if trj[0] < int_l:
+        start = 'L'
+    if trj[-1] >= int_t:
+        end = 'R'
+    if trj[-1] < int_l:
+        end = 'L'
+
+    return start, end
