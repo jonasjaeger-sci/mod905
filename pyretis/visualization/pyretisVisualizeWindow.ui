@@ -507,6 +507,9 @@
              </item>
              <item>
               <widget class="QPushButton" name="previewBtn">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
                <property name="toolTip">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Updates the figure in the plot.&lt;br/&gt;(just the visuals defined here, not changing any data loaded)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
@@ -575,6 +578,9 @@
              </item>
              <item>
               <widget class="QPushButton" name="saveFigBtn">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
                <property name="toolTip">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Save current figure as a *.png file&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
@@ -947,6 +953,8 @@
      </property>
      <addaction name="action_sim_hdf5"/>
      <addaction name="action_sim_pickle"/>
+     <addaction name="action_sim_hdf5_zip"/>
+     <addaction name="action_sim_pickle_zip"/>
     </widget>
     <widget class="QMenu" name="menuSave_figure_as">
      <property name="title">
@@ -991,6 +999,11 @@
     <string>.pickle</string>
    </property>
   </action>
+  <action name="action_sim_pickle_zip">
+   <property name="text">
+    <string>.pickle.zip</string>
+   </property>
+  </action>
   <action name="action_hdf5">
    <property name="text">
     <string>.hdf5</string>
@@ -999,6 +1012,11 @@
   <action name="action_sim_hdf5">
    <property name="text">
     <string>.hdf5</string>
+   </property>
+  </action> 
+  <action name="action_sim_hdf5_zip">
+   <property name="text">
+    <string>.hdf5.zip</string>
    </property>
   </action>
   <action name="action_json">

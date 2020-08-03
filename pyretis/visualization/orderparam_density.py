@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-# pylint: skip-file
-# Copyright (c) 2019, PyRETIS Development Team.
+# Copyright (c) 2020, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Compiler of PyRETIS simulation data.
 
@@ -8,21 +7,19 @@ This module is part of the PyRETIS library and can be used both for compiling
 the simulation data into a compressed file and/or load the data for later
 visualization.
 """
-import argparse
-import colorama
 import os
-import pandas as pd
 import pickle
 import warnings
 import timeit
+import zipfile
+import pandas as pd
+from tqdm import tqdm
 from pyretis import __version__ as VERSION
-from pyretis.info import PROGRAM_NAME
 from pyretis.inout import print_to_screen
 from pyretis.inout.settings import parse_settings_file
 from pyretis.visualization.common import (get_min_max,
                                           get_startat,
                                           diff_matching)
-from tqdm import tqdm
 
 warnings.filterwarnings('ignore', category=pd.io.pytables.PerformanceWarning)
 
@@ -30,7 +27,45 @@ warnings.filterwarnings('ignore', category=pd.io.pytables.PerformanceWarning)
 ENERGYLABELS = ['time', 'cycE', 'potE', 'kinE', 'totE']
 
 
-def remove_nan(data):
+def pyvisa_zip(input_file):
+    """Zip compress file of simulation data.
+
+    Parameters
+    ----------
+    input_file : string
+        The file to compress.
+
+    """
+    with zipfile.ZipFile(input_file+'.zip', 'w') as zipped_file:
+        zipped_file.write(input_file, compress_type=zipfile.ZIP_DEFLATED)
+
+    os.remove(input_file)
+
+
+def pyvisa_unzip(origin, destination=None):
+    """Unzip compressed file before load in visualizer.
+
+    Parameters
+    ----------
+    origin : string
+        Zipped file to unzip.
+    destination : string, optional
+        Unzipped file name.
+
+    """
+    msg = '###################################################\n'
+    msg += '# File type recognized as `.zip`, unzipping to tmp file \n'
+    msg += '# {} before loading.\n'.format(destination)
+    msg += '###################################################\n'
+    print_to_screen(msg, level='message')
+    with zipfile.ZipFile(origin) as zipped:
+        zipped.extractall(path=os.path.dirname(os.path.abspath(origin)))
+        # We here assume that only a file is stored in 'zipped'.
+        if destination is not None:
+            os.rename(zipped.namelist()[0], destination)
+
+
+def remove_nan(data_list):
     """Remove nan from data.
 
     The function shall remove initial nan, assuming that they are originated
@@ -40,28 +75,28 @@ def remove_nan(data):
 
     Parameters
     ----------
-    data : list
+    data_list : list
         Input list. If nan are present, they are replaced by the following
         entry. The method accounts for multiple consecutive nan occourence.
 
     """
-    NAN = True
-    iNAN = -1
-    while NAN:
-        NAN = False
-        for i, d in reversed(list(enumerate(data))):
-            if d*0 != 0:
-                NAN = True
-                iNAN = i
+    nan = True
+    inan = -1
+    while nan:
+        nan = False
+        for idx, data_point in reversed(list(enumerate(data_list))):
+            if data_point * 0 != 0:
+                nan = True
+                inan = idx
                 break
-        if NAN and iNAN == len(data)-1:
-            NAN = False
-        if NAN:
-            data[iNAN] = data[iNAN+1]
+        if nan and inan == len(data_list) - 1:
+            nan = False
+        if nan:
+            data_list[inan] = data_list[inan + 1]
 
 
 class PathDensity():
-    """Perfrom the path density analysis.
+    """Perform the path density analysis.
 
     This class defines the path density analysis for completed simulations
     with several order parameters.
@@ -69,7 +104,14 @@ class PathDensity():
     """
 
     def __init__(self, iofile=None):
-        """Initialize the class."""
+        """Initialize the class.
+
+        Parameters
+        ----------
+        iofile : string, optional
+            The input file.
+
+        """
         self.iofile = iofile
         self.pfile = None
         try:
@@ -88,11 +130,9 @@ class PathDensity():
         # Getting interfaces from iofile
         settings = parse_settings_file(self.iofile)
         interfaces = settings['simulation']['interfaces']
-        intnames = []
-        intnames.append('0$^{-}$')
-        intnames.append('0$^{+}$')
-        for i in range(1, len(interfaces)-1):
-            intnames.append(str(i)+'$^{+}$')
+        intnames = ['0$^{-}$', '0$^{+}$']
+        for i in range(1, len(interfaces) - 1):
+            intnames.append(str(i) + '$^{+}$')
         path = []
         # Getting ensembles/folders from directory
         for fol in sorted(filter(os.path.isdir, os.listdir('.'))):
@@ -153,16 +193,16 @@ class PathDensity():
             self.ops['astatw', fol] = []
             # Creating lists of time step (from order.txt files)
             self.ops['atimo', fol], self.ops['rtimo', fol] = [], []
-            if not (only_ops):
+            if not only_ops:
                 self.eops['atimo', fol], self.eops['rtimo', fol] = [], []
             # Creating empty lists in dictionaries for order params,
             # accepted and rejected
             for j in self.infos['op_labels']:
                 self.ops['a'+j, fol], self.ops['r'+j, fol] = [], []
-                if not (only_ops):
+                if not only_ops:
                     self.eops['a'+j, fol], self.eops['r'+j, fol] = [], []
             # Creating empty lists in dictionary for energies and time
-            if not (only_ops):
+            if not only_ops:
                 for j in ENERGYLABELS:
                     self.eops['a'+j, fol], self.eops['r'+j, fol] = [], []
 
@@ -192,11 +232,11 @@ class PathDensity():
             print_to_screen('Reading data from {}'.format(
                                 fol), level='message')
             file_starts = [get_startat(files[0])]
-            self.get_OP(files[0], fol, file_starts[0])
-            if not (only_ops):
+            self.get_op(files[0], fol, file_starts[0])
+            if not only_ops:
                 file_starts.append(get_startat(files[1]))
-                self.get_EOP(fol, files, file_starts)
-                self.check_Steps(fol)
+                self.get_eop(fol, files, file_starts)
+                self.check_steps(fol)
             line = ('Done with folder, time used: '
                     '{0:4.4f}s, proceeding.\n'
                     ''.format(timeit.default_timer()-tic[1]))
@@ -204,7 +244,7 @@ class PathDensity():
 
         maxcl = '000'
 
-        if not (only_ops):
+        if not only_ops:
             c_e = len(self.eops['acycE', '000'] +
                       self.eops['rcycE', '000'])
             c_o = len(self.ops['acycO', '000'] +
@@ -229,8 +269,12 @@ class PathDensity():
         print_to_screen('# {} to {}'.format(self.infos['long_cycle'][0],
                                             self.infos['long_cycle'][-1]),
                         level='success')
-        print_to_screen('# Time spent: {:.2f}s'.format(
-                            timeit.default_timer()-tic[0]), level='success')
+        print_to_screen(
+            '# Time spent: {:.2f}s'.format(
+                timeit.default_timer()-tic[0]
+            ),
+            level='success'
+        )
         print_to_screen('###################################################'
                         + '\n', level='success')
 
@@ -244,6 +288,8 @@ class PathDensity():
         with open(self.pfile, 'wb') as out:
             pickle.dump(data, out, protocol=pickle.HIGHEST_PROTOCOL)
         print_to_screen('# {}'.format(self.pfile), level='message')
+        pyvisa_zip(self.pfile)
+        print_to_screen('# {}'.format(self.pfile+'.zip'), level='message')
         print_to_screen('###################################################'
                         + '\n', level='message')
 
@@ -258,10 +304,12 @@ class PathDensity():
                                        'infos': self.infos})
         data.to_hdf(self.pfile, key='data')
         print_to_screen('# {}'.format(self.pfile), level='message')
+        pyvisa_zip(self.pfile)
+        print_to_screen('# {}'.format(self.pfile+'.zip'), level='message')
         print_to_screen('###################################################'
                         + '\n', level='message')
 
-    def get_EOP(self, fol, files, file_starts):
+    def get_eop(self, fol, files, file_starts):
         """Read order and energy files, save frames only if present in both.
 
         Parameters
@@ -284,7 +332,6 @@ class PathDensity():
             total number of order parameters found in the order param file.
 
         """
-        ACC = None
         cycle = []
         flag = ''
 
@@ -324,7 +371,7 @@ class PathDensity():
         for key in self.eops:
             remove_nan(self.eops[key])
 
-        WRITE = False
+        write = False
         flag = ''
         # Continue with orderp file
         with open(files[0], 'r') as temp:
@@ -349,10 +396,10 @@ class PathDensity():
                             flag = 'a'
                         else:
                             flag = 'r'
-                        WRITE = bool(cycle_t in cycle)
+                        write = bool(cycle_t in cycle)
                         continue
 
-                    if WRITE:
+                    if write:
                         self.eops[flag+'cycO', fol].append(cycle_t)
                         self.eops[flag+'timo', fol].append(int(data[0]))
                         for j in range(1, self.infos['num_op']+1):
@@ -362,7 +409,7 @@ class PathDensity():
                                 x = None
                             self.eops[flag+'op{}'.format(j), fol].append(x)
 
-    def get_OP(self, ofile, fol, ostart):
+    def get_op(self, ofile, fol, ostart):
         """Read order params from file and append to the lists in dict.
 
         Function that reads order params from orderfile, and appends
@@ -386,14 +433,13 @@ class PathDensity():
             total number of order parameters found in the order param file.
 
         """
-        ACC = None
         cycle = []
         statw = []
         weight = []
         flag = ''
 
-        with open(ofile, 'r') as o:
-            for i, line in enumerate(o):
+        with open(ofile, 'r') as orderfile:
+            for i, line in enumerate(orderfile):
                 if i < ostart-1:
                     continue
                 else:
@@ -426,17 +472,17 @@ class PathDensity():
                     self.ops[flag+'cycO', fol].append(cycle[-1])
                     for j in range(1, self.infos['num_op']+1):
                         try:
-                            v = float(data[j])
+                            val = float(data[j])
                         except IndexError:
-                            v = None
-                        self.ops[flag+'op{}'.format(j), fol].append(v)
+                            val = None
+                        self.ops[flag+'op{}'.format(j), fol].append(val)
 
         # Creating list of statistical weights of paths
-        for t in self.ops['acycO', fol]:
-            s = cycle.index(t)
-            self.ops['astatw', fol].append(statw[s])
+        for val in self.ops['acycO', fol]:
+            idx = cycle.index(val)
+            self.ops['astatw', fol].append(statw[idx])
 
-    def check_Steps(self, fol):
+    def check_steps(self, fol):
         """Loop over dicts, check lengths and print energy/order lists.
 
         Function that loops over dictionaries, checking the length of
@@ -630,16 +676,24 @@ class PathDensity():
         elif (lenp[0] < lenp[1] and
               self.eops[acc+'timo', fol][0:lenp[0]] ==
               self.eops[acc+'time', fol]):
-            print_to_screen('Deleting last {} lines of orderP lists'.format(
-                            lenp[1]-lenp[0]), level='message')
+            print_to_screen(
+                'Deleting last {} lines of orderP lists'.format(
+                    lenp[1]-lenp[0]
+                ),
+                level='message'
+            )
             _del_last_op(acc, fol)
 
         # Case: energy (lists) are longer than the energy, else match
         elif (lenp[1] < lenp[0] and
               self.eops[acc+'time', fol][0:lenp[1]] ==
               self.eops[acc+'timo', fol]):
-            print_to_screen('Deleting last {} lines of energy lists'.format(
-                            lenp[0]-lenp[1]), level='message')
+            print_to_screen(
+                'Deleting last {} lines of energy lists'.format(
+                    lenp[0]-lenp[1]
+                ),
+                level='message'
+            )
             _del_last_en(acc, fol)
 
         # Case: More differences mid-lists, heavy loop-through required
@@ -679,17 +733,48 @@ class PathVisualize():
     def __init__(self, pfile=None):
         """Initialize the PathVisualize class.
 
-        If an input fil .pickle or .hdf5 is present, loads the pre-compiled
+        If a supported compressed input file is present, loads the pre-compiled
         data from it. Else, must use specific functions explicitly.
+
+        Parameters
+        ----------
+        pfile : string, optional
+            The input file.
+
         """
+        self.ops = None
+        self.eops = None
+        self.infos = None
+        self.op_labels = None
         self.pfile = pfile
         if self.pfile is not None:
-            if 'pickle' in self.pfile:
-                self.load_pickle()
-            elif 'hdf5' in self.pfile:
-                self.load_dd()
-            else:
-                raise ValueError('Format not recognised')
+            self.load_whatever()
+
+    def load_whatever(self):
+        """Load all possible supported files.
+
+        This functions directs traffic towards the real loaders.
+        Essentially, it does almost nothing.
+
+        """
+        clean = False
+        if self.pfile.endswith('.zip'):
+            origin = self.pfile
+            self.pfile = self.pfile.rstrip('.zip')
+            tmp = os.path.join(os.path.dirname(os.path.abspath(origin)),
+                               'tmp_'+self.pfile)
+            self.pfile = tmp
+            pyvisa_unzip(origin, tmp)
+            clean = True
+        if self.pfile.endswith('.pickle'):
+            self.load_pickle()
+        elif self.pfile.endswith('.hdf5'):
+            self.load_dd()
+        else:
+            raise ValueError('Format not recognised')
+        # If from zip, just keep the zip
+        if clean:
+            os.remove(tmp)
 
     def load_pickle(self):
         """Load precompiled data from pickle file.
@@ -723,7 +808,7 @@ class PathVisualize():
         # Unpacking lists of info from infos dict
         self.op_labels = self.infos['op_labels']
 
-    def get_Odata(self, fol, XYACC, weight=True, min_max=(0, 0)):
+    def get_odata(self, fol, xyacc, weight=True, min_max=(0, 0)):
         """Load relevant data from dictionaries.
 
         Function that loads the relevant data from the dictionaries.
@@ -734,7 +819,7 @@ class PathVisualize():
         ----------
         fol : string
             Name of folder, 000, 001, etc.
-        XYACC : list
+        xyacc : list
             [0:1] : strings, names of x/y order parameter.
             [2] : bool, True/False for acc/rej paths.
         weight : boolean, optional
@@ -753,11 +838,11 @@ class PathVisualize():
         """
         x, y = [], []
 
-        if XYACC[2] == 'ACC' or XYACC[2] is True:
+        if xyacc[2] == 'ACC' or xyacc[2] is True:
             acc = 'a'
-        elif XYACC[2] == 'REJ' or XYACC[2] is False:
+        elif xyacc[2] == 'REJ' or xyacc[2] is False:
             acc = 'r'
-        elif XYACC[2] == 'BOTH':
+        elif xyacc[2] == 'BOTH':
             acc = 'BOTH'
 
         # Default - start-to-end
@@ -774,30 +859,30 @@ class PathVisualize():
             get_min_max(self.ops[acc+'cycO', fol], min_max, mini, maxi, acc)
 
         # Applying statistical weights to paths, or not
-        if (weight):
+        if weight:
             weights = self.ops['astatw', fol][mini['a']:maxi['a']]
         else:
-            weights = [1]*len(self.ops['a'+XYACC[0], fol][mini['a']:maxi['a']])
+            weights = [1]*len(self.ops['a'+xyacc[0], fol][mini['a']:maxi['a']])
 
         if acc != 'r':
             for a, b, c in zip(
-                    self.ops['a'+XYACC[0], fol][mini['a']:maxi['a']],
-                    self.ops['a'+XYACC[1], fol][mini['a']:maxi['a']],
+                    self.ops['a'+xyacc[0], fol][mini['a']:maxi['a']],
+                    self.ops['a'+xyacc[1], fol][mini['a']:maxi['a']],
                     weights):
                 for _ in range(c):
                     x.append(a)
                     y.append(b)
             if acc == 'BOTH':
-                x += self.ops['r'+XYACC[0], fol][mini['r']:maxi['r']]
-                y += self.ops['r'+XYACC[1], fol][mini['r']:maxi['r']]
+                x += self.ops['r'+xyacc[0], fol][mini['r']:maxi['r']]
+                y += self.ops['r'+xyacc[1], fol][mini['r']:maxi['r']]
 
         elif acc == 'r':
-            x += self.ops['r'+XYACC[0], fol][mini['r']:maxi['r']]
-            y += self.ops['r'+XYACC[1], fol][mini['r']:maxi['r']]
+            x += self.ops['r'+xyacc[0], fol][mini['r']:maxi['r']]
+            y += self.ops['r'+xyacc[1], fol][mini['r']:maxi['r']]
 
         # Remove item in both lists if one or both is NoneType
         del_indx = []
-        for i in range(len(x)):
+        for i, _ in enumerate(x):
             if x[i] is None or y[i] is None:
                 del_indx.append(i)
         for i in reversed(del_indx):
@@ -805,7 +890,7 @@ class PathVisualize():
             del y[i]
         return x, y
 
-    def get_Edata(self, fol, XYZ, ACC, min_max=None):
+    def get_edata(self, fol, xyz, acc, min_max=None):
         """Load relevant data from the dictionaries.
 
         Function that loads the relevant data from the dictionaries,
@@ -814,9 +899,9 @@ class PathVisualize():
 
         Parameters
         ----------
-        XYZ : list
+        xyz : list
             Names of order parameter and energy labels, for x/y/z-axis.
-        ACC : boolean OR string
+        acc : boolean OR string
             True/False for acc/rej paths, "BOTH" for both.
         fol : string
             Name of folder, 000,001,etc.
@@ -835,9 +920,9 @@ class PathVisualize():
         """
         x, y, z = [], [], []
 
-        if ACC == 'ACC' or ACC is True:
+        if acc == 'ACC' or acc is True:
             acc = 'a'
-        elif ACC == 'REJ' or ACC is False:
+        elif acc == 'REJ' or acc is False:
             acc = 'r'
 
         # Default - start-to-end
@@ -851,31 +936,31 @@ class PathVisualize():
                 get_min_max(self.eops[lll+'cycE', fol],
                             min_max, mini, maxi, lll)
 
-        if ACC == 'BOTH':
-            x = (self.eops['a'+XYZ[0], fol][mini['a']:maxi['a']] +
-                 self.eops['r'+XYZ[0], fol][mini['r']:maxi['r']])
-            y = (self.eops['a'+XYZ[1], fol][mini['a']:maxi['a']] +
-                 self.eops['r'+XYZ[1], fol][mini['r']:maxi['r']])
-            if XYZ[2] == 'None':
+        if acc == 'BOTH':
+            x = (self.eops['a'+xyz[0], fol][mini['a']:maxi['a']] +
+                 self.eops['r'+xyz[0], fol][mini['r']:maxi['r']])
+            y = (self.eops['a'+xyz[1], fol][mini['a']:maxi['a']] +
+                 self.eops['r'+xyz[1], fol][mini['r']:maxi['r']])
+            if xyz[2] == 'None':
                 z = [1]*len(x)
             else:
-                z = (self.eops['a'+XYZ[2], fol][mini['a']:maxi['a']] +
-                     self.eops['r'+XYZ[2], fol][mini['r']:maxi['r']])
+                z = (self.eops['a'+xyz[2], fol][mini['a']:maxi['a']] +
+                     self.eops['r'+xyz[2], fol][mini['r']:maxi['r']])
         else:
-            x = self.eops[acc+XYZ[0], fol][mini[acc]:maxi[acc]]
-            y = self.eops[acc+XYZ[1], fol][mini[acc]:maxi[acc]]
-            if len(XYZ) == 2 or XYZ[2] == 'None':
+            x = self.eops[acc+xyz[0], fol][mini[acc]:maxi[acc]]
+            y = self.eops[acc+xyz[1], fol][mini[acc]:maxi[acc]]
+            if len(xyz) == 2 or xyz[2] == 'None':
                 z = [1]*len(x)
             else:
-                z = self.eops[acc+XYZ[2], fol][mini[acc]:maxi[acc]]
+                z = self.eops[acc+xyz[2], fol][mini[acc]:maxi[acc]]
 
         # Remove item in both lists if one or both is NoneType
         del_indx = []
-        for i in range(len(x)):
+        for i, _ in enumerate(x):
             if x[i] is None or y[i] is None or z[i] is None:
                 del_indx.append(i)
-        for d in reversed(del_indx):
-            del x[d]
-            del y[d]
-            del z[d]
+        for i in reversed(del_indx):
+            del x[i]
+            del y[i]
+            del z[i]
         return x, y, z

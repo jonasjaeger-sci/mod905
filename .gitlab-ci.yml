@@ -52,7 +52,8 @@ pylint:
   script:
   - pip install -U pylint
   - pip install 'numpy<1.16' #Remove when https://github.com/PyCQA/pylint/issues/2694 is resolved
-  - python devtools/run_linting.py pyretis
+  - pip install PyQt5  # Update to install requirements for PyVisA when this is ready.
+  - python devtools/run_linting.py --input pyretis --white-list numpy PyQt5
 
 pycodestyle:
   stage: style

@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2019, PyRETIS Development Team.
+# Copyright (c) 2020, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """The sub-package with tools for visualizing simulation results for PyRETIS.
 
 This package is intended for compiling data of a simulation into a compact file
-standard (pickle), and displaying results from file in a custom GUI applet.
+standard (hdf5 or pickle), and displaying results
+from file in a custom GUI applet.
 Included are compiler of simulation data and a custom built PyQt5 GUI applet
 that loads pre-compiled data (or compiles when loading raw simulation data).
 The applet allows for user-friendly and interactive plotting of combinations of

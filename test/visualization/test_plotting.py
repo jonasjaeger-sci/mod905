@@ -73,22 +73,17 @@ class TestMethods(unittest.TestCase):
         cbar_ax = fig.add_axes([0.86, 0.1, 0.03, 0.8])
         # Generate surface 3d
         _ = gen_surface(x, y, z, fig, ax, cbar_ax=cbar_ax,
-                        resX=200, resY=200, method='surface')
+                        res_x=200, res_y=200, method='surface')
         ax.clear()
         _ = gen_surface(x, y, z, fig, ax, cbar_ax=cbar_ax,
-                        resX=200, resY=200, method='contour')
+                        res_x=200, res_y=200, method='contour')
         ax.clear()
         _ = gen_surface(x, y, z, fig, ax, cbar_ax=cbar_ax,
-                        resX=200, resY=200, method='contourf')
+                        res_x=200, res_y=200, method='contourf')
         ax.clear()
         _ = gen_surface(x, y, z, fig, ax, cbar_ax=cbar_ax,
                         method='scatter')
         ax.clear()
-        # Generate Error
-        with patch('sys.stdout', new=StringIO()) as fakeOutput:
-            _ = gen_surface(x, y, z, fig, ax, cbar_ax=cbar_ax,
-                            method='blub')
-            self.assertIn("Method not recognized!", fakeOutput.getvalue())
 
         fig.clear()
         # Generate surface 2d
@@ -103,15 +98,6 @@ class TestMethods(unittest.TestCase):
         _ = gen_surface(x, y, len(x)*[0.0], fig, ax, cbar_ax=cbar_ax, dim=2,
                         method='scatter')
         ax.clear()
-        with patch('sys.stdout', new=StringIO()) as fakeOutput:
-            _ = gen_surface(x, y, z, fig, ax, cbar_ax=cbar_ax, dim=2,
-                            method='blub')
-            self.assertIn("Method not recognized!", fakeOutput.getvalue())
-        fig.clear()
-        with patch('sys.stdout', new=StringIO()) as fakeOutput:
-            _ = gen_surface(x, y, z, fig, ax, cbar_ax=cbar_ax, dim=6,
-                            method='blub')
-            self.assertIn("Error! Dimension: 6", fakeOutput.getvalue())
         fig.clear()
 
 

@@ -4,8 +4,9 @@ Here, we will also give some over-all evaluation of the results.
 The exit code of this script will be != 0 if one or more files
 have a score below a pre-set value or if the changes are "too big".
 """
-import os
+import argparse
 from operator import itemgetter
+import pathlib
 import re
 import sys
 import colorama
@@ -16,26 +17,34 @@ from pylint.epylint import py_run
 SCORE_THRESHOLD = 9.2
 
 
-def look_for_source_files(rootdir):
+def look_for_source_files(rootdir, skip=None):
     """Find .py files by walking the given directory."""
-    files = []
-    for root, _, filenames in os.walk(rootdir):
-        for filename in filenames:
-            filepath = os.path.join(root, filename)
-            if filename.endswith('.py'):
-                files.append(filepath)
-    return sorted(files)
+    root = pathlib.Path(rootdir)
+    glob = sorted(root.rglob('*.py'))
+    if skip is None:
+        return glob
+    skip_dirs = [pathlib.Path(i) for i in skip]
+    return [
+        i for i in glob if not any(parent in skip_dirs for parent in i.parents)
+    ]
 
 
-def lint_file(filename, reg_score, reg_warning, reg_error):
+def lint_file(filename, reg_score, reg_warning, reg_error, white_list=None):
     """Run linting for a single file."""
+    if white_list is None:
+        cmd = '{}'.format(filename)
+    else:
+        cmd = '{} --extension-pkg-whitelist={}'.format(
+            filename,
+            ','.join(white_list)
+        )
     stdout, stderr = py_run(
-        '{} --extension-pkg-whitelist=numpy'.format(filename),
+        cmd,
         return_std=True
     )
     txt = stdout.read()
-    warnings = [i for i in reg_warning.findall(txt)]
-    errors = [i for i in reg_error.findall(txt)]
+    warnings = reg_warning.findall(txt)
+    errors = reg_error.findall(txt)
     result = reg_score.findall(txt)
     score, delta = process_result(result)
     stdout.close()
@@ -43,7 +52,7 @@ def lint_file(filename, reg_score, reg_warning, reg_error):
     return score, delta, warnings, errors
 
 
-def run_linting(files):
+def run_linting(files, white_list=None):
     """Run pylint for a set of files, individually."""
     reg_score = re.compile(r'-?\d+\.\d+\/\d+')
     reg_warning = re.compile(r'.+warning \(W.+')
@@ -65,7 +74,8 @@ def run_linting(files):
             filei,
             reg_score,
             reg_warning,
-            reg_error
+            reg_error,
+            white_list=white_list,
         )
         if score is None:
             print(Fore.YELLOW + 'Skipping file: {}'.format(filei))
@@ -214,17 +224,45 @@ def evaluate_results(results):
     return fail1 + fail2 + fail3
 
 
-def main(startdirs):
+def create_argument_parser():
+    """Create a argument parser for the linting tool."""
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '-i',
+        '--input',
+        nargs='+',
+        help='Input directories to search for .py files.',
+        required=True,
+    )
+    parser.add_argument(
+        '-s',
+        '--skip',
+        nargs='+',
+        help='Subdirectories to skip.',
+        required=False,
+    )
+    parser.add_argument(
+        '-w',
+        '--white-list',
+        nargs='+',
+        help=(
+            'Python modules to white-list, please see the pylint '
+            'documentation on the option: '
+            '"extension-pkg-whitelist"'
+        ),
+        required=False,
+    )
+    return parser
+
+
+def main(args):
     """Run the analysis."""
     return_code = 0
-    if not startdirs:
-        print(Fore.RED + 'No directories given!')
-        return_code += 1
-    for startdir in startdirs:
+    for startdir in args.input:
         print(Fore.GREEN + '\nRunning in: "{}"'.format(startdir))
-        files = look_for_source_files(startdir)
+        files = look_for_source_files(startdir, skip=args.skip)
         if files:
-            lint_result = run_linting(files)
+            lint_result = run_linting(files, white_list=args.white_list)
             result = evaluate_results(lint_result)
             return_code += result
         else:
@@ -235,4 +273,5 @@ def main(startdirs):
 
 if __name__ == '__main__':
     colorama.init(autoreset=True)
-    main(startdirs=sys.argv[1:])
+    PARSER = create_argument_parser()
+    main(PARSER.parse_args())
