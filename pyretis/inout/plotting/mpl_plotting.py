@@ -383,9 +383,9 @@ def _mpl_plot_xy_chunk(axs, series, low=0, high=None, color=None):
 
     if len(series['x']) != len(series['y']) and high is None:
         high = min(len(series['x']), len(series['y']))
-    elif high is not None and high > len(series['x']):
+    if high is not None and high > len(series['x']):
         high = len(series['x'])
-    elif high is not None and high > len(series['y']):
+    if high is not None and high > len(series['y']):
         high = len(series['y'])
 
     handle, = axs.plot(series['x'][low:high], series['y'][low:high],
