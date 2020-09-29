@@ -63,6 +63,7 @@ References
 import logging
 from pyretis.core.path import Path, paste_paths
 from pyretis.core.common import (segments_counter,
+                                 counter,
                                  select_and_trim_a_segment,
                                  crossing_counter,
                                  crossing_finder)
@@ -189,9 +190,6 @@ def make_tis_step(path, order_function, interfaces, engine, rgen,
         The status of the path.
 
     """
-    if shooting_move is None:
-        shooting_move = 'sh'
-
     if rgen.rand() < tis_settings['freq']:
         logger.info('Performing a time reversal move')
         accept, new_path, status = time_reversal(path, order_function,
@@ -504,7 +502,7 @@ def shoot_backwards(path_back, trial_path, shooting_point, engine,
         trial_path.status = 'BTL'  # BTL = backward trajectory too long.
         # Add the failed path to trial path for analysis:
         trial_path += path_back
-        if path_back.length == tis_settings['maxlength'] - 1:
+        if path_back.length >= tis_settings['maxlength'] - 1:
             # BTX is backward trajectory longer than maximum memory.
             trial_path.status = 'BTX'
         return False
@@ -734,7 +732,7 @@ def stone_skipping(path_old, order_function, interfaces, engine, rgen,
         * `allowmaxlength`: boolean, should paths be allowed to reach
           maximum length?
         * `maxlength`: integer, maximum allowed length of paths.
-        * `high_accept` : boolean, the option for High Acceptance SS.
+        * `high_accept`: boolean, the option for High Acceptance SS.
 
     start_cond : string
         The starting condition for the current ensemble, 'L'eft or
@@ -752,32 +750,30 @@ def stone_skipping(path_old, order_function, interfaces, engine, rgen,
 
     """
     maxlen = tis_settings['maxlength']
-    ph_point1, ph_point2 = crossing_finder(path_old, interfaces[1])
-    if not ph_point1:
+    ph_pt1, ph_pt2 = crossing_finder(path_old, interfaces[1])
+    if not ph_pt1:
         return False, path_old, 'NCR'
 
     ss_interfaces = [interfaces[1], interfaces[1], interfaces[2]]
     osc_try = 0  # One step crossing attempt counter
 
-    for _ in range(tis_settings['n_jumps']):
-        logger.debug('Trying a new stone skipping move')
+    for i in range(tis_settings['n_jumps']):
+        logger.debug(f'Trying a new stone skipping move, jump {i}')
         # Here we choose between the two
         # possible shooting points that describe a crossing.
-        if rgen.rand() >= 0.5:
-            shooting_point = ph_point1[-1]
-        else:
-            shooting_point = ph_point2[-1]
-
+        sh_pt = ph_pt1[-1] if rgen.rand() >= 0.5 else ph_pt2[-1]
+        engine.dump_phasepoint(sh_pt, str(counter()) + '_ss_shoot')
         # To continue, we must be sure that the new path
         # CROSSES the interface in ONLY ONE step.
         # Generate paths until it succeed. That is
         # what makes this version of the SS move useless for large systems.
-        for _ in range(maxlen):
+        for j in range(maxlen):
             # This function can become actually fun to work on.
             # e.g. have a 50% chance to give random v for each particle
             # Modify the velocities:
+            logger.debug(f'jump{i}, try {j}, start: {sh_pt.order[0]}')
             engine.modify_velocities(
-                shooting_point, rgen,
+                sh_pt, rgen,
                 sigma_v=tis_settings['sigma_v'],
                 aimless=tis_settings['aimless'],
                 momentum=tis_settings['zero_momentum'],
@@ -785,70 +781,76 @@ def stone_skipping(path_old, order_function, interfaces, engine, rgen,
                 )
 
             # A path of two frames is going to be generated.
-            success, path = one_step_crossing(shooting_point,
+            success, path = one_step_crossing(sh_pt,
                                               order_function,
                                               interfaces[1],
                                               engine, rgen)
             osc_try += 1
             if success:
                 break
-
-        if not success:  # In case we reached maxlen in jumps attempts.
+        else:  # In case we reached maxlength in jumps attempts.
+            success = False
             path.status = 'NSS'
             trial_path = path
             break
 
         # Depending on the shooting point (before or after the interface),
         # a backward path or a continuation has to be generated.
-        if path.get_end_point(interfaces[1]) == start_cond:
-            trial_path = path.empty_path(maxlen=maxlen-1)
-            success, _ = engine.propagate(trial_path,
-                                          shooting_point,
-                                          order_function,
-                                          ss_interfaces,
-                                          reverse=True)  # Backward
-            new_segment = paste_paths(trial_path, path, overlap=True,
-                                      maxlen=maxlen)
-        else:
-            new_segment = path.empty_path(maxlen=maxlen)
-            new_segment.append(path.phasepoints[0])
-            success, _ = engine.propagate(new_segment,
-                                          path.phasepoints[1],
-                                          order_function,
-                                          ss_interfaces,
-                                          reverse=False)  # Forward
-
+        new_segment = path.empty_path(maxlen=maxlen-1)
+        if path.get_end_point(interfaces[1], interfaces[2]) == start_cond:
+            path = path.reverse(order_function)
+        new_segment.append(path.phasepoints[0].copy())
+        success, _ = engine.propagate(new_segment,
+                                      path.phasepoints[1].copy(),
+                                      order_function,
+                                      ss_interfaces)
         if not success:
             new_segment.status = 'XSS'
             trial_path = new_segment
             break
 
-        ph_point1, ph_point2 = crossing_finder(new_segment, interfaces[1])
+        ph_pt1, ph_pt2 = crossing_finder(new_segment, interfaces[1])
 
     if success:
         success, trial_path, _ = extender(new_segment, order_function,
                                           interfaces, engine, tis_settings)
+
+    trial_path.generated = ('ss', sh_pt.order[0],
+                            osc_try, trial_path.length)
+
     if success:
         success = ss_wt_acceptance(path_old, trial_path, interfaces, rgen,
                                    order_function, tis_settings)
 
-        # A to A trajectories can change orientation at the end. 50% chances.
-        # If a path goes from A to B, it we shall not reverse the path.
-        # B to B paths are already rejected.
-        if trial_path.get_start_point(interfaces[0], interfaces[2])\
-                == trial_path.get_end_point(interfaces[0], interfaces[2]):
-            if rgen.rand() < 0.5:
-                trial_path = trial_path.reverse(order_function)
-                trial_path.status = 'ACC'
+    reverse = False
+    # A to A trajectories can change orientation at the end. 50% chances.
+    # If a path goes from A to B, it we shall not reverse the path.
+    # B to B paths are already rejected.
+    if success and rgen.rand() < 0.5:
+        if tis_settings.get('high_accept', False):
+            if trial_path.get_start_point(interfaces[0], interfaces[2])\
+                    == trial_path.get_end_point(interfaces[0], interfaces[2]):
+                reverse = True
+        else:
+            reverse = True
 
-    trial_path.generated = ('ss', shooting_point.order[0],
-                            osc_try, tis_settings['n_jumps'])
+    if reverse:
+        trial_path = trial_path.reverse(order_function)
+        trial_path.generated = ('ss', sh_pt.order[0],
+                                osc_try, trial_path.length)
+
+    if success and trial_path.get_start_point(interfaces[0],
+                                              interfaces[2]) != start_cond:
+        trial_path.status = 'BWI'
+        success = False
+
+    logger.debug(f'SS move {trial_path.status}')
 
     if not success:
         return False, trial_path, trial_path.status
 
     # Compute, eventually, the weights
-    if 'high_accept' in tis_settings and tis_settings['high_accept']:
+    if tis_settings.get('high_accept', False):
         trial_path.weight = compute_weight_ss(trial_path, interfaces)
     else:
         trial_path.weight = 1.
@@ -890,7 +892,7 @@ def compute_weight_ss(path, interfaces):
 
 
 def ss_wt_acceptance(path_old, path_new, interfaces, rgen,
-                     order_function, tis_settings):
+                     order_function, tis_settings, start_cond='L'):
     """Accept or reject the path_new.
 
     Super detailed balance rule is used in the original version
@@ -921,6 +923,9 @@ def ss_wt_acceptance(path_old, path_new, interfaces, rgen,
         This contains the settings for TIS. Keys used here:
 
         * `high_accept` : boolean, the option for High Acceptance SS.
+    start_cond : string, optional
+        The starting condition for the current ensemble, 'L'eft or
+        'R'ight.
 
     Returns
     -------
@@ -928,17 +933,17 @@ def ss_wt_acceptance(path_old, path_new, interfaces, rgen,
         True if the path can be accepted.
 
     """
-    if path_new.get_start_point(interfaces[0], interfaces[2]) == 'R' and \
-            path_new.get_end_point(interfaces[0], interfaces[2]) == 'R':
+    if start_cond != path_new.get_start_point(interfaces[0],
+                                              interfaces[2]) \
+            == path_new.get_end_point(interfaces[0], interfaces[2]):
         path_new.status = 'BWI'
         return False
 
-    if path_old.generated[0] == 'ss':
-        if 'high_accept' in tis_settings and tis_settings['high_accept']:
-            if path_new.get_start_point(interfaces[0], interfaces[2]) == 'R' \
-                   and \
-                   path_new.get_end_point(interfaces[0], interfaces[2]) == 'L':
-                path_new.reverse(order_function)
+    if path_new.generated[0] == 'ss':
+        if tis_settings.get('high_accept', False):
+            if path_new.get_end_point(interfaces[0],
+                                      interfaces[2]) != start_cond:
+                path_new = path_new.reverse(order_function)
         else:
             cr_old = crossing_counter(path_old, interfaces[1])
             cr_new = crossing_counter(path_new, interfaces[1])
@@ -946,7 +951,7 @@ def ss_wt_acceptance(path_old, path_new, interfaces, rgen,
                 path_new.status = 'SSA'
                 return False
 
-    elif path_old.generated[0] == 'wt':
+    elif path_new.generated[0] == 'wt':
         sour_int = tis_settings['interface_sour']
         cr_old = segments_counter(path_old, sour_int, interfaces[1])
         cr_new = segments_counter(path_new, sour_int, interfaces[1])
@@ -985,6 +990,7 @@ def web_throwing(path_old, order_function, interfaces, engine, rgen,
         * `allowmaxlength`: boolean, should paths be allowed to reach
           maximum length?
         * `maxlength`: integer, maximum allowed length of paths.
+        * `high_accept`: boolean, the option for High Acceptance SS.
 
     Returns
     -------
@@ -1016,65 +1022,69 @@ def web_throwing(path_old, order_function, interfaces, engine, rgen,
                                                interfaces[1],
                                                segment_to_pick)
 
-    save_initial_op = source_segment.phasepoints[-2].order[0]
+    shoots, save_acc = [0], 0
 
-    n_virtual, save_acc = 0, 0
-    side_picker0 = 'L' if rgen.rand() >= 0.5 else 'R'
-    side_picker = side_picker0
-
-    for i_j in range(tis_settings['n_jumps']):
-        # Choose a side
-        if side_picker != side_picker0 or i_j == n_virtual:
-            for _ in range(n_virtual):
-                if side_picker == 'L':
-                    pre_shooting_point = source_segment.phasepoints[0]
-                    shooting_point = source_segment.phasepoints[1]
-                    reverse = False
-                else:
-                    pre_shooting_point = source_segment.phasepoints[-1]
-                    shooting_point = source_segment.phasepoints[-2]
-                    reverse = True
-
-                new_segment = path_old.empty_path(maxlen=maxlen)
-                new_segment.append(pre_shooting_point)
-                logger.debug('Trying a new web')
-                engine.propagate(new_segment, shooting_point,
-                                 order_function, wt_interfaces,
-                                 reverse=reverse)
-                if segments_counter(new_segment,
-                                    tis_settings['interface_sour'],
-                                    interfaces[1]) == 1:
-                    logger.debug('Web successful')
-                    source_segment = new_segment.copy()
-                    source_segment.status = 'ACC'
-                    save_acc += 1
-                    break
-            n_virtual = 0
-            side_picker0 = side_picker
+    key = rgen.rand() >= 0.5  # Start from a random side
+    for _ in range(tis_settings['n_jumps']):
+        if rgen.rand() >= 0.5:
+            shoots[-1] += 1  # One more on the Same side
         else:
-            n_virtual += 1
-            side_picker = 'L' if rgen.rand() > 0.5 else 'R'
+            shoots.append(1)  # A move in the other side
+
+    for n_virtual in shoots:
+        key = not key  # Change side, key controls also path reverse
+        for _ in range(n_virtual):
+            if key:
+                pre_shooting_point = source_segment.phasepoints[-1]
+                shooting_point = source_segment.phasepoints[-2]
+            else:
+                pre_shooting_point = source_segment.phasepoints[0]
+                shooting_point = source_segment.phasepoints[1]
+
+            prefix = str(counter())
+            engine.dump_phasepoint(pre_shooting_point,
+                                   prefix + '_wt_pre_shoot')
+            engine.dump_phasepoint(shooting_point,
+                                   prefix + '_wt_shoot')
+
+            new_segment = path_old.empty_path(maxlen=maxlen)
+            new_segment.append(pre_shooting_point)
+            logger.debug('Trying a new web')
+            engine.propagate(new_segment, shooting_point,
+                             order_function, wt_interfaces,
+                             reverse=key)
+
+            if segments_counter(new_segment,
+                                tis_settings['interface_sour'],
+                                interfaces[1], reverse=key) == 1:
+                logger.debug('Web successful')
+                source_segment = new_segment.reverse(
+                    order_function) if key else new_segment
+                source_segment.status = 'ACC'
+                save_acc += 1
+                break
 
     accept, trial_path, _ = extender(source_segment, order_function,
                                      interfaces, engine, tis_settings)
 
+    trial_path.generated = ('wt', source_segment.phasepoints[1].order[0],
+                            save_acc, trial_path.length)
     # Check that we did not get a B to A or a B to B path.
     if accept:
         accept = ss_wt_acceptance(path_old, trial_path, interfaces, rgen,
                                   order_function, tis_settings)
     if not accept:
-        trial_path.generated = ('wt', save_initial_op,
-                                segment_to_pick, save_acc)
+        trial_path.generated = ('wt', source_segment.phasepoints[1].order[0],
+                                save_acc, trial_path.length)
         return False, trial_path, trial_path.status
+
+    logger.debug(f'WT move {trial_path.status}')
 
     # Set the path flags
     if path_old.get_move() == 'ld' and save_acc == 0:
-        trial_path.generated = ('ld', save_initial_op,
-                                segment_to_pick, save_acc)
-    else:
-        trial_path.generated = ('wt', save_initial_op,
-                                segment_to_pick, save_acc)
-
+        trial_path.generated = ('ld', source_segment.phasepoints[1].order[0],
+                                save_acc, trial_path.length)
+    trial_path.weight = 1.
     trial_path.status = 'ACC'
     return True, trial_path, trial_path.status
 

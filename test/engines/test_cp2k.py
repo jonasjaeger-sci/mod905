@@ -8,9 +8,10 @@ import os
 import unittest
 from unittest.mock import patch
 import numpy as np
-from pyretis.core.system import System
+from pyretis.core.common import counter
 from pyretis.core.path import Path
 from pyretis.core.particles import ParticlesExt
+from pyretis.core.system import System
 from pyretis.engines import CP2KEngine
 from pyretis.inout.common import make_dirs
 from pyretis.inout.formats.xyz import (
@@ -155,14 +156,15 @@ class CP2KEngineTest(unittest.TestCase):
         # Propagate:
         orderp = PositionVelocity(0, dim='x', periodic=False)
         path = Path(None, maxlen=4)
+        counter.count = -1
         with patch('sys.stdout', new=StringIO()):
             success, _ = engine.propagate(path, system, orderp,
                                           [0.2, 0.5, 0.8], reverse=True)
             self.assertTrue(success)
         # Check that initial velocities were reversed:
-        infile = os.path.join(rundir, 'conf.xyz')
+        infile = os.path.join(rundir, '0_conf.xyz')
         _, _, vel, _ = convert_snapshot(next(read_xyz_file(infile)))
-        outfile = os.path.join(rundir, 'r_conf.xyz')
+        outfile = os.path.join(rundir, 'r_0_conf.xyz')
         _, _, rvel, _ = convert_snapshot(next(read_xyz_file(outfile)))
         self.assertTrue(np.allclose(vel, -1.0 * rvel))
         engine.clean_up()

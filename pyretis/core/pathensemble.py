@@ -20,7 +20,7 @@ import collections
 import logging
 import os
 import shutil
-
+from pyretis.core.common import counter
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
@@ -298,6 +298,8 @@ class PathEnsemble:
         except KeyError:  # This is the first occurrence of the status:
             self.nstats[status] = 1
         self.nstats['npath'] += 1
+        # Reset the counter
+        counter.count = 0
 
     def get_accepted(self):
         """Yield accepted paths from the path ensemble.

@@ -8,6 +8,7 @@ import os
 import shutil
 import tempfile
 import unittest
+from pyretis.core.common import counter
 from pyretis.core.path import Path
 from pyretis.engines import GromacsEngine
 from pyretis.inout.common import make_dirs
@@ -202,16 +203,17 @@ class GromacsEngineTest(unittest.TestCase):
             # Propagate:
             orderp = Position(0, dim='x', periodic=False)
             path = Path(None, maxlen=3)
+            counter.count = -1
             success, _ = eng.propagate(path, system, orderp,
                                        [-0.45, 10.0, 14.0],
                                        reverse=True)
             self.assertFalse(success)
             # Check that velocities were reversed:
             _, _, vel1, _ = read_gromacs_gro_file(
-                os.path.join(rundir, 'conf.gro')
+                os.path.join(rundir, '0_conf.gro')
             )
             _, _, vel2, _ = read_gromacs_gro_file(
-                os.path.join(rundir, 'r_conf.gro')
+                os.path.join(rundir, 'r_0_conf.gro')
             )
             self.assertTrue(np.allclose(vel1, -1.0 * vel2))
             eng.clean_up()

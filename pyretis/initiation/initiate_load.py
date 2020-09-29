@@ -272,8 +272,6 @@ def clean_path(path, path_ensemble):
 
     # Happy Ending, but make sure to do not kill it all.
     for i in erase_list:
-        if path.length == 0:
-            raise RuntimeError('All frames of the path are invalid')
         path.delete(i)
 
     # The path has to cope with the ensemble requirements.

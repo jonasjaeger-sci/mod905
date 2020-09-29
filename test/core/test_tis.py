@@ -390,6 +390,7 @@ class TISTestMethod(unittest.TestCase):
         self.assertFalse(accept)
 
         interfaces = [-3, -1.4, 2.3]
+        path.generated = ('sh', 0, 0, 0)
         accept, new_path, status = select_shoot(path, order_f,
                                                 interfaces, engine,
                                                 rgen, tis_settings,
@@ -445,8 +446,8 @@ class TISTestMethod(unittest.TestCase):
                                             interfaces, engine,
                                             rgen, tis_settings)
         self.assertEqual(path.generated[0], 'wt')
-        self.assertEqual(status, 'ACC')
-        self.assertTrue(accept)
+        self.assertEqual(status, 'WTA')
+        self.assertFalse(accept)
 
         # iF No jumps, the extension on this absurd interfaces
         # should get lost (BTX)
@@ -501,12 +502,12 @@ class TISTestMethod(unittest.TestCase):
         accept, path, status = stone_skipping(path, order_f,
                                               [0.7, 2., 1234.5], engine,
                                               rgen, tis_settings, 'L')
-        self.assertEqual(status, 'NSS')
+        self.assertEqual(status, 'XSS')
         self.assertFalse(accept)
 
         # Not extendable
         accept, path, status = stone_skipping(path, order_f,
-                                              [-100., 3., 100.], engine,
+                                              [-1000., 30., 1000.], engine,
                                               rgen, tis_settings, 'L')
         self.assertEqual(status, 'NCR')
         self.assertFalse(accept)
@@ -573,9 +574,9 @@ class TISTestMethod(unittest.TestCase):
                          order_f, interfaces,
                          reverse=False)
 
-        path = empty.reverse(order_f)
-        path.set_move('ss')
-        accept, path, status = select_shoot(path, order_f,
+        trial_path = empty.reverse(order_f)
+        trial_path.set_move('ss')
+        accept, path, status = select_shoot(trial_path, order_f,
                                             interfaces, engine,
                                             rgen, tis_settings,
                                             shooting_move='ss',
@@ -613,6 +614,44 @@ class TISTestMethod(unittest.TestCase):
 
         self.assertEqual(status, 'NSS')
         self.assertFalse(accept)
+
+    def test_ss_rejected_detail_balance(self):
+        """Test ss rejection with low and high acc."""
+        tis_settings = {
+            'maxlength': 1000,
+            'sigma_v': -1,
+            'aimless': True,
+            'zero_momentum': False,
+            'rescale_energy': False,
+            'allowmaxlength': False,
+            'shooting_move': 'ss',
+            'n_jumps': 2,
+            'high_accept': False
+        }
+        # Generate ACC:
+        trial_path = make_internal_path((-5, 2.1), (5, 2.2), (1, -1))
+        interfaces = [-1, -0.4, 2.1]
+        order_f = Position(index=0)
+        engine = VelocityVerlet(0.1)
+        rgen = RandomGenerator(seed=33)
+        accept, path, status = select_shoot(trial_path, order_f,
+                                            interfaces, engine,
+                                            rgen, tis_settings,
+                                            shooting_move='ss',
+                                            start_cond='L')
+
+        self.assertEqual(status, 'BWI')
+        self.assertFalse(accept)
+
+        tis_settings['high_accept'] = True
+        accept, path, status = select_shoot(trial_path, order_f,
+                                            interfaces, engine,
+                                            rgen, tis_settings,
+                                            shooting_move='ss',
+                                            start_cond='L')
+
+        self.assertEqual(status, 'ACC')
+        self.assertTrue(accept)
 
     def test_extender(self):
         """Test extender of paths."""
@@ -681,7 +720,7 @@ class TISTestMethod(unittest.TestCase):
         lol_path = make_internal_path((5, 5), (-5, -5), (5, 5))
         new_path = lol_path.copy()
         new_path.status = 'REJ'
-        lol_path.set_move('ss')
+        new_path.set_move('ss')
         succ = ss_wt_acceptance(path_old=lol_path, path_new=new_path,
                                 interfaces=interfaces,
                                 rgen=rgen, order_function=order_f,
@@ -732,22 +771,22 @@ class TISTestMethod(unittest.TestCase):
         self.assertTrue(succ)
         self.assertEqual(path.status, 'ACC')
 
-        rgen = RandomGenerator(seed=0)
-        path.set_move('ss')
+        rgen = RandomGenerator(seed=10)
+        old_path.set_move('ss')
         succ = ss_wt_acceptance(path, old_path, interfaces,
                                 rgen=rgen, order_function=None,
                                 tis_settings={})
         self.assertFalse(succ)
         self.assertEqual(old_path.status, 'SSA')
 
-        path.set_move('wt')
+        old_path.set_move('wt')
         succ = ss_wt_acceptance(path, old_path, interfaces,
                                 rgen=rgen, order_function=None,
                                 tis_settings={'interface_sour': -2.})
         self.assertFalse(succ)
         self.assertEqual(old_path.status, 'WTA')
 
-        path.set_move('ss')
+        old_path.set_move('ss')
         succ = ss_wt_acceptance(path, old_path, interfaces,
                                 rgen=rgen, order_function=None,
                                 tis_settings={'high_accept': True})
