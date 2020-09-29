@@ -14,11 +14,12 @@ ExternalMDEngine (:py:class:`.ExternalMDEngine`)
 
 """
 from abc import abstractmethod
-import re
 import logging
+import os
+import re
 import subprocess
 import shutil
-import os
+from pyretis.core.common import counter
 from pyretis.inout import print_to_screen
 from pyretis.inout.fileio import FileIO
 from pyretis.engines.engine import EngineBase
@@ -616,12 +617,13 @@ class ExternalMDEngine(EngineBase):
 
         """
         logger.debug('Running propagate with: "%s"', self.description)
+        prefix = str(counter())
         if reverse:
             logger.debug('Running backward in time.')
-            name = 'trajB'
+            name = prefix + '_trajB'
         else:
             logger.debug('Running forward in time.')
-            name = 'trajF'
+            name = prefix + '_trajF'
         logger.debug('Trajectory name: "%s"', name)
         # Also create a message file for inspecting progress:
         msg_file_name = os.path.join(self.exe_dir, 'msg-{}.txt'.format(name))
@@ -634,7 +636,7 @@ class ExternalMDEngine(EngineBase):
         msg_file.write('# Trajectory label: {}'.format(name))
 
         system = initial_state.copy()
-        initial_file = self.dump_frame(system)
+        initial_file = self.dump_frame(system, deffnm=prefix + '_conf')
         msg_file.write('# Initial file: {}'.format(initial_file))
         logger.debug('Initial state: %s', system)
 

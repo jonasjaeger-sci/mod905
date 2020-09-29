@@ -13,6 +13,9 @@ inspect_function (:py:func:`.inspect_function`)
 initiate_instance (:py:func:`.initiate_instance`)
     Method to initiate a class with optional arguments.
 
+counter (:py:func`.counter`)
+    Function to count the number of iterations.
+
 generic_factory (:py:func:`.generic_factory`)
     Create instances of classes based on settings.
 
@@ -42,9 +45,15 @@ logger.addHandler(logging.NullHandler())
 
 
 __all__ = ['inspect_function', 'initiate_instance', 'generic_factory',
-           'crossing_counter', 'crossing_finder',
+           'crossing_counter', 'crossing_finder', 'counter',
            'select_and_trim_a_segment', 'trim_path_between_interfaces',
            'big_fat_comparer']
+
+
+def counter():
+    """Return how many times this function is called."""
+    counter.count = 0 if not hasattr(counter, 'count') else counter.count + 1
+    return counter.count
 
 
 def _arg_kind(arg):
@@ -404,7 +413,7 @@ def compare_objects(obj1, obj2, attrs, numpy_attrs=None):
     return True
 
 
-def segments_counter(path, interface_l, interface_r):
+def segments_counter(path, interface_l, interface_r, reverse=False):
     """Count the directional segment between interfaces.
 
     Method to count the number of the directional segments of the path,
@@ -418,6 +427,8 @@ def segments_counter(path, interface_l, interface_r):
         This is the position of the RIGHT interface.
     interface_l : float
         This is the position of the LEFT interface.
+    reverse : boolean, optional
+        Check on a reversed path.
 
     Returns
     -------
@@ -426,12 +437,14 @@ def segments_counter(path, interface_l, interface_r):
 
     """
     icros, n_segments = -1, 0
-    for i in range(len(path.phasepoints[:-1])):
+    for i in range(path.length - 1):
         op1 = path.phasepoints[i].order[0]
         op2 = path.phasepoints[i+1].order[0]
-        if op2 > interface_l >= op1:
+        if reverse and op1 >= interface_r > op2 or\
+                not reverse and op2 > interface_l >= op1:
             icros = i
-        if op2 > interface_r >= op1:
+        if reverse and op1 >= interface_l > op2 or\
+                not reverse and op2 > interface_r >= op1:
             if icros != -1:
                 icros = -1
                 n_segments += 1

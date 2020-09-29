@@ -101,13 +101,14 @@ def compare_ensemble(run1, run2, ensemble,
             return False
         if not traj_skip:
             print_to_screen('\tComparing for trajectory archive:')
-            archive_errors = soft_archive_comparison(
-                os.path.join(run1, ensemble, TRAJ),
-                os.path.join(run2, ensemble, TRAJ),
-            )
-            if archive_errors:
-                print_to_screen('\t\t-> Archives differ', level='error')
-                return False
+            for i in {'0_', '1_'}:
+                archive_errors = soft_archive_comparison(
+                    os.path.join(run1, ensemble, i + TRAJ),
+                    os.path.join(run2, ensemble, i + TRAJ),
+                )
+                if archive_errors:
+                    print_to_screen('\t\t-> Archives differ', level='error')
+                    return False
             print_to_screen('\t\t-> Archives are equal', level='success')
         else:
             print_to_screen('\tSkipping comparison for trajectory archive.')

@@ -466,8 +466,7 @@ def retis_swap(ensembles, idx, order_function, engine,
 
     status = 'NCR'
 
-    if accept and 'high_accept' in settings['tis'] and \
-            settings['tis']['high_accept']:
+    if accept and settings['tis'].get('high_accept', False):
         accept, status = high_acc_swap(path1, path2, rgen,
                                        ensemble1.interfaces[1],
                                        ensemble2.interfaces[1],
@@ -561,22 +560,20 @@ def retis_swap_zero(ensembles, order_function, engine,
         The result of the swapping move.
 
     """
-    ensemble0 = ensembles[0]
-    ensemble1 = ensembles[1]
     # 1. Generate path for [0^-] from [0^+]:
     # We generate from the first point of the path in [0^+]:
     logger.debug('Creating path for [0^-] from [0^+]')
     # Note: The copy below is not really needed as the
     # propagate method will not alter the initial state:
-    system = ensemble1.last_path.phasepoints[0].copy()
+    system = ensembles[1].last_path.phasepoints[0].copy()
     logger.debug('Initial point is: %s', system)
     # Propagate it backward in time:
     maxlen = settings['tis']['maxlength']
-    path_tmp = ensemble1.last_path.empty_path(maxlen=maxlen-1)
-    engine.exe_dir = ensemble0.directory['generate']
+    path_tmp = ensembles[1].last_path.empty_path(maxlen=maxlen-1)
+    engine.exe_dir = ensembles[0].directory['generate']
     logger.debug('Propagating for [0^-]')
     engine.propagate(path_tmp, system, order_function,
-                     ensemble0.interfaces, reverse=True)
+                     ensembles[0].interfaces, reverse=True)
     path0 = path_tmp.empty_path(maxlen=maxlen)
     for phasepoint in reversed(path_tmp.phasepoints):
         path0.append(phasepoint)
@@ -584,7 +581,7 @@ def retis_swap_zero(ensembles, order_function, engine,
     logger.debug('Adding second point from [0^+]:')
     # Here we make a copy of the phase point, as we will update
     # the configuration and append it to the new path:
-    phase_point = ensemble1.last_path.phasepoints[1].copy()
+    phase_point = ensembles[1].last_path.phasepoints[1].copy()
     logger.debug('Point is %s', phase_point)
     engine.dump_phasepoint(phase_point, 'second')
     path0.append(phase_point)
@@ -592,7 +589,7 @@ def retis_swap_zero(ensembles, order_function, engine,
         path0.status = 'BTX'
     elif path0.length < 3:
         path0.status = 'BTS'
-    elif 'L' in path0.check_interfaces(ensemble0.interfaces)[:2]:
+    elif 'L' in path0.check_interfaces(ensembles[0].interfaces)[:2]:
         path0.status = '0-L'
     else:
         path0.status = 'ACC'
@@ -607,16 +604,16 @@ def retis_swap_zero(ensembles, order_function, engine,
     # We start the generation from the LAST point:
     # Again, the copy below is not needed as the propagate
     # method will not alter the initial state.
-    system = ensemble0.last_path.phasepoints[-1].copy()
+    system = ensembles[0].last_path.phasepoints[-1].copy()
     logger.debug('Initial point is %s', system)
-    engine.exe_dir = ensemble1.directory['generate']
+    engine.exe_dir = ensembles[1].directory['generate']
     logger.debug('Propagating for [0^+]')
     engine.propagate(path_tmp, system, order_function,
-                     ensemble1.interfaces, reverse=False)
+                     ensembles[1].interfaces, reverse=False)
     # Ok, now we need to just add the SECOND LAST point from [0^-] as
     # the first point for the path:
     path1 = path_tmp.empty_path(maxlen=maxlen)
-    phase_point = ensemble0.last_path.phasepoints[-2].copy()
+    phase_point = ensembles[0].last_path.phasepoints[-2].copy()
     logger.debug('Add second last point: %s', phase_point)
     engine.dump_phasepoint(phase_point, 'second_last')
     path1.append(phase_point)
@@ -654,8 +651,8 @@ def retis_swap_zero(ensembles, order_function, engine,
         accept = False
         logger.debug('Rejecting swap path in [0^+], %s', path1.status)
     logger.debug('Done with swap zero!')
-    ensemble0.add_path_data(path0, status, cycle=cycle)
-    ensemble1.add_path_data(path1, status, cycle=cycle)
+    ensembles[0].add_path_data(path0, status, cycle=cycle)
+    ensembles[1].add_path_data(path1, status, cycle=cycle)
     return accept, (path0, path1), status
 
 
