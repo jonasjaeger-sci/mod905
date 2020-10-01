@@ -329,7 +329,7 @@ def mpl_plot_in_chunks(axs, series, chunksize=20000):
     """
     color = None
     line = None
-    leny = len(series['y'])
+    leny = min(len(series['y']), len(series['x']))
     if leny > chunksize:
         nchunk, rest = divmod(leny, chunksize)
         for i in range(nchunk):
@@ -339,8 +339,10 @@ def mpl_plot_in_chunks(axs, series, chunksize=20000):
                                       color=color)
             color = line.get_color()
         if rest > 0:
-            line = _mpl_plot_xy_chunk(axs, series, low=-(rest+1), high=None,
-                                      color=color)
+            # We want 1 less to force line overlap,
+            # We want positive low in case x and y length don't overlap
+            line = _mpl_plot_xy_chunk(axs, series, low=nchunk*chunksize-1,
+                                      high=None, color=color)
     else:
         line = _mpl_plot_xy_chunk(axs, series)
     return line
@@ -381,13 +383,10 @@ def _mpl_plot_xy_chunk(axs, series, low=0, high=None, color=None):
         except KeyError:
             pass
 
-    if len(series['x']) != len(series['y']) and high is None:
+    if high is None:
         high = min(len(series['x']), len(series['y']))
-    if high is not None and high > len(series['x']):
-        high = len(series['x'])
-    if high is not None and high > len(series['y']):
-        high = len(series['y'])
-
+    else:
+        high = min(len(series['x']), len(series['y']), high)
     handle, = axs.plot(series['x'][low:high], series['y'][low:high],
                        **kwargs)
     return handle
