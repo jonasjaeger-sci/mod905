@@ -164,9 +164,10 @@ def compare_prob_files():
     names = ['tis-multiple_report.html',
              'tis-multiple_report.rst',
              'tis-multiple_report.tex']
-    skips = [lambda i: i < 19 or i in (645, 646, 647),
-             lambda i: i in (4, 5, 6),
-             lambda i: i in (24, 25, 26, 27, 28, 29)]
+    # Skip the lines that contain the time when the command was called
+    skips = [lambda i: i in [646],
+             lambda i: i in [5],
+             lambda i: i in [25]]
     retval = 0
     for name, skip in zip(names, skips):
         fil1 = os.path.join('report', name)
