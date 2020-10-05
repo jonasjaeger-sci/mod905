@@ -559,6 +559,7 @@ def analyse_path_ensemble(path_ensemble, settings):
               'interfaces': [i for i in path_ensemble.interfaces]}
     orderparam = []  # list of all accepted order parameters
     weights = []
+    last_acc_weight = 0
     success = 0  # determines if the current path is successful or not
     pdata = []
     length_acc = []
@@ -568,7 +569,6 @@ def analyse_path_ensemble(path_ensemble, settings):
     npath = 0
     production_run = True
     for path in path_ensemble.get_paths():  # loop over all paths
-        npath += 1
         if path['generated'][0] in INITIAL_MOVES:
             production_run = False
         if not production_run and path['status'] == 'ACC' and \
@@ -576,22 +576,20 @@ def analyse_path_ensemble(path_ensemble, settings):
             production_run = True
         if not production_run:
             continue
+
+        npath += 1
         if path['status'] == 'ACC':
             nacc += 1
-            weights.append(path.get('weight', 1.))
+            last_acc_weight = path.get('weight', 1.)
+            weights.append(last_acc_weight)
             orderparam.append(path['ordermax'][0])
             length_acc.append(path['length'])
             success = 1 if path['ordermax'][0] > detect else 0
             pdata.append(success)  # Store data for block analysis
         elif nacc != 0:  # just increase the weights
-            weights[-1] += 1
+            weights[-1] += last_acc_weight
         # we also update the running average of the probability here:
-        if not result['prun']:
-            result['prun'] = [success]
-        else:  # update average
-            result['prun'].append(float(success +
-                                        result['prun'][-1] * (npath - 1)) /
-                                  float(npath))
+
         result['cycle'].append(path['cycle'])
         # get the length - note that this length depends on the type of move
         # see the `_get_path_length` function.
@@ -601,11 +599,16 @@ def analyse_path_ensemble(path_ensemble, settings):
         # update the shoot stats, this will only be done for shooting moves
         _update_shoot_stats(shoot_stats, path)
 
+    # Check if we have enough data to do analysis:
+    if nacc == 0:
+        msg = "No accepted paths to analyse in ensemble {}".format(
+            ensemble_number)
+        raise RuntimeError(msg)
     # When restarting a simulations, or by stacking together different
     # simulations, the cycles might not be in order. We thus reset the counter.
     result['cycle'] = np.arange(len(result['cycle']))
-    # 1) result['prun'] is already calculated.
-    result['prun'] = np.array(result['prun'])
+    # 1) result['prun'] is calculated here with the correct path weigths.
+    result['prun'] = running_average(np.repeat(pdata, weights))
     result['pdata'] = np.array(pdata)
     # 2) lambda pcross:
     analysis = settings['analysis']
@@ -690,10 +693,9 @@ def analyse_path_ensemble0(path_ensemble, settings):
               'interfaces': [i for i in path_ensemble.interfaces]}
     length_acc, length_all, weights = [], [], []
     shoot_stats = {'REJ': [], 'ALL': []}
-    nacc, npath = 0, 0
+    nacc, npath, last_acc_weight = 0, 0, 0
     production_run = True
     for path in path_ensemble.get_paths():  # loop over all paths
-        npath += 1
         if path['generated'][0] in INITIAL_MOVES:
             production_run = False
         if not production_run and path['status'] == 'ACC' and \
@@ -701,12 +703,14 @@ def analyse_path_ensemble0(path_ensemble, settings):
             production_run = True
         if not production_run:
             continue
+        npath += 1
         if path['status'] == 'ACC':
             nacc += 1
-            weights.append(path.get('weight', 1.))
+            last_acc_weight = path.get('weight', 1.)
+            weights.append(last_acc_weight)
             length_acc.append(path['length'])
         elif nacc != 0:  # just increase the weights
-            weights[-1] += 1
+            weights[-1] += last_acc_weight
         result['cycle'].append(path['cycle'])
         length = _get_path_length(path, ensemble_number)
         if length is not None:

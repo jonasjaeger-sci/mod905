@@ -69,28 +69,28 @@ class AnalysePathEnsembleTest(unittest.TestCase):
                 'interfaces': [-0.9, -0.9, 1],
                 'detect': -0.8,
                 'file': 'pathensemble001.txt',
-                'test': {'prun': (-1, 0.22777222)},
+                'test': {'prun': (-1, 223/996)},
             },
             {
                 'ensemble_number': 2,
                 'interfaces': [-0.9, -0.8, 1],
                 'detect': -0.7,
                 'file': 'pathensemble002.txt',
-                'test': {'prun': (-1, 0.14485514)},
+                'test': {'prun': (-1, 145/996)},
             },
             {
                 'ensemble_number': 3,
                 'interfaces': [-0.9, -0.7, 1],
                 'detect': -0.6,
                 'file': 'pathensemble003.txt',
-                'test': {'prun': (-1, 0.12487512)},
+                'test': {'prun': (-1, 125/999)},
             },
             {
                 'ensemble_number': 4,
                 'interfaces': [-0.9, -0.71, 1],
                 'detect': -0.6,
                 'file': 'pathensemble004.txt',
-                'test': {'prun': (-1, 0.129132231)},
+                'test': {'prun': (-1, 125/966)},
             },
         ]
         settings = {'analysis': SECTIONS['analysis']}
@@ -105,13 +105,13 @@ class AnalysePathEnsembleTest(unittest.TestCase):
             results.append(analyse_path_ensemble(raw_data, settings))
             detect.append(ens['detect'])
         match = match_probabilities(results[1:], detect[1:], settings)
-        self.assertAlmostEqual(match['prob'], 0.0005320412259474298)
+        self.assertAlmostEqual(match['prob'], 0.0005277540804156307)
         flux = retis_flux(results[0], results[1], 0.002)
         self.assertAlmostEqual(flux[0], 0.26572079970779655)
         self.assertAlmostEqual(flux[1], 0.02422284635774688)
         rate = retis_rate(match['prob'], match['relerror'], flux[0], flux[1])
-        self.assertAlmostEqual(rate[0], 0.00014137442003626753)
-        self.assertAlmostEqual(rate[1], 0.4724455526732373)
+        self.assertAlmostEqual(rate[0], 0.00014023523629709417)
+        self.assertAlmostEqual(rate[1], 0.4734317724627789)
 
         # Re-check the last one:
         settings['analysis']['maxblock'] = 0
