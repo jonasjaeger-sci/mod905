@@ -120,12 +120,11 @@ test_openmm:
   before_script:
   - apt-get update -qy
   - apt-get install gcc -y
-  - pip install --upgrade pip
-  - pip install -e .
-  - python -V
+  - conda install python=3.7 #OpenMM does not support python 3.8 yet
   script:
   - conda install -c omnia -c conda-forge openmm mdtraj
   - pip install -r requirements.txt
+  - pip install --upgrade pip
   - pip install -e .
   - python -V
   - conda list
