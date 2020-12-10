@@ -328,9 +328,10 @@ Keyword high_friction
 
         \mathbf{r}(t + \Delta t) = \mathbf{r}(t) + \gamma \Delta t \mathbf{f}(t)/m + \delta \mathbf{r},
 
-     where :math:`\mathbf{f}(t)` is the force and the
-     velocities (:math:`\delta \mathbf{r}`) are drawn from a
+     where :math:`\mathbf{f}(t)` is the deterministic force and the
+     displacements (:math:`\delta \mathbf{r}`) are drawn from a
      normal distribution,
+
 
    * If ``high_friction`` is ``False``, we are in the low friction
      limit and the equations of motion are integrated according to
