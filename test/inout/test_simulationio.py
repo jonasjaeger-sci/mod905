@@ -102,7 +102,7 @@ class DummyExternal(ExternalMDEngine):
         """Read a xyz configuration."""
 
     def _reverse_velocities(self, filename, outfile):
-        """Reverse velocoties with a dummy method."""
+        """Reverse velocities with a dummy method."""
 
     def _extract_frame(self, traj_file, idx, out_file):
         """Extract a frame, dummy method."""

@@ -482,7 +482,7 @@ def task_from_settings(task, settings, directory, engine, progress=False):
     target = task_settings['target']
     if target == 'screen' and progress:
         logger.info(
-            'Disabling output to screen %s since progress bare is ON',
+            'Disabling output to screen %s since progress bar is ON',
             task['name'],
         )
         return None
