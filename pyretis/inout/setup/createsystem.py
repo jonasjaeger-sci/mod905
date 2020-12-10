@@ -361,7 +361,7 @@ def initial_positions_file(settings):
     logger.info('Read %d particle(s) from "%s".', particles.npart,
                 pos_settings['file'])
     if vel_read:
-        logger.info('Read velocoties from file: "%s".', pos_settings['file'])
+        logger.info('Read velocities from file: "%s".', pos_settings['file'])
     return particles, box, vel_read
 
 
