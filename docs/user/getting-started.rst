@@ -299,7 +299,9 @@ Main studies performed with |pyretis|
          is included. The various features of |pyvisa| can be tested
          on the simulation outputs.
         
-         Paper in preparation.
+         Paper: `PyVisA: Visualization and Analysis of path sampling
+         trajectories
+         <https://onlinelibrary.wiley.com/doi/full/10.1002/jcc.26467>`_
 
          `Source Files <http://pyretis.org/source_files/Water_trimer_2020>`__
 
@@ -319,6 +321,7 @@ Main studies performed with |pyretis|
          The mechanism(s) have been highlighted and their rate(s) estimated
          as a function of the temperature.
 
-         Paper: `Path sampling for atmospheric reactions: formic acid catalysed conversion <https://doi.org/10.7717/peerj-pchem.7>`_
+         Paper: `Path sampling for atmospheric reactions: formic acid catalysed
+         conversion <https://doi.org/10.7717/peerj-pchem.7>`_
 
          `Source Files <http://pyretis.org/source_files/Formic_acid_2020>`__
