@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2019, PyRETIS Development Team.
+# Copyright (c) 2021, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """A script for building the C extension (order parameter and potential)."""
 from distutils.core import (  # pylint: disable=no-name-in-module,import-error

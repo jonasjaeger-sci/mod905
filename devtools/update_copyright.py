@@ -5,7 +5,7 @@ import subprocess
 import sys
 import tempfile
 
-NEW_YEAR = '2019'
+NEW_YEAR = '2021'
 COPYRIGHT = re.compile('copyright', re.IGNORECASE)
 # Assume that we won't do PyRETIS after 2099 ;-)
 YEAR = re.compile('20[0-9][0-9]')
