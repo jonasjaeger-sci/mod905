@@ -72,7 +72,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = '{}'.format(PYRETIS)
-copyright = '2019, The {} team'.format(PYRETIS)
+copyright = '2021, The {} team'.format(PYRETIS)
 author = 'The {} team'.format(PYRETIS)
 
 rst_epilog = """

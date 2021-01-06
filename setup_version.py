@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2019, PyRETIS Development Team.
+# Copyright (c) 2021, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """
 PyRETIS - A simulation package for rare event simulations.
 
-Copyright (c) 2019, PyRETIS Development team.
+Copyright (c) 2021, PyRETIS Development team.
 
 This file generates the version info and appends a ".beta"
 to the logo if needed.
@@ -33,7 +33,7 @@ VERSION_FMT = '{major:d}.{minor:d}.{micro:d}'
 
 # Define the text for creating .py files for PyRETIS:
 HEADER_TXT = """# -*- coding: utf-8 -*-
-# Copyright (c) 2019, PyRETIS Development Team.
+# Copyright (c) 2021, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info."""
 
 VERSION_TXT = '''{header:s}
