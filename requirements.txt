@@ -8,5 +8,6 @@ docutils>=0.14
 tqdm>=4.15.0
 colorama>=0.3.9
 pandas>=0.23.4
-tables>=3.5.1
+tables>=3.6.1
 cython>=0.29
+mdtraj>=1.9.3
