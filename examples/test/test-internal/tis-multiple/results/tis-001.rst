@@ -6,20 +6,22 @@ Simulation settings
 task = 'tis'
 steps = 50
 interfaces = [-0.9, -0.9, 1.0]
+rgen = 'rgen-borg'
 
 System settings
 ---------------
 units = 'reduced'
 dimensions = 1
-temperature = 0.27
+temperature = 0.7
 
 Engine settings
 ---------------
 class = 'Langevin'
-timestep = 0.002
+timestep = 0.05
 gamma = 0.3
 high_friction = False
 seed = 16
+rgen = 'rgen'
 
 Box settings
 ------------
@@ -28,10 +30,12 @@ periodic = [False]
 Particles settings
 ------------------
 position = {'file': 'initial.xyz'}
-velocity = {'generate': 'maxwell', 'momentum': False, 'seed': 0}
+velocity = {'generate': 'maxwell',
+            'momentum': False,
+            'rgen': 'rgen',
+            'seed': 0}
 mass = {'Ar': 1.0}
 name = ['Ar']
-type = [0]
 
 Forcefield settings
 -------------------
@@ -54,11 +58,11 @@ name = 'Order Parameter'
 
 Output settings
 ---------------
+backup = 'overwrite'
 energy-file = 100
 order-file = 100
-trajectory-file = 100
 restart-file = 10
-backup = 'overwrite'
+trajectory-file = 100
 cross-file = 1
 pathensemble-file = 1
 screen = 10
@@ -73,11 +77,12 @@ zero_momentum = False
 rescale_energy = False
 sigma_v = -1
 seed = 16
+rgen = 'rgen-borg'
 high_accept = False
 shooting_move = 'sh'
 shooting_moves = []
 ensemble_number = 1
-detect = -0.8
+detect = -0.6
 
 Initial-path settings
 ---------------------

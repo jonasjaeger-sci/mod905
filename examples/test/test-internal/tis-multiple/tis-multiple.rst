@@ -5,13 +5,17 @@ Simulation
 ----------
 task = tis-multiple
 steps = 50
-interfaces = [-0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3,  1.0]
+interfaces = [-0.9, -0.6, -0.3,  1.0]
+zero_ensemble = True
+seed = 16
+rgen = 'rgen-borg'
 
 System
 ------
 units = reduced
 dimensions = 1
-temperature = 0.27
+temperature = 0.7
+rgen = 'rgen-borg'
 
 Box
 ---
@@ -20,10 +24,11 @@ periodic = [False]
 Engine
 ------
 class = Langevin
-timestep = 0.002
+timestep = 0.05
 gamma = 0.3
 high_friction = False
 seed = 16
+rgen = 'rgen'
 
 TIS
 ---
@@ -35,6 +40,7 @@ zero_momentum = False
 rescale_energy = False
 sigma_v = -1
 seed = 16
+rgen = 'rgen-borg'
 
 Initial-path
 ------------
@@ -45,10 +51,10 @@ Particles
 position = {'file': 'initial.xyz'}
 velocity = {'generate': 'maxwell',
             'momentum': False,
-            'seed': 0}
+            'seed': 0, 'rgen': 'rgen'}
 mass = {'Ar': 1.0}
 name = ['Ar']
-type = [0]
+ptype = [0]
 
 Forcefield
 ----------
@@ -70,7 +76,9 @@ periodic = False
 
 Output
 ------
+backup = overwrite
 energy-file = 100
 order-file = 100
+restart-file = 10
 trajectory-file = 100
 restart-file = 10

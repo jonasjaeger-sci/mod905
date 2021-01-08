@@ -8,10 +8,10 @@
       - .coverage*
     expire_in: 1 week
 
-image: python:3.7-stretch
+image: python:buster
 
 .oldpy: &old_py
-  image: python:3.6-stretch
+  image: python:3.7-stretch
   stage: old_py
 
 .codacy: &codacy
@@ -33,10 +33,7 @@ before_script:
   - apt-get update -qy
   - apt-get install gcc -y
   - pip install --upgrade pip
-  - ln /usr/bin/gcc /usr/bin/gcc44
-  - ln /usr/bin/g++ /usr/bin/g++44
   - pip install -r requirements.txt
-  - pip install git+https://github.com/mdtraj/mdtraj.git
   - pip install -e .
   - python -V
 
@@ -51,7 +48,6 @@ pylint:
   stage: style
   script:
   - pip install -U pylint
-  - pip install 'numpy<1.16' #Remove when https://github.com/PyCQA/pylint/issues/2694 is resolved
   - pip install PyQt5  # Update to install requirements for PyVisA when this is ready.
   - python devtools/run_linting.py --input pyretis --white-list numpy PyQt5
 
@@ -171,6 +167,7 @@ test_cp2k_oldpy:
 
 test_min_version:
   extends: test
+  <<: *old_py
   before_script: 
     - apt-get update -qy
     - apt-get install -qy libblas-dev liblapack-dev libatlas-base-dev gfortran
@@ -183,7 +180,7 @@ test_min_version:
     - grep "cython" min_req.txt >> numpy.txt 
     - pip install -r numpy.txt
     - pip install -r min_req.txt
-    - pip install --no-use-pep517 git+https://github.com/mdtraj/mdtraj.git
+    - pip install --no-use-pep517 mdtraj
     - pip install -e .
     - python -V
     - pip freeze
