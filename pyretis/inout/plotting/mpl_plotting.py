@@ -475,7 +475,7 @@ def mpl_linecollection_gradient(axs, series):
     kwargs = {'linestyle': series.get('ls', '-'),
               'alpha': series.get('alpha', 1.0),
               'linewidth': series.get('lw', 2.0)}
-    points = np.array([series['x'], series['y']]).T.reshape(-1, 1, 2)
+    points = np.array([series['x'], series['y']]).T.reshape((-1, 1, 2))
     segments = np.concatenate([points[:-1], points[1:]], axis=1)
     values = np.linspace(0, 1, len(series['x']))
     linec = LineCollection(segments, array=values,
