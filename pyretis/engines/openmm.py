@@ -19,10 +19,14 @@ from pyretis.core.particlefunctions import (calculate_kinetic_energy,
 from pyretis.engines.engine import EngineBase
 from pyretis.core.box import box_matrix_to_list
 try:
-    from simtk import openmm
+    import openmm
     HAS_OPENMM = True
 except ImportError:
-    HAS_OPENMM = False
+    try:  # Support openmm < 7.6
+        from simtk import openmm
+        HAS_OPENMM = True
+    except ImportError:
+        HAS_OPENMM = False
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())

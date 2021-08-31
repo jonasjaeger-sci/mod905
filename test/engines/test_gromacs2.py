@@ -147,8 +147,10 @@ class GromacsEngineTest(unittest.TestCase):
             # Check the error - output:
             with open(os.path.join(rundir, 'stderr.txt')) as infile:
                 data = infile.readlines()
-                self.assertEqual(len(data), 1)
-                self.assertEqual(data[0].strip(), 'Crash error for testing.')
+                # Following assert should be 1, but is 2 while gromacs fixes
+                # their openmm imports (which raises an extra warning atm)
+                self.assertLessEqual(len(data), 2)
+                self.assertEqual(data[-1].strip(), 'Crash error for testing.')
             eng.clean_up()
 
     def test_propagate_sleep(self):

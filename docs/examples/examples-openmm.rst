@@ -20,7 +20,7 @@ and ``OpenMMEngine`` objects
 
 .. code-block:: python
     
-    import simtk.unit as u
+    import openmm.unit as u
     from pyretis.core import System, Particles
     from pyretis.core.box import create_box, box_matrix_to_list
     from pyretis.engines import OpenMMEngine
