@@ -3,9 +3,9 @@
 # you can save the file to disk and edit it with your favorite editor.
 ##########################################################################
 
-from simtk.openmm import app
-import simtk.openmm as mm
-from simtk import unit
+from openmm import app
+import openmm as mm
+from openmm import unit
 
 pdb = app.PDBFile('input.pdb')
 forcefield = app.ForceField('amber99sbildn.xml', 'tip3p.xml')

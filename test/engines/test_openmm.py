@@ -20,7 +20,7 @@ from .test_engines import (prepare_test_system,
 if HAS_OPENMM:
     from .test_helpers.test_helpers import (create_openmm_simulation,
                                             write_test_pdb, FakeOp)
-    import simtk.unit as u
+    from .test_helpers.test_helpers import unit as u
 
 
 def make_pyretis_system(simulation):

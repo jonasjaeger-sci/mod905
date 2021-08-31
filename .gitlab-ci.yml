@@ -123,7 +123,7 @@ test_openmm:
   - pip install -e .
   - python -V
   - conda list
-  - python -m simtk.testInstallation
+  - python -m openmm.testInstallation
   - pip install coverage
   - coverage run -p -m unittest discover -s test
   <<: *coverage_artifacts

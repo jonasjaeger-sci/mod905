@@ -7,9 +7,13 @@ from pyretis.core.system import System
 from pyretis.core.particles import ParticlesExt
 from pyretis.engines.openmm import HAS_OPENMM
 if HAS_OPENMM:
-    from simtk.openmm import app
-    import simtk.openmm as mm
-    from simtk import unit
+    from pyretis.engines.openmm import openmm as mm
+    try:
+        from openmm import unit
+        from openmm import app
+    except ImportError:  # openmm < 7.6
+        from simtk import unit
+        from simtk.openmm import app
 
 PDB_STRING = (
     """CRYST1   68.478   68.478   68.472  60.00  60.00  90.00 P 1           1
