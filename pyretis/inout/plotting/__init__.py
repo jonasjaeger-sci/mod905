@@ -128,6 +128,5 @@ def create_plotter(plot_settings, out_dir=None):
     if plotter.lower() in ['mpl', 'matplotlib']:
         return MplPlotter(out_fmt, backup=backup, style=style,
                           out_dir=out_dir)
-    else:
-        msg = 'Unknown plotter: {}'.format(plotter)
-        raise ValueError(msg)
+    msg = f'Unknown plotter: {plotter}'
+    raise ValueError(msg)

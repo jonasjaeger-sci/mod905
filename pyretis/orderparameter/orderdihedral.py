@@ -55,16 +55,16 @@ class Dihedral(OrderParameter):
         try:
             if len(index) != 4:
                 msg = ('Wrong number of atoms for dihedral definition. '
-                       'Expected 4 got {}'.format(len(index)))
+                       f'Expected 4 got {len(index)}')
                 logger.error(msg)
                 raise ValueError(msg)
-        except TypeError:
+        except TypeError as err:
             msg = 'Dihedral should be defined as a tuple/list of integers!'
             logger.error(msg)
-            raise TypeError(msg)
+            raise TypeError(msg) from err
         self.index = [int(i) for i in index]
         txt = ('Dihedral angle between particles '
-               '{0}, {1}, {2} and {3}'.format(*self.index))
+               f'{index[0]}, {index[1]}, {index[2]} and {index[3]}')
         super().__init__(description=txt)
         self.periodic = periodic
 

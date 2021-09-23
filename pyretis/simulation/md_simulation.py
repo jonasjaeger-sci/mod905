@@ -124,9 +124,9 @@ class SimulationMD(Simulation):
         """Return a string with info about the simulation."""
         msg = ['Generic MD simulation']
         nstep = self.cycle['end'] - self.cycle['start']
-        msg += ['Number of steps to do: {}'.format(nstep)]
-        msg += ['MD engine: {}'.format(self.engine)]
-        msg += ['Time step: {}'.format(self.engine.timestep)]
+        msg += [f'Number of steps to do: {nstep}']
+        msg += [f'MD engine: {self.engine}']
+        msg += [f'Time step: {self.engine.timestep}']
         return '\n'.join(msg)
 
 
@@ -203,9 +203,9 @@ class SimulationNVE(SimulationMD):
         """Return a string with info about the simulation."""
         msg = ['NVE simulation']
         nstep = self.cycle['end'] - self.cycle['start']
-        msg += ['Number of steps to do: {}'.format(nstep)]
-        msg += ['MD engine: {}'.format(self.engine)]
-        msg += ['Time step: {}'.format(self.engine.timestep)]
+        msg += [f'Number of steps to do: {nstep}']
+        msg += [f'MD engine: {self.engine}']
+        msg += [f'Time step: {self.engine.timestep}']
         return '\n'.join(msg)
 
 
@@ -310,9 +310,9 @@ class SimulationMDFlux(SimulationMD):
         """Return a string with info about the simulation."""
         msg = ['MD-flux simulation']
         nstep = self.cycle['end'] - self.cycle['start']
-        msg += ['Number of steps to do: {}'.format(nstep)]
-        msg += ['Dynamics engine: {}'.format(self.engine)]
-        msg += ['Time step: {}'.format(self.engine.timestep)]
+        msg += [f'Number of steps to do: {nstep}']
+        msg += [f'Dynamics engine: {self.engine}']
+        msg += [f'Time step: {self.engine.timestep}']
         return '\n'.join(msg)
 
     def restart_info(self):

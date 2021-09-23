@@ -80,7 +80,7 @@ def _table_md_efficiency(results, fmt='rst'):
         corr = results['corrMD'][i]
         prel = results['1-p'][i]
         row = [
-            '{:^10d}'.format(i + 1),
+            f'{i + 1:^10d}',
             apply_format(pmd, '{:^10.6f}'),
             apply_format(prel, '{:^10.6f}'),
             apply_format(teff, '{:^10.6f}'),
@@ -136,11 +136,11 @@ def _table_md_flux_cycles(results, fmt='rst'):
     """
     # table for interfaces:
     table = [
-        ['A', '{:8d}'.format(results['times']['A'])],
-        ['B', '{:8d}'.format(results['times']['B'])],
-        ['overall A', '{:8d}'.format(results['times']['OA'])],
-        ['overall B', '{:8d}'.format(results['times']['OB'])],
-        ['Total cycles', '{:8d}'.format(results['totalcycle'])],
+        ['A', f'{results["times"]["A"]:8d}'],
+        ['B', f'{results["times"]["B"]:8d}'],
+        ['overall A', f'{results["times"]["OA"]:8d}'],
+        ['overall B', f'{results["times"]["OB"]:8d}'],
+        ['Total cycles', f'{results["totalcycle"]:8d}'],
     ]
     if fmt in ['tex', 'latex']:
         table_str = generate_latex_table(table, 'Cycles spent in state',
@@ -180,13 +180,13 @@ def _table_md_flux(results, fmt='rst'):
         error = results['errflux'][i][2]
         relerror = results['errflux'][i][4]
         row = [
-            '{:^4d}'.format(i + 1),
+            f'{i + 1:^4d}',
             apply_format(idet, '{:^8.4f}'),
             apply_format(flux, '{:^10.6f}'),
             apply_format(error, '{:^10.6f}'),
             apply_format(relerror, '{:^10.6f}'),
-            '{:^8d}'.format(results['ncross'][i]),
-            '{:^8d}'.format(results['neffcross'][i]),
+            f'{results["ncross"][i]:^8d}',
+            f'{results["neffcross"][i]:^8d}',
             apply_format(results['neffc/nc'][i], '{:^10.6f}'),
             apply_format(results['cross_time'][i], '{:^10.6f}'),
         ]

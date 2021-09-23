@@ -123,8 +123,8 @@ class OrderParameter:
     def __str__(self):
         """Return a simple string representation of the order parameter."""
         msg = [
-            'Order parameter: "{}"'.format(self.__class__.__name__),
-            '{}'.format(self.description),
+            f'Order parameter: "{self.__class__.__name__}"',
+            f'{self.description}',
         ]
         if self.velocity_dependent:
             msg.append('This order parameter is velocity dependent.')
@@ -166,13 +166,13 @@ class Position(OrderParameter):
             applied to the position.
 
         """
-        txt = 'Position of particle {} (dim: {})'.format(index, dim)
+        txt = f'Position of particle {index} (dim: {dim})'
         super().__init__(description=txt, velocity=False)
         self.periodic = periodic
         self.index = index
         self.dim = {'x': 0, 'y': 1, 'z': 2}.get(dim, None)
         if self.dim is None:
-            msg = 'Unknown dimension {} requested'.format(dim)
+            msg = f'Unknown dimension {dim} requested'
             logger.critical(msg)
             raise ValueError(msg)
 
@@ -227,7 +227,7 @@ class Velocity(OrderParameter):
             it should equal 'x', 'y' or 'z'.
 
         """
-        txt = 'Velocity of particle {} (dim: {})'.format(index, dim)
+        txt = f'Velocity of particle {index} (dim: {dim})'
         super().__init__(description=txt, velocity=True)
         self.index = index
         self.dim = {'x': 0, 'y': 1, 'z': 2}.get(dim, None)
@@ -257,13 +257,13 @@ def _verify_pair(index):
     try:
         if len(index) != 2:
             msg = ('Wrong number of atoms for pair definition. '
-                   'Expected 2 got {}'.format(len(index)))
+                   f'Expected 2 got {len(index)}')
             logger.error(msg)
             raise ValueError(msg)
-    except TypeError:
+    except TypeError as err:
         msg = 'Atom pair should be defined as a tuple/list of integers.'
         logger.error(msg)
-        raise TypeError(msg)
+        raise TypeError(msg) from err
 
 
 class Distance(OrderParameter):
@@ -298,11 +298,7 @@ class Distance(OrderParameter):
         """
         _verify_pair(index)
         pbc = 'Periodic' if periodic else 'Non-periodic'
-        txt = '{} distance, particles {} and {}'.format(
-            pbc,
-            index[0],
-            index[1]
-        )
+        txt = f'{pbc} distance, particles {index[0]} and {index[1]}'
         super().__init__(description=txt, velocity=False)
         self.periodic = periodic
         self.index = index
@@ -365,11 +361,8 @@ class Distancevel(OrderParameter):
         """
         _verify_pair(index)
         pbc = 'Periodic' if periodic else 'Non-periodic'
-        txt = '{} rate-of-change-distance, particles {} and {}'.format(
-            pbc,
-            index[0],
-            index[1]
-        )
+        txt = (f'{pbc} rate-of-change-distance, particles '
+               f'{index[0]} and {index[1]}')
         super().__init__(description=txt, velocity=True)
         self.periodic = periodic
         self.index = index
@@ -480,17 +473,11 @@ class CompositeOrderParameter(OrderParameter):
             objfunc = getattr(order_function, func, None)
             name = order_function.__class__.__name__
             if not objfunc:
-                msg = 'Missing method "{}" in order parameter {}'.format(
-                    func,
-                    name,
-                )
+                msg = f'Missing method "{func}" in order parameter {name}'
                 logger.error(msg)
                 raise ValueError(msg)
             if not callable(objfunc):
-                msg = '"{}" in order parameter {} is not callable!'.format(
-                    func,
-                    name,
-                )
+                msg = f'"{func}" in order parameter {name} is not callable!'
                 raise ValueError(msg)
         self.velocity_dependent |= order_function.velocity_dependent
         if self.velocity_dependent:
@@ -505,7 +492,7 @@ class CompositeOrderParameter(OrderParameter):
         """Return a simple string representation of the order parameter."""
         txt = ['Order parameter, combination of:']
         for i, order in enumerate(self.order_parameters):
-            txt.append('{}: {}'.format(i, str(order)))
+            txt.append(f'{i}: {str(order)}')
         msg = '\n'.join(txt)
         return msg
 

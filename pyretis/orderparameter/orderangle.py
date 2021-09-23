@@ -55,16 +55,14 @@ class Angle(OrderParameter):
         try:
             if len(index) != 3:
                 msg = ('Wrong number of atoms for angle definition. '
-                       'Expected 3 got {}'.format(len(index)))
+                       f'Expected 3 got {len(index)}')
                 logger.error(msg)
                 raise ValueError(msg)
-        except TypeError:
+        except TypeError as err:
             msg = 'Angle should be defined as a tuple/list of integers!'
             logger.error(msg)
-            raise TypeError(msg)
-        txt = 'Angle between particles {}, {} and {}'.format(index[0],
-                                                             index[1],
-                                                             index[2])
+            raise TypeError(msg) from err
+        txt = f'Angle between particles {index[0]}, {index[1]} and {index[2]}'
         super().__init__(description=txt)
         self.periodic = periodic
         self.index = [int(i) for i in index]

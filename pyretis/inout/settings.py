@@ -27,8 +27,8 @@ __all__ = ['parse_settings_file', 'write_settings_file',
            '_fill_up_tis_and_retis_settings']
 
 
-SECTIONS = dict()
-TITLE = '{} input settings'.format(PROGRAM_NAME)
+SECTIONS = {}
+TITLE = f'{PROGRAM_NAME} input settings'
 HEADING = '{}\n{}\nFor more info, please see: {}\nHave Fun!'
 SECTIONS['heading'] = {'text': HEADING.format(TITLE, '=' * len(TITLE), URL)}
 
@@ -209,7 +209,7 @@ def parse_settings_file(filename, add_default=True):
         A dictionary with settings for PyRETIS.
 
     """
-    with open(filename, 'r') as fileh:
+    with open(filename, 'r', encoding='utf-8') as fileh:
         raw_sections = _parse_sections(fileh)
     settings = _parse_all_raw_sections(raw_sections)
     if add_default:
@@ -322,10 +322,7 @@ def _parse_sections(inputtxt):
                 continue
             section_title = previous_line.split()[0].lower()
             if section_title in SPECIAL_MULTIPLE:
-                new_section_title = '{}{}'.format(
-                    section_title,
-                    multiple[section_title]
-                )
+                new_section_title = f'{section_title}{multiple[section_title]}'
                 multiple[section_title] += 1
                 section_title = new_section_title
             if section_title not in raw_data:
@@ -443,19 +440,19 @@ def _parse_section_default(raw_section):
                     new_setting = _parse_section_default(var)
                     if key_0 not in setting:
                         setting[key_0] = {}
-                    for key in new_setting:
+                    for key, value in new_setting.items():
                         if key in setting[key_0]:
-                            setting[key_0][key].update(new_setting[key])
+                            setting[key_0][key].update(value)
                         else:
-                            setting[key_0][key] = new_setting[key]
+                            setting[key_0][key] = value
 
                 else:
                     setting[keyword] = parsed
 
             else:  # pragma: no cover
-                msg = ['Could read keyword {}'.format(keyword)]
+                msg = [f'Could read keyword {keyword}']
                 msg += ['Keyword was skipped, please check your input!']
-                msg += ['Input setting: {}'.format(raw)]
+                msg += [f'Input setting: {raw}']
                 msgtxt = '\n'.join(msg)
                 logger.critical(msgtxt)
     return setting
@@ -480,7 +477,7 @@ def _parse_raw_section(raw_section, section):
     """
     if section not in SECTIONS:
         # Unknown section, just ignore it and give a warning.
-        msgtxt = 'Ignoring unknown input section "{}"'.format(section)
+        msgtxt = f'Ignoring unknown input section "{section}"'
         logger.warning(msgtxt)
         return None
     if section == 'heading':
@@ -504,7 +501,7 @@ def _parse_all_raw_sections(raw_sections):
         The parsed settings, with one key for each section parsed.
 
     """
-    settings = dict()
+    settings = {}
     for key, val in raw_sections.items():
         special = None
         for i in SPECIAL_MULTIPLE:
@@ -542,8 +539,8 @@ def _check_for_bullshitt(settings):
 
     if (settings['simulation']['task'] in {'retis', 'tis'} and
             len(settings['simulation']['interfaces']) < 3):
-        msg += ['Insufficient number of interfaces for {}'
-                .format(settings['simulation']['task'])]
+        msg += ['Insufficient number of interfaces for '
+                f'{settings["simulation"]["task"]}']
         success = False
 
     if settings['simulation']['task'] in {'tis', 'retis'}:
@@ -606,7 +603,7 @@ def _fill_up_tis_and_retis_settings(settings):
     # The previously constructed dictionary is inserted in the settings.
     # This is done such that the specific input given per ensemble
     # OVERWRITES the general input.
-    for i_ens, ens in enumerate(ensemble_save):
+    for i_ens, _ in enumerate(ensemble_save):
         for key in settings:
             if key in ensemble_save[i_ens]:
                 if key not in SPECIAL_MULTIPLE:
@@ -627,7 +624,7 @@ def _fill_up_tis_and_retis_settings(settings):
                                 **ensemble_save[i_ens].copy()}
         del ensemble_save[i_ens]['ensemble']
 
-    for i_ens, ens in enumerate(ensemble_save):
+    for i_ens, _ in enumerate(ensemble_save):
         settings['ensemble'][i_ens] = ensemble_save[i_ens].copy()
 
 
@@ -644,12 +641,12 @@ def add_default_settings(settings):
     None, but this method might add data to the input settings.
 
     """
-    for sec in SECTIONS:
+    for sec, sec_value in SECTIONS.items():
         if sec not in settings:
             settings[sec] = {}
-        for key in SECTIONS[sec]:
-            if SECTIONS[sec][key] is not None and key not in settings[sec]:
-                settings[sec][key] = SECTIONS[sec][key]
+        for key, value in sec_value.items():
+            if value is not None and key not in settings[sec]:
+                settings[sec][key] = value
     to_remove = [key for key in settings if len(settings[key]) == 0]
     for key in to_remove:
         settings.pop(key, None)
@@ -675,11 +672,11 @@ def _clean_settings(settings):
     # Add other sections:
     for sec in settings:
         if sec not in SECTIONS:  # Well, ignore unknown ones:
-            msgtxt = 'Ignoring unknown section "{}"'.format(sec)
+            msgtxt = f'Ignoring unknown section "{sec}"'
             logger.warning(msgtxt)
             continue
         if sec in SPECIAL_MULTIPLE:
-            settingc[sec] = [i for i in settings[sec]]
+            settingc[sec] = list(settings[sec])
         else:
             settingc[sec] = {}
             if sec in ALLOW_MULTIPLE:  # Here, just add multiple sections:
@@ -688,12 +685,11 @@ def _clean_settings(settings):
             else:
                 for key in settings[sec]:
                     if key not in SECTIONS[sec]:  # Ignore junk:
-                        msgtxt = 'Ignoring unknown "{}" in "{}"'.format(key,
-                                                                        sec)
+                        msgtxt = f'Ignoring unknown "{key}" in "{sec}"'
                         logger.warning(msgtxt)
                     else:
                         settingc[sec][key] = settings[sec][key]
-    to_remove = [key for key in settingc if len(settingc[key]) == 0]
+    to_remove = [key for key, val in settingc.items() if len(val) == 0]
     for key in to_remove:
         settingc.pop(key, None)
     return settingc
@@ -727,23 +723,23 @@ def settings_to_text(settings):
                                                            pure=True)
                 else:
                     raw_data = section_to_text(sec)
-                txt.append('{}\n{}\n{}\n\n'.format(title, line, raw_data))
+                txt.append(f'{title}\n{line}\n{raw_data}\n\n')
         elif section == 'heading':
-            txt.append('{}\n\n'.format(settings[section]['text']))
+            txt.append(f'{settings[section]["text"]}\n\n')
         else:
             if section in ('tis', 'retis'):
-                title = '{} settings'.format(section.upper())
+                title = f'{section.upper()} settings'
             else:
-                title = '{} settings'.format(section.capitalize())
+                title = f'{section.capitalize()} settings'
             line = '-' * len(title)
             raw_data = section_to_text(settings[section])
-            txt.append('{}\n{}\n{}\n\n'.format(title, line, raw_data))
+            txt.append(f'{title}\n{line}\n{raw_data}\n\n')
     return ''.join(txt)
 
 
 def double_section_to_text(settings):
     """Just here to not break 2.0 API, will be removed in Pyretis3."""
-    return(multiple_section_to_text(settings)[1])
+    return multiple_section_to_text(settings)[1]
 
 
 def multiple_section_to_text(settings, prefix=None, pure=False):
@@ -771,23 +767,23 @@ def multiple_section_to_text(settings, prefix=None, pure=False):
 
     """
     data = []
-    for key in settings:
+    for key, value in settings.items():
         prefix = None if pure else prefix
         if key in SPECIAL_MULTIPLE:
-            for i, entry in enumerate(settings[key]):
-                temp_prefix = '{}{:d}'.format(key, i)
+            for i, entry in enumerate(value):
+                temp_prefix = f'{key}{i:d}'
                 _, txt = multiple_section_to_text(entry,
                                                   prefix=temp_prefix)
                 data.append(txt)
 
         elif key == 'interface':
-            pretty = pprint.pformat(settings[key], width=67)
+            pretty = pprint.pformat(value, width=67)
             pretty = pretty.replace('\n', '\n' + ' ' * 67)
-            txt = '{} = {}'.format(key, pretty)
+            txt = f'{key} = {pretty}'
             data.append(txt)
 
         elif key == 'heading':
-            txt = '{} = {}'.format(key, settings[key])
+            txt = f'{key} = {value}'
             data.append(txt)
 
         elif isinstance(settings[key], dict):
@@ -797,12 +793,12 @@ def multiple_section_to_text(settings, prefix=None, pure=False):
             else:
                 base = prefix
                 prefix += ' ' + key
-            _, txt = multiple_section_to_text(settings[key], prefix=prefix)
+            _, txt = multiple_section_to_text(value, prefix=prefix)
             prefix = base
             data.append(txt)
 
         else:
-            txt = '{} {} = {}'.format(prefix, key, settings[key])
+            txt = f'{prefix} {key} = {value}'
             data.append(txt)
 
     return prefix, '\n'.join(data)
@@ -840,9 +836,9 @@ def section_to_text(settings, prefix=None):
             pretty = pprint.pformat(settings[key], width=79-leng)
             pretty = pretty.replace('\n', '\n' + ' ' * leng)
             if prefix is not None:
-                txt = '{} {} = {}'.format(prefix, key, pretty)
+                txt = f'{prefix} {key} = {pretty}'
             else:
-                txt = '{} = {}'.format(key, pretty)
+                txt = f'{key} = {pretty}'
         if len(txt) >= 5:  # Shortest text, e.g: "a = 1".
             data.append(txt)
     return '\n'.join(data)
@@ -874,7 +870,7 @@ def write_settings_file(settings, outfile, backup=True):
         msg = create_backup(outfile)
         if msg:
             logger.info(msg)
-    with open(outfile, 'w') as fileh:
+    with open(outfile, 'w', encoding='utf-8') as fileh:
         txt = settings_to_text(settings)
         fileh.write(txt.strip())
 
@@ -897,7 +893,7 @@ def copy_settings(settings):
     for sec in settings:  # this is common for all simulations:
         lsetting[sec] = {}
         if sec in SPECIAL_MULTIPLE:
-            lsetting[sec] = [j for j in settings[sec]]
+            lsetting[sec] = list(settings[sec])
         else:
             for key in settings[sec]:
                 lsetting[sec][key] = settings[sec][key]

@@ -208,7 +208,7 @@ def read_gromacs_file(filename):
     ...     print(snapshot['x'][0])
 
     """
-    with open(filename, 'r') as fileh:
+    with open(filename, 'r', encoding='utf-8') as fileh:
         for snapshot in read_gromacs_lines(fileh):
             yield snapshot
 
@@ -244,7 +244,7 @@ def read_gromacs_gro_file(filename):
     xyz = None
     vel = None
     box = None
-    with open(filename, 'r') as fileh:
+    with open(filename, 'r', encoding='utf8') as fileh:
         snapshot = next(read_gromacs_lines(fileh))
         box = snapshot.get('box', None)
         xyz = snapshot.get('xyz', None)
@@ -275,9 +275,9 @@ def write_gromacs_gro_file(outfile, txt, xyz, vel=None, box=None):
     atomname = txt['atomname']
     atomnr = txt['atomnr']
     npart = len(xyz)
-    with open(outfile, 'w') as output:
-        output.write('{}\n'.format(txt['header']))
-        output.write('{}\n'.format(npart))
+    with open(outfile, 'w', encoding='utf-8') as output:
+        output.write(f'{txt["header"]}\n')
+        output.write(f'{npart}\n')
         for i in range(npart):
             if vel is None:
                 buff = _GRO_FMT.format(
@@ -300,12 +300,12 @@ def write_gromacs_gro_file(outfile, txt, xyz, vel=None, box=None):
                     vel[i, 0],
                     vel[i, 1],
                     vel[i, 2])
-            output.write('{}\n'.format(buff))
+            output.write(f'{buff}\n')
         if box is None:
             box = ' '.join([_GRO_BOX_FMT.format(i) for i in txt['box']])
         else:
             box = ' '.join([_GRO_BOX_FMT.format(i) for i in box])
-        output.write('{}\n'.format(box))
+        output.write(f'{box}\n')
 
 
 def read_gromos96_file(filename):
@@ -335,7 +335,7 @@ def read_gromos96_file(filename):
     rawdata = {'TITLE': [], 'POSITION': [], 'VELOCITY': [], 'BOX': [],
                'POSITIONRED': [], 'VELOCITYRED': []}
     section = None
-    with open(filename, 'r', errors='replace') as gromosfile:
+    with open(filename, 'r', encoding='utf-8', errors='replace') as gromosfile:
         for lines in gromosfile:
             new_section = False
             stripline = lines.strip()
@@ -397,11 +397,11 @@ def write_gromos96_file(filename, raw, xyz, vel, box=None):
 
     """
     _keys = ('TITLE', 'POSITION', 'VELOCITY', 'BOX')
-    with open(filename, 'w') as outfile:
+    with open(filename, 'w', encoding='utf-8') as outfile:
         for key in _keys:
             if key not in raw:
                 continue
-            outfile.write('{}\n'.format(key))
+            outfile.write(f'{key}\n')
             for i, line in enumerate(raw[key]):
                 if key == 'POSITION':
                     outfile.write(_G96_FMT.format(line, *xyz[i]))
@@ -413,7 +413,7 @@ def write_gromos96_file(filename, raw, xyz, vel, box=None):
                     else:
                         outfile.write(_G96_BOX_FMT.format(*box))
                 else:
-                    outfile.write('{}\n'.format(line))
+                    outfile.write(f'{line}\n')
             outfile.write('END\n')
 
 
@@ -421,7 +421,7 @@ def read_xvg_file(filename):
     """Return data in xvg file as numpy array."""
     data = []
     legends = []
-    with open(filename, 'r') as fileh:
+    with open(filename, 'r', encoding='utf-8') as fileh:
         for lines in fileh:
             if lines.startswith('@ s') and lines.find('legend') != -1:
                 legend = lines.split('legend')[-1].strip()
@@ -479,8 +479,7 @@ def read_struct_buff(fileh, fmt):
     buff = fileh.read(struct.calcsize(fmt))
     if not buff:
         raise EOFError
-    else:
-        return struct.unpack(fmt, buff)
+    return struct.unpack(fmt, buff)
 
 
 def read_matrix(fileh, endian, double):
@@ -506,9 +505,9 @@ def read_matrix(fileh, endian, double):
 
     """
     if double:
-        fmt = '{}{}d'.format(endian, _DIM * _DIM)
+        fmt = f'{endian}{_DIM**2}d'
     else:
-        fmt = '{}{}f'.format(endian, _DIM * _DIM)
+        fmt = f'{endian}{_DIM**2}f'
     read = read_struct_buff(fileh, fmt)
     mat = np.zeros((_DIM, _DIM))
     for i in range(_DIM):
@@ -544,9 +543,9 @@ def read_coord(fileh, endian, double, natoms):
 
     """
     if double:
-        fmt = '{}{}d'.format(endian, natoms * _DIM)
+        fmt = f'{endian}{natoms * _DIM}d'
     else:
-        fmt = '{}{}f'.format(endian, natoms * _DIM)
+        fmt = f'{endian}{natoms * _DIM}f'
     read = read_struct_buff(fileh, fmt)
     mat = np.array(read)
     mat.shape = (natoms, _DIM)
@@ -579,13 +578,11 @@ def is_double(header):
             if key == 'box_size':
                 size = int(header[key] / _DIM**2)
                 break
-            else:
-                size = int(header[key] / (header['natoms'] * _DIM))
-                break
+            size = int(header[key] / (header['natoms'] * _DIM))
+            break
     if size not in (_SIZE_FLOAT, _SIZE_DOUBLE):
         raise ValueError('Could not determine size!')
-    else:
-        return size == _SIZE_DOUBLE
+    return size == _SIZE_DOUBLE
 
 
 def read_trr_header(fileh):
@@ -604,7 +601,7 @@ def read_trr_header(fileh):
     """
     start = fileh.tell()
     endian = '>'
-    magic = read_struct_buff(fileh, '{}1i'.format(endian))[0]
+    magic = read_struct_buff(fileh, f'{endian}1i')[0]
     if magic == _GROMACS_MAGIC:
         pass
     else:
@@ -614,8 +611,8 @@ def read_trr_header(fileh):
                 'TRR file might be inconsistent! Could find _GROMACS_MAGIC'
             )
         endian = swap_endian(endian)
-    slen = read_struct_buff(fileh, '{}2i'.format(endian))
-    raw = read_struct_buff(fileh, '{}{}s'.format(endian, slen[0]-1))
+    slen = read_struct_buff(fileh, f'{endian}2i')
+    raw = read_struct_buff(fileh, f'{endian}{slen[0] - 1}s')
     version = raw[0].split(b'\0', 1)[0].decode('utf-8')
     if not version == _TRR_VERSION:
         raise ValueError('Unknown format')
@@ -629,9 +626,9 @@ def read_trr_header(fileh):
     # The next are either floats or double
     double = is_double(header)
     if double:
-        fmt = '{}2d'.format(endian)
+        fmt = f'{endian}2d'
     else:
-        fmt = '{}2f'.format(endian)
+        fmt = f'{endian}2f'
     header_r = read_struct_buff(fileh, fmt)
     header['time'] = header_r[0]
     header['lambda'] = header_r[1]
@@ -687,11 +684,11 @@ def read_trr_data(fileh, header):
     endian = header['endian']
     double = header['double']
     for key in ('box', 'vir', 'pres'):
-        header_key = '{}_size'.format(key)
+        header_key = f'{key}_size'
         if header[header_key] != 0:
             data[key] = read_matrix(fileh, endian, double)
     for key in ('x', 'v', 'f'):
-        header_key = '{}_size'.format(key)
+        header_key = f'{key}_size'
         if header[header_key] != 0:
             data[key] = read_coord(fileh, endian, double,
                                    header['natoms'])
@@ -752,11 +749,10 @@ def trr_frame_to_g96(trr_file, index, outfile):
 
     """
     header, data = read_trr_frame(trr_file, index)
-    with open(outfile, 'w') as output:
+    with open(outfile, 'w', encoding='utf-8') as output:
         output.write('TITLE\n')
-        output.write(' Dump from TRR, index = {}, time = {}\n'.format(
-            index,
-            header['time']))
+        output.write(f' Dump from TRR, index = {index}, '
+                     f'time = {header["time"]}\n')
         output.write('END\n')
         output.write('POSITION\n')
         for i, posi in enumerate(data['x']):
@@ -812,8 +808,8 @@ def reverse_trr(filename, outname, print_progress=True):
         # Loop through headers in reverse and write data.
         for header, header_loc, header_size in reversed(all_headers):
             if print_progress:  # pragma: no cover
-                print('Processing step {} time {}'.format(header['step'],
-                                                          header['time']))
+                print(f'Processing step {header["step"]} '
+                      f'time {header["time"]}')
             data_size = sum([header[key] for key in TRR_DATA_ITEMS])
             start = header_loc - header_size
             infile.seek(start)
@@ -865,7 +861,7 @@ def write_trr_frame(filename, data, endian=None, double=False, append=False):
     header['box_size'] = size * _DIM * _DIM
     for i in ('x', 'v', 'f'):
         if i in data:
-            header['{}_size'.format(i)] = data['natoms'] * size * _DIM
+            header[f'{i}_size'] = data['natoms'] * size * _DIM
     header['endian'] = endian
     header['double'] = double
     header['time'] = data['time']
@@ -875,7 +871,7 @@ def write_trr_frame(filename, data, endian=None, double=False, append=False):
         write_trr_header(outfile, header, floatfmt, endian=endian)
         for key in TRR_DATA_ITEMS:
             if header[key] != 0:
-                matrix = data[key.split('_')[0]]
+                matrix = data[key.split('_', 1)[0]]
                 fmt = floatfmt.format(matrix.size)
                 outfile.write(struct.pack(fmt, *matrix.flatten()))
     return header
@@ -898,7 +894,7 @@ def write_trr_header(outfile, header, floatfmt, endian=None):
 
     """
     slen = (13, 12)
-    fmt = ['1i', '2i', '{}s'.format(slen[0] - 1), '13i']
+    fmt = ['1i', '2i', f'{slen[0] - 1}s', '13i']
     if endian:
         fmt = [endian + i for i in fmt]
     outfile.write(struct.pack(fmt[0], _GROMACS_MAGIC))

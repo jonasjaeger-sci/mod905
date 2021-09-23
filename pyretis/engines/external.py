@@ -134,13 +134,10 @@ class ExternalMDEngine(EngineBase):
                 if optional_files and key in optional_files:
                     del input_files[key]
                     continue
-                else:
-                    msg = 'Missing {} input file "{}"'.format(
-                        self.description,
-                        input_files[key],
-                    )
-                    logger.error(msg)
-                    raise ValueError(msg)
+                msg = (f'Missing {self.description} input file '
+                       f'"{input_files[key]}"')
+                logger.error(msg)
+                raise ValueError(msg)
             logger.debug('%s input %s: %s', self.description, key,
                          input_files[key])
         return input_files
@@ -244,9 +241,10 @@ class ExternalMDEngine(EngineBase):
             The delimiter used for separation keywords from settings.
 
         """
-        reg = re.compile(r'(.*?){}'.format(delim))
+        reg = re.compile(fr'(.*?){delim}')
         written = set()
-        with open(sourcefile, 'r') as infile, open(outputfile, 'w') as outfile:
+        with open(sourcefile, 'r', encoding="utf-8") as infile, \
+             open(outputfile, 'w', encoding="utf-8") as outfile:
             for line in infile:
                 to_write = line
                 key = reg.match(line)
@@ -254,14 +252,13 @@ class ExternalMDEngine(EngineBase):
                     keyword = ''.join([key.group(1), delim])
                     keyword_strip = key.group(1).strip()
                     if keyword_strip in settings:
-                        to_write = '{} {}\n'.format(keyword,
-                                                    settings[keyword_strip])
+                        to_write = f'{keyword} {settings[keyword_strip]}\n'
                     written.add(keyword_strip)
                 outfile.write(to_write)
             # Add settings not yet written:
             for key, value in settings.items():
                 if key not in written:
-                    outfile.write('{} {} {}\n'.format(key, delim, value))
+                    outfile.write(f'{key} {delim} {value}\n')
 
     @staticmethod
     def _read_input_settings(sourcefile, delim='='):
@@ -290,9 +287,9 @@ class ExternalMDEngine(EngineBase):
         keyword per line.
 
         """
-        reg = re.compile(r'(.*?){}'.format(delim))
+        reg = re.compile(fr'(.*?){delim}')
         settings = {}
-        with open(sourcefile, 'r') as infile:
+        with open(sourcefile, 'r', encoding="utf-8") as infile:
             for line in infile:
                 key = reg.match(line)
                 if key:
@@ -364,8 +361,8 @@ class ExternalMDEngine(EngineBase):
                              return_code)
                 logger.error('STDOUT, see file: %s', out_name)
                 logger.error('STDERR, see file: %s', err_name)
-                msg = ('Execution of external program ({}) failed. '
-                       'Return code: {}').format(self.description, return_code)
+                msg = (f'Execution of external program ({self.description}) '
+                       f'failed. Return code: {return_code}')
                 raise RuntimeError(msg)
         if return_code is not None and return_code == 0:
             self._removefile(out_name)
@@ -501,18 +498,18 @@ class ExternalMDEngine(EngineBase):
         # Create a "previous file" for storing the state before a new kick:
         prev_file = os.path.join(
             self.exe_dir,
-            'p_{}'.format(os.path.basename(initial_file))
+            f'p_{os.path.basename(initial_file)}'
         )
         msg_file_name = os.path.join(self.exe_dir, 'msg-kick.txt')
         msg_file = FileIO(msg_file_name, 'w', None, backup=False)
         msg_file.open()
-        msg_file.write('Kick initiation for {}'.format(self.description))
+        msg_file.write(f'Kick initiation for {self.description}')
         self._copyfile(initial_file, prev_file)
         # Update so that we use the prev_file:
         system.particles.set_pos((prev_file, None, None))
         logger.info('Searching for crossing with: %9.6g', middle)
-        print_to_screen('Searching for crossing with: {}'.format(middle))
-        print_to_screen('Writing progress to: {}'.format(msg_file_name))
+        print_to_screen(f'Searching for crossing with: {middle}')
+        print_to_screen(f'Writing progress to: {msg_file_name}')
         while True:
             msg_file.write('New kick:')
             # Do kick from current state:
@@ -525,7 +522,7 @@ class ExternalMDEngine(EngineBase):
                                    rescale=None)
             # Update order parameter in case it's velocity dependent:
             curr = self.calculate_order(order_function, system)[0]
-            msg_file.write('\tAfter kick: {}'.format(curr))
+            msg_file.write(f'\tAfter kick: {curr}')
             # Store the kicked configuration as the previous config.
             self._movefile(system.particles.get_pos()[0], prev_file)
             system.particles.set_pos((prev_file, None, None))
@@ -538,14 +535,14 @@ class ExternalMDEngine(EngineBase):
             # Compare previous order parameter and the new one:
             prev = curr
             curr = self.calculate_order(order_function, system)[0]
-            txt = '{} -> {} | {}'.format(prev, curr, middle)
-            msg_file.write('\t{}'.format(txt))
+            txt = f'{prev} -> {curr} | {middle}'
+            msg_file.write(f'\t{txt}')
             if (prev <= middle < curr) or (curr < middle <= prev):
                 logger.info('Crossed middle interface: %s', txt)
                 msg_file.write('\tCrossed middle interface!')
                 # Middle interface was crossed, just stop the loop.
                 break
-            elif (prev <= curr < middle) or (middle < curr <= prev):
+            if (prev <= curr < middle) or (middle < curr <= prev):
                 # Getting closer, keep the new point:
                 logger.debug('Getting closer to middle: %s', txt)
                 msg_file.write(
@@ -583,7 +580,7 @@ class ExternalMDEngine(EngineBase):
         """
         return
 
-    def propagate(self, path, initial_state, order_function, interfaces,
+    def propagate(self, path, system, order_function, interfaces,
                   reverse=False):
         """
         Propagate the equations of motion with the external code.
@@ -598,7 +595,7 @@ class ExternalMDEngine(EngineBase):
             We are here not returning a new path - this since we want
             to delegate the creation of the path to the method
             that is running `propagate`.
-        initial_state : object like :py:class:`.System`
+        system : object like :py:class:`.System`
             The system object gives the initial state for the
             integration.
         order_function : object like :py:class:`.OrderParameter`
@@ -626,18 +623,16 @@ class ExternalMDEngine(EngineBase):
             name = prefix + '_trajF'
         logger.debug('Trajectory name: "%s"', name)
         # Also create a message file for inspecting progress:
-        msg_file_name = os.path.join(self.exe_dir, 'msg-{}.txt'.format(name))
+        msg_file_name = os.path.join(self.exe_dir, f'msg-{name}.txt')
         logger.debug('Writing propagation progress to: %s', msg_file_name)
         msg_file = FileIO(msg_file_name, 'w', None, backup=False)
         msg_file.open()
-        msg_file.write(
-            '# Preparing propagation with {}'.format(self.description)
-        )
-        msg_file.write('# Trajectory label: {}'.format(name))
+        msg_file.write(f'# Preparing propagation with {self.description}')
+        msg_file.write(f'# Trajectory label: {name}')
 
-        system = initial_state.copy()
+        system = system.copy()
         initial_file = self.dump_frame(system, deffnm=prefix + '_conf')
-        msg_file.write('# Initial file: {}'.format(initial_file))
+        msg_file.write(f'# Initial file: {initial_file}')
         logger.debug('Initial state: %s', system)
 
         if reverse != system.particles.vel_rev:
@@ -645,17 +640,17 @@ class ExternalMDEngine(EngineBase):
             msg_file.write('# Reversing velocities')
             basepath = os.path.dirname(initial_file)
             localfile = os.path.basename(initial_file)
-            initial_conf = os.path.join(basepath, 'r_{}'.format(localfile))
+            initial_conf = os.path.join(basepath, f'r_{localfile}')
             self._reverse_velocities(initial_file, initial_conf)
         else:
             initial_conf = initial_file
-        msg_file.write('# Initial config: {}'.format(initial_conf))
+        msg_file.write(f'# Initial config: {initial_conf}')
 
         # Update system to point to the configuration file:
         system.particles.set_pos((initial_conf, None))
         system.particles.set_vel(reverse)
         # Propagate from this point:
-        msg_file.write('# Interfaces: {}'.format(interfaces))
+        msg_file.write(f'# Interfaces: {interfaces}')
         success, status = self._propagate_from(
             name,
             path,

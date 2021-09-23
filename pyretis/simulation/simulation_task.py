@@ -47,7 +47,7 @@ def _check_args(function, given_args=None, given_kwargs=None):
     """
     arguments = inspect_function(function)
     args = [arg for arg in arguments['args'] if arg != 'self']
-    defaults = [arg for arg in arguments['kwargs']]
+    defaults = list(arguments['kwargs'])
     # first test, do we give correct number of required arguments?
     if given_args is not None:
         given = len(given_args)
@@ -64,8 +64,8 @@ def _check_args(function, given_args=None, given_kwargs=None):
         if defaults:
             extra = [key for key in given_kwargs if key not in defaults]
             if extra:
-                msg = ['Task Keyword arguments: {}'.format(defaults)]
-                msg += ['Unexpected keyword argument: {}'.format(extra)]
+                msg = [f'Task Keyword arguments: {defaults}']
+                msg += [f'Unexpected keyword argument: {extra}']
                 msgtxt = '\n'.join(msg)
                 logger.warning(msgtxt)
                 return False
@@ -204,10 +204,10 @@ class SimulationTask(Task):
     def __str__(self):
         """Output info about the task."""
         msg = ['Task:']
-        msg += [' -> Function name: {}'.format(self.function.__name__)]
-        msg += [' -> Function args: {}'.format(self.args)]
-        msg += [' -> Function kwargs: {}'.format(self.kwargs)]
-        msg += [' -> Execute when: {}'.format(self.when)]
-        msg += [' -> Execute at first: {}'.format(self.first)]
-        msg += [' -> Result: {}'.format(self._result)]
+        msg += [f' -> Function name: {self.function.__name__}']
+        msg += [f' -> Function args: {self.args}']
+        msg += [f' -> Function kwargs: {self.kwargs}']
+        msg += [f' -> Execute when: {self.when}']
+        msg += [f' -> Execute at first: {self.first}']
+        msg += [f' -> Result: {self._result}']
         return '\n'.join(msg)

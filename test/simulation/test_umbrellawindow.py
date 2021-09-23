@@ -65,7 +65,7 @@ class TestUmbrellaWindow(unittest.TestCase):
             0.1,
             mincycle=10
         )
-        self.assertIsInstance(simulation.rgen, np.random.RandomState)
+        self.assertIsInstance(simulation.rgen, np.random.Generator)
 
 
 if __name__ == '__main__':

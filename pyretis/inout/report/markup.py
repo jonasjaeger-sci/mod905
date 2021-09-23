@@ -59,10 +59,10 @@ def generate_rst_table(table, title, headings):
     width = len(col_len) + sum(col_len) - 1
     topline = '+' + width * '-' + '+'
     # create the header
-    str_header = '|{{0:<{0}s}}|'.format(width)
+    str_header = f'|{{0:<{width}s}}|'
     str_header = str_header.format(title)
     # make format for header:
-    head_fmt = ['{{0:^{0}s}}'.format(col) for col in col_len]
+    head_fmt = [f'{{0:^{col}s}}' for col in col_len]
     # create first row, which is the header on columns:
     row_line = [fmt.format(col) for fmt, col in zip(head_fmt, headings)]
     row_line = [''] + row_line + ['']
@@ -142,8 +142,8 @@ def latexify_number(str_float):
     """
     if 'e' in str_float:
         base, exp = str_float.split('e')
-        return r'${0} \times 10^{{{1}}}$'.format(base, int(exp))
-    return r'${}$'.format(str_float)
+        return fr'${base} \times 10^{{{int(exp)}}}$'
+    return fr'${str_float}$'
 
 
 def mathexify_number(str_float):
@@ -163,4 +163,4 @@ def mathexify_number(str_float):
         A math directive for reStructuredText.
 
     """
-    return ':math:`{}`'.format(latexify_number(str_float))
+    return f':math:`{latexify_number(str_float)}`'

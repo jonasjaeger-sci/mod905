@@ -120,14 +120,14 @@ def create_backup(outputfile):
     here will be part of some more elaborate message.
 
     """
-    filename = '{}'.format(outputfile)
+    filename = str(outputfile)
     fileid = 0
     msg = None
     while os.path.isfile(filename) or os.path.isdir(filename):
-        filename = '{}_{:03d}'.format(outputfile, fileid)
+        filename = f'{outputfile}_{fileid:03d}'
         fileid += 1
     if fileid > 0:
-        msg = 'Backup existing file "{}" to "{}"'.format(outputfile, filename)
+        msg = f'Backup existing file "{outputfile}" to "{filename}"'
         os.rename(outputfile, filename)
     return msg
 
@@ -174,17 +174,16 @@ def make_dirs(dirname):
     """
     try:
         os.makedirs(dirname)
-        msg = 'Created directory: "{}"'.format(dirname)
-        return msg
+        msg = f'Created directory: "{dirname}"'
     except OSError as err:
         if err.errno != errno.EEXIST:  # pragma: no cover
             raise err
         if os.path.isfile(dirname):
-            msg = '"{}" is a file. Will abort!'
-            raise OSError(errno.EEXIST, msg, dirname)
+            msg = f'"{dirname}" is a file. Will abort!'
+            raise OSError(errno.EEXIST, msg) from err
         if os.path.isdir(dirname):
-            msg = 'Directory "{}" already exist.'.format(dirname)
-            return msg
+            msg = f'Directory "{dirname}" already exist.'
+    return msg
 
 
 def simplify_ensemble_name(ensemble, fmt='{:03d}'):
@@ -217,12 +216,10 @@ def simplify_ensemble_name(ensemble, fmt='{:03d}'):
     match_dir = re.search(r'(?<=\^)(.)(?=\])', ensemble)
     if match_dir:
         dire = match_dir.group()
-        if dire == '-':
-            ens = ens
-        else:
+        if dire != '-':
             ens += 1
     else:
-        msg = ['Could not get direction for ensemble {}.'.format(ensemble),
+        msg = [f'Could not get direction for ensemble {ensemble}.',
                'We assume "+", note that this might overwrite files']
         logger.warning('\n'.join(msg))
         ens += 1
@@ -298,7 +295,7 @@ def generate_file_name(basename, directory, settings):
     """
     prefix = settings['output'].get('prefix', None)
     if prefix is not None:
-        filename = '{}{}'.format(prefix, basename)
+        filename = f'{prefix}{basename}'
     else:
         filename = basename
     filename = add_dirname(filename, directory)
@@ -310,8 +307,7 @@ def check_python_version():  # pragma: no cover
     pyversion = sys.version.split()[0]
     if sys.version_info < (3, 0):
         msgtxt = ('Please upgrade to Python 3.'
-                  '\nPython {} is not supported!')
-        msgtxt = msgtxt.format(pyversion)
+                  f'\nPython {pyversion} is not supported!')
         logger.error(msgtxt)
         raise SystemExit(msgtxt)
 
@@ -389,8 +385,7 @@ class OutputBase(metaclass=ABCMeta):
 
     def __str__(self):
         """Return basic info."""
-        return '{}\n\t* Formatter: {}'.format(self.__class__.__name__,
-                                              self.formatter)
+        return f'{self.__class__.__name__}\n\t* Formatter: {self.formatter}'
 
 
 def create_empty_ensembles(settings):

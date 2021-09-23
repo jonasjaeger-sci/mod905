@@ -523,11 +523,11 @@ def generate_conversion_factors(unit, distance, energy, mass, charge='e'):
         # let us also check if we can define kB now:
         if unit not in CONSTANTS['kB']:
             try:
-                kboltz = CONSTANTS['kB']['{}/K'.format(energy[1])] / energy[0]
+                kboltz = CONSTANTS['kB'][f'{energy[1]}/K'] / energy[0]
                 CONSTANTS['kB'][unit] = kboltz
-            except KeyError:
-                msg = 'For "{}" you need to define kB'.format(unit)
-                raise ValueError(msg)
+            except KeyError as err:
+                msg = f'For "{unit}" you need to define kB'
+                raise ValueError(msg) from err
     # First, set up simple conversions:
     for dim in ('length', 'energy', 'mass'):
         _generate_conversion_for_dim(CONVERT, dim, unit)
@@ -537,14 +537,14 @@ def generate_conversion_factors(unit, distance, energy, mass, charge='e'):
         value = (CONVERT['length'][unit, 'm']**2 *
                  CONVERT['mass'][unit, 'kg'] /
                  CONVERT['energy'][unit, 'J'])**0.5
-    except KeyError:
+    except KeyError as err:
         keys = [(unit, 'm'), (unit, 'kg'), (unit, 'J')]
         dims = ['length', 'mass', 'energy']
         msg = ""
-        for _ in range(len(keys)):
-            if not keys[_] in CONVERT[dims[_]]:
-                msg += 'Missing {} in CONVERT["{}"]. '.format(keys[_], dims[_])
-        raise ValueError(msg)
+        for key, dim in zip(keys, dims):
+            if key not in CONVERT[dim]:
+                msg += 'Missing {key} in CONVERT["{dim}"]. '
+        raise ValueError(msg) from err
     _add_conversion_and_inverse(CONVERT['time'], value, unit, 's')
     # And velocity (since it's using time and length):
     value = CONVERT['length'][unit, 'm'] / CONVERT['time'][unit, 's']
@@ -603,8 +603,8 @@ def generate_inverse(conversions):
         newunit = (unit_to, unit_from)
         if newunit not in conversions:
             newconvert[newunit] = 1.0 / conversions[unit]
-    for newunit in newconvert:
-        conversions[newunit] = newconvert[newunit]
+    for newunit, value in newconvert.items():
+        conversions[newunit] = value
 
 
 def bfs_convert(conversions, unit_from, unit_to):
@@ -751,25 +751,23 @@ def print_table(unit, system=False):  # pragma: no cover
     row_head = '  | {:10s} | {:16s} | {:16s} |'
     row_line = ''.join(['+-', '-' * 10, '-+-', '-' * 16, '-+-',
                         '-' * 16, '-+'])
-    row_line = '  {}'.format(row_line)
+    row_line = '  {row_line}'
     if system:
-        title = 'Conversions for {} to other systems'.format(unit)
-        print('\n.. _conversions-{}-system:'.format(unit))
+        title = f'Conversions for {unit} to other systems'
+        print(f'\n.. _conversions-{unit}-system:')
     else:
-        title = 'Conversions for {}'.format(unit)
-        print('\n.. _conversions-{}:'.format(unit))
-    print('\n{}'.format(title))
+        title = f'Conversions for {unit}'
+        print(f'\n.. _conversions-{unit}:')
+    print(f'\n{title}')
     print('-' * len(title))
     for dim in sorted(CONVERT):
-        header = '.. table:: Conversion factors for: {}'
-        header = header.format(dim.capitalize())
+        header = f'.. table:: Conversion factors for: {dim.capitalize()}'
         if system:
-            print('\n.. _{}-{}-system:'.format(dim, unit))
+            print(f'\n.. _{dim}-{unit}-system:')
         else:
-            print('\n.. _{}-{}:'.format(dim, unit))
-        print('\n{}\n'.format(header))
-        row = row_head.format('Unit', '{} -> unit'.format(unit),
-                              'unit -> {}'.format(unit))
+            print(f'\n.. _{dim}-{unit}:')
+        print(f'\n{header}\n')
+        row = row_head.format('Unit', f'{unit} -> unit', f'unit -> {unit}')
         print(row_line)
         print(row)
         print(row_line.replace('-', '='))
@@ -783,7 +781,7 @@ def print_table(unit, system=False):  # pragma: no cover
                 print(row)
                 print(row_line)
     print('\n')
-    print('Value of kB: {}'.format(CONSTANTS['kB'][unit]))
+    print(f'Value of kB: {CONSTANTS["kB"][unit]}')
     print('\n')
 
 
@@ -805,12 +803,11 @@ def write_conversions(filename='units.txt'):
         Will not return anything, but writes the given file.
 
     """
-    with open(filename, 'w') as fileh:
+    with open(filename, 'w', encoding="utf-8") as fileh:
         for dim in sorted(CONVERT):
             convert = CONVERT[dim]
             for unit in sorted(convert):
-                out = '{} {} {} {}\n'.format(dim, unit[0], unit[1],
-                                             convert[unit])
+                out = f'{dim} {unit[0]} {unit[1]} {convert[unit]}\n'
                 fileh.write(out)
                 fileh.flush()
 
@@ -836,7 +833,7 @@ def read_conversions(filename='units.txt', select_units=None):
 
     """
     convert = {}
-    with open(filename, 'r') as fileh:
+    with open(filename, 'r', encoding="utf-8") as fileh:
         for lines in fileh:
             try:
                 dim, unit1, unit2, conv = lines.strip().split()
@@ -889,20 +886,19 @@ def _check_input_unit(unit, dim, input_unit):
         try:
             value, unit_dim = input_unit
             if unit_dim not in UNITS[dim] and unit_dim != 'kB':
-                msg = 'Unknown {} unit: {}'.format(dim, unit_dim)
+                msg = f'Unknown {dim} unit: {unit_dim}'
                 raise LookupError(msg)
-            else:
-                return value, unit_dim
-        except TypeError:
-            msg = 'Could not understand {} unit: {}'.format(dim, input_unit)
-            raise TypeError(msg)
+            return value, unit_dim
+        except TypeError as err:
+            msg = f'Could not understand {dim} unit: {input_unit}'
+            raise TypeError(msg) from err
     else:  # Try do get values from default:
         try:
             value, unit_dim = UNIT_SYSTEMS[unit][dim]
             return value, unit_dim
-        except KeyError:
-            msg = 'Could not determine {} unit for {}'.format(dim, unit)
-            raise ValueError(msg)
+        except KeyError as err:
+            msg = f'Could not determine {dim} unit for {unit}'
+            raise ValueError(msg) from err
 
 
 def create_conversion_factors(unit, length=None, energy=None, mass=None,
@@ -944,12 +940,12 @@ def create_conversion_factors(unit, length=None, energy=None, mass=None,
     if charge is None:
         try:
             charge = UNIT_SYSTEMS[unit]['charge']
-        except KeyError:
-            msg = 'Undefined charge unit for {}'.format(unit)
-            raise ValueError(msg)
+        except KeyError as err:
+            msg = f'Undefined charge unit for {unit}'
+            raise ValueError(msg) from err
     else:
         if charge not in UNITS['charge']:
-            msg = 'Unknown charge unit "{}" requested.'.format(charge)
+            msg = f'Unknown charge unit "{charge}" requested.'
             raise ValueError(msg)
     generate_conversion_factors(unit, length, energy, mass, charge=charge)
 
@@ -974,31 +970,29 @@ def units_from_settings(settings):
     if 'unit-system' in settings:
         try:
             unit2 = settings['unit-system']['name'].lower()
-        except KeyError:
+        except KeyError as err:
             msg = 'Could not find "name" setting for section "unit-system"!'
             logger.error(msg)
-            raise ValueError(msg)
+            raise ValueError(msg) from err
         if not unit2 == unit:
-            msg = 'Inconsistent unit settings "{}" != "{}".'.format(unit,
-                                                                    unit2)
+            msg = f'Inconsistent unit settings "{unit}" != "{unit2}".'
             logger.error(msg)
             raise ValueError(msg)
         setts = {}
         for key in ('length', 'energy', 'mass', 'charge'):
             try:
                 setts[key] = settings['unit-system'][key]
-            except KeyError:
-                msg = 'Could not find "{}" for section "unit-system"!'
-                msg = msg.format(key)
+            except KeyError as err:
+                msg = f'Could not find "{key}" for section "unit-system"!'
                 logger.error(msg)
-                raise ValueError(msg)
+                raise ValueError(msg) from err
         logger.debug('Creating unit system: "%s".', unit)
         create_conversion_factors(unit, **setts)
-        msg = 'Created unit system: "{}".'.format(unit)
+        msg = f'Created unit system: "{unit}".'
     else:
         logger.debug('Creating units: "%s".', unit)
         create_conversion_factors(unit)
-        msg = 'Created units: "{}".'.format(unit)
+        msg = f'Created units: "{unit}".'
     return msg
 
 
@@ -1009,13 +1003,13 @@ def _examples():  # pragma: no cover
                               'energy': (1000, 'J/mol'),
                               'mass': (1.0, 'g/mol'),
                               'charge': 'e'}}
-    for uni in new_system:
+    for uni, sub_dict in new_system.items():
         create_conversion_factors(
             uni,
-            length=new_system[uni]['length'],
-            energy=new_system[uni]['energy'],
-            mass=new_system[uni]['mass'],
-            charge=new_system[uni]['charge'])
+            length=sub_dict['length'],
+            energy=sub_dict['energy'],
+            mass=sub_dict[uni]['mass'],
+            charge=sub_dict['charge'])
         print_table(uni)
     # Also add some base conversions for systems:
     create_conversion_factors('lj')
@@ -1028,13 +1022,13 @@ def _examples():  # pragma: no cover
             for sys2 in ('lj', 'gromacs', 'real', 'cp2k'):
                 if sys1 == sys2:
                     continue
-                print(('\nTo convert "{}" between systems '
-                       '"{}" & "{}"').format(key, sys1, sys2))
+                print(f'\nTo convert "{key}" '
+                      f'between systems "{sys1}" & "{sys2}"')
                 _, value, path = bfs_convert(CONVERT[key], sys1, sys2)
-                txt_path = ['{} -> {}'.format(*nodes) for nodes in path]
+                txt_path = [f'{nodes[0]} -> {nodes[1]}' for nodes in path]
                 txt = ' -> '.join(txt_path)
-                print('Conversion value: {}'.format(value))
-                print('Conversion path: {}'.format(txt))
+                print(f'Conversion value: {value}')
+                print(f'Conversion path: {txt}')
     # To generate conversions between different systems:
     for sys1 in UNIT_SYSTEMS:
         for sys2 in UNIT_SYSTEMS:

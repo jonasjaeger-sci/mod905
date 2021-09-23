@@ -129,7 +129,7 @@ def read_lammps_log(filename):
     energy_keys = []
     energy_data = {}
     read_energy = False
-    with open(filename, 'r') as logfile:
+    with open(filename, 'r', encoding="utf-8") as logfile:
         for lines in logfile:
             if lines.startswith('Step'):
                 # Assume that this is the start of the thermo output.
@@ -186,7 +186,7 @@ def read_lammps_input(filename):
 
     """
     settings = []
-    with open(filename, 'r') as infile:
+    with open(filename, 'r', encoding="utf-8") as infile:
         for lines in infile:
             current_line, _, _ = lines.strip().partition('#')
             split = current_line.split()
@@ -216,9 +216,9 @@ def add_to_lammps_input(infile, outfile, to_add):
         logger.debug(
             '"%s" exists and will be overwritten by PyRETIS.', outfile
         )
-    with open(infile, 'r') as indata:
+    with open(infile, 'r', encoding="utf-8") as indata:
         data = indata.read()
-        with open(outfile, 'w') as output:
+        with open(outfile, 'w', encoding='utf-8') as output:
             output.write(data)
             output.write('\n'.join(to_add))
 
@@ -334,7 +334,7 @@ def create_lammps_md_input(system, infile, outfile, settings):
     # Update the thermo output from LAMMPS:
     new_lines.append('# PyRETIS requested the following thermo output:')
     new_lines.append(THERMO_STYLE)
-    new_lines.append('thermo {}'.format(settings['subcycles']))
+    new_lines.append(f'thermo {settings["subcycles"]}')
     # Add randomization of velocities, if requested:
     new_lines += _add_generate_vel(settings)
     # Add storing of the LAMMPS trajectory:
@@ -345,7 +345,7 @@ def create_lammps_md_input(system, infile, outfile, settings):
     new_lines += _add_stopping_condition(settings)
     # Add the number of steps to run:
     new_lines.append('# Requested steps by PyRETIS:')
-    new_lines.append('run {}'.format(settings['steps_subcycles']))
+    new_lines.append(f'run {settings["steps_subcycles"]}')
     # Add "clean-up" to the LAMMPS file:
     new_lines.append('# PyRETIS clean up:')
     new_lines.append(TRAJ_UNDUMP)
@@ -387,9 +387,7 @@ def system_to_lammps(system, reverse_velocities, dimension):
         # file. The motivation behind this is that we define this
         # file type to be the initial configuration and that data files
         # will never be used for something else.
-        lammps.append(
-            '# PyRETIS requested the LAMMPS data file: {}'.format(config[0])
-        )
+        lammps.append(f'# PyRETIS requested the LAMMPS data file: {config[0]}')
     else:
         # Assume that this is a LAMMPS trajectory.
         lammps.append('# PyRETIS requested the following snapshot:')
@@ -404,7 +402,7 @@ def system_to_lammps(system, reverse_velocities, dimension):
         vel = ['NULL', 'NULL', 'NULL']
         for i, dim in enumerate(['x', 'y', 'z'][:dimension]):
             lammps.append(VEL_REV.format(dim))
-            vel[i] = 'v_v{}'.format(dim)
+            vel[i] = f'v_v{dim}'
         lammps.append(VEL_SET.format(*vel))
         lammps.append('run 0')
     return lammps
@@ -470,7 +468,7 @@ class LAMMPSEngine(ExternalMDEngine):
         if extra_files is not None:
             extra = self._look_for_input_files(
                 self.input_path,
-                {'file-{}'.format(i): val for i, val in enumerate(extra_files)}
+                {f'file-{i}': val for i, val in enumerate(extra_files)}
             )
             for key, val in extra.items():
                 self.run_files[key] = val
@@ -496,7 +494,7 @@ class LAMMPSEngine(ExternalMDEngine):
         ops = ['$(step)']
         for key, val in order_settings:
             if key == 'variable':
-                ops.append('${{{}}}'.format(val.strip().split()[0]))
+                ops.append(f'${{{val.strip().split()[0]}}}')
         txt = [
             ORDER_HACK.format(' '.join(ops), ordername),
             ORDER_FIX.format(self.subcycles, ' '.join(ops), ordername),
@@ -544,7 +542,7 @@ class LAMMPSEngine(ExternalMDEngine):
         in the current execute directory.
 
         """
-        logfile = os.path.join(self.exe_dir, '{}.log'.format(name))
+        logfile = os.path.join(self.exe_dir, f'{name}.log')
         data = read_lammps_log(logfile)
         return data['energy']
 
@@ -642,10 +640,9 @@ class LAMMPSEngine(ExternalMDEngine):
             else:
                 dek = kin_new - kin_old
             return dek, kin_new
-        else:
-            raise ValueError(
-                'LAMMPS only support the aimless velocity modification.'
-            )
+        raise ValueError(
+            'LAMMPS only support the aimless velocity modification.'
+        )
 
     def run_lammps(self, system, settings, name):
         """Execute LAMMPS.
@@ -678,10 +675,8 @@ class LAMMPSEngine(ExternalMDEngine):
         logger.debug('Adding input files for LAMMPS.')
         self.add_input_files(self.exe_dir)
         # Name the trajectory output:
-        settings['traj'] = os.path.join(
-            self.exe_dir, '{}.lammpstrj'.format(name)
-        )
-        settings['order'] = 'order_{}.txt'.format(name)
+        settings['traj'] = os.path.join(self.exe_dir, f'{name}.lammpstrj')
+        settings['order'] = f'order_{name}.txt'
         # Add the subcycles & timestep settings:
         settings['subcycles'] = self.subcycles
         settings['timestep'] = self.timestep
@@ -689,7 +684,7 @@ class LAMMPSEngine(ExternalMDEngine):
         # Add the order-fix:
         settings['order-fix'] = self._make_order_fix(settings['order'])
         # Name the input script for LAMMPS:
-        input_file = '{}.in'.format(name)
+        input_file = f'{name}.in'
         script_file = os.path.join(self.exe_dir, input_file)
         # Create the input file we will use or running LAMMPS:
         create_lammps_md_input(
@@ -701,8 +696,8 @@ class LAMMPSEngine(ExternalMDEngine):
         cmd = shlex.split(self.lmp)
         cmd_arguments = [
             '-in', input_file,
-            '-l', '{}.log'.format(name),
-            '-screen', '{}.screen'.format(name)
+            '-l', f'{name}.log',
+            '-screen', f'{name}.screen'
         ]
         cmd.extend(cmd_arguments)
         logger.debug('Executing LAMMPS "%s".', name)
@@ -730,7 +725,7 @@ class LAMMPSEngine(ExternalMDEngine):
         # Execute LAMMPS:
         self.run_lammps(system, settings, 'pyretis_md')
 
-    def propagate(self, path, initial_state, order_function, interfaces,
+    def propagate(self, path, system, order_function, interfaces,
                   reverse=False):
         """
         Propagate the equations of motion with the external code.
@@ -742,7 +737,7 @@ class LAMMPSEngine(ExternalMDEngine):
             We are here not returning a new path - this since we want
             to delegate the creation of the path to the method
             that is running `propagate`.
-        initial_state : object like :py:class:`.System`
+        system : object like :py:class:`.System`
             The system object gives the initial state for the
             integration.
         order_function : object like :py:class:`.OrderParameter`
@@ -769,16 +764,14 @@ class LAMMPSEngine(ExternalMDEngine):
             name = 'trajF'
         logger.debug('Trajectory name: "%s"', name)
         # Also create a message file for inspecting progress:
-        msg_file_name = os.path.join(self.exe_dir, 'msg-{}.txt'.format(name))
+        msg_file_name = os.path.join(self.exe_dir, f'msg-{name}.txt')
         logger.debug('Writing propagation progress to: %s', msg_file_name)
         msg_file = FileIO(msg_file_name, 'w', None, backup=False)
         msg_file.open()
-        msg_file.write(
-            '# Preparing propagation with {}'.format(self.description)
-        )
-        msg_file.write('# Trajectory label: {}'.format(name))
+        msg_file.write(f'# Preparing propagation with {self.description}')
+        msg_file.write(f'# Trajectory label: {name}')
 
-        system = initial_state.copy()
+        system = system.copy()
         logger.debug('Initial state: %s', system)
         # For storing LAMMPS settings:
         settings = {
@@ -792,10 +785,8 @@ class LAMMPSEngine(ExternalMDEngine):
         system.particles.set_vel(reverse)
 
         # Propagate from the current point:
-        msg_file.write('# Interfaces: {}'.format(interfaces))
-        msg_file.write(
-            '# Running LAMMPS in folder: {}'.format(self.exe_dir)
-        )
+        msg_file.write(f'# Interfaces: {interfaces}')
+        msg_file.write(f'# Running LAMMPS in folder: {self.exe_dir}')
         order, energy, traj = self.run_lammps(system, settings, name)
         msg_file.write('# Done running LAMMPS, adding points to path.')
         for i, orderi in enumerate(order):

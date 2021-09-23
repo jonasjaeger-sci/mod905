@@ -110,7 +110,7 @@ class GromacsEngine2(GromacsEngine):
             A text description of the current status of the propagation.
 
         """
-        status = 'propagating with GROMACS (reverse = {})'.format(reverse)
+        status = f'propagating with GROMACS (reverse = {reverse})'
         logger.debug(status)
         success = False
         left, _, right = interfaces
@@ -120,9 +120,7 @@ class GromacsEngine2(GromacsEngine):
         # Get the current order parameter:
         order = self.calculate_order(order_function, system)
         msg_file.write(
-            '# Initial order parameter: {}'.format(
-                ' '.join(['{}'.format(i) for i in order])
-            )
+            f'# Initial order parameter: {" ".join([str(i) for i in order])}'
         )
         # So, here we will just blast off GROMACS and check the .trr
         # output when we can.
@@ -130,21 +128,21 @@ class GromacsEngine2(GromacsEngine):
         settings = {'gen_vel': 'no',
                     'nsteps': path.maxlen * self.subcycles,
                     'continuation': 'no'}
-        mdp_file = os.path.join(self.exe_dir, '{}.mdp'.format(name))
+        mdp_file = os.path.join(self.exe_dir, f'{name}.mdp')
         self._modify_input(self.input_files['input'], mdp_file, settings,
                            delim='=')
         # 2) Run GROMACS preprocessor:
         out_files = self._execute_grompp(mdp_file, initial_conf, name)
         # Generate some names that will be created by mdrun:
-        confout = '{}.{}'.format(name, self.ext)
+        confout = f'{name}.{self.ext}'
         out_files['conf'] = confout
-        out_files['cpt_prev'] = '{}_prev.cpt'.format(name)
+        out_files['cpt_prev'] = f'{name}_prev.cpt'
         for key in ('cpt', 'edr', 'log', 'trr'):
-            out_files[key] = '{}.{}'.format(name, key)
+            out_files[key] = f'{name}.{key}'
         # Remove some of these files if present (e.g. left over from a
         # crashed simulation). This is so that GromacsRunner will not
         # start reading a .trr left from a previous simulation.
-        remove = [out_files[key] for key in out_files if key not in ('tpr',)]
+        remove = [value for key, value in out_files.items() if key != 'tpr']
         self._remove_files(self.exe_dir, remove)
         tpr_file = out_files['tpr']
         trr_file = os.path.join(self.exe_dir, out_files['trr'])
@@ -152,7 +150,7 @@ class GromacsEngine2(GromacsEngine):
         cmd = shlex.split(self.mdrun.format(tpr_file, name, confout))
         # 3) Fire off GROMACS mdrun:
         logger.debug('Executing GROMACS.')
-        msg_file.write('# Trajectory file is: {}'.format(trr_file))
+        msg_file.write(f'# Trajectory file is: {trr_file}')
         msg_file.write('# Starting GROMACS.')
         msg_file.write('# Step order parameter cv1 cv2 ...')
         with GromacsRunner(cmd, trr_file, edr_file, self.exe_dir) as gro:
@@ -172,9 +170,7 @@ class GromacsEngine2(GromacsEngine):
                 system.update_box(length)
                 order = order_function.calculate(system)
                 msg_file.write(
-                    '{} {}'.format(
-                        i, ' '.join(['{}'.format(j) for j in order])
-                    )
+                    f'{i} {" ".join([str(j) for j in order])}'
                 )
                 snapshot = {'order': order,
                             'config': (trr_file, i),
@@ -188,7 +184,7 @@ class GromacsEngine2(GromacsEngine):
                     break
         logger.debug('GROMACS propagation done, obtaining energies!')
         msg_file.write('# Propagation done.')
-        msg_file.write('# Reading energies from: {}'.format(out_files['edr']))
+        msg_file.write(f'# Reading energies from: {out_files["edr"]}')
         energy = self.get_energies(out_files['edr'])
         path.update_energies(energy['kinetic en.'], energy['potential'])
         logger.debug('Removing GROMACS output after propagate.')
@@ -241,21 +237,21 @@ class GromacsEngine2(GromacsEngine):
         # Note the -1 here due do different numbering in GROMACS and PyRETIS.
         settings = {'nsteps': (steps - 1) * self.subcycles,
                     'continuation': 'no'}
-        mdp_file = os.path.join(self.exe_dir, '{}.mdp'.format(name))
+        mdp_file = os.path.join(self.exe_dir, f'{name}.mdp')
         self._modify_input(self.input_files['input'], mdp_file, settings,
                            delim='=')
         # 2) Run GROMACS preprocessor:
         out_files = self._execute_grompp(mdp_file, initial_file, name)
         # Generate some names that will be created by mdrun:
-        confout = '{}.{}'.format(name, self.ext)
+        confout = f'{name}.{self.ext}'
         out_files['conf'] = confout
-        out_files['cpt_prev'] = '{}_prev.cpt'.format(name)
+        out_files['cpt_prev'] = f'{name}_prev.cpt'
         for key in ('cpt', 'edr', 'log', 'trr'):
-            out_files[key] = '{}.{}'.format(name, key)
+            out_files[key] = f'{name}.{key}'
         # Remove some of these files if present (e.g. left over from a
         # crashed simulation). This is so that GromacsRunner will not
         # start reading a .trr left from a previous simulation.
-        remove = [out_files[key] for key in out_files if key not in ('tpr',)]
+        remove = [val for key, val in out_files.items() if key != 'tpr']
         self._remove_files(self.exe_dir, remove)
         tpr_file = out_files['tpr']
         trr_file = os.path.join(self.exe_dir, out_files['trr'])
