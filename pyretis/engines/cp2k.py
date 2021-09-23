@@ -78,7 +78,7 @@ def write_for_step_vel(infile, outfile, timestep, subcycles, posfile, vel,
         print_freq = subcycles
     to_update = {
         'GLOBAL': {
-            'data': ['PROJECT {}'.format(name),
+            'data': [f'PROJECT {name}',
                      'RUN_TYPE MD',
                      'PRINT_LEVEL LOW'],
             'replace': True,
@@ -115,8 +115,7 @@ def write_for_step_vel(infile, outfile, timestep, subcycles, posfile, vel,
     }
     for veli in vel:
         to_update['FORCE_EVAL->SUBSYS->VELOCITY']['data'].append(
-            '{} {} {}'.format(*veli)
-        )
+            f'{veli[0]} {veli[1]} {veli[2]}')
     remove = [
         'EXT_RESTART',
         'FORCE_EVAL->SUBSYS->COORD'
@@ -153,7 +152,7 @@ def write_for_integrate(infile, outfile, timestep, subcycles, posfile,
         print_freq = subcycles
     to_update = {
         'GLOBAL': {
-            'data': ['PROJECT {}'.format(name),
+            'data': [f'PROJECT {name}',
                      'RUN_TYPE MD',
                      'PRINT_LEVEL LOW'],
             'replace': True,
@@ -217,7 +216,7 @@ def write_for_continue(infile, outfile, timestep, subcycles,
     """
     to_update = {
         'GLOBAL': {
-            'data': ['PROJECT {}'.format(name),
+            'data': [f'PROJECT {name}',
                      'RUN_TYPE MD',
                      'PRINT_LEVEL LOW'],
             'replace': True,
@@ -281,8 +280,8 @@ def write_for_genvel(infile, outfile, posfile, seed, name='genvel'):
     """
     to_update = {
         'GLOBAL': {
-            'data': ['PROJECT {}'.format(name),
-                     'SEED {}'.format(seed),
+            'data': [f'PROJECT {name}',
+                     f'SEED {seed}',
                      'RUN_TYPE MD',
                      'PRINT_LEVEL LOW'],
             'replace': True,
@@ -390,7 +389,7 @@ class CP2KEngine(ExternalMDEngine):
         if extra_files is not None:
             self.extra_files = self._look_for_input_files(
                 self.input_path,
-                {'file-{}'.format(i): val for i, val in enumerate(extra_files)}
+                {f'file-{i}': val for i, val in enumerate(extra_files)}
             )
 
     def run_cp2k(self, input_file, proj_name):
@@ -442,7 +441,7 @@ class CP2KEngine(ExternalMDEngine):
 
     def _name_output(self, basename):
         """Return the name of the output file."""
-        out_file = '{}.{}'.format(basename, self.ext)
+        out_file = f'{basename}.{self.ext}'
         return os.path.join(self.exe_dir, out_file)
 
     def _propagate_from(self, name, path, system, order_function, interfaces,
@@ -482,7 +481,7 @@ class CP2KEngine(ExternalMDEngine):
             propagation.
 
         """
-        status = 'propagating with CP2K (reverse = {})'.format(reverse)
+        status = f'propagating with CP2K (reverse = {reverse})'
         logger.debug(status)
         success = False
         left, _, right = interfaces
@@ -507,14 +506,12 @@ class CP2KEngine(ExternalMDEngine):
         # Get the order parameter before the run:
         order = self.calculate_order(order_function, system,
                                      xyz=xyz, vel=vel, box=box)
-        traj_file = os.path.join(self.exe_dir, '{}.{}'.format(name, self.ext))
+        traj_file = os.path.join(self.exe_dir, f'{name}.{self.ext}')
         # Create a message file with some info about this run:
         msg_file.write(
-            '# Initial order parameter: {}'.format(
-                ' '.join(['{}'.format(i) for i in order])
-            )
+            f'# Initial order parameter: {" ".join([str(i) for i in order])}'
         )
-        msg_file.write('# Trajectory file is: {}'.format(traj_file))
+        msg_file.write(f'# Trajectory file is: {traj_file}')
         # Run the first step:
         msg_file.write('# Running first CP2k step.')
         out_files = self.run_cp2k('step.inp', name)
@@ -531,9 +528,7 @@ class CP2KEngine(ExternalMDEngine):
         msg_file.write('# Running main CP2k propagation loop.')
         msg_file.write('# Step order parameter cv1 cv2 ...')
         for i in range(path.maxlen):
-            msg_file.write(
-                '{} {}'.format(i, ' '.join(['{}'.format(j) for j in order]))
-            )
+            msg_file.write(f'{i} {" ".join([str(j) for j in order])}')
             snapshot = {'order': order, 'config': (traj_file, i),
                         'vel_rev': reverse}
             phase_point = self.snapshot_to_system(system, snapshot)
@@ -563,7 +558,7 @@ class CP2KEngine(ExternalMDEngine):
                                              xyz=xyz, vel=vel, box=box)
         msg_file.write('# Propagation done.')
         energy_file = out_files['energy']
-        msg_file.write('# Reading energies from: {}'.format(energy_file))
+        msg_file.write(f'# Reading energies from: {energy_file}')
         energy = read_cp2k_energy(energy_file)
         end = (i + 1) * self.subcycles
         path.update_energies(energy['ekin'][:end:self.subcycles],
@@ -637,7 +632,7 @@ class CP2KEngine(ExternalMDEngine):
                                          xyz=xyz, vel=vel, box=box)
         else:
             order = None
-        traj_file = os.path.join(self.exe_dir, '{}.{}'.format(name, self.ext))
+        traj_file = os.path.join(self.exe_dir, f'{name}.{self.ext}')
         # Run the first step:
         out_files = self.run_cp2k('step.inp', name)
         restart_file = os.path.join(self.exe_dir, out_files['restart'])
@@ -717,7 +712,7 @@ class CP2KEngine(ExternalMDEngine):
         energy = read_cp2k_energy(out_files['energy'])
         # Get the output configuration:
         atoms, xyz, vel, box, _ = read_cp2k_restart(out_files['restart'])
-        conf_out = os.path.join(self.exe_dir, '{}.{}'.format(name, self.ext))
+        conf_out = os.path.join(self.exe_dir, f'{name}.{self.ext}')
         write_xyz_trajectory(conf_out, xyz, vel, atoms, box, append=False)
         system.particles.set_pos((conf_out, None))
         system.particles.set_vel(False)
@@ -744,13 +739,13 @@ class CP2KEngine(ExternalMDEngine):
             The full path to where we want to add the files.
 
         """
-        for filei in self.extra_files:
-            basename = os.path.basename(self.extra_files[filei])
+        for filei in self.extra_files.values():
+            basename = os.path.basename(filei)
             dest = os.path.join(dirname, basename)
             if not os.path.isfile(dest):
                 logger.debug('Adding input file "%s" to "%s"',
                              basename, dirname)
-                self._copyfile(self.extra_files[filei], dest)
+                self._copyfile(filei, dest)
 
     @staticmethod
     def _find_backup_files(dirname):
@@ -845,8 +840,7 @@ class CP2KEngine(ExternalMDEngine):
         energy = read_cp2k_energy(out_files['energy'])
         # Get the output configuration:
         atoms, xyz, vel, box, _ = read_cp2k_restart(out_files['restart'])
-        conf_out = os.path.join(self.exe_dir,
-                                '{}.{}'.format('genvel', self.ext))
+        conf_out = os.path.join(self.exe_dir, f'genvel.{self.ext}')
         write_xyz_trajectory(conf_out, xyz, vel, atoms, box, append=False)
         # Remove run-files etc:
         for _, files in out_files.items():
@@ -897,8 +891,7 @@ class CP2KEngine(ExternalMDEngine):
             msgtxt = 'CP2K engine does not support energy re-scale.'
             logger.error(msgtxt)
             raise NotImplementedError(msgtxt)
-        else:
-            kin_old = system.particles.ekin
+        kin_old = system.particles.ekin
         if aimless:
             pos = self.dump_frame(system)
             posvel, energy = self._prepare_shooting_point(pos)

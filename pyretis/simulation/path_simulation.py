@@ -146,10 +146,9 @@ class PathSimulation(Simulation):
                 logtxt = logtxt.format(key, self.name)
                 logger.error(logtxt)
                 raise ValueError(logtxt)
-            else:
-                self.settings[key] = settings[key]
+            self.settings[key] = settings[key]
         if rgen is None:
-            self.rgen = np.random.RandomState()
+            self.rgen = np.random.default_rng()
         else:
             self.rgen = rgen
         # Additional setup for shooting:
@@ -248,19 +247,19 @@ class PathSimulation(Simulation):
         print_to_screen('')
         for accept, path, status, ensemble in init:
             print_to_screen(
-                'Found initial path for {}:'.format(ensemble.ensemble_name),
+                f'Found initial path for {ensemble.ensemble_name}:',
                 level='success' if accept else 'warning',
             )
             for line in str(path).split('\n'):
-                print_to_screen('- {}'.format(line))
+                print_to_screen(f'- {line}')
             logger.info('Found initial path for %s', ensemble.ensemble_name)
             logger.info('%s', path)
             print_to_screen('')
             idx = ensemble.ensemble_number
             ensemble_result = {
-                'pathensemble-{}'.format(idx): ensemble,
-                'path-{}'.format(idx): path,
-                'status-{}'.format(idx): status,
+                f'pathensemble-{idx}': ensemble,
+                f'path-{idx}': path,
+                f'status-{idx}': status,
                 'cycle': self.cycle,
                 'system': self.system,
             }
@@ -367,20 +366,20 @@ class SimulationSingleTIS(PathSimulation):
                 self.cycle['step'],
             )
             results['cycle'] = self.cycle
-            results['accept-{}'.format(idx)] = accept
-            results['path-{}'.format(idx)] = trial
-            results['status-{}'.format(idx)] = status
-            results['pathensemble-{}'.format(idx)] = ensemble
+            results[f'accept-{idx}'] = accept
+            results[f'path-{idx}'] = trial
+            results[f'status-{idx}'] = status
+            results[f'pathensemble-{idx}'] = ensemble
         return results
 
     def __str__(self):
         """Just a small function to return some info about the simulation."""
         msg = ['TIS simulation']
-        msg += ['Path ensemble: {}'.format(self.path_ensemble.ensemble_number)]
-        msg += ['Interfaces: {}'.format(self.path_ensemble.interfaces)]
+        msg += [f'Path ensemble: {self.path_ensemble.ensemble_number}']
+        msg += [f'Interfaces: {self.path_ensemble.interfaces}']
         nstep = self.cycle['end'] - self.cycle['start']
-        msg += ['Number of steps to do: {}'.format(nstep)]
-        msg += ['Engine: {}'.format(self.engine)]
+        msg += [f'Number of steps to do: {nstep}']
+        msg += [f'Engine: {self.engine}']
         return '\n'.join(msg)
 
 
@@ -454,7 +453,7 @@ class SimulationRETIS(PathSimulation):
         results = {}
         self.cycle['step'] += 1
         self.cycle['stepno'] += 1
-        msgtxt = 'RETIS step. Cycle {}'.format(self.cycle['stepno'])
+        msgtxt = f'RETIS step. Cycle {self.cycle["stepno"]}'
         logger.info(msgtxt)
         retis_step = make_retis_step(
             self.path_ensembles,
@@ -466,12 +465,12 @@ class SimulationRETIS(PathSimulation):
         )
         for res in retis_step:
             idx = res['ensemble']
-            results['move-{}'.format(idx)] = res['retis-move']
-            results['status-{}'.format(idx)] = res['status']
-            results['path-{}'.format(idx)] = res['trial']
-            results['accept-{}'.format(idx)] = res['accept']
-            results['all-{}'.format(idx)] = res
-            results['pathensemble-{}'.format(idx)] = self.path_ensembles[idx]
+            results[f'move-{idx}'] = res['retis-move']
+            results[f'status-{idx}'] = res['status']
+            results[f'path-{idx}'] = res['trial']
+            results[f'accept-{idx}'] = res['accept']
+            results[f'all-{idx}'] = res
+            results[f'pathensemble-{idx}'] = self.path_ensembles[idx]
         results['system'] = self.system  # TODO: IS THIS REALLY NEEDED HERE?
         results['cycle'] = self.cycle
         return results
@@ -481,9 +480,9 @@ class SimulationRETIS(PathSimulation):
         msg = ['RETIS simulation']
         msg += ['Path ensembles:']
         for ensemble in self.path_ensembles:
-            msgtxt = '{}: Interfaces: {}'.format(ensemble.ensemble_name,
-                                                 ensemble.interfaces)
+            msgtxt = (f'{ensemble.ensemble_name}: '
+                      f'Interfaces: {ensemble.interfaces}')
             msg += [msgtxt]
         nstep = self.cycle['end'] - self.cycle['start']
-        msg += ['Number of steps to do: {}'.format(nstep)]
+        msg += [f'Number of steps to do: {nstep}']
         return '\n'.join(msg)

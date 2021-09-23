@@ -27,7 +27,6 @@ import_from (:py:func:`.import_from`)
 """
 import sys
 import importlib
-import imp
 import logging
 import os
 from pyretis.core.common import initiate_instance
@@ -77,29 +76,23 @@ def import_from(module_path, function_name):
     try:
         module_name = os.path.basename(module_path)
         module_name = os.path.splitext(module_name)[0]
-        # imp is deprecated for python 3.5 -> we need to check if we are
-        # using python3.5 or earlier:
-        if sys.version_info < (3, 5):  # pragma: no cover
-            module = imp.load_source(module_name, module_path)
-        else:
-            spec = importlib.util.spec_from_file_location(
-                module_name,
-                module_path
-            )
-            module = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(module)
-            sys.modules[module_name] = module
+        spec = importlib.util.spec_from_file_location(
+            module_name,
+            module_path
+        )
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        sys.modules[module_name] = module
         logger.debug('Imported module: %s', module)
         return getattr(module, function_name)
-    except (ImportError, IOError):
-        msg = 'Could not import module: {}'.format(module_path)
+    except (ImportError, IOError) as err:
+        msg = f'Could not import module: {module_path}'
         logger.critical(msg)
-        raise ValueError(msg)
-    except AttributeError:
-        msg = 'Could not import "{}" from "{}"'.format(function_name,
-                                                       module_path)
+        raise ValueError(msg) from err
+    except AttributeError as err:
+        msg = f'Could not import "{function_name}" from "{module_path}"'
         logger.critical(msg)
-        raise ValueError(msg)
+        raise ValueError(msg) from err
 
 
 def check_settings(settings, required):
@@ -201,22 +194,19 @@ def create_external(settings, key, factory, required_methods,
                                   module)
             obj = import_from(module, klass)
         else:
-            msg = 'Could not find module "{}" for {}!'.format(module, key)
+            msg = f'Could not find module "{module}" for {key}!'
             raise ValueError(msg)
     # run some checks:
     for function in required_methods:
         objfunc = getattr(obj, function, None)
         if not objfunc:
-            msg = 'Could not find method {}.{}'.format(klass,
-                                                       function)
+            msg = f'Could not find method {klass}.{function}'
             logger.critical(msg)
             raise ValueError(msg)
-        else:
-            if not callable(objfunc):
-                msg = 'Method {}.{} is not callable!'.format(klass,
-                                                             function)
-                logger.critical(msg)
-                raise ValueError(msg)
+        if not callable(objfunc):
+            msg = f'Method {klass}.{function} is not callable!'
+            logger.critical(msg)
+            raise ValueError(msg)
     return initiate_instance(obj, key_settings)
 
 

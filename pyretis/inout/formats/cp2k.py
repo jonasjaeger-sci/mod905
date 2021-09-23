@@ -65,7 +65,7 @@ class SectionNode:
         self.parent = parent
         self.settings = settings
         if data:
-            self.data = [i for i in data]
+            self.data = list(data)
         else:
             self.data = []
         self.children = set()
@@ -105,20 +105,17 @@ def dfs_print(node, visited):
     out = []
     pre = ' ' * (2 * node.level)
     if not node.settings:
-        out.append('{}&{}'.format(pre, node.title))
+        out.append(f'{pre}&{node.title}')
     else:
-        out.append('{}&{} {}'.format(
-            pre,
-            node.title,
-            ' '.join(node.settings)))
+        out.append(f'{pre}&{node.title} {" ".join(node.settings)}')
     for lines in node.data:
-        out.append('{}  {}'.format(pre, lines))
+        out.append(f'{pre}  {lines}')
     visited.add(node)
     for child in node.children:
         if child not in visited:
             for lines in dfs_print(child, visited):
                 out.append(lines)
-    out.append('{}&END {}'.format(pre, node.title))
+    out.append(f'{pre}&END {node.title}')
     return out
 
 
@@ -133,8 +130,8 @@ def set_parents(listofnodes):
             par = '->'.join(node.parents)
             if par in node_ref:
                 prev = node_ref.pop(par)
-                par1 = '{}->{}'.format(par, ' '.join(prev.settings))
-                par2 = '{}->{}'.format(par, ' '.join(node.settings))
+                par1 = f'{par}->{" ".join(prev.settings)}'
+                par2 = f'{par}->{" ".join(node.settings)}'
                 node_ref[par1] = prev
                 node_ref[par2] = node
             else:
@@ -166,7 +163,7 @@ def read_cp2k_input(filename):
     """
     nodes = []
     current_node = None
-    with open(filename, 'r') as infile:
+    with open(filename, 'r', encoding="utf-8") as infile:
         for lines in infile:
             lstrip = lines.strip()
             if not lstrip:
@@ -253,24 +250,23 @@ def update_node(target, settings, data, node_ref, nodes,
         for line in node.data:
             key = line.split()[0]
             if key in data:
-                new_data.append('{} {}'.format(key, data[key]))
+                new_data.append(f'{key} {data[key]}')
                 done.add(key)
             else:
                 new_data.append(line)
         for key in data:
             if key in done:
                 continue
+            if data[key] is None:
+                new_data.append(str(key))
             else:
-                if data[key] is None:
-                    new_data.append('{}'.format(key))
-                else:
-                    new_data.append('{} {}'.format(key, data[key]))
-        node.data = [i for i in new_data]
+                new_data.append(f'{key} {data[key]}')
+        node.data = list(new_data)
     else:
-        node.data = [i for i in data]
+        node.data = list(data)
     if settings is not None:
         if replace:
-            node.settings = [i for i in settings]
+            node.settings = list(settings)
         else:
             node.settings += settings
     return node
@@ -311,8 +307,7 @@ def remove_node(target, node_ref, root_nodes):
             parent.children.remove(to_del)
         del to_del
         for key in visited:
-            remove = node_ref.pop(key, None)
-            del remove
+            _ = node_ref.pop(key, None)
 
 
 def update_cp2k_input(template, output, update=None, remove=None):
@@ -343,7 +338,7 @@ def update_cp2k_input(template, output, update=None, remove=None):
     if remove is not None:
         for nodei in remove:
             remove_node(nodei, node_ref, nodes)
-    with open(output, 'w') as outf:
+    with open(output, 'w', encoding='utf-8') as outf:
         for i, nodei in enumerate(nodes):
             vis = set()
             if i > 0:
@@ -373,7 +368,7 @@ def read_box_data(box_data):
     data = {}
     for lines in box_data:
         for key, val in to_read.items():
-            keyword = '{} '.format(key)
+            keyword = f'{key} '
             if lines.startswith(keyword):
                 if val == 'vec':
                     data[key] = [float(i) for i in lines.split()[1:]]
@@ -401,7 +396,7 @@ def read_box_data(box_data):
     periodic = []
     periodic_setting = data.get('PERIODIC', 'XYZ')
     for val in ('X', 'Y', 'Z'):
-        periodic.append(True if val in periodic_setting.upper() else False)
+        periodic.append(val in periodic_setting.upper())
     return box, periodic
 
 

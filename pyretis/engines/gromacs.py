@@ -14,7 +14,6 @@ GromacsEngine (:py:class:`.GromacsEngine`)
 import logging
 import os
 import shlex
-import tempfile
 from pyretis.core.box import box_matrix_to_list
 from pyretis.engines.external import ExternalMDEngine
 from pyretis.inout.formats.gromacs import (
@@ -111,7 +110,7 @@ class GromacsEngine(ExternalMDEngine):
         self.input_path = os.path.abspath(input_path)
 
         input_files = {
-            'conf': 'conf.{}'.format(self.ext),
+            'conf': f'conf.{self.ext}',
             'input_o': 'grompp.mdp',  # "o" = original input file.
             'topology': 'topol.top',
             'top': 'conf.gro'}
@@ -232,7 +231,7 @@ class GromacsEngine(ExternalMDEngine):
             A file name with an extension.
 
         """
-        out_file = '{}.{}'.format(basename, self.ext)
+        out_file = f'{basename}.{self.ext}'
         return os.path.join(self.exe_dir, out_file)
 
     def _execute_grompp(self, mdp_file, config, deffnm):
@@ -255,13 +254,13 @@ class GromacsEngine(ExternalMDEngine):
 
         """
         topol = self.input_files['topology']
-        tpr = '{}.tpr'.format(deffnm)
+        tpr = f'{deffnm}.tpr'
         cmd = [self.gmx, 'grompp', '-f', mdp_file, '-c', config,
                '-p', topol, '-o', tpr]
         if 'index' in self.input_files:
             cmd.extend(['-n', self.input_files['index']])
         if self.maxwarn > 0:
-            cmd.extend(['-maxwarn', '{}'.format(self.maxwarn)])
+            cmd.extend(['-maxwarn', str(self.maxwarn)])
         self.execute_command(cmd, cwd=self.exe_dir)
         out_files = {'tpr': tpr, 'mdout': 'mdout.mdp'}
         return out_files
@@ -287,13 +286,13 @@ class GromacsEngine(ExternalMDEngine):
             Note that we here hard code the file names.
 
         """
-        confout = '{}.{}'.format(deffnm, self.ext)
+        confout = f'{deffnm}.{self.ext}'
         cmd = shlex.split(self.mdrun.format(tprfile, deffnm, confout))
         self.execute_command(cmd, cwd=self.exe_dir)
         out_files = {'conf': confout,
-                     'cpt_prev': '{}_prev.cpt'.format(deffnm)}
+                     'cpt_prev': f'{deffnm}_prev.cpt'}
         for key in ('cpt', 'edr', 'log', 'trr'):
-            out_files[key] = '{}.{}'.format(deffnm, key)
+            out_files[key] = f'{deffnm}.{key}'
         self._remove_gromacs_backup_files(self.exe_dir)
         return out_files
 
@@ -351,14 +350,14 @@ class GromacsEngine(ExternalMDEngine):
             continue the simulation.
 
         """
-        confout = '{}.{}'.format(deffnm, self.ext)
+        confout = f'{deffnm}.{self.ext}'
         self._removefile(confout)
         cmd = shlex.split(self.mdrun_c.format(tprfile, cptfile,
                                               deffnm, confout))
         self.execute_command(cmd, cwd=self.exe_dir)
         out_files = {'conf': confout}
         for key in ('cpt', 'edr', 'log', 'trr'):
-            out_files[key] = '{}.{}'.format(deffnm, key)
+            out_files[key] = f'{deffnm}.{key}'
         self._remove_gromacs_backup_files(self.exe_dir)
         return out_files
 
@@ -378,10 +377,10 @@ class GromacsEngine(ExternalMDEngine):
             The files created by GROMACS when we extend.
 
         """
-        tpxout = 'ext_{}'.format(tprfile)
+        tpxout = f'ext_{tprfile}'
         self._removefile(tpxout)
         cmd = [self.gmx, 'convert-tpr', '-s', tprfile,
-               '-extend', '{}'.format(time), '-o', tpxout]
+               '-extend', str(time), '-o', tpxout]
         self.execute_command(cmd, cwd=self.exe_dir)
         out_files = {'tpr': tpxout}
         return out_files
@@ -499,11 +498,10 @@ class GromacsEngine(ExternalMDEngine):
         """
         cmd = [self.gmx, 'energy', '-f', energy_file]
         if begin is not None:
-            if begin < 0:
-                begin = 0
-            cmd.extend(['-b', '{}'.format(begin)])
+            begin = max(begin, 0)
+            cmd.extend(['-b', str(begin)])
         if end is not None:
-            cmd.extend(['-e', '{}'.format(end)])
+            cmd.extend(['-e', str(end)])
         self.execute_command(cmd, inputs=self.energy_terms,
                              cwd=self.exe_dir)
         xvg_file = os.path.join(self.exe_dir, 'energy.xvg')
@@ -547,7 +545,7 @@ class GromacsEngine(ExternalMDEngine):
             A text description of the current status of the propagation.
 
         """
-        status = 'propagating with GROMACS (reverse = {})'.format(reverse)
+        status = f'propagating with GROMACS (reverse = {reverse})'
         logger.debug(status)
         success = False
         left, _, right = interfaces
@@ -557,9 +555,7 @@ class GromacsEngine(ExternalMDEngine):
         # Get the current order parameter:
         order = self.calculate_order(order_function, system)
         msg_file.write(
-            '# Initial order parameter: {}'.format(
-                ' '.join(['{}'.format(i) for i in order])
-            )
+            f'# Initial order parameter: {" ".join([str(i) for i in order])}'
         )
         # In some cases, we don't really have to perform a step as the
         # initial config might be left/right of the interface in
@@ -573,14 +569,14 @@ class GromacsEngine(ExternalMDEngine):
         tpr_file = out_files['tpr']
         cpt_file = out_files['cpt']
         traj_file = os.path.join(self.exe_dir, out_files['trr'])
-        msg_file.write('# Trajectory file is: {}'.format(traj_file))
+        msg_file.write(f'# Trajectory file is: {traj_file}')
         conf_abs = os.path.join(self.exe_dir, out_files['conf'])
         # Note: The order parameter is calculated AT THE END of each iteration.
         msg_file.write('# Starting GROMACS.')
         msg_file.write('# Step order parameter cv1 cv2 ...')
         for i in range(path.maxlen):
             msg_file.write(
-                '{} {}'.format(i, ' '.join(['{}'.format(j) for j in order]))
+                f'{i} {" ".join([str(j) for j in order])}'
             )
             # We first add the previous phase point, and then we propagate.
             snapshot = {'order': order,
@@ -610,7 +606,7 @@ class GromacsEngine(ExternalMDEngine):
             msg_file.flush()
         logger.debug('GROMACS propagation done, obtaining energies')
         msg_file.write('# Propagation done.')
-        msg_file.write('# Reading energies from: {}'.format(out_files['edr']))
+        msg_file.write(f'# Reading energies from: {out_files["edr"]}')
         msg_file.flush()
         energy = self.get_energies(out_files['edr'])
         path.update_energies(energy['kinetic en.'],
@@ -796,8 +792,7 @@ class GromacsEngine(ExternalMDEngine):
             msgtxt = 'GROMACS engine does not support energy re-scale.'
             logger.error(msgtxt)
             raise NotImplementedError(msgtxt)
-        else:
-            kin_old = system.particles.ekin
+        kin_old = system.particles.ekin
         if aimless:
             pos = self.dump_frame(system)
             posvel, energy = self._prepare_shooting_point(pos)

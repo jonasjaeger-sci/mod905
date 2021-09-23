@@ -75,15 +75,13 @@ def generate_lattice(lattice, repeat, lcon=None, density=None):
     """
     try:
         unit_cell = UNIT_CELL[lattice.lower()]
-    except KeyError:
-        msg = ['Unknown lattice "{}" requested!'.format(lattice)]
-        msg += ['Input lattice should '
-                'be a string in {}'.format(UNIT_CELL.keys())]
-        raise ValueError('\n'.join(msg))
-    except AttributeError:
-        msgtxt = ('Input lattice should '
-                  'be a string in {}'.format(UNIT_CELL.keys()))
-        raise ValueError(msgtxt)
+    except KeyError as err:
+        msg = [f'Unknown lattice "{lattice}" requested!']
+        msg += [f'Input lattice should be a string in {UNIT_CELL.keys()}']
+        raise ValueError('\n'.join(msg)) from err
+    except AttributeError as err:
+        msgtxt = f'Input lattice should be a string in {UNIT_CELL.keys()}'
+        raise ValueError(msgtxt) from err
     ndim = len(unit_cell[0])
     npart = len(unit_cell)
     if density is not None:

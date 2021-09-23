@@ -106,7 +106,7 @@ class UmbrellaWindowSimulation(Simulation):
         self.umbrella = umbrella
         self.overlap = overlap
         if rgen is None:
-            self.rgen = np.random.RandomState()
+            self.rgen = np.random.default_rng()
         else:
             self.rgen = rgen
         self.system = system
@@ -139,7 +139,6 @@ class UmbrellaWindowSimulation(Simulation):
     def __str__(self):
         """Return some info about the simulation as a string."""
         msg = ['Umbrella window simulation']
-        msg += ['Umbrella: {}, Overlap: {}.'.format(self.umbrella,
-                                                    self.overlap)]
-        msg += ['Minimum number of cycles: {}'.format(self.cycle['end'])]
+        msg += [f'Umbrella: {self.umbrella}, Overlap: {self.overlap}.']
+        msg += [f'Minimum number of cycles: {self.cycle["end"]}']
         return '\n'.join(msg)

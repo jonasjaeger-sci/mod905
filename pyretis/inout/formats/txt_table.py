@@ -165,12 +165,12 @@ class TxtTableFormatter(OutputFormatter):
         """
         spacing = kwargs.get('spacing', 1)
         header = {'spacing': spacing,
-                  'labels': kwargs.get('labels', [var for var in variables])}
+                  'labels': kwargs.get('labels', list(variables))}
         width = kwargs.get('width', None)
         if width is None:
             header['width'] = [max(12, len(i)) for i in header['labels']]
         else:
-            header['width'] = [i for i in width]
+            header['width'] = list(width)
 
         _fill_list(header['width'], len(header['labels']))
 
@@ -182,9 +182,9 @@ class TxtTableFormatter(OutputFormatter):
             self.row_fmt = []
             for wid in header['width']:
                 if wid - 6 <= 0:
-                    self.row_fmt.append('{{:> {}}}'.format(wid))
+                    self.row_fmt.append(f'{{:> {wid}}}')
                 else:
-                    self.row_fmt.append('{{:> {}.{}g}}'.format(wid, wid - 6))
+                    self.row_fmt.append(f'{{:> {wid}.{wid-6}g}}')
         else:
             self.row_fmt = row_fmt
         _fill_list(self.row_fmt, len(self.variables))
@@ -220,9 +220,9 @@ class TxtTableFormatter(OutputFormatter):
 
     def __str__(self):
         """Return a string with some info about the TxtTableFormatter."""
-        msg = ['TxtTableFormatter: "{}"'.format(self.title)]
-        msg += ['\t* Variables: {}'.format(self.variables)]
-        msg += ['\t* Format: {}'.format(self.fmt)]
+        msg = [f'TxtTableFormatter: "{self.title}"']
+        msg += [f'\t* Variables: {self.variables}']
+        msg += [f'\t* Format: {self.fmt}']
         return '\n'.join(msg)
 
 
@@ -356,20 +356,16 @@ class RETISResultFormatter(TxtTableFormatter):
             else:
                 value = data.nstats.get(key, 0)
             row[key] = value
-        yield '# Results for path ensemble {} at cycle {}:'.format(
-            data.ensemble_name,
-            step
-        )
+        yield (f'# Results for path ensemble {data.ensemble_name} '
+               f'at cycle {step}:')
         path = data.paths[-1]
         move = _GENERATED_SHORT.get(path['generated'][0], 'unknown').lower()
-        yield ('# Generated path with status "{}", move "{}" and'
-               ' length {}.').format(path['status'], move, path['length'])
-        yield '# Order parameter max was: {} at index {}.'.format(
-            *path['ordermax'],
-        )
-        yield '# Order parameter min was: {} at index {}.'.format(
-            *path['ordermin'],
-        )
+        yield (f'# Generated path with status "{path["status"]}", '
+               f'move "{move}" and length {path["length"]}.')
+        omax = path['ordermax']
+        yield f'# Order parameter max was: {omax[0]} at index {omax[1]}.'
+        omin = path['ordermin']
+        yield f'# Order parameter min was: {omin[0]} at index {omin[1]}.'
         yield '# Path ensemble statistics:'
         yield self.header
         var = [row.get(i, float('nan')) for i in self.variables]

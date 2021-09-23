@@ -30,6 +30,7 @@ import argparse
 import datetime
 import logging
 import os
+import pathlib
 import signal
 import sys
 import traceback
@@ -118,32 +119,30 @@ def hello_world(infile, rundir, logfile):
     print_to_screen('\n'.join([LOGO]), level='message')
     logger.info('\n'.join([LOGO]))
 
-    print_to_screen('{} version: {}'.format(PROGRAM_NAME, VERSION),
-                    level='message')
+    print_to_screen(f'{PROGRAM_NAME} version: {VERSION}', level='message')
     logger.info('%s version: %s', PROGRAM_NAME, VERSION)
 
-    print_to_screen('Start of execution: {}'.format(timestart),
-                    level='message')
+    print_to_screen(f'Start of execution: {timestart}', level='message')
     logger.info('Start of execution: %s', timestart)
-    print_to_screen('Python version: {}'.format(pyversion), level='message')
+    print_to_screen(f'Python version: {pyversion}', level='message')
     logger.info('Python version: %s', pyversion)
 
-    print_to_screen('\nRunning in directory: {}'.format(rundir))
+    print_to_screen(f'\nRunning in directory: {rundir}')
     logger.info('Running in directory: %s', rundir)
-    print_to_screen('Input file: {}'.format(infile))
+    print_to_screen(f'Input file: {infile}')
     logger.info('Input file: %s', infile)
-    print_to_screen('Log file: {}'.format(logfile))
+    print_to_screen(f'Log file: {logfile}')
     logger.info('Log file: %s', logfile)
 
 
 def bye_bye_world():
     """Print out the goodbye message for PyRETIS."""
     timeend = datetime.datetime.now().strftime(_DATE_FMT)
-    msgtxt = 'End of {} execution: {}'.format(PROGRAM_NAME, timeend)
+    msgtxt = f'End of {PROGRAM_NAME} execution: {timeend}'
     print_to_screen(msgtxt, level='info')
     logger.info(msgtxt)
     # display some references:
-    references = ['{} references:'.format(PROGRAM_NAME)]
+    references = [f'{PROGRAM_NAME} references:']
     references.append(('-')*len(references[0]))
     for line in CITE.split('\n'):
         if line:
@@ -152,7 +151,7 @@ def bye_bye_world():
     logger.info(reftxt)
     print_to_screen()
     print_to_screen(reftxt)
-    urltxt = '{}'.format(URL)
+    urltxt = f'{URL}'
     logger.info(urltxt)
     print_to_screen()
     print_to_screen(urltxt, level='info')
@@ -227,7 +226,7 @@ def run_tis_single_simulation(sim, sim_settings, progress=False):
     ensemble = sim.path_ensemble
     ensemble_name = ensemble.ensemble_name
 
-    logtxt = 'TIS simulation, ensemble: {}'.format(ensemble_name)
+    logtxt = f'TIS simulation, ensemble: {ensemble_name}'
     print_to_screen(logtxt, level='info')
     logger.info(logtxt)
 
@@ -238,7 +237,7 @@ def run_tis_single_simulation(sim, sim_settings, progress=False):
 
     print_to_screen('')
 
-    logtxt = 'Starting TIS simulation: {}'.format(ensemble_name)
+    logtxt = f'Starting TIS simulation: {ensemble_name}'
     print_to_screen(logtxt)
     logger.info(logtxt)
 
@@ -257,7 +256,7 @@ def run_tis_single_simulation(sim, sim_settings, progress=False):
 
     tqd = use_tqdm(progress)
     nsteps = (sim.cycle['end'] - sim.cycle['step'])
-    desc = 'TIS Ensemble {}'.format(ensemble_name)
+    desc = f'TIS Ensemble {ensemble_name}'
     for _ in tqd(sim.run(), total=nsteps, desc=desc):
         pass
     # Write final restart file:
@@ -285,11 +284,11 @@ def run_retis_simulation(sim, sim_settings, progress=False):
     )
 
     logtxt = 'Initialising RETIS simulation'
-    print_to_screen('\n{}'.format(logtxt), level='info')
+    print_to_screen(f'\n{logtxt}', level='info')
     logger.info(logtxt)
 
     logtxt = 'Initialising path ensembles:'
-    print_to_screen('\n{}'.format(logtxt))
+    print_to_screen(f'\n{logtxt}')
     logger.info(logtxt)
 
     # Here we do the initialisation:
@@ -300,7 +299,7 @@ def run_retis_simulation(sim, sim_settings, progress=False):
     sim.write_restart(now=True)
 
     logtxt = 'Initiation done. Starting main RETIS simulation.'
-    print_to_screen('\n{}'.format(logtxt), level='success')
+    print_to_screen(f'\n{logtxt}', level='success')
     logger.info(logtxt)
 
     tqd = use_tqdm(progress)
@@ -350,17 +349,17 @@ def run_tis_simulation(settings_sim, settings_tis, progress=False):
         for i, setting in enumerate(settings_sim):
             ens = i + 1
             ensf = generate_ensemble_name(ens)
-            logtxt = 'Creating input for TIS ensemble: {}'.format(ens)
+            logtxt = f'Creating input for TIS ensemble: {ens}'
             print_to_screen(logtxt)
             logger.info(logtxt)
-            infile = '{}-{}.rst'.format('tis', ensf)
-            logtxt = 'Create file: "{}"'.format(infile)
+            infile = f'tis-{ensf}.rst'
+            logtxt = f'Create file: "{infile}"'
             logger.info(logtxt)
             write_settings_file(setting, infile, backup=False)
             logtxt = 'Command for executing:'
             print_to_screen(logtxt)
             logger.info(logtxt)
-            logtxt = 'pyretisrun -i {} -p -f {}.log'.format(infile, ensf)
+            logtxt = f'pyretisrun -i {infile} -p -f {ensf}.log'
             print_to_screen(logtxt, level='message')
             logger.info(logtxt)
             print_to_screen()
@@ -429,9 +428,9 @@ def set_up_simulation(inputfile, runpath):
 
     """
     if not os.path.isfile(inputfile):
-        raise ValueError('Input file "{}" NOT found!'.format(inputfile))
+        raise ValueError(f'Input file "{inputfile}" NOT found!')
 
-    print_to_screen('\nReading input settings from: {}'.format(inputfile),
+    print_to_screen(f'\nReading input settings from: {inputfile}',
                     level='info')
     logger.info('Reading input settings from: %s', inputfile)
 
@@ -443,7 +442,7 @@ def set_up_simulation(inputfile, runpath):
     restart = sim_settings['simulation'].get('restart', None)
     restart_info = None
     if restart is not None:
-        print_to_screen('Reading restart file: "{}"'.format(restart),
+        print_to_screen(f'Reading restart file: "{restart}"',
                         level='warning')
         logger.info('Reading restart file: "%s"', restart)
         restart_info = read_restart_file(restart)
@@ -451,32 +450,32 @@ def set_up_simulation(inputfile, runpath):
         logger.info('Setting output setting "backup" to "append"')
 
     logtxt = units_from_settings(sim_settings)
-    print_to_screen('* {}'.format(logtxt))
+    print_to_screen(f'* {logtxt}')
     logger.info(logtxt)
 
     engine = create_engine(sim_settings)
     if engine is not None:
-        logtxt = 'Created engine: "{}".'.format(engine)
-        print_to_screen('* {}'.format(logtxt))
+        logtxt = f'Created engine: "{engine}".'
+        print_to_screen(f'* {logtxt}')
         logger.info(logtxt)
     else:
         logtxt = 'No engine created.'
-        print_to_screen('* {}'.format(logtxt), level='warning')
+        print_to_screen(f'* {logtxt}', level='warning')
         logger.info(logtxt)
 
     logtxt = 'Set up and create system.'
-    print_to_screen('* {}'.format(logtxt))
+    print_to_screen(f'* {logtxt}')
     logger.info(logtxt)
     syst = create_system(sim_settings, engine=engine, restart=restart_info)
 
     logtxt = 'Set up and create force field.'
-    print_to_screen('* {}'.format(logtxt))
+    print_to_screen(f'* {logtxt}')
     logger.info(logtxt)
     syst.forcefield = create_force_field(sim_settings)
     syst.extra_setup()
 
     logtxt = 'Set up and create simulation.'
-    print_to_screen('* {}'.format(logtxt))
+    print_to_screen(f'* {logtxt}')
     logger.info(logtxt)
     keyargs = {'system': syst, 'engine': engine}
     sim = create_simulation(sim_settings, keyargs)
@@ -484,8 +483,7 @@ def set_up_simulation(inputfile, runpath):
         sim.load_restart_info(restart_info['simulation'])
 
     task = sim_settings['simulation']['task'].lower()
-    print_to_screen('Will run simulation "{}".'.format(task),
-                    level='success')
+    print_to_screen(f'Will run simulation "{task}".', level='success')
     logger.info('Setup for simulation "%s" is done.', task)
     runner = _RUNNERS.get(task, run_generic_simulation)
     return runner, sim, syst, sim_settings
@@ -507,7 +505,7 @@ def store_simulation_settings(settings, indir, backup):
     out_file = os.path.join(indir, 'out.rst')
     rel_file = os.path.relpath(out_file)
     print_to_screen(
-        '\nFull settings used for simulation written to: {}'.format(rel_file),
+        f'\nFull settings used for simulation written to: {rel_file}',
     )
     logger.info('Full simulation settings written to: %s', out_file)
     write_settings_file(settings, out_file, backup=backup)
@@ -526,7 +524,7 @@ def soft_exit_ignore(turn_keyboard_interruption_off=True):
     def soft_exit_handler(signum, frame):  # pylint: disable=unused-argument
         """Handle with a keyboard interruption signal."""
         print_to_screen('Attempting soft exit - terminating soon...')
-        open('EXIT', 'w').close()
+        pathlib.Path("EXIT").touch(exist_ok=True)
     if turn_keyboard_interruption_off:
         return signal.signal(signal.SIGINT, soft_exit_handler)
     return signal.signal(signal.SIGINT, signal.default_int_handler)
@@ -583,7 +581,7 @@ def main(infile, indir, exe_dir, progress, log_level):
             end = getattr(simulation, 'cycle', {'step': None})['step']
             if end is not None:
                 settings['simulation']['endcycle'] = end
-                logtxt = 'Execution ended at step {}'.format(end)
+                logtxt = f'Execution ended at step {end}'
                 print_to_screen(logtxt)
                 logger.info(logtxt)
         if system is not None:
@@ -599,14 +597,14 @@ def entry_point():
     colorama.init(autoreset=True)
     parser = argparse.ArgumentParser(description=PROGRAM_NAME)
     parser.add_argument('-i', '--input',
-                        help='Location of {} input file'.format(PROGRAM_NAME),
+                        help=f'Location of {PROGRAM_NAME} input file',
                         required=True)
     parser.add_argument('-V', '--version', action='version',
-                        version='{} {}'.format(PROGRAM_NAME, VERSION))
+                        version=f'{PROGRAM_NAME} {VERSION}')
     parser.add_argument('-f', '--log_file',
                         help='Specify log file to write',
                         required=False,
-                        default='{}.log'.format(PROGRAM_NAME.lower()))
+                        default=f'{PROGRAM_NAME.lower()}.log')
     parser.add_argument('-l', '--log_level',
                         help='Specify log level for log file',
                         required=False,

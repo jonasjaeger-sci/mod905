@@ -14,7 +14,6 @@ import timeit
 import zipfile
 import pandas as pd
 from tqdm import tqdm
-from pyretis import __version__ as VERSION
 from pyretis.inout import print_to_screen
 from pyretis.inout.settings import parse_settings_file
 from pyretis.visualization.common import (get_min_max,
@@ -55,7 +54,7 @@ def pyvisa_unzip(origin, destination=None):
     """
     msg = '###################################################\n'
     msg += '# File type recognized as `.zip`, unzipping to tmp file \n'
-    msg += '# {} before loading.\n'.format(destination)
+    msg += f'# {destination} before loading.\n'
     msg += '###################################################\n'
     print_to_screen(msg, level='message')
     with zipfile.ZipFile(origin) as zipped:
@@ -115,12 +114,12 @@ class PathDensity():
         self.iofile = iofile
         self.pfile = None
         try:
-            testfile = open(self.iofile, 'r')
+            testfile = open(self.iofile, 'r', encoding="utf-8")
             os.chdir(os.path.join(os.getcwd(), os.path.dirname(self.iofile)))
             testfile.close()
         except FileNotFoundError:
-            line = 'Found no input file, "iofile = {}"'
-            print_to_screen(line.format(self.iofile), level='error')
+            line = f'Found no input file, "iofile = {self.iofile}"'
+            print_to_screen(line, level='error')
             return
         # Setting up empty dictionaries for the orderP and energy values
         self.eops = {}
@@ -139,14 +138,15 @@ class PathDensity():
             if str(fol)[0] == '0':  # Excluding folders not named '0**'
                 path.append(fol)
         # Getting order parameters from order-file of first folder in path
-        with open(os.path.join(path[0], 'order.txt')) as temp:
+        with open(os.path.join(path[0], 'order.txt'),
+                  encoding='utf-8') as temp:
             # If implemented, use OP names as labels instead.
             tail = temp.read().split('\n')[-2]
             op_line = tail.split()
             num_op = len(op_line)-1
         op_labels = []
         for i in range(1, num_op+1):
-            op_labels.append('op{}'.format(i))
+            op_labels.append(f'op{i}')
         op_labels.append('cycO')
 
         self.infos['path'] = path
@@ -210,12 +210,12 @@ class PathDensity():
         print_to_screen('###################################################',
                         level='message')
         print_to_screen('# PathDensity performing "walk" in \n# ' +
-                        '{}/'.format(os.getcwd()),
+                        f'{os.getcwd()}/',
                         level='message')
         print_to_screen('# Number of subfolders (0**) = ' +
-                        '{}'.format(len(self.infos['path'])),
+                        f'{len(self.infos["path"])}',
                         level='message')
-        print_to_screen('# Found {} '.format(self.infos['num_op']) +
+        print_to_screen(f'# Found {self.infos["num_op"]} ' +
                         'order parameters in output',
                         level='message')
         print_to_screen('###################################################'
@@ -229,8 +229,7 @@ class PathDensity():
             _make_dict_lists(self, fol)
             files = [os.path.join(fol, 'order.txt'),
                      os.path.join(fol, 'energy.txt')]
-            print_to_screen('Reading data from {}'.format(
-                                fol), level='message')
+            print_to_screen(f'Reading data from {fol}', level='message')
             file_starts = [get_startat(files[0])]
             self.get_op(files[0], fol, file_starts[0])
             if not only_ops:
@@ -238,8 +237,7 @@ class PathDensity():
                 self.get_eop(fol, files, file_starts)
                 self.check_steps(fol)
             line = ('Done with folder, time used: '
-                    '{0:4.4f}s, proceeding.\n'
-                    ''.format(timeit.default_timer()-tic[1]))
+                    f'{timeit.default_timer()-tic[1]:4.4f}s, proceeding.\n')
             print_to_screen('='*len(line) + '\n' + line, level='success')
 
         maxcl = '000'
@@ -266,13 +264,11 @@ class PathDensity():
                         level='success')
         print_to_screen('# Data successfully retrieved, in cycles:',
                         level='success')
-        print_to_screen('# {} to {}'.format(self.infos['long_cycle'][0],
-                                            self.infos['long_cycle'][-1]),
+        print_to_screen((f'# {self.infos["long_cycle"][0]} to '
+                         f'{self.infos["long_cycle"][-1]}'),
                         level='success')
         print_to_screen(
-            '# Time spent: {:.2f}s'.format(
-                timeit.default_timer()-tic[0]
-            ),
+            f'# Time spent: {timeit.default_timer()-tic[0]:.2f}s',
             level='success'
         )
         print_to_screen('###################################################'
@@ -287,9 +283,9 @@ class PathDensity():
         self.pfile = 'pyvisa_compressed_data.pickle'
         with open(self.pfile, 'wb') as out:
             pickle.dump(data, out, protocol=pickle.HIGHEST_PROTOCOL)
-        print_to_screen('# {}'.format(self.pfile), level='message')
+        print_to_screen(f'# {self.pfile}', level='message')
         pyvisa_zip(self.pfile)
-        print_to_screen('# {}'.format(self.pfile+'.zip'), level='message')
+        print_to_screen(f'# {self.pfile}.zip', level='message')
         print_to_screen('###################################################'
                         + '\n', level='message')
 
@@ -303,9 +299,9 @@ class PathDensity():
                                        'eops': self.eops,
                                        'infos': self.infos})
         data.to_hdf(self.pfile, key='data')
-        print_to_screen('# {}'.format(self.pfile), level='message')
+        print_to_screen(f'# {self.pfile}', level='message')
         pyvisa_zip(self.pfile)
-        print_to_screen('# {}'.format(self.pfile+'.zip'), level='message')
+        print_to_screen(f'# {self.pfile}.zip', level='message')
         print_to_screen('###################################################'
                         + '\n', level='message')
 
@@ -336,78 +332,76 @@ class PathDensity():
         flag = ''
 
         # Start with energy file
-        with open(files[1], 'r+') as temp:
+        with open(files[1], 'r+', encoding='utf-8') as temp:
             for i, line in enumerate(temp):
                 if i < file_starts[1]-1:
                     continue
+                if '#' in line and line[0] != '#':
+                    data = line[:line.index('#')].split()  # before comment
                 else:
-                    if '#' in line and line[0] != '#':
-                        data = line[:line.index('#')].split()  # before comment
+                    data = line.split()
+                if not data:
+                    continue
+                if data[0] == '#':
+                    if data[1] == 'Time':
+                        continue
+                    try:
+                        cycle_t = int(data[2].rstrip(','))
+                    except (ValueError, IndexError):
+                        continue
+                    if 'ACC' in data[4]:
+                        flag = 'a'
                     else:
-                        data = line.split()
-                    if not data:
-                        continue
-                    if data[0] == '#':
-                        if data[1] == 'Time':
-                            continue
-                        try:
-                            cycle_t = int(data[2].rstrip(','))
-                        except (ValueError, IndexError):
-                            continue
-                        if 'ACC' in data[4]:
-                            flag = 'a'
-                        else:
-                            flag = 'r'
-                        cycle.append(cycle_t)
-                        continue
+                        flag = 'r'
+                    cycle.append(cycle_t)
+                    continue
 
-                    self.eops[flag+'cycE', fol].append(cycle[-1])
-                    self.eops[flag+'time', fol].append(int(data[0]))
-                    self.eops[flag+'potE', fol].append(float(data[1]))
-                    self.eops[flag+'kinE', fol].append(float(data[2]))
-                    self.eops[flag+'totE', fol].append(float(data[1]) +
-                                                       float(data[2]))
+                self.eops[flag+'cycE', fol].append(cycle[-1])
+                self.eops[flag+'time', fol].append(int(data[0]))
+                self.eops[flag+'potE', fol].append(float(data[1]))
+                self.eops[flag+'kinE', fol].append(float(data[2]))
+                self.eops[flag+'totE', fol].append(float(data[1]) +
+                                                   float(data[2]))
 
-        for key in self.eops:
-            remove_nan(self.eops[key])
+        for value in self.eops.values():
+            remove_nan(value)
 
         write = False
         flag = ''
         # Continue with orderp file
-        with open(files[0], 'r') as temp:
+        with open(files[0], 'r', encoding='utf-8') as temp:
             for i, line in enumerate(temp):
                 if i < file_starts[0]-1:
                     continue
+                if '#' in line and line[0] != '#':
+                    data = line[:line.index('#')].split()
                 else:
-                    if '#' in line and line[0] != '#':
-                        data = line[:line.index('#')].split()
+                    data = line.split()
+                if not data:
+                    continue
+                if data[0] == '#':
+                    if data[1] == 'Time':
+                        continue
+                    try:
+                        cycle_t = int(data[2].rstrip(','))
+                    except (ValueError, IndexError):
+                        continue
+                    if 'ACC' in data[4]:
+                        flag = 'a'
                     else:
-                        data = line.split()
-                    if not data:
-                        continue
-                    elif data[0] == '#':
-                        if data[1] == 'Time':
-                            continue
-                        try:
-                            cycle_t = int(data[2].rstrip(','))
-                        except (ValueError, IndexError):
-                            continue
-                        if 'ACC' in data[4]:
-                            flag = 'a'
-                        else:
-                            flag = 'r'
-                        write = bool(cycle_t in cycle)
-                        continue
+                        flag = 'r'
+                    write = bool(cycle_t in cycle)
+                    continue
 
-                    if write:
-                        self.eops[flag+'cycO', fol].append(cycle_t)
-                        self.eops[flag+'timo', fol].append(int(data[0]))
-                        for j in range(1, self.infos['num_op']+1):
-                            try:
-                                x = float(data[j])
-                            except IndexError:
-                                x = None
-                            self.eops[flag+'op{}'.format(j), fol].append(x)
+                if write:
+                    self.eops[flag+'cycO', fol].append(cycle_t)
+                    self.eops[flag+'timo', fol].append(int(data[0]))
+                    for j in range(1, self.infos['num_op']+1):
+                        try:
+                            x = float(data[j])
+                        except IndexError:
+                            x = None
+                        self.eops[flag+f'op{j}', fol].append(x)
 
     def get_op(self, ofile, fol, ostart):
         """Read order params from file and append to the lists in dict.
@@ -438,44 +432,43 @@ class PathDensity():
         weight = []
         flag = ''
 
-        with open(ofile, 'r') as orderfile:
+        with open(ofile, 'r', encoding='utf-8') as orderfile:
             for i, line in enumerate(orderfile):
                 if i < ostart-1:
                     continue
+                if '#' in line and line[0] != '#':
+                    data = line[:line.index('#')].split()
                 else:
-                    if '#' in line and line[0] != '#':
-                        data = line[:line.index('#')].split()
+                    data = line.split()
+                if not data:
+                    continue
+                if data[0] == '#':
+                    if data[1] == 'Time':
+                        continue
+                    try:
+                        cycle_t = int(data[2].rstrip(','))
+                    except (ValueError, IndexError):
+                        continue
+                    cycle.append(cycle_t)
+                    if 'ACC' in data[4]:
+                        flag = 'a'
+                        statw.append(1)
+                        weight.append(1)
                     else:
-                        data = line.split()
-                    if not data:
-                        continue
-                    if data[0] == '#':
-                        if data[1] == 'Time':
-                            continue
-                        try:
-                            cycle_t = int(data[2].rstrip(','))
-                        except (ValueError, IndexError):
-                            continue
-                        cycle.append(cycle_t)
-                        if 'ACC' in data[4]:
-                            flag = 'a'
-                            statw.append(1)
-                            weight.append(1)
-                        else:
-                            flag = 'r'
-                            if weight:
-                                weight[-1] += 1
-                            statw.append(0)
-                        continue
+                        flag = 'r'
+                        if weight:
+                            weight[-1] += 1
+                        statw.append(0)
+                    continue
 
-                    self.ops[flag+'timo', fol].append(int(data[0]))
-                    self.ops[flag+'cycO', fol].append(cycle[-1])
-                    for j in range(1, self.infos['num_op']+1):
-                        try:
-                            val = float(data[j])
-                        except IndexError:
-                            val = None
-                        self.ops[flag+'op{}'.format(j), fol].append(val)
+                self.ops[flag+'timo', fol].append(int(data[0]))
+                self.ops[flag+'cycO', fol].append(cycle[-1])
+                for j in range(1, self.infos['num_op']+1):
+                    try:
+                        val = float(data[j])
+                    except IndexError:
+                        val = None
+                    self.ops[flag+f'op{j}', fol].append(val)
 
         # Creating list of statistical weights of paths
         for val in self.ops['acycO', fol]:
@@ -549,8 +542,7 @@ class PathDensity():
 
             if lentot == 0:
                 break
-            else:
-                prc = str('{0:.2f}'.format(100.*lenop/lentot))
+            prc = str('{100.*lenop/lentot:.2f}')
 
             errors, lev, where_err = _check_timesteps(acc, fol)
             print_to_screen((txt.format(acc.upper(), lenep, lenop, lentot, prc)
@@ -670,16 +662,14 @@ class PathDensity():
             print_to_screen('---------------------------------',
                             level='success')
             print_to_screen('Time steps of the lists ' +
-                            '({}) match'.format(acc.upper()), level='success')
+                            f'({acc.upper()}) match', level='success')
 
         # Case: orderP (lists) are longer than the orderP, else match
         elif (lenp[0] < lenp[1] and
               self.eops[acc+'timo', fol][0:lenp[0]] ==
               self.eops[acc+'time', fol]):
             print_to_screen(
-                'Deleting last {} lines of orderP lists'.format(
-                    lenp[1]-lenp[0]
-                ),
+                f'Deleting last {lenp[1]-lenp[0]} lines of orderP lists',
                 level='message'
             )
             _del_last_op(acc, fol)
@@ -689,9 +679,7 @@ class PathDensity():
               self.eops[acc+'time', fol][0:lenp[1]] ==
               self.eops[acc+'timo', fol]):
             print_to_screen(
-                'Deleting last {} lines of energy lists'.format(
-                    lenp[0]-lenp[1]
-                ),
+                f'Deleting last {lenp[0]-lenp[1]} lines of energy lists',
                 level='message'
             )
             _del_last_en(acc, fol)
@@ -718,7 +706,7 @@ class PathDensity():
 
             toc = timeit.default_timer()
             print_to_screen('Deletion done, time used: ' +
-                            '{0:.4f}s. Proceeding'.format(toc-tic),
+                            f'{toc-tic:.4f}s. Proceeding',
                             level='success')
 
 

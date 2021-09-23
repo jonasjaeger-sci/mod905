@@ -126,7 +126,7 @@ def convert_snapshot(snapshot):
     vel = np.zeros_like(xyz)
     for i, dim in enumerate(('x', 'y', 'z')):
         xyz[:, i] = snapshot[dim]
-        key = 'v{}'.format(dim)
+        key = f'v{dim}'
         if key in snapshot:
             vel[:, i] = snapshot[key]
     return box, xyz, vel, names
@@ -162,12 +162,12 @@ def format_xyz_data(pos, vel=None, names=None, header=None, fmt=None):
 
     if vel is not None:
         vel = adjust_coordinate(vel)
-    yield '{}'.format(npart)
+    yield str(npart)
 
     if header is None:
         yield 'PyRETIS XYZ writer'
     else:
-        yield '{}'.format(header)
+        yield str(header)
 
     if names is None:
         logger.warning('No atom name given. Using "X"')
@@ -213,10 +213,10 @@ def write_xyz_file(filename, pos, vel=None, names=None, header=None):
     >>> write_xyz_file('confv.xyz', xyz, vel)
 
     """
-    with open(filename, 'w') as output_file:
+    with open(filename, 'w', encoding='utf-8') as output_file:
         for line in format_xyz_data(pos, vel=vel, names=names,
                                     header=header):
-            output_file.write('{}\n'.format(line))
+            output_file.write(f'{line}\n')
 
 
 def write_xyz_trajectory(filename, pos, vel, names, box, step=None,
@@ -252,15 +252,13 @@ def write_xyz_trajectory(filename, pos, vel, names, box, step=None,
     npart = len(pos)
 
     filemode = 'a' if append else 'w'
-    with open(filename, filemode) as output_file:
-        output_file.write('{}\n'.format(npart))
+    with open(filename, filemode, encoding='utf-8') as output_file:
+        output_file.write(f'{npart}\n')
         header = ['#']
         if step is not None:
-            header.append('Step: {}'.format(step))
+            header.append(f'Step: {step}')
         if box is not None:
-            header.append('Box: {}'.format(
-                ' '.join(['{:9.4f}'.format(i) for i in box])
-            ))
+            header.append(f'Box: {" ".join([f"{i:9.4f}" for i in box])}')
         header.append('\n')
         header_str = ' '.join(header)
         output_file.write(header_str)
@@ -268,7 +266,7 @@ def write_xyz_trajectory(filename, pos, vel, names, box, step=None,
             line = _XYZ_BIG_VEL_FMT.format(names[i], pos[i, 0], pos[i, 1],
                                            pos[i, 2], vel[i, 0], vel[i, 1],
                                            vel[i, 2])
-            output_file.write('{}\n'.format(line))
+            output_file.write(f'{line}\n')
 
 
 def xyz_merge(backward, forward, merged):
@@ -292,7 +290,8 @@ def xyz_merge(backward, forward, merged):
 
     """
     reverse_xyz_file(backward, merged)
-    with open(forward, 'r') as infile, open(merged, 'a+') as output:
+    with open(forward, 'r', encoding='utf-8') as infile, \
+         open(merged, 'a+', encoding='utf-8') as output:
         for lines in infile:
             output.write(lines)
 
@@ -351,7 +350,8 @@ def reverse_xyz_file(filename, outputfile):
     """
     buff_size = io.DEFAULT_BUFFER_SIZE
     left_over = None
-    with open(filename, 'r') as fileh, open(outputfile, 'w') as outfh:
+    with open(filename, 'r', encoding='utf-8') as fileh, \
+         open(outputfile, 'w', encoding='utf-8') as outfh:
         fileh.seek(0, 2)  # Go to the end
         current_pos = fileh.tell()
         done = False
@@ -401,7 +401,7 @@ def txt_to_xyz(inputfile, outputfile, atoms, selection=None, nzero=6):
 
     """
     all_output = []
-    out = ''.join([outputfile, '-{:0', '{}d'.format(nzero), '}-{}.xyz'])
+    out = ''.join([outputfile, '-{:0', f'{nzero}d', '}-{}.xyz'])
     for traj in PathIntFormatter().load(inputfile):
         split = traj['comment'][0].split()
         cycle = int(split[2][:-1])
@@ -410,11 +410,11 @@ def txt_to_xyz(inputfile, outputfile, atoms, selection=None, nzero=6):
             continue
         output = out.format(cycle, status)
         all_output.append(output)
-        with open(output, 'w') as outh:
+        with open(output, 'w', encoding='utf-8') as outh:
             for j, snapshot in enumerate(traj['data']):
                 for lines in format_xyz_data(snapshot['pos'],
                                              vel=snapshot['vel'],
                                              names=atoms,
-                                             header='Snapshot: {}'.format(j)):
-                    outh.write('{}\n'.format(lines))
+                                             header=f'Snapshot: {j}'):
+                    outh.write(f'{lines}\n')
     return all_output

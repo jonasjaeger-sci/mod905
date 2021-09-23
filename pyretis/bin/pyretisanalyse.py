@@ -87,7 +87,7 @@ def get_report_name(report_type, ext, prefix=None, path=None):
     """
     name = REPORTFILES[report_type]
     if prefix is not None:
-        name = '{}_{}'.format(prefix, name)
+        name = f'{prefix}_{name}'
     return name_file(name, ext, path=path)
 
 
@@ -107,7 +107,7 @@ def write_file(outname, report_txt):
         The name of the file written.
 
     """
-    with open(outname, 'wt') as report_fh:
+    with open(outname, 'wt', encoding='utf-8') as report_fh:
         try:  # will work in python 3
             report_fh.write(report_txt)
         except UnicodeEncodeError:  # for python 2
@@ -166,23 +166,23 @@ def hello_world(infile, run_dir, report_dir):
     msgtxt = [LOGO]
     msgtxt += ['                                                    Starting']
     msgtxt += ['analysis tool!']
-    msgtxt += ['{} version: {}'.format(PROGRAM_NAME, VERSION)]
-    msgtxt += ['Python version: {}'.format(pyversion)]
-    msgtxt += ['Running in directory: {}'.format(run_dir)]
-    msgtxt += ['Report directory: {}'.format(report_dir)]
-    msgtxt += ['Input file: {}'.format(infile)]
+    msgtxt += [f'{PROGRAM_NAME} version: {VERSION}']
+    msgtxt += [f'Python version: {pyversion}']
+    msgtxt += [f'Running in directory: {run_dir}']
+    msgtxt += [f'Report directory: {report_dir}']
+    msgtxt += [f'Input file: {infile}']
     print_to_screen('\n'.join(msgtxt), level='message')
     logger.info('\n'.join(msgtxt))
 
 
 def bye_bye_world():
     """Print out the goodbye message for PyRETIS."""
-    msgtxt = 'End of {} analysis execution.'.format(PROGRAM_NAME)
+    msgtxt = f'End of {PROGRAM_NAME} analysis execution.'
     logger.info(msgtxt)
     print_to_screen('')
     print_to_screen(msgtxt, level='info')
     # display some references:
-    references = ['{} references:'.format(PROGRAM_NAME)]
+    references = [f'{PROGRAM_NAME} references:']
     references.append(('-')*len(references[0]))
     for line in CITE.split('\n'):
         if line:
@@ -191,7 +191,7 @@ def bye_bye_world():
     logger.info(reftxt)
     print_to_screen('')
     print_to_screen(reftxt)
-    urltxt = '{}'.format(URL)
+    urltxt = f'{URL}'
     logger.info(urltxt)
     print_to_screen('')
     print_to_screen(urltxt, level='info')
@@ -202,7 +202,7 @@ def write_traceback(filename):
     msg = create_backup(filename)
     if msg:
         logger.warning(msg)
-    with open(filename, 'w') as out:
+    with open(filename, 'w', encoding='utf-8') as out:
         out.write(traceback.format_exc())
 
 
@@ -245,11 +245,11 @@ def main(input_file, run_path, report_dir, pyvisa_dict=None):
                 msg = ('PyQt5 is not installed. You can still generate the '
                        'pickle by using the -pyvisa-cmp flag instead')
                 raise ImportError(msg)
-            runpath = os.path.dirname(os.path.realpath(input_file))
+            local_runpath = os.path.dirname(os.path.realpath(input_file))
             hello_pyvisa()
-            visualize_main(runpath, input_file)
+            visualize_main(local_runpath, input_file)
         else:
-            print_to_screen('Reading input file "{}"'.format(input_file))
+            print_to_screen(f'Reading input file "{input_file}"')
             settings = parse_settings_file(input_file)
             # override exe-path to the one we are executing in now:
             settings['simulation']['exe-path'] = run_path
@@ -261,25 +261,24 @@ def main(input_file, run_path, report_dir, pyvisa_dict=None):
             msg_dir = make_dirs(report_dir)
             print_to_screen(msg_dir)
             task = settings['simulation']['task']
-            print_to_screen('Simulation task was: "{}"'.format(task))
+            print_to_screen(f'Simulation task was: "{task}"')
             print_to_screen()
 
             results = run_analysis(settings)
             print_to_screen()
             for outfile in create_reports(settings, results, report_dir):
                 relfile = os.path.relpath(outfile, start=run_path)
-                print_to_screen('Report created: {}'.format(relfile),
-                                level='info')
+                print_to_screen(f'Report created: {relfile}', level='info')
 
     except FileNotFoundError as error:
-        errtxt = '{}: {}'.format(error.strerror, error.filename)
+        errtxt = f'{error.strerror}: {error.filename}'
         print_to_screen(errtxt, level='error')
         print_to_screen('Execution failed!', level='error')
     except Exception as error:  # Exceptions should subclass BaseException.
-        errtxt = '{}: {}'.format(type(error).__name__, error.args)
+        errtxt = f'{type(error).__name__}: {error.args}'
         print_to_screen(errtxt, level='error')
         print_to_screen('Execution failed!', level='error')
-        print_to_screen('Error traceback is written to: {}'.format(ERROR_FILE),
+        print_to_screen(f'Error traceback is written to: {ERROR_FILE}',
                         level='error')
         write_traceback(ERROR_FILE)
     finally:
@@ -293,12 +292,12 @@ def entry_point():
     parser.add_argument(
         '-i',
         '--input',
-        help=('Location of {} input file'.format(PROGRAM_NAME)),
+        help=(f'Location of {PROGRAM_NAME} input file'),
         required=False,
         default='retis.rst'
     )
     parser.add_argument('-V', '--version', action='version',
-                        version='{} {}'.format(PROGRAM_NAME, VERSION))
+                        version=f'{PROGRAM_NAME} {VERSION}')
     parser.add_argument('-pyvisa', '--pyvisa-all', action='store_true',
                         help='Run PyVisA',
                         default=False)
@@ -316,7 +315,7 @@ def entry_point():
     args_dict = vars(parser.parse_args())
 
     # set up for logging:
-    logger = logging.getLogger('')
+    # logger = logging.getLogger('')
     logger.setLevel(logging.DEBUG)
     # Define a console logger. This will log to sys.stderr:
     console = logging.StreamHandler()

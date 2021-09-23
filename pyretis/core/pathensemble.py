@@ -51,8 +51,7 @@ def generate_ensemble_name(ensemble_number, zero_pad=3):
     if zero_pad < 3:
         logger.warning('zero_pad must be >= 3. Setting it to 3.')
         zero_pad = 3
-    fmt = '{{:0{}d}}'.format(zero_pad)
-    return fmt.format(ensemble_number)
+    return f"{ensemble_number:0{zero_pad}d}"
 
 
 def _generate_file_names(path, target_dir, prefix=None):
@@ -83,7 +82,7 @@ def _generate_file_names(path, target_dir, prefix=None):
         if pos_file not in source:
             localfile = os.path.basename(pos_file)
             if prefix is not None:
-                localfile = '{}{}'.format(prefix, localfile)
+                localfile = f'{prefix}{localfile}'
             dest = os.path.join(target_dir, localfile)
             source[pos_file] = dest
         dest = source[pos_file]
@@ -174,7 +173,7 @@ class PathEnsemble:
             self.ensemble_name = '[0^-]'
             self.start_condition = 'R'
         else:
-            self.ensemble_name = '[{}^+]'.format(self.ensemble_number - 1)
+            self.ensemble_name = f'[{self.ensemble_number-1}^+]'
             self.start_condition = 'L'
         self.ensemble_name_simple = generate_ensemble_name(
             self.ensemble_number
@@ -360,17 +359,17 @@ class PathEnsemble:
 
     def __str__(self):
         """Return a string with some info about the path ensemble."""
-        msg = ['Path ensemble: {}'.format(self.ensemble_name)]
-        msg += ['\tInterfaces: {}'.format(self.interfaces)]
+        msg = [f'Path ensemble: {self.ensemble_name}']
+        msg += [f'\tInterfaces: {self.interfaces}']
         if self.detect is not None:
-            msg += ['\tDetect: {}'.format(self.detect)]
+            msg += [f'\tDetect: {self.detect}']
         if self.nstats['npath'] > 0:
             npath = self.nstats['npath']
             nacc = self.nstats.get('ACC', 0)
-            msg += ['\tNumber of paths stored: {}'.format(npath)]
-            msg += ['\tNumber of accepted paths: {}'.format(nacc)]
+            msg += [f'\tNumber of paths stored: {npath}']
+            msg += [f'\tNumber of accepted paths: {nacc}']
             ratio = float(nacc) / float(npath)
-            msg += ['\tRatio accepted/total paths: {}'.format(ratio)]
+            msg += [f'\tRatio accepted/total paths: {ratio}']
         return '\n'.join(msg)
 
     def restart_info(self):
@@ -538,7 +537,7 @@ def get_path_ensemble_class(ensemble_type):
                          'external': PathEnsembleExt}
     try:
         return path_ensemble_map[ensemble_type]
-    except KeyError:
-        msg = 'Unknown ensemble type "{}" requested.'.format(ensemble_type)
+    except KeyError as err:
+        msg = f'Unknown ensemble type "{ensemble_type}" requested.'
         logger.critical(msg)
-        raise ValueError(msg)
+        raise ValueError(msg) from err
