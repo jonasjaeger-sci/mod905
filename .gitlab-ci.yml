@@ -8,7 +8,7 @@
       - .coverage*
     expire_in: 1 week
 
-image: python:buster
+image: python:3.9.7-buster
 
 .oldpy: &old_py
   image: python:3.7-stretch
@@ -114,6 +114,7 @@ test_openmm:
   image: continuumio/miniconda3:latest
   stage: heavy_test
   before_script:
+  - conda install python=3.9
   - apt-get update -qy
   - apt-get install gcc -y
   script:
