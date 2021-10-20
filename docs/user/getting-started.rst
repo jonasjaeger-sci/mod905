@@ -125,7 +125,7 @@ the :ref:`example section <examples-index>`.
 
    .. container:: col-lg-3 col-md-3 col-sm-3 col-xs-6 thumbnail thumbnail2
 
-      .. image:: http://openmm.org/img/logos/Icon.svg
+      .. image:: https://openmm.org/images/logo.svg
          :width: 94%
          :class: img-responsive
          :target: ../examples/examples-openmm.html
