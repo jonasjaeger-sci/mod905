@@ -69,7 +69,7 @@ def create_box(low=None, high=None, cell=None, periodic=None):
     # the length:
     if cell is not None:
         # make sure the cell does not become an array of objects
-        cell = np.array(cell, dtype=np.float)
+        cell = np.array(cell, dtype=float)
 
         if len(cell) <= 3:
             length = np.array([i for i in cell])
