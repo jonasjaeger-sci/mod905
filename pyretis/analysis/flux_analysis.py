@@ -215,7 +215,7 @@ def _calculate_flux(effective_cross, time_in_state, time_window, time_step):
 
     """
     max_windows = int(1.0 * time_in_state / time_window)
-    ncross = np.zeros(max_windows, dtype=np.int)
+    ncross = np.zeros(max_windows, dtype=int)
     for crossing in effective_cross:
         idx = int(np.floor((crossing[0] - 0.0) / time_window))
         if idx >= max_windows:

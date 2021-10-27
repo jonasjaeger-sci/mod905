@@ -125,7 +125,7 @@ def path_traj_order_energy(path):
         vel = -1 if phasepoint.particles.get_vel() else 1
         traj.append([i, os.path.basename(phasepoint.particles.get_pos()[0]),
                      phasepoint.particles.get_pos()[1], vel])
-        order.append(np.array([i, phasepoint.order], dtype=np.float))
+        order.append(np.array([i, phasepoint.order[0]], dtype=float))
         energy['time'].append(i)
         energy['vpot'].append(phasepoint.particles.vpot)
         energy['ekin'].append(phasepoint.particles.ekin)
