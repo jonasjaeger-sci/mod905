@@ -2,7 +2,7 @@
 # Copyright (c) 2021, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """A script for building the C Lennard-Jones extension."""
-from distutils.core import (  # pylint: disable=import-error,no-name-in-module
+from setuptools import (
     setup,
     Extension,
 )
