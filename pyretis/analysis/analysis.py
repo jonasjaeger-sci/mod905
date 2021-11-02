@@ -119,7 +119,7 @@ def block_error(data, maxblock=None, blockskip=1, weights=None):
         tot_w[k] += blockw[k]
         tot_w_s[k] += blockw[k]**2
         delta1 = blockw[k] * (block[k] - block_avg[k])
-        block_avg[k] = block_avg[k] + delta1 / tot_w[k]
+        block_avg[k] = block_avg[k] + np.nan_to_num(delta1 / tot_w[k])
         delta2 = block[k] - block_avg[k]
         block_var[k] = block_var[k] + delta1 * delta2
         # reset these blocks

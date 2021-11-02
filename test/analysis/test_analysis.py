@@ -24,3 +24,10 @@ class TestAnalysis(object):
         r2 = block_error(data2, weights=weights2)
         for i, j in zip(r1, r2):
             assert np.allclose(i, j)
+
+    def test_block_error_zero_weights_start(self):
+        data = np.random.random(100)
+        weights = np.ones(data.shape)
+        weights[0] = 0  # this would lead to nan's
+        r1 = block_error(data, weights=weights)
+        assert not np.isnan(r1[1][0])
