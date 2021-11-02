@@ -43,7 +43,7 @@ def running_average(data):
     return data.cumsum(axis=0) / one.cumsum(axis=0)
 
 
-def block_error(data, maxblock=None, blockskip=1):
+def block_error(data, maxblock=None, blockskip=1, weights=None):
     """Perform block error analysis.
 
     This function will estimate the standard deviation in the input
@@ -89,6 +89,8 @@ def block_error(data, maxblock=None, blockskip=1):
         maxblock = len(data) // 2
     else:
         maxblock = min(maxblock, len(data) // 2)
+    if weights is None:
+        weights = np.ones(len(data))
     # define helper variables:
     blocklen = np.arange(0, maxblock, blockskip, dtype=np.int_)
     # blocklen contains the lengths of the blocks
@@ -97,24 +99,39 @@ def block_error(data, maxblock=None, blockskip=1):
     # starts at 0 -> blocklen[0] = 1 and so on. Note that arange does
     # create [0, ..., maxblock).
     block = np.zeros(len(blocklen))  # to accumulate values for a block
-    nblock = np.zeros(block.shape)  # to count number of whole blocks
+    blockw = np.zeros(len(blocklen))  # accumulate weights for a block
+    tot_w = np.zeros(block.shape)  # accumulate total weights
+    tot_w_s = np.zeros(block.shape)  # accumulate total weights**2
     block_avg = np.zeros(block.shape)  # to store averages in block
     block_var = np.zeros(block.shape)  # estimator of variance
 
-    for i, datai in enumerate(data):
-        block += datai  # accumulate the value to all blocks
+    # Algorithm taken from
+    # https://markusthill.github.io/math/stats/ml/
+    # online-estimation-of-weighted-sample-mean-and-coviarance-matrix/
+    # equation 39 where we delay the normalization to the end
+    for i, (datai, weighti) in enumerate(zip(data, weights)):
+        block += weighti*datai  # accumulate the value to all blocks
+        blockw += weighti
         # next pick out blocks which are "full":
         k = np.where((i + 1) % blocklen == 0)[0]
         # update estimate of average and variance
-        block[k] = block[k] / blocklen[k]
-        nblock[k] += 1
-        deltas = block[k] - block_avg[k]
-        block_avg[k] = block_avg[k] + deltas / nblock[k]
-        block_var[k] = block_var[k] + deltas * (block[k] - block_avg[k])
+        block[k] = np.nan_to_num(block[k] / blockw[k])  # catch 0/0 = NaN
+        tot_w[k] += blockw[k]
+        tot_w_s[k] += blockw[k]**2
+        delta1 = blockw[k] * (block[k] - block_avg[k])
+        block_avg[k] = block_avg[k] + delta1 / tot_w[k]
+        delta2 = block[k] - block_avg[k]
+        block_var[k] = block_var[k] + delta1 * delta2
         # reset these blocks
         block[k] = 0.0
-    block_var = block_var / (nblock - 1)
-    block_err = np.sqrt(block_var / nblock)  # estimate of error
+        blockw[k] = 0
+
+    block_var = block_var / tot_w
+    new_weights = tot_w_s / tot_w**2
+    nsamp = 1.0 / new_weights
+    bessel = nsamp / (nsamp - 1)
+    block_var = block_var * bessel
+    block_err = np.sqrt(block_var / nsamp)  # estimate of error
     k = np.where(blocklen > maxblock // 2)[0]
     block_err_avg = np.average(block_err[k])
     return blocklen, block_avg, block_err, block_err_avg
