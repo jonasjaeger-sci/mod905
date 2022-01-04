@@ -4,8 +4,9 @@ import re
 import subprocess
 import sys
 import tempfile
+from datetime import date
 
-NEW_YEAR = '2021'
+NEW_YEAR = str(date.today().year)
 COPYRIGHT = re.compile('copyright', re.IGNORECASE)
 # Assume that we won't do PyRETIS after 2099 ;-)
 YEAR = re.compile('20[0-9][0-9]')
