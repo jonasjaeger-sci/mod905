@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2021, PyRETIS Development Team.
+# Copyright (c) 2022, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """PyRETIS - A simulation package for rare event simulations.
 
 PyRETIS - A simulation package for rare event simulations.
-Copyright (c) 2021, PyRETIS Development Team
+Copyright (c) 2022, PyRETIS Development Team
 
 This file is part of PyRETIS.
 
