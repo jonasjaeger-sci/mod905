@@ -165,7 +165,7 @@ def compare_prob_files():
              'tis-multiple_report.rst',
              'tis-multiple_report.tex']
     # Skip the lines that contain the time when the command was called
-    skips = [lambda i: i in [5, 646],
+    skips = [lambda i: i in [702],
              lambda i: i in [5],
              lambda i: i in [25]]
     retval = 0
