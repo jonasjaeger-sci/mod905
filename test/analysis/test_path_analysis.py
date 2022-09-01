@@ -198,9 +198,10 @@ class AnalysePathEnsembleTest(unittest.TestCase):
             path['status'] = 'ACC'
         with warnings.catch_warnings(record=True) as warn:
             results = analyse_path_ensemble_object(ensemble, settings)
-            self.assertEqual(
+            self.assertIn(
                 str(warn[-1].message),
-                'invalid value encountered in true_divide'
+                ['invalid value encountered in true_divide',  # old
+                 'invalid value encountered in divide']  # new
             )
 
 
