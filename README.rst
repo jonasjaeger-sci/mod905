@@ -5,8 +5,8 @@
 .. image:: https://gitlab.com/pyretis/pyretis/badges/master/coverage.svg
     :target: https://gitlab.com/pyretis/pyretis/commits/master
 
-.. image:: https://api.codacy.com/project/badge/Grade/5c452c3240574d9b90840e681a4ad3d7    
-    :target: https://www.codacy.com/app/pyretis/pyretis?utm_source=gitlab.com&amp;utm_medium=referral&amp;utm_content=pyretis/pyretis&amp;utm_campaign=Badge_Grade
+.. image:: https://app.codacy.com/project/badge/Grade/b276d2748d6448c8ac31e4657aa800b4
+    :target: https://app.codacy.com/gl/pyretis/pyretis/dashboard?utm_source=gl&utm_medium=referral&utm_content=&utm_campaign=Badge_grade
 
 .. image:: https://badge.fury.io/py/pyretis.svg
     :target: https://badge.fury.io/py/pyretis
