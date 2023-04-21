@@ -118,7 +118,7 @@ test_openmm:
   - apt-get update -qy
   - apt-get install gcc -y
   script:
-  - conda install -c conda-forge openmm mdtraj -y
+  - conda install -c conda-forge openmm mdtraj libstdcxx-ng -y
   - pip install -r requirements.txt
   - pip install --upgrade pip
   - pip install -e .
