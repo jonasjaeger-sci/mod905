@@ -114,9 +114,9 @@ from .plotting import (plot_regline,
                        gen_surface)
 # Check if PyQt5 is installed
 try:
-    HAS_PYQT5 = True
     import PyQt5
     from . import resources_rc
-    from .visualize import VisualApp
+    from pyretis.visualization.visualize import VisualApp
+    HAS_PYQT5 = True
 except ImportError:
     HAS_PYQT5 = False
