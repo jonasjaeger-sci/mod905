@@ -58,7 +58,10 @@ def get_requirements(docs=False):
     filename = here.joinpath('requirements.txt')
     with openc(filename, encoding='utf-8') as fileh:
         for lines in fileh:
-            package = lines.split('>=')[1].strip()
+            if '>=' in lines:
+                package = lines.split('>=')[1].strip()
+            elif '<' in lines:
+                package = lines.split('<')[1].strip()
             if not docs and package in doc_package:
                 continue
             requirements.append(lines.strip())
@@ -84,8 +87,8 @@ setup(
         'Operating System :: MacOS :: MacOS X',
         'Operating System :: POSIX',
         'Programming Language :: Python :: 3 :: Only',
-        'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.9',
         'Topic :: Scientific/Engineering :: Physics',
     ],
     keywords='rare-events md mc tps simulation tis retis',
