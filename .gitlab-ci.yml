@@ -28,7 +28,6 @@ stages:
   - old_py
   - coverage
   - upload
-  - do_release
 
 before_script:
   - apt-get update -qy
@@ -246,6 +245,10 @@ do_release:
    stage: upload
    dependencies:
      - build_docs
+   only:
+     - /[v][0-9]+\.[0-9]+\.[0-9]+/
+   except:
+     - branches
    script:
      - pip install twine
      - echo $CI_COMMIT_TAG
