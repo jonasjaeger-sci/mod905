@@ -21,6 +21,7 @@ image: python:3.11-buster
  
 
 stages:
+  - style
   - upload
   - do_release
 
