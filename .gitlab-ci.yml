@@ -22,6 +22,11 @@ image: python:3.11-buster
 
 stages:
   - style
+  - light_test
+  - heavy_test
+  - example_test
+  - old_py
+  - coverage
   - upload
   - do_release
 
