@@ -3,22 +3,23 @@ TIS 1D example
 
 Simulation settings
 -------------------
-interfaces = [-0.9, -0.9, 1.0]
-steps = 2
+interfaces = [-0.9, -0.9, -0.8]
+steps = 9
 task = tis
 restart = ../run-2/pyretis.restart
+seed = 2
 
 System settings
 ---------------
 dimensions = 1
-temperature = 0.07
+temperature = 0.7
 units = reduced
 
 Engine settings
 ---------------
-timestep = 0.002
+timestep = 0.02
 class = Langevin
-seed = 0
+seed = 1
 gamma = 0.3
 high_friction = False
 
@@ -67,7 +68,7 @@ aimless = True
 freq = 0.5
 sigma_v = -1
 allowmaxlength = False
-seed = 0
+seed = 3
 
 Initial-path settings
 ---------------------

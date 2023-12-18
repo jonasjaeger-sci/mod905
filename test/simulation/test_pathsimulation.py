@@ -1,48 +1,35 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Test the path simulation classes."""
 from io import StringIO
-import unittest
-from unittest.mock import patch
-import logging
-import tempfile
-import os
 import copy
-from shutil import copyfile
-from pyretis.simulation.path_simulation import (
-    PathSimulation,
-    SimulationRETIS,
-)
-from pyretis.inout.settings import add_default_settings
-from pyretis.inout.setup import (
-    create_force_field,
-    create_engine,
-    create_orderparameter,
-)
-from pyretis.inout.setup.createsystem import create_system_from_settings
-from pyretis.inout.setup.createsimulation import create_path_ensembles
-from pyretis.orderparameter import Position
-from pyretis.engines.internal import Langevin, VelocityVerlet
-from pyretis.core.random_gen import (
-    MockRandomGenerator,
-    create_random_generator,
-)
-from pyretis.core.units import units_from_settings
-from .test_helpers import TEST_SETTINGS
+import logging
+import os
+import tempfile
+import unittest
+import pathlib
 
+from pyretis.inout.settings import (add_default_settings,
+                                    fill_up_tis_and_retis_settings,)
+from pyretis.setup.createsimulation import create_ensembles
+from pyretis.simulation.path_simulation import (PathSimulation,
+                                                SimulationTIS,
+                                                SimulationRETIS,)
+from unittest.mock import patch
+from .help import TEST_SETTINGS
 
 logging.disable(logging.CRITICAL)
 
-
 HERE = os.path.abspath(os.path.dirname(__file__))
-
 
 SETTINGS1 = {
     'simulation': {
         'task': 'tis',
         'steps': 10,
         'interfaces': [-0.9, -0.9, 1.0],
+        'seed': 1,
+        'rgen': 'rgen',
     },
     'system': {'units': 'lj', 'temperature': 0.1, 'dimensions': 1},
     'engine': {
@@ -50,7 +37,7 @@ SETTINGS1 = {
         'gamma': 0.3,
         'high_friction': False,
         'seed': 321,
-        'timestep': 0.002
+        'timestep': 0.2
     },
     'potential': [{'a': 1.0, 'b': 2.0, 'c': 0.0, 'class': 'DoubleWell'}],
     'orderparameter': {
@@ -61,7 +48,7 @@ SETTINGS1 = {
         'periodic': False
     },
     'initial-path': {'method': 'kick'},
-    'particles': {'position': {'file': 'initial.xyz'}},
+    'particles': {'position': {'input_file': 'initial.xyz'}},
     'retis': {
         'swapfreq': 0.5,
         'nullmoves': True,
@@ -74,64 +61,54 @@ SETTINGS1 = {
         'allowmaxlength': False,
         'sigma_v': -1,
         'seed': 1,
-        'rgen': 'mock',
+        'rgen': 'rgen',
         'zero_momentum': False,
         'rescale_energy': False,
     },
 }
 
 
-def create_variables(stochastic=False, exe_path=None):
+def create_variables(exe_path=None):
     """Create system, engine, order parameter etc."""
     settings = {key: copy.deepcopy(val) for key, val in TEST_SETTINGS.items()}
-    add_default_settings(settings)
+    settings['engine'] = {'class': 'Langevin', 'gamma': 0.3,
+                          'high_friction': False,
+                          'timestep': 0.2}
+    settings['orderparameter'] = {'class': 'Position',
+                                  'index': 0}
+
     if exe_path is not None:
-        settings['simulation']['exe-path'] = exe_path
-    units_from_settings(settings)
-    if stochastic:
-        engine = Langevin(0.002, 1.0)
-        engine.rgen = MockRandomGenerator(seed=2)
-    else:
-        engine = VelocityVerlet(0.002)
-    system = create_system_from_settings(settings, engine)
-    system.forcefield = create_force_field(settings)
-    order_function = Position(0)
-    ensembles, _ = create_path_ensembles(
-        [-1.0, 0.0, 1.0, 2.0],
-        'internal',
-        include_zero=True,
-        exe_dir=exe_path
-    )
-    rgen = MockRandomGenerator(seed=1)
-    return settings, engine, system, order_function, ensembles, rgen
+        settings['simulation'] = {'exe_path': exe_path}
+    add_default_settings(settings)
+    settings['particles']['type'] = 'internal'
+    settings['simulation']['interfaces'] = [-1.0, 0.0, 1.0, 2.0]
+    settings['simulation']['task'] = 'tis'
+    settings['simulation']['zero_ensemble'] = True
+    settings['simulation']['zero_left'] = -16.0
+    settings['simulation']['flux'] = True
+    settings['retis'] = {'rgen': 'rgen'}
+    with patch('sys.stdout', new=StringIO()):
+        fill_up_tis_and_retis_settings(settings)
+        ensembles = create_ensembles(settings)
+    return settings, ensembles
 
 
 def create_variables1(exe_path=None):
     """Create system, engine, order parameter etc."""
     settings = {key: copy.deepcopy(val) for key, val in SETTINGS1.items()}
     add_default_settings(settings)
-    if exe_path is not None:
-        settings['simulation']['exe-path'] = exe_path
-        source = os.path.join(
-            HERE, settings['particles']['position']['file']
-        )
-        target = os.path.join(
-            exe_path, settings['particles']['position']['file']
-        )
-        copyfile(source, target)
-    units_from_settings(settings)
-    engine = create_engine(settings)
-    system = create_system_from_settings(settings, engine)
-    system.forcefield = create_force_field(settings)
-    order_function = create_orderparameter(settings)
-    ensembles, _ = create_path_ensembles(
-        settings['simulation']['interfaces'],
-        'internal',
-        include_zero=True,
-        exe_dir=exe_path
-    )
-    rgen = create_random_generator(settings)
-    return settings, engine, system, order_function, ensembles, rgen
+    settings['particles']['position']['input_file'] =\
+        os.path.join(HERE, 'initial.xyz')
+    settings['particles']['type'] = 'internal'
+    settings['simulation']['task'] = 'retis'
+    settings['simulation']['zero_ensemble'] = True
+    settings['simulation']['flux'] = True
+    settings['simulation']['exe_path'] = exe_path
+
+    with patch('sys.stdout', new=StringIO()):
+        fill_up_tis_and_retis_settings(settings)
+        ensembles = create_ensembles(settings)
+    return settings, ensembles
 
 
 class TestPathSimulation(unittest.TestCase):
@@ -139,58 +116,60 @@ class TestPathSimulation(unittest.TestCase):
 
     def test_init(self):
         """Test that we can create the simulation object."""
-        settings, engine, system, order, ensembles, rgen = create_variables()
-        simulation = PathSimulation(system, order, engine, ensembles, settings)
+        settings, ensembles = create_variables()
+        simulation = PathSimulation(ensembles, settings, controls={})
         self.assertTrue(hasattr(simulation, 'rgen'))
-        simulation = PathSimulation(system, order, engine, ensembles, settings,
-                                    rgen=rgen)
-        self.assertEqual(len(simulation.path_ensembles), len(ensembles))
-        for i, j in zip(simulation.path_ensembles, ensembles):
+        settings['engine']['sigma_v'] = 0.1
+        simulation = PathSimulation(ensembles, settings, controls={})
+        self.assertEqual(len(simulation.ensembles), len(ensembles))
+        for i, j in zip(simulation.ensembles, ensembles):
             self.assertIs(i, j)
         self.assertTrue(simulation.settings['tis']['aimless'])
-        settings['tis']['sigma_v'] = 0.1
-        simulation = PathSimulation(system, order, engine, ensembles, settings,
-                                    rgen=rgen)
-        self.assertFalse(simulation.settings['tis']['aimless'])
+        settings['simulation']['task'] = 'make-tis-files'
+        del settings['ensemble']
+        fill_up_tis_and_retis_settings(settings)
+        for ens_set in settings['ensemble']:
+            self.assertEqual('tis', ens_set['simulation']['task'])
         del settings['tis']
         with self.assertRaises(ValueError):
-            PathSimulation(system, order, engine, ensembles,
-                           settings, rgen=rgen)
+            PathSimulation(ensembles, settings, controls={})
+
+    def test_init_sigma_v(self):
+        """Test that we can create the simulation object."""
+        settings, ensembles = create_variables()
+        settings['ensemble'][1]['tis']['sigma_v'] = 0.1
+        simulation = PathSimulation(ensembles, settings, controls={})
+        self.assertFalse(simulation.settings['ensemble'][1]['tis']['aimless'])
 
     def test_restart_info(self):
         """Test generation of restart info."""
-        settings, engine, system, order, ensembles, rgen = create_variables(
-            stochastic=True
-        )
-        simulation = PathSimulation(system, order, engine, ensembles, settings,
-                                    rgen=rgen)
+        settings, ensembles = create_variables()
+        simulation = PathSimulation(ensembles,
+                                    settings,
+                                    controls={'steps': 16})
         info = simulation.restart_info()
         for key in ('cycle', 'rgen'):
-            self.assertIn(key, info)
-        self.assertEqual(info['rgen'], 1)
-        self.assertIn('engine', info)
-        self.assertIn('rgen', info['engine'])
-        self.assertEqual(info['engine']['rgen'], 2)
-        settings, engine, system, order, ensembles, rgen = create_variables()
-        simulation = PathSimulation(system, order, engine, ensembles, settings,
-                                    rgen=rgen)
-        info = simulation.restart_info()
-        self.assertNotIn('engine', info)
+            self.assertIn(key, info['simulation'])
+        self.assertEqual(info['simulation']['rgen']['state'][2], 624)
+        self.assertIn('system', info)
+        simulation = PathSimulation(ensembles, settings, controls={})
+        simulation.load_restart_info(info)
+        self.assertEqual(simulation.rgen.get_state()['state'][2], 624)
+        self.assertEqual(simulation.cycle['startcycle'], 16)
 
     def test_write_restart_file(self):
         """Test that we can create the restart files."""
         with tempfile.TemporaryDirectory() as tempdir:
-            var = create_variables(exe_path=tempdir)
-            settings, engine, system, order, ensembles, rgen = var
-            simulation = PathSimulation(system, order, engine, ensembles,
-                                        settings, rgen=rgen)
+            settings, ensembles = create_variables(exe_path=tempdir)
+            simulation = PathSimulation(ensembles, settings, controls={})
             simulation.set_up_output(settings)
             simulation.write_restart(now=True)
             dirs = [i.name for i in os.scandir(tempdir) if i.is_dir()]
             self.assertEqual(len(dirs), 4)
             for i in ensembles:
-                self.assertIn(i.ensemble_name_simple, dirs)
-                for j in os.scandir(i.directory['path-ensemble']):
+                self.assertIn(i['path_ensemble'].ensemble_name_simple, dirs)
+                for j in os.scandir(
+                        i['path_ensemble'].directory['path_ensemble']):
                     if j.is_file():
                         self.assertEqual('ensemble.restart', j.name)
             files = [i.name for i in os.scandir(tempdir) if i.is_file()]
@@ -200,15 +179,18 @@ class TestPathSimulation(unittest.TestCase):
     def test_initiation(self):
         """Test the initiation method."""
         with tempfile.TemporaryDirectory() as tempdir:
-            var = create_variables1(exe_path=tempdir)
-            settings, engine, system, order, ensembles, rgen = var
-            simulation = PathSimulation(system, order, engine,
-                                        ensembles, settings, rgen=rgen)
+            # Generate a input file in the temp directory
+            with open(os.path.join(tempdir, 'initial.xyz'), 'w',
+                      encoding='utf-8') as scrivi:
+                scrivi.write('1\n \n Ar  -1.0  -0.0  -0.0 ')
+
+            settings, ensembles = create_variables1(exe_path=tempdir)
+            simulation = PathSimulation(ensembles, settings, controls={})
             simulation.set_up_output(settings)
             with patch('sys.stdout', new=StringIO()):
                 self.assertTrue(simulation.initiate(settings))
             # Check the soft exit option:
-            open(os.path.join(tempdir, 'EXIT'), 'w').close()
+            open(os.path.join(tempdir, 'EXIT'), 'w', encoding='utf-8').close()
             with patch('sys.stdout', new=StringIO()):
                 self.assertFalse(simulation.initiate(settings))
 
@@ -218,12 +200,11 @@ class TestSimulationRETIS(unittest.TestCase):
 
     def test_step(self):
         """Test the initiation method."""
-        moves = {'move-0': 'swap', 'move-1': 'swap', 'move-2': 'nullmove'}
+        moves = {'move-0': 'tr', 'move-1': 'tr', 'move-2': 'tr'}
+
         with tempfile.TemporaryDirectory() as tempdir:
-            var = create_variables1(exe_path=tempdir)
-            settings, engine, system, order, ensembles, rgen = var
-            simulation = SimulationRETIS(system, order, engine,
-                                         ensembles, settings, rgen)
+            settings, ensembles = create_variables1(exe_path=tempdir)
+            simulation = SimulationRETIS(ensembles, settings, controls={})
             simulation.set_up_output(settings)
             with patch('sys.stdout', new=StringIO()):
                 self.assertTrue(simulation.initiate(settings))
@@ -231,6 +212,95 @@ class TestSimulationRETIS(unittest.TestCase):
                 for key, move in moves.items():
                     self.assertIn(key, result)
                     self.assertEqual(move, result[key])
+
+    def test_soft_exit(self):
+        """Test the soft exit method."""
+        with tempfile.TemporaryDirectory() as tempdir:
+            settings, ensembles = create_variables1(exe_path=tempdir)
+            simulation = SimulationRETIS(ensembles, settings, controls={})
+            settings['simulation']['exe_path'] = tempdir
+            simulation.set_up_output(settings)
+            simulation.cycle['endcycle'] = 1
+            exit_file = os.path.join(tempdir, 'EXIT')
+            with patch('sys.stdout', new=StringIO()) as stdout:
+                self.assertTrue(simulation.initiate(settings))
+                pathlib.Path(exit_file).touch()
+                for _ in enumerate(simulation.run()):
+                    pass
+                self.assertIn('soft exit', stdout.getvalue().strip())
+                restart_file = os.path.join(tempdir, 'pyretis.restart')
+                self.assertTrue(os.path.exists(restart_file))
+                self.assertEqual(simulation.cycle['step'], 1)
+
+    def test_priority(self):
+        """Test the priority shooting feature."""
+        with tempfile.TemporaryDirectory() as tempdir:
+            settings, ensembles = create_variables1(exe_path=tempdir)
+            fill_up_tis_and_retis_settings(settings)
+            simulation = SimulationRETIS(ensembles, settings, controls={})
+            simulation.set_up_output(settings)
+            with patch('sys.stdout', new=StringIO()):
+                self.assertTrue(simulation.initiate(settings))
+                simulation.cycle['step'] = 2
+                settings['retis']['swapfreq'] = 0.0
+                settings['simulation']['priority_shooting'] = True
+                simulation.ensembles[0]['path_ensemble'].nstats['npath'] = 2
+                simulation.ensembles[1]['path_ensemble'].nstats['npath'] = 1
+                simulation.ensembles[2]['path_ensemble'].nstats['npath'] = 1
+
+                # Get nstats['npath'] = 2 for all path_ensembles:
+                result = simulation.step()
+                self.assertNotIn('move-0', result)
+                self.assertIn('move-1', result)
+                self.assertIn('move-2', result)
+                self.assertEqual([2, 2, 2], [i['path_ensemble'].nstats['npath']
+                                             for i in simulation.ensembles])
+
+                # test case when we 100% do swap with unequal nstats['npath']:
+                simulation.ensembles[2]['path_ensemble'].nstats['npath'] = 0
+                settings['retis']['swapfreq'] = 1.0
+
+                # 1. We do TIS move in ensembles[2] only:
+                result = simulation.step()
+                self.assertNotIn('move-0', result)
+                self.assertIn('move-2', result)
+
+                # We do swap move in when priority_shooting = False:
+                settings['simulation']['priority_shooting'] = False
+                result = simulation.step()
+                for i in range(3):
+                    move = 'swap' if i else 'nullmove'
+                    self.assertEqual(move, result.get('move-' + str(i)))
+
+    def test_priority_tis(self):
+        """Test the priority shooting feature for tis."""
+        with tempfile.TemporaryDirectory() as tempdir:
+            settings, _ = create_variables1(exe_path=tempdir)
+            settings['simulation']['task'] = 'tis'
+            settings['simulation']['interfaces'] = [-0.9, -0.8, -0.7, 1.0]
+            settings['simulation']['flux'] = False
+            del settings['ensemble']
+            fill_up_tis_and_retis_settings(settings)
+            with patch('sys.stdout', new=StringIO()):
+                ensembles = create_ensembles(settings)
+                simulation = SimulationTIS(ensembles, settings, controls={})
+                simulation.set_up_output(settings)
+                self.assertTrue(simulation.initiate(settings))
+                simulation.cycle['endcycle'] = 4
+                simulation.cycle['step'] = 2
+                settings['simulation']['priority_shooting'] = True
+                simulation.ensembles[0]['path_ensemble'].nstats['npath'] = 2
+                simulation.ensembles[1]['path_ensemble'].nstats['npath'] = 1
+                simulation.ensembles[2]['path_ensemble'].nstats['npath'] = 1
+
+                cnt = 0
+                while not simulation.is_finished():
+                    simulation.step()
+                    cnt += 1
+                self.assertEqual([4, 4, 4], [i['path_ensemble'].nstats['npath']
+                                             for i in simulation.ensembles])
+                self.assertEqual(cnt, 3)
+                self.assertTrue(simulation.is_finished())
 
 
 if __name__ == '__main__':

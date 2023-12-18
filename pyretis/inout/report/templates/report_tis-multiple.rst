@@ -13,9 +13,29 @@ The main result is:
 * The crossing probability:
   :math:`P_{\text{cross}} = @{{ numbers['pcross'] }}@  \pm  @{{ numbers['perr'] }}@ \%`
 
+.. _combined-results:
+
+Combined results
+================
+
+The overall matched probability distributions are shown in the left figure
+while the matched probability distribution is shown in the right figure below.
+The overall crossing probability as a function of cycles
+and its relative error block analysis are reported in the two following
+plots, respectively.
+
+.. image:: @{{ figures['total'] }}@
+   :width: 45%
+.. image:: @{{ figures['matched']}}@
+   :width: 45%
+
+.. image:: @{{ figures['progress'] }}@
+   :width: 45%
+.. image:: @{{ figures['error']}}@
+   :width: 45%
+
 Detailed results are given below for the different path
-ensembles and the overall results are summarized
-in the `Combined results`_.
+ensembles.
 
 .. _figure-results:
 
@@ -27,9 +47,9 @@ the analysis:
 
 @{{ tables['interfaces'] }}@
 
-The calculated crossing probabilities are:
-
 @{{ tables['probability'] }}@
+
+@{{ tables['efficiency'] }}@
 
 The crossing probabilities are also displayed in the figures below
 
@@ -57,54 +77,12 @@ The average path lengths in the different ensembles are given in
 the table below and some distributions for the path lengths and
 shooting moves can also be found here:
 
-@{{ tables['path'] }}@
-
 @{% for figure in figures['tis'] %}@
 .. image:: @{{ figure['lpath'] }}@
-   :width: 30%
+   :width: 45%
 .. image:: @{{ figure['shoots'] }}@
-   :width: 30%
-.. image:: @{{ figure['shoots_scaled'] }}@
-   :width: 30%
+   :width: 45%
 @{% endfor %}@
 
 
-.. _tis-efficiency:
-
-Efficiency analysis
--------------------
-
-@{{ tables['efficiency'] }}@
-
-.. _combined-results:
-
-Combined results
-================
-
-The overall matched probability distributions are shown in the left figure
-while the matched probability distribution is shown in the right figure below.
-The overall crossing probability as a function of cycles
-and its relative error block analysis are reported in the two following
-plots, respectively.
-
-.. image:: @{{ figures['total'] }}@
-   :width: 45%
-.. image:: @{{ figures['matched']}}@
-   :width: 45%
-
-.. image:: @{{ figures['progress'] }}@
-   :width: 45%
-.. image:: @{{ figures['error']}}@
-   :width: 45%
-
-The overall crossing probability is:
-:math:`P_{\text{cross}} = @{{ numbers['pcross'] }}@  \pm  @{{ numbers['perr'] }}@ \%`
-
-Other statistics:
-
-* :math:`\text{sim.time} = @{{ numbers['simt'] }}@`
-
-* :math:`\tau_{\text{eff}} = @{{ numbers['teff']}}@`
-
-* :math:`\tau_{\text{eff}}^{\text{opt}} = @{{ numbers['opteff']}}@`
 

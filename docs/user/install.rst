@@ -18,7 +18,7 @@ can be installed directly from the source code :ref:`using git <user-guide-insta
 Prerequisites
 -------------
 
-|pyretis| requires **Python 3.6** or **Python 3.7**. Please make sure that you have
+|pyretis| requires **Python 3.7** or **Python 3.8**. Please make sure that you have
 an updated version of Python installed on your system. |pyretis| depends on several
 other Python packages, however, these should be installed automatically as part
 of the installation of |pyretis|. A  list of the dependencies :ref:`can be found below <user-guide-install-requirements>`.
@@ -36,14 +36,6 @@ with the following command:
 
     python -m pip install pyretis
 
-
-|pyretis| requires `mdtraj <http://mdtraj.org>`_ and this has to be
-installed **after** installing |pyretis|:
-
-.. code-block:: pyretis
-
-    python -m pip install git+https://github.com/mdtraj/mdtraj.git
-
 |pyretis| offers an analysis tool, named |pyvisa|. Its GUI requires
 PyQt5 to be executed. To install PyQt5 via pip:
 
@@ -51,8 +43,15 @@ PyQt5 to be executed. To install PyQt5 via pip:
 
     python -m pip install pyqt5 
 
+|pyvisa| also requires `mdtraj <http://mdtraj.org>`_ and this has to be
+installed **after** installing |pyretis|:
+
+.. code-block:: pyretis
+
+    python -m pip install git+https://github.com/mdtraj/mdtraj.git
+
 **Note:** Please make sure that you are using a Python environment
-of version 3.6 or newer. On some systems, **Python 2** may still be the default
+of version 3.7 or newer. On some systems, **Python 2** may still be the default
 version and ``pip`` might actually try to install for **Python 2**.
 In this case, use ``pip3`` in the command above.
 
@@ -73,13 +72,15 @@ with the following commands:
     conda install pyretis -c conda-forge
 
 |pyretis| offers an analysis tool, named |pyvisa|. Its GUI requires
-PyQt5 to be executed. To install PyQt5 via conda:
+PyQt5 and mdtraj to be executed. To install PyQt5 and mdtraj via conda:
 
 .. code-block:: pyretis
 
     conda install pyqt -c conda-forge
+    
+    conda install mdtraj -c conda-forge
 
-**Note:** Since |pyretis| will **only work with Python 3.6 or newer**,
+**Note:** Since |pyretis| will **only work with Python 3.7 or newer**,
 please make sure that you are using an environment with a recent version
 of Python.
 
@@ -127,11 +128,11 @@ set up a virtual environment:
 
    Note, if you want more control over which version of Python to use, you can
    use the ``-p`` option in the command above to specify this. For instance,
-   for version **3.7**:
+   for version **3.8**:
    
    .. code-block:: pyretis
 
-      virtualenv -p /usr/bin/python3.7 ~/name-of-environment-folder/pyretis-env
+      virtualenv -p /usr/bin/python3.8 ~/name-of-environment-folder/pyretis-env
 
 4. Activate the environment:
 
@@ -145,17 +146,18 @@ set up a virtual environment:
 
       python -m pip install pyretis
 
-6. Install `mdtraj <http://mdtraj.org>`_:
+6. (Optional) |pyvisa|'s GUI requisite:
+
+   .. code-block:: pyretis
+
+      python -m pip install pyqt5
+
+7. (Optional) |pyvisa|'s also requisite `mdtraj <http://mdtraj.org>`_:
 
    .. code-block:: pyretis
 
       python -m pip install git+https://github.com/mdtraj/mdtraj.git
 
-7. (Optional) |pyvisa|'s GUI requisites:
-
-   .. code-block:: pyretis
-
-      python -m pip install pyqt5
 
 
 The folder ``~/name-of-environment-folder/pyretis-env`` now contains a new Python environment
@@ -201,17 +203,17 @@ or, alternatively:
 
    python setup.py install
 
-Then, install ``mdtraj``:
-
-.. code-block:: pyretis
-
-   python -m pip install git+https://github.com/mdtraj/mdtraj.git
-
 and, to be able to run |pyvisa|'s GUI, add ``pyqt5``:
 
 .. code-block:: pyretis
 
    python -m pip install pyqt5
+
+Then, install ``mdtraj``:
+
+.. code-block:: pyretis
+
+   python -m pip install git+https://github.com/mdtraj/mdtraj.git
 
 .. _user-guide-install-develop:
 
@@ -234,12 +236,6 @@ supported in some environments):
 .. code-block:: pyretis
 
     python -m pip install -r requirements-dev.txt
-
-install ``mdtraj``:
-
-.. code-block:: pyretis
-
-    python -m pip install git+https://github.com/mdtraj/mdtraj.git
 
 Finally, install |pyretis| using:
 
@@ -282,6 +278,4 @@ code directory. These packages can be installed by:
 after downloading the :download:`requirements.txt </_static/files/requirements.txt>` file.
 This should be automatically done if you
 are installing |pyretis| using ``pip``/``conda``. 
-Notes: (1) the `mdtraj <http://mdtraj.org>`_
-requirement may have to be installed separately as described above;
-(2) the analysis package |pyvisa| requires PyQt5, which has to be installed separately as described above.
+Notes: (1) the analysis package |pyvisa| requires PyQt5 and mdtraj, which has to be installed separately as described above.

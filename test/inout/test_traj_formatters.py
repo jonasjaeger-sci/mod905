@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Test the trajectory writers."""
 import logging
@@ -71,7 +71,7 @@ class TrajTest(unittest.TestCase):
         txt_writer = SnapshotFormatter(write_vel=True)
         snapshot = txt_writer.format_snapshot(0, system)
         correct = os.path.join(HERE, 'generated.txt')
-        with open(correct, 'r') as fileh:
+        with open(correct, 'r', encoding='utf-8') as fileh:
             for lines1, lines2 in zip(fileh, snapshot):
                 self.assertEqual(lines1.rstrip(), lines2.rstrip())
 

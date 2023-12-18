@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Definition of order parameters.
 
@@ -38,7 +38,9 @@ from .orderparameter import (
     Distancevel,
     PositionVelocity,
     DistanceVelocity,
-    CompositeOrderParameter,
+    Permeability,
+    PermeabilityMinusOffset,
+    CompositeOrderParameter
 )
 from .orderangle import Angle
 from .orderdihedral import Dihedral
@@ -88,6 +90,12 @@ def order_factory(settings):
         },
         'dihedral': {
             'cls': Dihedral
+        },
+        'permeability': {
+            'cls': Permeability
+        },
+        'permeabilityminusoffset': {
+            'cls': PermeabilityMinusOffset
         },
     }
     return generic_factory(settings, factory_map, name='orderparameter')

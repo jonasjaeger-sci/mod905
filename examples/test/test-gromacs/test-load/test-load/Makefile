@@ -13,8 +13,8 @@ clean:
 	find -name \*.log\* -delete
 	find -name mdout.mdp -delete
 	find -name \*.tpr -delete
-	-rm -rf run-20/0*
-	-rm -rf run-50/0*
+	-rm -rf run-2/0*
+	-rm -rf run-10/0*
 	-rm -rf run-load/0*
 	-rm -rf run-load/initial_path
 	-rm -rf merged

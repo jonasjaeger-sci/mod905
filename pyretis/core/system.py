@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Module defining the system class.
 
@@ -114,7 +114,7 @@ class System:
             self.temperature['dof'] += np.array(dof)
 
     def _adjust_dof_according_to_box(self):
-        """Adjust the dof's according to the box connected to the system.
+        """Adjust the dof according to the box connected to the system.
 
         For each 'True' in the periodic settings of the box, we subtract
         one degree of freedom for that dimension.
@@ -414,20 +414,25 @@ class System:
             if func is not None:
                 func(*args)
 
-    def rescale_velocities(self, energy):
+    def rescale_velocities(self, energy, external=False):
         """Re-scale the kinetic energy to a given total energy.
 
         Parameters
         ----------
         energy : float
             The desired energy.
+        energy : boolean, optional
+            If True, self.particles.vpot will be used as the potential energy.
 
         Returns
         -------
         None, but updates the velocities of the particles.
 
         """
-        vpot = self.potential()
+        if not external:
+            vpot = self.potential()
+        else:
+            vpot = self.particles.vpot
         ekin, _ = calculate_kinetic_energy(self.particles)
         ekin_new = energy - vpot
         if ekin_new < 0:
@@ -455,9 +460,19 @@ class System:
         return info
 
     def load_restart_info(self, info):
-        """Load the given restart information into the system."""
+        """Load restart information.
+
+        Parameters
+        ----------
+        info : dict
+            The dictionary with the restart information, should be
+            similar to the dict produced by :py:func:`.restart_info`.
+
+        """
         for attr in ('units', 'temperature', 'post_setup', 'order'):
-            setattr(self, attr, info[attr])
+            if attr in info:
+                setattr(self, attr, info[attr])
+
         self.box = box_from_restart(info)
         self.particles = particles_from_restart(info)
 
@@ -466,7 +481,7 @@ class System:
 
         Parameters
         ----------
-        length : numpy.array, list or iterable
+        length : numpy.array, list or iterable.
             The box vectors represented as a list.
 
         """
@@ -519,7 +534,8 @@ class System:
         # depends on the choice of the order parameter function.
         attrs = ('units', 'post_setup', 'box', 'particles')
         check = compare_objects(self, other, attrs, numpy_attrs=None)
-        check = check and self.forcefield is other.forcefield
+        # todo To be re-introduced if forcefields get a __eq_ function
+        # check = check and self.forcefield is other.forcefield
         # For the temperature, one key may give some trouble:
         check = check and len(self.temperature) == len(other.temperature)
         for key in ('set', 'beta'):
@@ -528,12 +544,16 @@ class System:
                                          other.temperature['dof'])
         return check
 
+    def __ne__(self, other):
+        """Check if two systems are not equal."""
+        return not self == other
+
     def __str__(self):
         """Just print some basic info about the system."""
         msg = ['PyRETIS System',
-               'Order parameter: {}'.format(self.order),
+               f'Order parameter: {self.order}',
                'Box:']
-        msg.append('{}'.format(self.box))
+        msg.append(f'{self.box}')
         msg.append('Particles:')
-        msg.append('{}'.format(self.particles))
+        msg.append(f'{self.particles}')
         return '\n'.join(msg)

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Test the methods in pyretis.inout.setup.createsystem."""
 import os
@@ -11,6 +11,7 @@ import numpy as np
 from pyretis.core.system import System
 from pyretis.inout.common import make_dirs
 from pyretis.engines.external import ExternalMDEngine
+from pyretis.engines import CP2KEngine
 from pyretis.inout.formats.xyz import (
     read_xyz_file,
     convert_snapshot,
@@ -54,15 +55,11 @@ class DummyExternal(ExternalMDEngine):
     def _extract_frame(self, traj_file, idx, out_file):
         """Extract a frame, dummy method."""
 
-    def _propagate_from(self, name, path, system, order_function, interfaces,
-                        msg_file, reverse=False):
+    def _propagate_from(self, name, path, ensemble, msg_file, reverse=False):
         """Propagate with the engine, dummy method."""
-        # pylint: disable=too-many-arguments
 
-    def modify_velocities(self, system, rgen, sigma_v=None, aimless=True,
-                          momentum=False, rescale=None):
+    def modify_velocities(self, ensemble, vel_settings):
         """Modify velocities, dummy method."""
-        # pylint: disable=too-many-arguments
 
 
 class TestExternalEngine(unittest.TestCase):
@@ -113,7 +110,7 @@ class TestExternalEngine(unittest.TestCase):
         """Test that we can move files."""
         engine = DummyExternal('test', 1.0, 10)
         filename = os.path.join(HERE, 'empty_file')
-        with open(filename, 'w') as temp:
+        with open(filename, 'w', encoding="utf8") as temp:
             temp.write('Hello!')
         outfile = os.path.join(HERE, 'empty_file2')
         # pylint: disable=protected-access
@@ -127,7 +124,7 @@ class TestExternalEngine(unittest.TestCase):
         """Test that we can copy files."""
         engine = DummyExternal('test', 1.0, 10)
         filename = os.path.join(HERE, 'empty_file')
-        with open(filename, 'w') as temp:
+        with open(filename, 'w', encoding="utf8") as temp:
             temp.write('Hello!')
         outfile = os.path.join(HERE, 'empty_file_copy')
         # pylint: disable=protected-access
@@ -146,7 +143,7 @@ class TestExternalEngine(unittest.TestCase):
         for i in range(3):
             basename = 'empty_file{}'.format(i)
             filename = os.path.join(HERE, basename)
-            with open(filename, 'w') as temp:
+            with open(filename, 'w', encoding="utf8") as temp:
                 temp.write('Hello!')
             files.append(basename)
         # pylint: disable=protected-access
@@ -163,7 +160,7 @@ class TestExternalEngine(unittest.TestCase):
         for i in range(3):
             basename = 'empty_file{}'.format(i)
             filename = os.path.join(dirname, basename)
-            with open(filename, 'w') as temp:
+            with open(filename, 'w', encoding="utf8") as temp:
                 temp.write('Hello!')
             files.append(filename)
         engine = DummyExternal('test', 1.0, 10)
@@ -200,12 +197,38 @@ class TestExternalEngine(unittest.TestCase):
         system = System()
         system.particles = ParticlesExt(dim=3)
         system.particles.config = (filename, 0)
-        order = engine.calculate_order(order_function, system)
+        ensemble = {'order_function': order_function, 'system': system}
+        order = engine.calculate_order(ensemble)
         self.assertAlmostEqual(order[0], 0.0)
         self.assertAlmostEqual(order[1], 1.0)
         system.particles.vel_rev = True
-        order = engine.calculate_order(order_function, system)
+        order = engine.calculate_order(ensemble)
         self.assertAlmostEqual(order[1], -1.0)
+        engine.ext = 'A_cool_estention'
+        engine.exe_dir = '.'
+        engine.dump_phasepoint(system)
+        self.assertIn(engine.ext, system.particles.config[0])
+
+    def test_calculate_order_external(self):
+        """Test calculation of the order parameter with external engine."""
+        cmd = os.path.join(HERE, 'mockcp2k.py')
+        dir_name = os.path.join(HERE, 'cp2k_input')
+        extra_files = ['extra_file']
+        engine = CP2KEngine(cmd,
+                            input_path=dir_name,
+                            timestep=0.002,
+                            subcycles=10,
+                            extra_files=extra_files)
+        order_function = PositionVelocity(0, dim='x', periodic=False)
+        system = System()
+        system.particles = ParticlesExt(dim=3)
+        system.particles.config = (engine.input_files['conf'], 0)
+        ensemble = {'order_function': order_function, 'system': system,
+                    'engine': engine}
+        order = engine.calculate_order(ensemble)
+        # Check that have assigned the box to correctly calculate the order.
+        self.assertEqual(order[0], 0.7731715808)
+        self.assertEqual(order[1], 1.)
 
     def test_execute_command(self):
         """Test what happens when the execution fails."""
@@ -216,14 +239,16 @@ class TestExternalEngine(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             engine.execute_command(cmd, cwd=HERE, inputs=b'')
         # The outputs should be reatined after the previous error:
-        with open(os.path.join(HERE, 'stdout.txt'), 'r') as stdout:
+        with open(os.path.join(HERE, 'stdout.txt'), 'r',
+                  encoding="utf8") as stdout:
             lines = stdout.readlines()
             self.assertEqual(len(lines), 1)
             self.assertEqual(
                 lines[0].strip(),
                 'This is a program for testing external commands.'
             )
-        with open(os.path.join(HERE, 'stderr.txt'), 'r') as stdout:
+        with open(os.path.join(HERE, 'stderr.txt'), 'r',
+                  encoding="utf8") as stdout:
             lines = stdout.readlines()
             self.assertEqual(len(lines), 2)
             self.assertEqual(

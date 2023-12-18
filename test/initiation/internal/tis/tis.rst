@@ -4,14 +4,15 @@ TIS 1D example
 Simulation
 ----------
 task = tis
-steps = 1000
+steps = 100
 interfaces = [-0.9, -0.8, -0.7]
+zero_ensemble = True
 
 System
 ------
 units = reduced
 dimensions = 1
-temperature = 0.07
+temperature = 0.7
 
 Box
 ---
@@ -35,21 +36,22 @@ zero_momentum = False
 rescale_energy = False
 sigma_v = -1
 seed = 0
+ensemble_number = 1
 
 Initial-path
 ------------
 method = load
-load_folder = load
+load_folder = loader
 
 Particles
 ---------
-position = {'file': 'initial.xyz'}
+position = {'input_file': 'initial.xyz'}
 velocity = {'generate': 'maxwell',
             'momentum': False,
             'seed': 0}
 mass = {'Ar': 1.0}
 name = ['Ar']
-type = [0]
+ptype = [0]
 
 Forcefield
 ----------

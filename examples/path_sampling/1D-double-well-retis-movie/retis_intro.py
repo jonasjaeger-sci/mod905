@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """This is a simple RETIS example.
 
@@ -8,11 +8,18 @@ some of the objects in PyRETIS.
 
 Have fun!
 """
+import colorama
 import numpy as np
+from pyretis.inout.settings import (fill_up_tis_and_retis_settings,
+                                    _add_default_settings,
+                                    _add_specific_default_settings)
 from pyretis.core import System, create_box, Particles
 from pyretis.initiation import initiate_path_simulation
-from pyretis.inout.setup import (create_force_field, create_engine,
-                                 create_orderparameter, create_simulation)
+from pyretis.setup import (
+    create_force_field,
+    create_orderparameter,
+    create_simulation
+)
 
 # Let us define the simulation:
 SETTINGS = {}
@@ -23,7 +30,7 @@ SETTINGS['simulation'] = {
     'interfaces': [-0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, 1.0],
 }
 # Basic settings for the system:
-SETTINGS['system'] = {'units': 'reduced', 'temperature': 0.07}
+SETTINGS['system'] = {'units': 'reduced', 'temperature': 0.07, 'dimensions': 1}
 # Basic settings for the Langevin integrator:
 SETTINGS['engine'] = {
     'class': 'Langevin',
@@ -97,22 +104,24 @@ def print_step_results(ensembles, retis_result):
 
     Parameters
     ----------
-    ensembles : list of objects like :py:class:`.PathEnsemble`
-        The different path ensembles we are simulating.
+    ensembles : list of dicts. They contain:
+        *  PathEnsemble: objects like :py:class:`.PathEnsemble`
+           The different path ensembles we are simulating.
     retis_result : list of lists
         The results of a RETIS simulation step.
 
     """
     for ensemble in ensembles:
-        name = ensemble.ensemble_name
-        idx = ensemble.ensemble_number
+        path_ensemble = ensemble['path_ensemble']
+        name = path_ensemble.ensemble_name
+        idx = path_ensemble.ensemble_number
         print('Move in {}'.format(name))
         accepted = retis_result['accept-{}'.format(idx)]
         name_of_move = retis_result['move-{}'.format(idx)]
         print('\tType: {}'.format(name_of_move))
         if name_of_move == 'swap':
             idx2 = retis_result['all-{}'.format(idx)]['swap-with']
-            name2 = ensembles[idx2].ensemble_name
+            name2 = ensembles[idx2]['path_ensemble'].ensemble_name
             print('\tSwapping: {} -> {}'.format(name2, name))
         elif name_of_move == 'tis':
             trial_path = retis_result['path-{}'.format(idx)]
@@ -128,26 +137,27 @@ def print_step_results(ensembles, retis_result):
 
 def main():
     """Just run the simulation."""
-    print('# CREATING SYSTEM...')
-    system = set_up_system(SETTINGS)
-    print('# CREATING SIMULATION...')
-    sim_args = {'system': system, 'engine': create_engine(SETTINGS)}
-    simulation = create_simulation(SETTINGS, sim_args)
+    colorama.init(autoreset=True)
+    _add_default_settings(SETTINGS)
+    _add_specific_default_settings(SETTINGS)
+    SETTINGS['system']['obj'] = set_up_system(SETTINGS)
+    fill_up_tis_and_retis_settings(SETTINGS)
+    simulation = create_simulation(SETTINGS)
     print(simulation)
     print('# INITIATING TRAJECTORIES...')
 
-    ensembles = simulation.path_ensembles
+    ensembles = simulation.ensembles
     for i, _ in enumerate(initiate_path_simulation(simulation, SETTINGS)):
-        ensemble = ensembles[i]
-        name = ensemble.ensemble_name
+        path_ensemble = ensembles[i]['path_ensemble']
+        name = path_ensemble.ensemble_name
         print('Info about ensemble {}:'.format(name))
-        print(ensemble)
+        print(path_ensemble)
         print('Info about the initial path:')
-        print(ensemble.last_path)
+        print(path_ensemble.last_path)
         print('')
     # We can interact directly with points in trajectories,
     # here is a simple example
-    path = ensembles[2].last_path
+    path = ensembles[2]['path_ensemble'].last_path
     first = True
     for i, point in enumerate(path.phasepoints):
         order = point.order[0]
@@ -164,8 +174,9 @@ def main():
     print('Running a single RETIS step...')
     result = simulation.step()
     for ensemble in ensembles:
-        name = ensemble.ensemble_name
-        idx = ensemble.ensemble_number
+        path_ensemble = ensemble['path_ensemble']
+        name = path_ensemble.ensemble_name
+        idx = path_ensemble.ensemble_number
         print('Move in {}'.format(name))
         status = result['status-{}'.format(idx)]
         accepted = result['accept-{}'.format(idx)]
@@ -187,7 +198,7 @@ def main():
             # [move, accepted, .., swap-with] where swap-with is the
             # ensemble we are trying to swap with.
             idx2 = result['all-{}'.format(idx)]['swap-with']
-            name2 = ensembles[idx2].ensemble_name
+            name2 = ensembles[idx2]['path_ensemble'].ensemble_name
             print('\tSwapping: {} -> {}'.format(name2, name))
         elif name_of_move == 'tis':
             trial_path = result['path-{}'.format(idx)]

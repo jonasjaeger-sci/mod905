@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Test the common methods in pyretis.inout.common."""
 import os
@@ -34,9 +34,13 @@ class TestMethods(unittest.TestCase):
     """Test some of the methods from pyretis.inout.common."""
     def test_create_empty_ensembles(self):
         """Test that we can properly create empty ensembles."""
-        settings = {'simulation': {'interfaces': [1, 2, 3, 4, 5]}}
+        settings = {'simulation': {'interfaces': [1, 2, 3, 4, 5],
+                                   'flux': True,
+                                   'zero_ensemble': True}}
         create_empty_ensembles(settings)
-        settings = {'simulation': {'interfaces': [1, 2, 3, 4, 5]}}
+        settings = {'simulation': {'interfaces': [1, 2, 3, 4, 5],
+                                   'flux': True,
+                                   'zero_ensemble': True}}
         settings['ensemble'] = [settings]
         settings['ensemble'][0]['interface'] = 1
         settings['ensemble'][0]['tis'] = {'ensemble_number': 123321}
@@ -45,14 +49,18 @@ class TestMethods(unittest.TestCase):
         self.assertTrue(
             settings['ensemble'][0]['tis']['ensemble_number'] == 123321)
 
-        settings = {'simulation': {'interfaces': [1, 2, 3, 4, 5]},
+        settings = {'simulation': {'interfaces': [1, 2, 3, 4, 5],
+                                   'flux': True,
+                                   'zero_ensemble': True},
                     'tis': {'ensemble_number': 123321}}
         create_empty_ensembles(settings)
         self.assertTrue(
             settings['ensemble'][0]['tis']['ensemble_number'] == 123321)
         self.assertTrue(len(settings['ensemble']) == 1)
 
-        settings = {'simulation': {'interfaces': [1, 2, 3, 4, 5]},
+        settings = {'simulation': {'interfaces': [1, 2, 3, 4, 5],
+                                   'flux': True,
+                                   'zero_ensemble': True},
                     'ensemble': [{'interface': 3,
                                   'gnappo': 'lappo',
                                   'tis': {'ensemble_number': 3}}]}
@@ -61,6 +69,16 @@ class TestMethods(unittest.TestCase):
         self.assertEqual(settings['ensemble'][3]['gnappo'], 'lappo')
         self.assertEqual(
             settings['ensemble'][3]['tis']['ensemble_number'], 3)
+        # todo. This should be part of the ensamble numering issue.
+        # with self.assertRaises(ValueError) as err:
+        #    create_empty_ensembles(settings)
+        # self.assertEqual('Invalid entry for setting ensemble',
+        #    str(err.exception))
+        # settings['ensemble'][0] = {'tis': {'ensemble_number': 'flux'}}
+        # create_empty_ensembles(settings)
+        # self.assertTrue(
+        #     settings['simulation']['ensemble'][0]['tis']['ensemble_number'],
+        #     'flux')
 
     def test_remove_ext(self):
         """Test that we can remove the extenstion from a file name."""
@@ -122,6 +140,15 @@ class TestMethods(unittest.TestCase):
         settings = {'output': {'prefix': 'abc-'}}
         name = generate_file_name('base.txt', 'dir', settings)
         self.assertEqual(name, os.path.join('dir', 'abc-base.txt'))
+
+    def test_check_python_version(self):
+        # DO custom import and go from there to prevent overriding anything
+        # important
+        # Set the min python version to next mayor version to remember updating
+        import pyretis.inout.common as common
+        common.MIN_PYTHON_VERSION = (4, 0)
+        with self.assertRaises(SystemExit):
+            common.check_python_version()
 
 
 if __name__ == '__main__':

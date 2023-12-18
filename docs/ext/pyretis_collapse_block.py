@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Defining a collapse block for the PyRETIS web-page."""
-import os
 from docutils import nodes
+from pathlib import Path
 from docutils.parsers.rst import Directive
 from docutils.parsers.rst.directives import unchanged
 from jinja2 import Template
@@ -35,8 +35,8 @@ class PyretisCollapseBlock(Directive):
     def run(self):
         """Set up a new node for a collapse block."""
         env = self.state.document.settings.env
-        rst_source = self.state_machine.node.document['source']
-        rst_filename = os.path.basename(rst_source)
+        rst_source = Path(self.state_machine.node.document['source'])
+        rst_filename = rst_source.name
         target_id = "%s.pyretiscb-%d" % (
             rst_filename,
             env.new_serialno('pyretis-ccb')
@@ -59,7 +59,7 @@ def html_visit_block(self, node):
     )
 
 
-def html_depart_block(self, node):
+def html_depart_block(self, _):
     """End the HTML code when the block is done."""
     self.body.append(TEMPLATE_POST.render())
 

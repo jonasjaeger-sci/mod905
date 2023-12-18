@@ -4,7 +4,7 @@ MD flux simulation
 Simulation settings
 -------------------
 task = md-flux
-steps = 7655
+steps = 2000
 interfaces = [-0.9]
 restart = ../run-step1/pyretis.restart
 
@@ -21,6 +21,16 @@ timestep = 0.002
 gamma = 0.3
 high_friction = False
 seed = 0
+
+Particles
+---------
+position = {'input_file': '../initial.xyz'}
+velocity = {'generate': 'maxwell',
+            'momentum': False,
+            'seed': 0}
+mass = {'Ar': 1.0}
+name = ['Ar']
+ptype = [0]
 
 ForceField settings
 -------------------

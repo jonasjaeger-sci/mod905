@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Method to re-calculate order parameters for external trajectories.
 
@@ -23,21 +23,19 @@ import collections
 import logging
 import os
 import numpy as np
-import tempfile
 from pyretis.core import System, ParticlesExt
 from pyretis.core.box import box_matrix_to_list
 from pyretis.inout import print_to_screen
 from pyretis.inout.formats.gromacs import (
     read_trr_file,
     read_gromos96_file,
-    read_gromacs_gro_file,
-    write_gromacs_gro_file
+    read_gromacs_gro_file
 )
 from pyretis.inout.formats.xyz import read_xyz_file, convert_snapshot
 from pyretis.inout.formats.path import PathExtFile
+
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
-
 
 __all__ = [
     'recalculate_from_trj',
@@ -69,11 +67,6 @@ def recalculate_from_trj(order_parameter, trr_file, options):
           want to skip some frames from the .trr file.
         * `idx`: integer, optional
           This allows the selection of a single frame to recompute.
-        * `top`: string, optional
-          This is the name of a top_file to instruct the external tool
-          (e.g. mdtraj, top= option) to properly read the trajectory.
-          When this entry is given, the order parameter is assumed to
-          be computed externally.
 
     Yields
     ------
@@ -82,7 +75,7 @@ def recalculate_from_trj(order_parameter, trr_file, options):
 
     """
     system = System(box=None)  # Add dummy system.
-    msg = ('Re-calculate from {}:'.format(os.path.basename(trr_file)) +
+    msg = (f'Re-calculate from {os.path.basename(trr_file)}:' +
            ' Step {}, time {}')
     minidx, maxidx = options.get('minidx'), options.get('maxidx')
     if options.get('idx', False):
@@ -108,18 +101,8 @@ def recalculate_from_trj(order_parameter, trr_file, options):
             system.particles.vel = data['v']
         length = box_matrix_to_list(data['box'])
         system.update_box(length)
-        if options.get('top', False):
-            info, _, _, _ = read_gromacs_gro_file(options['top'])
-            system.particles.top = options['top']
-            with tempfile.NamedTemporaryFile(suffix='.gro') as tmp:
-                system.particles.config = (tmp.name, i)
-                write_gromacs_gro_file(tmp.name, info,
-                                       data['x'], data['v'], length)
-                order = order_parameter.calculate(system)
-            system.particles.config = (trr_file, i)
-        else:
-            system.particles.config = (trr_file, i)
-            order = order_parameter.calculate(system)
+        system.particles.config = (trr_file, i)
+        order = order_parameter.calculate(system)
         yield order
 
 
@@ -154,7 +137,7 @@ def recalculate_from_xyz(order_parameter, traj_file, options):
 
     """
     system = System(box=None)
-    msg = ('Re-calculate from {}:'.format(os.path.basename(traj_file)) +
+    msg = (f'Re-calculate from {os.path.basename(traj_file)}:' +
            ' Step {}')
     minidx, maxidx = options.get('minidx'), options.get('maxidx')
     reverse = options.get('reverse')
@@ -206,14 +189,14 @@ def recalculate_from_frame(order_parameter, frame_file, options):
 
     """
     system = System(box=None)
-    msg = 'Re-calculate from {}:'.format(os.path.basename(frame_file))
+    msg = f'Re-calculate from {os.path.basename(frame_file)}:'
     print_to_screen(msg)
     if options['ext'] == '.g96':
         _, xyz, vel, box = read_gromos96_file(frame_file)
     elif options['ext'] == '.gro':
         _, xyz, vel, box = read_gromacs_gro_file(frame_file)
     else:
-        raise ValueError('Unknown format {}'.format(options['ext']))
+        raise ValueError(f"Unknown format {options['ext']}")
     if options.get('reverse'):
         vel *= -1
     if system.particles is None:

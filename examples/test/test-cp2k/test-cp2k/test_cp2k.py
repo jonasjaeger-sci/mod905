@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """
 Here we test the basic functionality of the CP2K engine.
@@ -33,7 +33,7 @@ from pyretis.engines.cp2k import (
 )
 
 
-plt.style.use('seaborn-deep')
+plt.style.use('seaborn-v0_8-deep')
 
 
 def clean_dir(dirname):
@@ -76,7 +76,9 @@ def run_in_steps(engine, system, order_parameter, interfaces,
     engine.exe_dir = folder
     path = Path(None, maxlen=steps)
     start = time.perf_counter()
-    engine.propagate(path, system, order_parameter, interfaces,
+    engine.propagate(path,
+                     {'system': system, 'order_function': order_parameter,
+                      'interfaces': interfaces},
                      reverse=reverse)
     end = time.perf_counter()
     print_to_screen('Propagation done!')
@@ -204,7 +206,7 @@ def main(plot=False):
         engine_settings['input_path'],
         engine_settings['timestep'],
         engine_settings['subcycles'],
-        engine_settings.get('extra_files', [])
+        extra_files=engine_settings.get('extra_files', [])
     )
     print_to_screen('Testing engine: {}'.format(engine), level='info')
     print_to_screen('Time step: {}'.format(engine.timestep))

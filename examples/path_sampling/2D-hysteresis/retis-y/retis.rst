@@ -49,13 +49,13 @@ method = kick
 
 Particles
 ---------
-position = {'file': '../initial.xyz'}
+position = {'input_file': '../initial.xyz'}
 velocity = {'generate': 'maxwell',
             'momentum': False,
             'seed': 0}
 mass = {'Ar': 1.0}
 name = ['Ar']
-type = [0]
+ptype = [0]
 
 Forcefield settings
 -------------------

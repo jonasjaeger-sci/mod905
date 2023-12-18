@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Example of running a MD NVE simulation.
 
@@ -13,8 +13,7 @@ from matplotlib import animation
 import matplotlib as mpl
 from pyretis.core.units import CONVERT, create_conversion_factors
 from pyretis.inout.plotting import COLORS, COLOR_SCHEME
-from pyretis.inout.setup import (create_force_field, create_system,
-                                 create_engine, create_simulation)
+from pyretis.setup import create_simulation
 
 ljparams = {0: {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5}}
 # Define simulation settings:
@@ -50,7 +49,7 @@ settings['potential'] = [
      'parameter': ljparams}
 ]
 settings['particles'] = {
-    'position': {'file': 'initial.xyz'},
+    'position': {'input_file': 'initial.xyz'},
     'velocity': {'generate': 'maxwell', 'momentum': True, 'seed': 0}
 }
 UNIT = settings['system']['units']
@@ -58,15 +57,10 @@ create_conversion_factors(UNIT)
 SIGMA = CONVERT['length'][UNIT, 'A']
 ECONV = CONVERT['energy'][UNIT, 'kcal/mol']
 print('# Creating system from settings.')
-ljsystem = create_system(settings)
-ljsystem.forcefield = create_force_field(settings)
-ljsystem.particles.pos -= (np.average(ljsystem.particles.pos, axis=0) -
-                           0.5 * ljsystem.box.length)  # center in box
-print('# Creating simulation from settings.')
-kwargs = {'system': ljsystem, 'engine': create_engine(settings)}
-simulation_nve = create_simulation(settings, kwargs)
+simulation_nve = create_simulation(settings)
 print('# Creating output tasks from settings.')
 simulation_nve.set_up_output(settings, progress=False)
+ljsystem = simulation_nve.system
 size = ljsystem.box.bounds()
 npart = ljsystem.particles.npart
 msg = 'Added {:d} particles to a simple square lattice'

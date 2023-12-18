@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Module for formatting snapshot data from PyRETIS.
 
@@ -164,11 +164,8 @@ class SnapshotFormatter(OutputFormatter):
         """
         npart = system.particles.npart
         buff = [
-            '{}'.format(npart),
-            'Snapshot, step: {} box: {}'.format(
-                step,
-                system.box.print_length()
-            ),
+            f'{npart}',
+            f'Snapshot, step: {step} box: {system.box.print_length()}',
         ]
         if self.write_vel:
             formatter = self._format_with_vel
@@ -219,7 +216,7 @@ def read_txt_snapshots(filename, data_keys=None):
     if data_keys is None:
         data_keys = ('atomname', 'x', 'y', 'z', 'vx', 'vy', 'vz')
     read_header = False
-    with open(filename, 'r') as fileh:
+    with open(filename, 'r', encoding="utf8") as fileh:
         for lines in fileh:
             if read_header:
                 snapshot = {'header': lines.strip()}

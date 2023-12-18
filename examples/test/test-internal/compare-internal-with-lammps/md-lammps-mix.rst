@@ -4,7 +4,7 @@ Molecular dynamics example settings
 Simulation settings
 -------------------
 task = md-nve
-steps = 1000
+steps = 33
 
 System settings
 ---------------
@@ -25,7 +25,7 @@ timestep = 0.0025
 
 Particles settings
 ------------------
-position = {'file': 'input_data/mix.txt'}
+position = {'input_file': 'input_data/mix.txt'}
 mass = {'A': 1.0, 'B': 1.0, 'C': 1.5}
 
 Forcefield settings

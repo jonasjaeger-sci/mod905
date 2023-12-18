@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """General functions for generating reports.
 
@@ -35,7 +35,9 @@ from pyretis.inout.report.report_md import generate_report_mdflux
 from pyretis.inout.report.report_path import (generate_report_retis,
                                               generate_report_retis0,
                                               generate_report_tis,
-                                              generate_report_tis_path)
+                                              generate_report_tis_path,
+                                              generate_report_repptis,
+                                              generate_report_pptis_path)
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
@@ -59,13 +61,18 @@ _TEMPLATE_NAMES = {'md-flux': 'mdflux',
                    'retis': 'retis',
                    'retis0': 'retis0',
                    'tis': 'tis',
-                   'tis-multiple': 'tis-multiple'}
+                   'repptis': 'repptis',
+                   'pptis': 'pptis',
+                   'make-tis-files': 'tis-multiple'}
 
 _REPORT_MAP = {'md-flux': generate_report_mdflux,
                'retis': generate_report_retis,
                'retis0': generate_report_retis0,
-               'tis-multiple': generate_report_tis,
+               'make-tis-files': generate_report_tis,
+               'repptis': generate_report_repptis,
+               'pptis': generate_report_pptis_path,
                'tis': generate_report_tis_path}
+
 # Table for file extensions:
 _EXT = {'rst': 'rst',
         'html': 'html',
@@ -102,7 +109,7 @@ def get_template(output, report_type, template=None):
     """Return the template to use for a specified output format.
 
     The output is one of the defined output types, for instance 'rst'
-    for restrucutred text or 'latex' for latex. Different report types
+    for restructured text or 'latex' for latex. Different report types
     will have different templates and the report types must also be
     specified here.
 
@@ -133,7 +140,7 @@ def get_template(output, report_type, template=None):
         template = _TEMPLATES[output].format(_TEMPLATE_NAMES[ltype])
         path_to_template = os.path.join(path, template)
         if not os.path.isfile(path_to_template):
-            msg = 'Could not locate template "{}"!'.format(path_to_template)
+            msg = f'Could not locate template "{path_to_template}"!'
             raise ValueError(msg)
     else:
         # user specified full path to template:
@@ -221,11 +228,10 @@ def generate_report(report_type, analysis_results, output, template=None):
     report = {'version': VERSION,
               'program': PROGRAM_NAME,
               'date': datetime.datetime.now().strftime(_DATE_FMT),
-              'figures': [], 'tables': [], 'numbers': []}
-    try:
-        generator = _REPORT_MAP[report_type]
-    except KeyError:
-        return None, None
+              'figures': {}, 'tables': {}, 'numbers': {}}
+    if report_type not in _REPORT_MAP:
+        raise ValueError(f'Unkown report type {report_type}')
+    generator = _REPORT_MAP[report_type]
     # Check if the output is a valid format
     if output not in _TEMPLATES:
         msg = 'Format {} not defined for {} report. Defaulting to rst'
@@ -236,10 +242,13 @@ def generate_report(report_type, analysis_results, output, template=None):
     generated = generator(analysis_results, output=output)
     report.update(generated)
     # Remove white-space from numbers:
-    for key in report['numbers']:
-        report['numbers'][key] = report['numbers'][key].strip()
+    for key, value in report['numbers'].items():
+        if isinstance(value, str):
+            report['numbers'][key] = value.strip()
+
     if output in ('latex', 'tex', 'html', 'htm'):
         # Latexify numbers:
-        for key in report['numbers']:
-            report['numbers'][key] = latexify_number(report['numbers'][key])
+        for key, value in report['numbers'].items():
+            if isinstance(value, str):
+                report['numbers'][key] = latexify_number(value)
     return render_report(report, output, template, path)

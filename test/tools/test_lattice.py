@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Test the lattice generation tools in pyretis.tools"""
 import logging
@@ -66,6 +66,10 @@ class LatticeTest(unittest.TestCase):
             self.assertTrue(np.allclose(xyz_g, xyz[key], atol=1.0e-8))
             self.assertTrue(np.allclose(np.array(size_g), size[key],
                                         atol=1.0e-8))
+        # Test if we give almost nothing
+        pos, size = generate_lattice(lattice='1d')
+        self.assertEqual(pos[0], 0)
+        self.assertEqual(size, [[0.0, 1]])
 
     def test_generate_no_lcon_or_dens(self):
         """Test if the generate lattice methods fails when it should."""

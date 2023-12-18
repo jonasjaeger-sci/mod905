@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """
 This is an example of how we can create an animation with PyRETIS.
@@ -13,18 +13,16 @@ from matplotlib import pyplot as plt
 from matplotlib import animation
 from umbrella_sampling_mc import (
     UMBRELLA_WINDOWS,
-    set_up_system,
     set_up_simulation,
-    plot_unbiased_potential,
+    calculate_unbiased_potential,
 )
 
 
 def main_amination(windows, save=False):
     """Run the animation."""
-    system = set_up_system()
     # For plotting unbiased potential:
     xpos = np.linspace(-2, 2, 250)
-    vpot = plot_unbiased_potential(system, xpos)
+    vpot = calculate_unbiased_potential(xpos)
 
     fig = plt.figure()
     axs = plt.axes(xlim=(-1.05, 1.05), ylim=(-0.3, 0.05))
@@ -51,10 +49,11 @@ def main_amination(windows, save=False):
     systems = []
     for i, window in enumerate(windows):
         over = windows[min(i + 1, n_umb - 1)][0]
-        system = set_up_system(pos=np.array([over]))
-        simulation = set_up_simulation(system, window, over, 1)
+        simulation = set_up_simulation(
+            window, over, 1, initial_positions=np.array([window[0]]),
+        )
         simulations.append(simulation)
-        systems.append(system)
+        systems.append(simulation.system)
 
     anim = animation.FuncAnimation(
         fig,

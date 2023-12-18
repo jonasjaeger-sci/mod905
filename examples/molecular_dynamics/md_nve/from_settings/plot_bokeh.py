@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Just plot some results using bokeh."""
 import numpy as np
@@ -64,8 +64,12 @@ def make_plot():
     plt2.xaxis.major_label_text_font_size = '12pt'
     plt2.yaxis.major_label_text_font_size = '12pt'
 
-    subplot = gridplot(plt1, plt2, ncols=2, plot_width=400, plot_height=400,
-                       toolbar_location='right')
+    subplot = gridplot(
+        (plt1, plt2),
+        ncols=2,
+        plot_width=400,
+        plot_height=400,
+    )
     show(subplot)
 
 

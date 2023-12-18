@@ -5,7 +5,7 @@ Simulation
 ----------
 task = retis
 steps = 10
-interfaces = [-0.26, -0.24, -0.22, -0.20, -0.19, -0.18]
+interfaces = [-0.26, -0.20, -0.19, -0.18]
 
 System
 ------
@@ -17,7 +17,7 @@ class = GromacsEngineR
 module = gromacs.py
 gmx = GMXCOMMAND
 mdrun = GMXCOMMAND mdrun
-input_path = ../gromacs_input
+input_path = gromacs_input1
 timestep = 0.002
 subcycles = 5
 gmx_format = g96
@@ -35,7 +35,7 @@ seed = 0
 
 Initial-path
 ------------
-method = kick
+method = restart
 
 RETIS settings
 --------------

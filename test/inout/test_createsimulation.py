@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
-"""Test the methods in pyretis.inout.setup.createsimulation"""
+"""Test the methods in pyretis.setup.createsimulation"""
 import os
 import logging
 import unittest
 import numpy as np
+from io import StringIO
+from unittest.mock import patch
 from pyretis.engines.internal import VelocityVerlet
 from pyretis.core.units import create_conversion_factors
 from pyretis.core.system import System
@@ -14,13 +16,14 @@ from pyretis.core.pathensemble import (
     PathEnsemble,
     PathEnsembleExt,
 )
-from pyretis.inout.setup.createsimulation import (
-    create_path_ensemble,
-    create_path_ensembles,
+from pyretis.setup.createsimulation import (
+    create_ensemble,
+    create_ensembles,
     create_nve_simulation,
     create_mdflux_simulation,
+    create_md_simulation,
     create_umbrellaw_simulation,
-    create_tis_simulations,
+    create_tis_simulation,
     create_retis_simulation,
     create_simulation,
 )
@@ -28,30 +31,53 @@ from pyretis.tools.lattice import generate_lattice
 from pyretis.forcefield.forcefield import ForceField
 from pyretis.forcefield.potentials import PairLennardJonesCutnp
 from pyretis.core.box import create_box
+from pyretis.inout.settings import SECTIONS
+
+from pyretis.simulation.simulation import Simulation
 from pyretis.simulation.md_simulation import (
     SimulationNVE,
+    SimulationMD,
     SimulationMDFlux,
 )
-from pyretis.simulation.mc_simulation import (
-    UmbrellaWindowSimulation,
-)
+from pyretis.simulation.mc_simulation import UmbrellaWindowSimulation
 from pyretis.simulation.path_simulation import (
-    SimulationSingleTIS,
-    SimulationRETIS,
+    SimulationTIS,
+    SimulationRETIS
 )
-from pyretis.inout.settings import SECTIONS
+from pyretis.inout.settings import fill_up_tis_and_retis_settings
+from pyretis.inout.checker import check_ensemble
+
 logging.disable(logging.CRITICAL)
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
-
 ORDER_ERROR_MSG = (
-    'No order parameter was defined, but the '
-    'engine *does* require it.'
+    'No order parameter was defined,'
+    ' but the engine *does* require it.'
 )
 MISSING_STEPS_ERROR_MSG = 'Simulation setting "steps" is missing!'
 MISSING_INTERFACES_ERROR_MSG = 'Simulation setting "interfaces" is missing!'
+
+
+def create_test_settings():
+    """Create a settings we can use for testing."""
+    settings = {'simulation': {'task': 'retis',
+                               'interfaces': [-1., 0, 1],
+                               'steps': 10,
+                               'exe_path': HERE,
+                               'zero_ensemble': True,
+                               'flux': True},
+                'orderparameter': {'class': 'Position',
+                                   'dim': 'x',
+                                   'index': 0,
+                                   'periodic': False},
+                'particles': {'type': 'internal'},
+                'system': {'units': 'lj',
+                           'obj': create_test_system()},
+                'engine': {'obj': VelocityVerlet(0.002)},
+                'tis': {'shooting_moves': ['sh', 'sh', 'sh']}}
+    return settings
 
 
 def create_test_system():
@@ -84,347 +110,570 @@ def create_test_system():
 
 class TestMethods(unittest.TestCase):
     """Test some of the methods from .createsimulation."""
-
     def test_create_path_ensemble(self):
         """Test create_path_ensemble."""
-        settings = {
-            'simulation': {'interfaces': [-1., 0, 1]},
-            'tis': {'detect': 0.8, 'ensemble_number': 2}
-        }
-        ensemble = create_path_ensemble(settings, 'internal')
-        self.assertEqual(ensemble.ensemble_number, 2)
-        self.assertAlmostEqual(ensemble.detect, 0.8)
-        self.assertIsInstance(ensemble, PathEnsemble)
-        ensemble = create_path_ensemble(settings, 'external')
-        self.assertIsInstance(ensemble, PathEnsembleExt)
-        self.assertEqual(ensemble.ensemble_number, 2)
-        self.assertAlmostEqual(ensemble.detect, 0.8)
+        path_ensemble = PathEnsemble(ensemble_number=2, interfaces=[-1., 0, 1])
+        self.assertEqual(path_ensemble.ensemble_number, 2)
+        self.assertIsInstance(path_ensemble, PathEnsemble)
+        path_ensemble = PathEnsembleExt(ensemble_number=2,
+                                        interfaces=[-1., 0, 1])
+        self.assertIsInstance(path_ensemble, PathEnsembleExt)
+        self.assertEqual(path_ensemble.ensemble_number, 2)
         # Test with some "missing" settings:
-        settings = {'simulation': {'interfaces': [-1., 0., 1.]}, 'tis': {}}
-        ensemble = create_path_ensemble(settings, 'internal')
-        self.assertEqual(ensemble.ensemble_number, 1)
-        self.assertAlmostEqual(ensemble.detect, 1.0)
-        with self.assertRaises(ValueError):
-            settings = {'simulation': {'interfaces': [-1., 0.]}}
-            create_path_ensemble(settings, 'internal')
+        settings = {'simulation': {'interfaces': [-1., 0.]}}
+        with patch('sys.stdout', new=StringIO()):
+            with self.assertRaises(KeyError):
+                create_ensemble(settings)
 
-    def test_create_path_ensembles(self):
-        """Test create_path_ensembles."""
-        interfaces = [-1., 0., 1.0, 2.0]
-        ensembles, detect = create_path_ensembles(interfaces, 'internal',
-                                                  include_zero=True)
-        for ens in ensembles:
-            self.assertIsInstance(ens, PathEnsemble)
-        for i, j in zip(detect, [0.0, 1.0, 2.0]):
-            self.assertAlmostEqual(i, j)
+    def test_create_ensemble(self):
+        """Test create_ensemble."""
+        settings = create_test_settings()
+
+        fill_up_tis_and_retis_settings(settings)
+        check_ensemble(settings)
+        with patch('sys.stdout', new=StringIO()):
+            ensembles = create_ensembles(settings)
+        for i_ens, ensemble in enumerate(ensembles):
+            path_ensemble = ensemble['path_ensemble']
+            self.assertEqual(path_ensemble.ensemble_number, i_ens)
+            self.assertIsInstance(path_ensemble, PathEnsemble)
+
+        for i_ens in range(len(ensembles)):
+            settings['ensemble'][i_ens]['particles']['type'] = 'external'
+
+        with patch('sys.stdout', new=StringIO()):
+            ensembles = create_ensembles(settings)
+        for i_ens, ensemble in enumerate(ensembles):
+            path_ensemble = ensemble['path_ensemble']
+            self.assertIsInstance(path_ensemble, PathEnsembleExt)
+            self.assertEqual(path_ensemble.ensemble_number, i_ens)
+
+    def test_create_ensemble_permeability(self):
+        """Test create_ensemble."""
+        settings = create_test_settings()
+        settings['simulation'] = {'task': 'retis',
+                                  'interfaces': [-1., 0, 1],
+                                  'exe_path': HERE,
+                                  'zero_ensemble': True,
+                                  'flux': True,
+                                  'permeability': True,
+                                  'zero_left': -2}
+
+        fill_up_tis_and_retis_settings(settings)
+        with patch('sys.stdout', new=StringIO()):
+            ensembles = create_ensembles(settings)
+        ens = ensembles[0]
+        self.assertEqual((-2, -1.5, -1), ens['path_ensemble'].interfaces)
+        self.assertEqual(["R", "L"], ens['path_ensemble'].start_condition)
+
+    def test_create_ensemble_pptis(self):
+        """Test create_ensemble for pptis."""
+        # with flux=False, zero_ensemble=True
+        # -------------------------------------
+        settings = create_test_settings()
+        settings['tis']['shooting_moves'] += ['sh', 'sh']
+        settings['simulation'] = {'task': 'pptis',
+                                  'interfaces': [-1., 0., 1., 2., 3.],
+                                  'flux': False,
+                                  'zero_ensemble': True,
+                                  'exe_path': HERE}
+
+        fill_up_tis_and_retis_settings(settings)
+        with patch('sys.stdout', new=StringIO()):
+            ensembles = create_ensembles(settings)
+        n_ens = len(ensembles)
+        for i in range(n_ens):
+            self.assertEqual(ensembles[i]['path_ensemble'].start_condition,
+                             ['R', 'L'])
+        hoped = [(-1., -1., 0.), (-1., 0., 1.),
+                 (0., 1., 2.), (1., 2., 3.)]
+        self.assertEqual(len(hoped), n_ens)
+        for ensemble, hope in zip(ensembles, hoped):
+            self.assertEqual(ensemble['path_ensemble'].interfaces, hope)
+
+    def test_create_ensemble_pptis_1(self):
+        """Test create_ensemble for pptis."""
+        # with flux=True, zero_ensemble=True
+        # -------------------------------------
+        settings = create_test_settings()
+        settings['tis']['shooting_moves'] += ['sh', 'sh']
+        settings['simulation'] = {'task': 'pptis',
+                                  'interfaces': [-1., 0., 1., 2., 3.],
+                                  'flux': True,
+                                  'zero_ensemble': True,
+                                  'exe_path': HERE}
+
+        fill_up_tis_and_retis_settings(settings)
+        with patch('sys.stdout', new=StringIO()):
+            ensembles = create_ensembles(settings)
+        n_ens = len(ensembles)
+        # start condition
+        self.assertEqual(ensembles[0]['path_ensemble'].start_condition, 'R')
+        for i in range(1, n_ens):
+            self.assertEqual(ensembles[i]['path_ensemble'].start_condition,
+                             ['R', 'L'])
+        # interfaces
+        hoped = [(-np.inf, -1., -1.), (-1., -1., 0.), (-1., 0., 1.),
+                 (0., 1., 2.), (1., 2., 3.)]
+        self.assertEqual(len(hoped), n_ens)
+        for ensemble, hope in zip(ensembles, hoped):
+            self.assertEqual(ensemble['path_ensemble'].interfaces, hope)
+
+    def test_create_ensemble_pptis_2(self):
+        """Test create_ensemble for repptis."""
+        # with flux=False, zero_ensemble=False
+        # -------------------------------------
+        settings = create_test_settings()
+        settings['tis']['shooting_moves'] += ['sh', 'sh']
+        settings['simulation'] = {'task': 'pptis',
+                                  'interfaces': [-1., 0., 1., 2., 3.],
+                                  'flux': False,
+                                  'zero_ensemble': False,
+                                  'exe_path': HERE}
+        # just [1+], [2+], [3+]
+        fill_up_tis_and_retis_settings(settings)
+        with patch('sys.stdout', new=StringIO()):
+            ensembles = create_ensembles(settings)
+        n_ens = len(ensembles)
+        # start condition
+        for i in range(n_ens):
+            self.assertEqual(ensembles[i]['path_ensemble'].start_condition,
+                             ['R', 'L'])
+        # interfaces
+        hoped = [(-1., 0., 1.), (0., 1., 2.), (1., 2., 3.)]
+        self.assertEqual(len(hoped), n_ens)
+        for ensemble, hope in zip(ensembles, hoped):
+            self.assertEqual(ensemble['path_ensemble'].interfaces, hope)
+
+    def test_create_ensemble_pptis_3(self):
+        """Test create_ensemble for pptis."""
+        # with flux=True, zero_ensemble=False
+        # ------------------------------------
+        settings = create_test_settings()
+        settings['tis']['shooting_moves'] += ['sh', 'sh']
+        settings['simulation'] = {'task': 'pptis',
+                                  'interfaces': [-1., 0., 1., 2., 3.],
+                                  'flux': True,
+                                  'zero_ensemble': False,
+                                  'exe_path': HERE}
+        # [0-], [1+], [2+], [3+]
+        fill_up_tis_and_retis_settings(settings)
+        with patch('sys.stdout', new=StringIO()):
+            ensembles = create_ensembles(settings)
+        n_ens = len(ensembles)
+        # start condition
+        self.assertEqual(ensembles[0]['path_ensemble'].start_condition, 'R')
+        for i in range(1, n_ens):
+            self.assertEqual(ensembles[i]['path_ensemble'].start_condition,
+                             ['R', 'L'])
+        # interfaces
+        hoped = [(-np.inf, -1., -1.), (-1., 0., 1.),
+                 (0., 1., 2.), (1., 2., 3.)]
+        self.assertEqual(len(hoped), n_ens)
+        for ensemble, hope in zip(ensembles, hoped):
+            self.assertEqual(ensemble['path_ensemble'].interfaces, hope)
+
+    def test_create_ensemble_repptis_0(self):
+        """Test create_ensemble for repptis."""
+        # with flux=False, zero_ensemble=False, no permeability
+        settings = create_test_settings()
+        settings['simulation'] = {'task': 'repptis',
+                                  'interfaces': [-1., 0., 1., 2., 3.],
+                                  'flux': False,
+                                  'zero_ensemble': False,
+                                  'exe_path': HERE}
+        fill_up_tis_and_retis_settings(settings)
+        with patch('sys.stdout', new=StringIO()):
+            ensembles = create_ensembles(settings)
+        n_ens = len(ensembles)
+        for i in range(n_ens):
+            self.assertEqual(ensembles[i]['path_ensemble'].start_condition,
+                             ['R', 'L'])
+        hoped = [(-1., 0., 1.), (0., 1., 2.), (1., 2., 3.)]
+        self.assertEqual(len(hoped), n_ens)
+        for ensemble, hope in zip(ensembles, hoped):
+            self.assertEqual(ensemble['path_ensemble'].interfaces, hope)
+
+    def test_create_ensemble_repptis_1(self):
+        """Test create_ensemble for repptis."""
+        # with flux=False, zero_ensemble=False, with permeability
+        settings = create_test_settings()
+        settings['simulation'] = {'task': 'repptis',
+                                  'interfaces': [-1., 0., 1., 2., 3.],
+                                  'exe_path': HERE,
+                                  'zero_ensemble': True,
+                                  'flux': True,
+                                  'zero_left': -2.,
+                                  'permeability': True}
+        # [0-], [0+], [1+], [2+], [3+]
+        settings['tis']['shooting_moves'] += ['sh', 'sh']
+        fill_up_tis_and_retis_settings(settings)
+        with patch('sys.stdout', new=StringIO()):
+            ensembles = create_ensembles(settings)
+        # start_condition for paths
+        n_ens = len(ensembles)
+        self.assertEqual(ensembles[0]['path_ensemble'].start_condition,
+                         ['R', 'L'])
+        for i in range(1, n_ens):
+            self.assertEqual(ensembles[i]['path_ensemble'].start_condition,
+                             ['R', 'L'])
+        hoped = [(-2, -1.5, -1), (-1., -1., 0.), (-1., 0., 1.),
+                 (0., 1., 2.), (1., 2., 3.)]
+        self.assertEqual(len(hoped), n_ens)
+        for ensemble, hope in zip(ensembles, hoped):
+            self.assertEqual(ensemble['path_ensemble'].interfaces, hope)
+
+    def test_create_ensemble_repptis_2(self):
+        """Test create_ensemble for repptis."""
+        settings = create_test_settings()
+        settings['simulation'] = {'task': 'repptis',
+                                  'interfaces': [-1., 0., 1., 2., 3.],
+                                  'exe_path': HERE,
+                                  'flux': False,
+                                  'zero_ensemble': True,
+                                  }
+        settings['tis']['shooting_moves'] += ['sh']
+        fill_up_tis_and_retis_settings(settings)
+        with patch('sys.stdout', new=StringIO()):
+            ensembles = create_ensembles(settings)
+        self.assertEqual(ensembles[-1]['path_ensemble'].start_condition,
+                         ['R', 'L'])
+        hoped = [(-1., -1., 0.), (-1., 0., 1.),
+                 (0., 1., 2.), (1., 2., 3.)]
+        self.assertEqual(len(hoped), len(ensembles))
+        for ensemble, hope in zip(ensembles, hoped):
+            self.assertEqual(ensemble['path_ensemble'].interfaces, hope)
+
+    def test_raise_on_wrong_mirror(self):
+        """Test bad mirror."""
+        settings = create_test_settings()
+        settings['simulation'] = {'task': 'retis',
+                                  'interfaces': [-1., 0, 1],
+                                  'exe_path': HERE,
+                                  'zero_ensemble': True,
+                                  'flux': True,
+                                  'zero_left': -2,
+                                  'permeability': True}
+        settings['orderparameter'] = {'class': 'Permeability',
+                                      'dim': 'x',
+                                      'index': 0,
+                                      'mirror_pos': 0}
+
+        fill_up_tis_and_retis_settings(settings)
+        with self.assertRaisesRegex(ValueError, "have a mirror at -1.5"):
+            with patch('sys.stdout', new=StringIO()):
+                create_ensembles(settings)
+
+    def test_create_ensembles(self):
+        """Test create_ensembles."""
+        settings = create_test_settings()
+        settings['simulation'] = {'task': 'tis',
+                                  'interfaces': [-1., 0., 1.0, 2.0],
+                                  'exe_path': HERE,
+                                  'zero_ensemble': False,
+                                  'flux': False}
+        fill_up_tis_and_retis_settings(settings)
+        check_ensemble(settings)
+        with patch('sys.stdout', new=StringIO()):
+            ensembles = create_ensembles(settings)
+        detects = [1.0, 2.0]
+        self.assertEqual(len(ensembles), 2)
+        for iens, ens in enumerate(ensembles):
+            self.assertIsInstance(ens['path_ensemble'], PathEnsemble)
+        for iens, ens in enumerate(settings['ensemble']):
+            self.assertEqual(detects[iens], ens['tis']['detect'])
+
+    def test_fail_simulation(self):
+        """Test fail simulation."""
+        settings = {'simulation': {'task': 'fake'}}
+        with self.assertRaises(ValueError) as err:
+            create_simulation(settings)
+        self.assertEqual('Unknown simulation task fake',
+                         str(err.exception))
+
+    def test_load_simulation(self):
+        """Test cycle counter."""
+        settings = {}
+        sim = Simulation(settings, controls={'steps': 16})
+        restart = {'simulation': {'cycle': {'steps': 30,
+                                            'endcycle': 30}}}
+        sim.load_restart_info(restart)
+        self.assertTrue(sim.cycle['steps'] == 16)
+        self.assertTrue(sim.cycle['step'] == 0)
 
     def test_create_nve_simulation(self):
         """Test create_nve_simulation."""
-        system = create_test_system()
-        engine = VelocityVerlet(0.002)
-        settings = {'simulation': {'steps': 10}}
-        sim = create_nve_simulation(settings, system, engine)
+        settings = {'simulation': {'task': 'md-nve', 'steps': 10},
+                    'system': {'obj': create_test_system()},
+                    'engine': {'obj': VelocityVerlet(0.002)}}
+        sim = create_nve_simulation(settings)
         self.assertIsInstance(sim, SimulationNVE)
         self.assertEqual(sim.simulation_type,
                          SimulationNVE.simulation_type)
         del settings['simulation']['steps']
-        with self.assertRaises(ValueError):
-            create_nve_simulation(settings, system, engine)
+        with self.assertRaises(ValueError) as err:
+            create_nve_simulation(settings)
+        self.assertEqual(MISSING_STEPS_ERROR_MSG, str(err.exception))
+
+    def test_create_md_simulation(self):
+        """Test create_nve_simulation."""
+        settings = {'simulation': {'task': 'md', 'steps': 10},
+                    'system': {'obj': create_test_system()},
+                    'engine': {'obj': VelocityVerlet(0.002)}}
+        sim = create_md_simulation(settings)
+        self.assertIsInstance(sim, SimulationMD)
+        self.assertEqual(sim.simulation_type,
+                         SimulationMD.simulation_type)
+        del settings['simulation']['steps']
+        with self.assertRaises(ValueError) as err:
+            create_md_simulation(settings)
+        self.assertEqual(MISSING_STEPS_ERROR_MSG, str(err.exception))
 
     def test_create_mdflux_simulation(self):
         """Test create_mdflux_simulation."""
-        system = create_test_system()
-        engine = VelocityVerlet(0.002)
-        settings = {'simulation': {}}
-        # Test that the setup fails without an order parameter,
-        # when the engine requires it:
+        settings = {'simulation': {'task': 'mdflux'},
+                    'system': {'obj': create_test_system()},
+                    'engine': {'obj': VelocityVerlet(0.002)}}
+
         with self.assertRaises(ValueError) as err:
-            create_mdflux_simulation(settings, system, engine)
+            create_mdflux_simulation(settings)
         self.assertEqual(ORDER_ERROR_MSG, str(err.exception))
         settings['orderparameter'] = {'class': 'Position',
                                       'dim': 'x', 'index': 0,
                                       'periodic': False}
         # Test that we fail because required setting "steps" are missing:
         with self.assertRaises(ValueError) as err:
-            create_mdflux_simulation(settings, system, engine)
+            create_mdflux_simulation(settings)
         self.assertEqual(MISSING_STEPS_ERROR_MSG, str(err.exception))
         settings['simulation']['steps'] = 10
         # Test that we fail because required setting "interfaces" are
         # missing:
         with self.assertRaises(ValueError) as err:
-            create_mdflux_simulation(settings, system, engine)
+            create_mdflux_simulation(settings)
         self.assertEqual(MISSING_INTERFACES_ERROR_MSG, str(err.exception))
         settings['simulation']['interfaces'] = [0, 1]
-        sim = create_mdflux_simulation(settings, system, engine)
+        sim = create_mdflux_simulation(settings)
         self.assertIsInstance(sim, SimulationMDFlux)
 
     def test_create_umbrellawsimulation(self):
-        """Test create_umbreallaw_simulation."""
-        system = create_test_system()
-        settings = {'simulation': {}}
-        with self.assertRaises(ValueError):
-            create_umbrellaw_simulation(settings, system)
+        """Test create_umbrellaw_simulation."""
+        settings = {'simulation': {'task': 'umbrellawindow', 'seed': 3},
+                    'system': {'obj': create_test_system}}
+
+        with self.assertRaises(ValueError) as err:
+            create_umbrellaw_simulation(settings)
+        self.assertEqual('Simulation setting "umbrella" is missing!',
+                         str(err.exception))
+
         settings['simulation']['umbrella'] = [-1.0, 0.0]
-        with self.assertRaises(ValueError):
-            create_umbrellaw_simulation(settings, system)
-        settings['simulation']['over'] = -0.5
-        with self.assertRaises(ValueError):
-            create_umbrellaw_simulation(settings, system)
+        with self.assertRaises(ValueError) as err:
+            create_umbrellaw_simulation(settings)
+        self.assertEqual('Simulation setting "overlap" is missing!',
+                         str(err.exception))
+
+        settings['simulation']['overlap'] = -0.5
+        with self.assertRaises(ValueError) as err:
+            create_umbrellaw_simulation(settings)
+        self.assertEqual('Simulation setting "maxdx" is missing!',
+                         str(err.exception))
+
         settings['simulation']['maxdx'] = 1.0
-        with self.assertRaises(ValueError):
-            create_umbrellaw_simulation(settings, system)
+        with self.assertRaises(ValueError) as err:
+            create_umbrellaw_simulation(settings)
+        self.assertEqual('Simulation setting "mincycle" is missing!',
+                         str(err.exception))
         settings['simulation']['mincycle'] = 10
-        sim = create_umbrellaw_simulation(settings, system)
+        sim = create_umbrellaw_simulation(settings)
         self.assertIsInstance(sim, UmbrellaWindowSimulation)
 
+        del settings['system']
+        with patch('sys.stdout', new=StringIO()):
+            with self.assertRaises(KeyError) as err:
+                create_umbrellaw_simulation(settings)
+        self.assertEqual("'system'", str(err.exception))
+
     def test_create_tis_simulation(self):
-        """Test create_tis_simulations."""
-        system = create_test_system()
-        engine = VelocityVerlet(0.002)
-        settings = {
-            'simulation': {
-                'task': 'tis',
-                'interfaces': [-1., 0., 1.],
-            },
-            'tis': SECTIONS['tis'],
-        }
+        """Test create_tis_simulation."""
+        settings = {'simulation': {'task': 'tis',
+                                   'interfaces': [-1., 0., 1.],
+                                   'exe_path': HERE,
+                                   'zero_ensemble': False,
+                                   'flux': False},
+                    'tis': SECTIONS['tis'],
+                    'particles': {'type': 'internal'},
+                    'system': {'obj': create_test_system()},
+                    'engine': {'obj': VelocityVerlet(0.002)},
+                    'output': SECTIONS['output']}
+        fill_up_tis_and_retis_settings(settings)
+
         # Test that the set up fails, when we did not define an
         # order parameter and the engine wants it:
-        with self.assertRaises(ValueError) as err:
-            create_tis_simulations(settings, system, engine)
+        with patch('sys.stdout', new=StringIO()):
+            with self.assertRaises(ValueError) as err:
+                create_tis_simulation(settings)
         self.assertEqual(ORDER_ERROR_MSG, str(err.exception))
         # Continue testing with an order parameter defined:
         settings['orderparameter'] = {'class': 'Position',
                                       'dim': 'x', 'index': 0,
                                       'periodic': False}
         # Test that we fail when we are missing some settings:
-        with self.assertRaises(ValueError) as err:
-            create_tis_simulations(settings, system, engine)
+        fill_up_tis_and_retis_settings(settings)
+        with patch('sys.stdout', new=StringIO()):
+            with self.assertRaises(ValueError) as err:
+                create_tis_simulation(settings)
+        # it should raise also missing steps
         self.assertEqual(MISSING_STEPS_ERROR_MSG, str(err.exception))
         settings['simulation']['steps'] = 10
-        sim = create_tis_simulations(settings, system, engine)
-        self.assertIsInstance(sim, SimulationSingleTIS)
+        fill_up_tis_and_retis_settings(settings)
+        with patch('sys.stdout', new=StringIO()):
+            sim = create_tis_simulation(settings)
+        self.assertIsInstance(sim, SimulationTIS)
+        del settings['ensemble']
+        del settings['system']
+        fill_up_tis_and_retis_settings(settings)
+        with patch('sys.stdout', new=StringIO()):
+            with self.assertRaises(KeyError) as err:
+                create_tis_simulation(settings)
+        self.assertEqual("'system'", str(err.exception))
 
     def test_create_tis_simulations(self):
         """Test create_tis_simulations."""
-        system = create_test_system()
-        engine = VelocityVerlet(0.002)
-        settings = {
-            'simulation': {
-                'task': 'tis-multiple',
-                'interfaces': [-1., 0., 1., 2],
-                'steps': 10,
-            },
-            'tis': SECTIONS['tis'],
-            'orderparameter': {
-                'class': 'Position',
-                'dim': 'x',
-                'index': 0,
-                'periodic': False,
-            },
-            'output': SECTIONS['output'],
-        }
-        simulations = create_tis_simulations(settings, system, engine)
-        for sim, i in zip(simulations, [1, 2, 3]):
-            self.assertEqual(sim['tis']['ensemble_number'], i)
+        settings = create_test_settings()
+        settings['simulation'] = {'task': 'tis',
+                                  'interfaces': [-1., 0., 1., 2],
+                                  'steps': 10,
+                                  'exe_path': HERE,
+                                  'zero_ensemble': False,
+                                  'flux': False}
+        settings['tis'] = SECTIONS['tis']
+        fill_up_tis_and_retis_settings(settings)
+        with patch('sys.stdout', new=StringIO()):
+            simulations = create_tis_simulation(settings)
+        self.assertIsInstance(simulations, SimulationTIS)
+        del settings['ensemble']
+        del settings['engine']
+        fill_up_tis_and_retis_settings(settings)
+        with patch('sys.stdout', new=StringIO()):
+            with self.assertRaises(ValueError) as err:
+                create_tis_simulation(settings)
+        self.assertEqual("Could not create engine from settings!",
+                         str(err.exception))
 
     def test_create_retis_simulation(self):
-        """Test create_retis_simulations."""
-        system = create_test_system()
-        engine = VelocityVerlet(0.002)
-        settings = {
-            'simulation': {
-                'task': 'retis',
-                'interfaces': [-1., 0., 1.],
-            },
-            'tis': SECTIONS['tis'],
-            'retis': SECTIONS['retis'],
-        }
+        """Test create_retis_simulation."""
+        settings = {'simulation': {'task': 'retis',
+                                   'interfaces': [-1., 0., 1.],
+                                   'exe_path': '.',
+                                   'zero_ensemble': True,
+                                   'flux': True},
+                    'tis': SECTIONS['tis'],
+                    'retis': SECTIONS['retis'],
+                    'engine': {'obj': VelocityVerlet(0.002)},
+                    'particles': {'type': 'internal'},
+                    'system': {'type': 'internal',
+                               'units': 'lj',
+                               'obj': create_test_system()}}
+
+        del settings['tis']['ensemble_number']
+        fill_up_tis_and_retis_settings(settings)
+
         # Test that we fail without an order parameter defined:
-        with self.assertRaises(ValueError) as err:
-            create_retis_simulation(settings, system, engine)
+        with patch('sys.stdout', new=StringIO()):
+            with self.assertRaises(ValueError) as err:
+                create_retis_simulation(settings)
         self.assertEqual(ORDER_ERROR_MSG, str(err.exception))
         settings['orderparameter'] = {'class': 'Position',
                                       'dim': 'x', 'index': 0,
                                       'periodic': False}
+
+        fill_up_tis_and_retis_settings(settings)
         # Test that we fail when we are missing some settings:
-        with self.assertRaises(ValueError) as err:
-            create_retis_simulation(settings, system, engine)
+        with patch('sys.stdout', new=StringIO()):
+            with self.assertRaises(ValueError) as err:
+                create_retis_simulation(settings)
         self.assertEqual(MISSING_STEPS_ERROR_MSG, str(err.exception))
         settings['simulation']['steps'] = 10
-        sim = create_retis_simulation(settings, system, engine)
+        with patch('sys.stdout', new=StringIO()):
+            sim = create_retis_simulation(settings)
         self.assertIsInstance(sim, SimulationRETIS)
+        del settings['ensemble']
+        del settings['engine']
+        fill_up_tis_and_retis_settings(settings)
+        with patch('sys.stdout', new=StringIO()):
+            with self.assertRaises(ValueError) as err:
+                create_tis_simulation(settings)
+        self.assertEqual("Could not create engine from settings!",
+                         str(err.exception))
+
+    def test_create_retis_simulation2(self):
+        """Test create_simulation for SimulationRETIS."""
+        settings = create_test_settings()
+        settings['tis'] = SECTIONS['tis']
+        settings['retis'] = SECTIONS['retis']
+
+        fill_up_tis_and_retis_settings(settings)
+        with patch('sys.stdout', new=StringIO()):
+            sim = create_retis_simulation(settings)
+        self.assertIsInstance(sim, SimulationRETIS)
+        del settings['ensemble']
+        del settings['system']
+        fill_up_tis_and_retis_settings(settings)
+        with patch('sys.stdout', new=StringIO()):
+            with self.assertRaises(KeyError) as err:
+                create_tis_simulation(settings)
+        self.assertEqual("'system'", str(err.exception))
 
     def test_create_simulation(self):
         """Test create_simulation."""
         settings = {'simulation': {'task': 'does-not-exist'}}
-        with self.assertRaises(ValueError):
-            create_simulation(settings, None)
+        with self.assertRaises(ValueError) as err:
+            create_simulation(settings)
+        self.assertEqual('Unknown simulation task does-not-exist',
+                         str(err.exception))
 
     def test_create_simulationnve(self):
-        """Test create_simulation for NVE."""
-        settings = {'simulation': {'task': 'does-not-exist'}}
-        system = create_test_system()
-        engine = VelocityVerlet(0.002)
-        settings = {'simulation': {'steps': 10, 'task': 'md-nve'}}
-        kwargs = {}
-        with self.assertRaises(ValueError):
-            create_simulation(settings, kwargs)
-        kwargs = {'system': system}
-        with self.assertRaises(ValueError):
-            create_simulation(settings, kwargs)
-        kwargs = {'system': system, 'engine': engine}
-        sim = create_simulation(settings, kwargs)
+        """Test create_simulation for NVE"""
+        settings = {'simulation': {'steps': 10, 'task': 'md-nve'},
+                    'system': {'obj': create_test_system()},
+                    'engine': {'obj': VelocityVerlet(0.002)}}
+        sim = create_simulation(settings)
         self.assertIsInstance(sim, SimulationNVE)
 
     def test_create_simulationmdflux(self):
-        """Test create_simulation for MD-Flux."""
-        system = create_test_system()
-        engine = VelocityVerlet(0.002)
-        settings = {
-            'simulation': {
-                'steps': 10,
-                'task': 'md-flux',
-                'interfaces': [-1.0],
-            },
-            'orderparameter': {
-                'class': 'Position',
-                'dim': 'x',
-                'index': 0,
-                'periodic': False
-            },
-        }
-        kwargs = {}
-        with self.assertRaises(ValueError):
-            create_simulation(settings, kwargs)
-        kwargs = {'system': system}
-        with self.assertRaises(ValueError):
-            create_simulation(settings, kwargs)
-        kwargs = {'system': system, 'engine': engine}
-        sim = create_simulation(settings, kwargs)
+        """Test create_simulation for MD-Flux"""
+        settings = create_test_settings()
+        settings['simulation'] = {'steps': 10,
+                                  'task': 'md-flux',
+                                  'interfaces': [-1.0]}
+        sim = create_mdflux_simulation(settings)
         self.assertIsInstance(sim, SimulationMDFlux)
 
     def test_create_simulationumb(self):
-        """Test create_simulation for UmbrellaWindow."""
-        system = create_test_system()
-        settings = {
-            'simulation': {
-                'task': 'umbrellawindow',
-                'umbrella': [-1.0, 0.0],
-                'over': -0.5,
-                'maxdx': 1.0,
-                'mincycle': 10,
-            },
-            'orderparameter': {
-                'class': 'Position',
-                'dim': 'x',
-                'index': 0,
-                'periodic': False
-            },
-        }
-        kwargs = {'system': system}
-        sim = create_simulation(settings, kwargs)
+        """Test create_simulation for UmbrellaWindow"""
+        settings = create_test_settings()
+        settings['simulation'] = {'task': 'umbrellawindow',
+                                  'umbrella': [-1.0, 0.0],
+                                  'overlap': -0.5,
+                                  'maxdx': 1.0,
+                                  'mincycle': 10}
+        sim = create_umbrellaw_simulation(settings)
         self.assertIsInstance(sim, UmbrellaWindowSimulation)
-
-    def test_create_simulationtis1(self):
-        """Test create_simulation for SimulationTIS single."""
-        system = create_test_system()
-        engine = VelocityVerlet(0.002)
-        # TIS:
-        settings = {
-            'simulation': {
-                'task': 'tis',
-                'interfaces': [-1., 0., 1.],
-                'steps': 10,
-            },
-            'tis': SECTIONS['tis'],
-            'orderparameter': {
-                'class': 'Position',
-                'dim': 'x',
-                'index': 0,
-                'periodic': False,
-            },
-            'output': SECTIONS['output'],
-        }
-        kwargs = {'system': system, 'engine': engine}
-        sim = create_simulation(settings, kwargs)
-        self.assertIsInstance(sim, SimulationSingleTIS)
 
     def test_create_simulationtis2(self):
         """Test create_simulation for SimulationTIS multiple."""
-        system = create_test_system()
-        engine = VelocityVerlet(0.002)
-        # TIS:
-        settings = {
-            'simulation': {
-                'task': 'tis-multiple',
-                'interfaces': [-1., 0., 1., 2.0],
-                'steps': 10,
-            },
-            'tis': SECTIONS['tis'],
-            'orderparameter': {
-                'class': 'Position',
-                'dim': 'x',
-                'index': 0,
-                'periodic': False,
-            },
-            'output': SECTIONS['output'],
-        }
-        kwargs = {'system': system, 'engine': engine}
-        simulations = create_simulation(settings, kwargs)
-        for sim, i in zip(simulations, [1, 2, 3]):
-            self.assertEqual(sim['tis']['ensemble_number'], i)
-
-    def test_create_simulationretis(self):
-        """Test create_simulation for SimulationRETIS."""
-        system = create_test_system()
-        engine = VelocityVerlet(0.002)
-        settings = {
-            'simulation': {
-                'steps': 10,
-                'task': 'retis',
-                'interfaces': [-1., 0., 1.],
-            },
-            'tis': SECTIONS['tis'],
-            'retis': SECTIONS['retis'],
-            'orderparameter': {
-                'class': 'Position',
-                'dim': 'x',
-                'index': 0,
-                'periodic': False,
-            }
-        }
-        kwargs = {'system': system, 'engine': engine}
-        sim = create_simulation(settings, kwargs)
-        self.assertIsInstance(sim, SimulationRETIS)
-        self.assertEqual(sim.path_ensembles[0].interfaces, (float('-inf'),
-                                                            -1.0, -1.0))
-
-    def test_create_simulationretis_zero_left(self):
-        """Test create_simulation for SimulationRETIS with zero_lef defined."""
-        system = create_test_system()
-        engine = VelocityVerlet(0.002)
-        settings = {
-            'simulation': {
-                'steps': 10,
-                'task': 'retis',
-                'interfaces': [-1., 0., 1.],
-                'zero_left': -101
-            },
-            'tis': SECTIONS['tis'],
-            'retis': SECTIONS['retis'],
-            'orderparameter': {
-                'class': 'Position',
-                'dim': 'x',
-                'index': 0,
-                'periodic': False,
-            }
-        }
-        kwargs = {'system': system, 'engine': engine}
-        sim = create_simulation(settings, kwargs)
-        self.assertIsInstance(sim, SimulationRETIS)
-        self.assertEqual(sim.path_ensembles[0].interfaces, (-101,
-                                                            -1.0, -1.0))
+        # TIS-multiple:
+        settings = create_test_settings()
+        settings['simulation'] = {'task': 'tis',
+                                  'interfaces': [-1., 0., 1., 2.0],
+                                  'steps': 10,
+                                  'exe_path': HERE,
+                                  'zero_ensemble': False,
+                                  'flux': False}
+        settings['tis'] = SECTIONS['tis']
+        fill_up_tis_and_retis_settings(settings)
+        with patch('sys.stdout', new=StringIO()):
+            simulations = create_tis_simulation(settings)
+        self.assertIsInstance(simulations, SimulationTIS)
 
 
 if __name__ == '__main__':

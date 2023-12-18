@@ -1,5 +1,6 @@
+#! /usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Methods that will output results from the analysis functions.
 
@@ -27,17 +28,19 @@ run_analysis_files (:py:func:`.run_analysis_files`)
 """
 import logging
 import os
+import numpy as np
 from pyretis.core.units import create_conversion_factors
 from pyretis.core.pathensemble import generate_ensemble_name
 from pyretis.analysis import (analyse_flux, analyse_energies, analyse_orderp,
-                              analyse_path_ensemble, match_probabilities,
-                              retis_flux, retis_rate)
+                              analyse_path_ensemble, analyse_repptis_ensemble,
+                              match_probabilities, retis_flux, retis_rate,
+                              perm_calculations)
 from pyretis.inout import print_to_screen
 from pyretis.inout.formats.formatter import format_number
 from pyretis.inout.plotting import create_plotter
 from pyretis.inout.plotting import TxtPlotter
 from pyretis.inout.report import generate_report
-from pyretis.inout.settings import (SECTIONS, copy_settings)
+from pyretis.inout.settings import SECTIONS, copy_settings
 from pyretis.inout.formats.pathensemble import PathEnsembleFile
 from pyretis.inout.formats.energy import EnergyFile
 from pyretis.inout.formats.order import OrderFile
@@ -47,13 +50,16 @@ logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 
-__all__ = ['analyse_file', 'run_analysis_files']
+__all__ = ['analyse_file', 'run_analysis_files',
+           'run_analysis', 'read_first_block',
+           'repptis_running_pcross_analysis']
 
 
 _ANALYSIS_FUNCTIONS = {'cross': analyse_flux,
                        'order': analyse_orderp,
                        'energy': analyse_energies,
-                       'pathensemble': analyse_path_ensemble}
+                       'pathensemble': analyse_path_ensemble,
+                       'pathensemble_repptis': analyse_repptis_ensemble}
 
 
 # Input files for analysis
@@ -61,8 +67,9 @@ _FILES = {'md-flux': {},
           'md-nve': {},
           'md': {},
           'tis': {},
-          'tis-multiple': {},
-          'retis': {}}
+          'make-tis-files': {},
+          'retis': {},
+          'repptis': {}}
 # Add files
 for key in ('cross', 'energy', 'order'):
     _FILES['md-flux'][key] = OUTPUT_TASKS[key]['filename']
@@ -70,7 +77,7 @@ for key in ('energy',):
     _FILES['md-nve'][key] = OUTPUT_TASKS[key]['filename']
     _FILES['md'][key] = OUTPUT_TASKS[key]['filename']
 for key in ('pathensemble',):
-    for key2 in ('tis-multiple', 'tis', 'retis'):
+    for key2 in ('make-tis-files', 'tis', 'retis', 'repptis'):
         _FILES[key2][key] = OUTPUT_TASKS[key]['filename']
 
 
@@ -91,10 +98,10 @@ def run_analysis(settings):
     """
     runners = {'retis': run_retis_analysis,
                'tis': run_tis_analysis,
-               'tis-multiple': run_tis_analysis,
-               'md-flux': run_mdflux_analysis}
-    sim = settings['simulation']
-    sim_task = sim['task'].lower()
+               'make-tis-files': run_tis_analysis,
+               'md-flux': run_mdflux_analysis,
+               'repptis': run_repptis_analysis}
+    sim_task = settings['simulation']['task'].lower()
     report_dir = settings['analysis'].get('report-dir', None)
     plotter = create_plotter(settings['analysis']['plot'],
                              out_dir=report_dir)
@@ -105,12 +112,12 @@ def run_analysis(settings):
     if sim_task in runners.keys():
         runner = runners[sim_task]
         return runner(settings, plotter, txt_plotter)
-    msgtxt = 'Unknown analysis task "{}" requested!'.format(sim_task)
+    msgtxt = f'Unknown analysis task "{sim_task}" requested!'
     logger.error(msgtxt)
     raise ValueError(msgtxt)
 
 
-def get_path_ensemble_files(ensemble, settings, detect,
+def get_path_ensemble_files(ensemble_number, settings, detect,
                             interfaces):
     """Return files for a single path ensemble.
 
@@ -120,7 +127,7 @@ def get_path_ensemble_files(ensemble, settings, detect,
 
     Parameters
     ----------
-    ensemble : int
+    ensemble_number : int
         This is the integer representing the ensemble.
     settings : dict
         The settings to use for an analysis/simulation
@@ -143,10 +150,12 @@ def get_path_ensemble_files(ensemble, settings, detect,
     lsetting = copy_settings(settings)
     lsetting['simulation']['interfaces'] = interfaces
     lsetting['tis']['detect'] = detect
-    lsetting['tis']['ensemble_number'] = ensemble
+    lsetting['tis']['ensemble_number'] = ensemble_number
+    run_path = settings['simulation']['exe-path']
     files = []
     for file_type in _FILES[sim_task]:
-        filename = os.path.join(generate_ensemble_name(ensemble),
+        filename = os.path.join(run_path,
+                                generate_ensemble_name(ensemble_number),
                                 _FILES[sim_task][file_type])
         if os.path.isfile(filename):
             files.append((file_type, filename))
@@ -191,7 +200,11 @@ def get_path_simulation_files(sim_settings):
     interfaces = sim_settings['simulation']['interfaces']
     reactant = interfaces[0]
     product = interfaces[-1]
-    if sim_settings['simulation']['task'] == 'tis-multiple':
+    task = sim_settings['simulation']['task']
+    # for PPTIS or REPPTIS: memory
+    mem = sim_settings.get(task, {}).get('memory', 1)
+
+    if task == 'make-tis-files':
         all_files.append(None)
         all_settings.append(None)
     else:  # just add the 0 ensemble
@@ -202,11 +215,13 @@ def get_path_simulation_files(sim_settings):
         all_files.append(files)
         all_settings.append(setts)
     for i, middle in enumerate(interfaces[:-1]):
-        try:
-            detect = interfaces[i + 1]
-        except IndexError:
-            detect = product
-        interface = [reactant, middle, product]
+        detect = interfaces[i + 1] if i < len(interfaces) else product
+        if task in ['pptis', 'repptis']:
+            reactant = interfaces[max(0, i - mem)]
+            product = interfaces[min(i + mem, len(interfaces) - 1)]
+            interface = [reactant, middle, product]
+        else:
+            interface = [reactant, middle, product]
         setts, files = get_path_ensemble_files(i + 1, sim_settings, detect,
                                                interface)
         all_files.append(files)
@@ -217,10 +232,10 @@ def get_path_simulation_files(sim_settings):
 def print_value_error(heading, value, rel_error, level=None):
     """Print out the matched probabilities."""
     val = format_number(value, 0.1, 100)
-    msgtxt = '{}: {}'.format(heading, val)
+    msgtxt = f'{heading}: {val}'
     print_to_screen(msgtxt.strip(), level=level)
     fmt_scale = format_number(rel_error * 100, 0.1, 100)
-    msgtxt = '(Relative error: {} %)'.format(fmt_scale.rstrip())
+    msgtxt = f'(Relative error: {fmt_scale.rstrip()} %)'
     print_to_screen(msgtxt, level=level)
 
 
@@ -243,12 +258,12 @@ def run_single_tis_analysis(settings, plotter, txt_plotter):
 
     """
     sim = settings['simulation']
-    tis = settings['tis']
-    sett, files = get_path_ensemble_files(tis['ensemble_number'],
-                                          settings,
-                                          tis['detect'],
-                                          sim['interfaces'])
-    msgtxt = 'Analysing ensemble {}'.format(tis['ensemble_number'])
+    tis = settings['ensemble'][0]['tis']
+    sett, files = get_path_ensemble_files(
+        tis['ensemble_number'], settings,
+        tis.get('detect', sim['interfaces'][-1]),
+        sim['interfaces'])
+    msgtxt = f"Analysing ensemble {tis['ensemble_number']}"
     print_to_screen(msgtxt, level='info')
     print_to_screen()
     result = run_analysis_files(sett, files, plotter, txt_plotter)
@@ -276,7 +291,8 @@ def run_tis_analysis(settings, plotter, txt_plotter):
         The output from the analysis.
 
     """
-    if settings['simulation']['task'] == 'tis':
+    list_ens = settings['ensemble']
+    if len(list_ens) == 1 and settings['simulation']['task'] == 'tis':
         return run_single_tis_analysis(settings, plotter, txt_plotter)
     results = {'cross': None, 'pathensemble': [], 'matched': None}
     all_settings, all_files = get_path_simulation_files(settings)
@@ -288,7 +304,7 @@ def run_tis_analysis(settings, plotter, txt_plotter):
             logger.info(msgtxt)
             print_to_screen(msgtxt, level='warning')
         else:
-            msgtxt = 'Analysing ensemble {} of {}'.format(i, nens)
+            msgtxt = f'Analysing ensemble {i} of {nens}'
             print_to_screen(msgtxt, level='info')
             print_to_screen()
             result = run_analysis_files(sett, files, plotter, txt_plotter)
@@ -324,18 +340,17 @@ def run_retis_analysis(settings, plotter, txt_plotter):
 
     """
     units = settings['system']['units']
-    if 'unit-system' in settings:
-        create_conversion_factors(units, **settings['unit-system'])
-    else:
-        create_conversion_factors(units)
+    permeability = settings['simulation'].get('permeability', False)
+    create_conversion_factors(units, **settings.get('unit-system', {}))
     all_settings, all_files = get_path_simulation_files(settings)
     results = {'cross': None,
                'pathensemble': [],
-               'matched': None}
+               'matched': None,
+               'permeability': permeability}
     nens = len(all_settings) - 1
     print_to_screen()
     for i, (sett, files) in enumerate(zip(all_settings, all_files)):
-        msgtxt = 'Analysing ensemble {} of {}'.format(i, nens)
+        msgtxt = f'Analysing ensemble {i} of {nens}'
         print_to_screen(msgtxt, level='info')
         print_to_screen()
         if i == 0:
@@ -369,17 +384,169 @@ def run_retis_analysis(settings, plotter, txt_plotter):
                                   flux, flux_error)
     results['rate'] = {'value': rate, 'error': rate_error,
                        'unit': units}
+
+    xi, tau, perm, xi_err, tau_err, perm_err = perm_calculations(
+        results['pathensemble0'], out['prob'], out['relerror'])
+    xi_figs, tau_figs = perm_figures(results['pathensemble0'], plotter)
+    results['xi'] = {'value': xi,
+                     'error': xi_err,
+                     'fig': xi_figs}
+    results['tau'] = {'value': tau,
+                      'error': tau_err,
+                      'fig': tau_figs}
+    results['perm'] = {'value': perm,
+                       'error': perm_err}
+
     print_to_screen('Overall results', level='success')
     print_to_screen('===============', level='success')
     print_to_screen()
     print_value_error('RETIS Crossing probability',
                       out['prob'], out['relerror'], level='success')
     print_to_screen()
-    print_value_error('Initial flux (units 1/{})'.format(units), flux,
+    print_value_error(f'Initial flux (units 1/{units})', flux,
                       flux_error, level='success')
     print_to_screen()
-    print_value_error('Rate constant (units 1/{})'.format(units), rate,
+    print_value_error(f'Rate constant (units 1/{units})', rate,
                       rate_error, level='success')
+    if permeability:
+        print_to_screen()
+        print_value_error('Xi', xi, xi_err, level='success')
+        print_to_screen()
+        print_value_error(f'Tau/dz (unit: {units}/OP-unit)',
+                          tau, tau_err, level='success')
+        print_to_screen()
+        print_value_error(f'Permeability (unit: OP-unit/{units})',
+                          perm, perm_err, level='success')
+    return results
+
+
+def run_repptis_analysis(settings, plotter, txt_plotter):
+    """Run the analysis for PPRETIS.
+
+    Parameters
+    ----------
+    settings : dict
+        The settings to use for an analysis/simulation.
+    plotter : object like :py:class:`.Plotter`
+        This is the object that handles the plotting.
+    txt_plotter : object like :py:class:`.Plotter`
+        This is the object that handles the text output.
+
+    """
+    units = settings['system']['units']
+    permeability = settings['simulation'].get('permeability', False)
+    create_conversion_factors(units, **settings.get('unit-system', {}))
+    all_settings, all_files = get_path_simulation_files(settings)
+    results = {'cross': None,
+               'pathensemble': [],
+               'matched': None,
+               'permeability': permeability,
+               'reptis': {}}
+    nens = len(all_settings) - 1
+    print_to_screen()
+    probs = []
+    ptypes = []
+    for i, (sett, files) in enumerate(zip(all_settings, all_files)):
+        msgtxt = f'Analysing ensemble {i} of {nens}'
+        # We change filetype to repptis instead of retis for anaylsis
+        repptis_str = 'pathensemble_repptis'
+        files0 = [(repptis_str, files[0][1])]
+        print_to_screen(msgtxt, level='info')
+        print_to_screen()
+        if i == 0:
+            result = run_analysis_files(sett, files0, plotter, txt_plotter)
+            results['pathensemble0'] = result['pathensemble_repptis']
+            report_txt = generate_report('retis0', result, output='txt')[0]
+            print_to_screen(''.join(report_txt))
+            print_to_screen()
+        else:
+            result = run_analysis_files(sett, files0, plotter, txt_plotter)
+            results['pathensemble'].append(result['pathensemble_repptis'])
+            pp_lmr = result[repptis_str]['out']['prun_sl'][-1]
+            pp_rml = result[repptis_str]['out']['prun_sr'][-1]
+            ptype = result[repptis_str]['out']['ptypes']
+            ptypes.append(ptype)
+            pp_lml = 1 - pp_lmr
+            pp_rmr = 1 - pp_rml
+            pp_lm_err = result[repptis_str]['out']['blockerror_sl'][2]
+            pp_rm_err = result[repptis_str]['out']['blockerror_sr'][2]
+            probs.append({"LMR": {"mean": pp_lmr,
+                                  "std": pp_lm_err},
+                          "RML": {"mean": pp_rml,
+                                  "std": pp_rm_err},
+                          "RMR": {"mean": pp_rmr,
+                                  "std": pp_rm_err},
+                          "LML": {"mean": pp_lml,
+                                  "std": pp_lm_err}, })
+
+            report_txt = generate_report('pptis', result, output='txt')[0]
+            print_to_screen(''.join(report_txt))
+            print_to_screen()
+
+    # flux first:
+    time_subcycles = settings['engine'].get('subcycles', 1)
+    timestep = settings['engine']['timestep'] * time_subcycles
+    flux, flux_error = retis_flux(results['pathensemble0']['out'],
+                                  results['pathensemble'][0]['out'],
+                                  timestep)
+    results['flux'] = {'value': flux, 'error': flux_error,
+                       'unit': units}
+
+    results.update(repptis_running_pcross_analysis(ptypes))
+    figures = plotter.output_matched_probability(
+            [],
+            settings['simulation']['interfaces'],
+            results, reptis=True
+    )
+    txt_plotter.output_matched_probability(
+            [],
+            settings['simulation']['interfaces'],
+            results, reptis=True
+    )
+    results['matched_fig'] = figures
+    results['cross'] = {'value': results['pcrossrun'][-1],
+                        'error': results['pcrossrun_hav_rele']}
+
+    rate, rate_error = retis_rate(results['pcrossrun'][-1],
+                                  results['pcrossrun_hav_rele'],
+                                  flux, flux_error)
+    results['rate'] = {'value': rate, 'error': rate_error,
+                       'unit': units}
+
+    xi, tau, perm, xi_err, tau_err, perm_err = perm_calculations(
+        results['pathensemble0'], results['pcrossrun'][-1],
+        results['pcrossrun_hav_rele'])
+    xi_figs, tau_figs = perm_figures(results['pathensemble0'], plotter)
+    results['xi'] = {'value': xi,
+                     'error': xi_err,
+                     'fig': xi_figs}
+    results['tau'] = {'value': tau,
+                      'error': tau_err,
+                      'fig': tau_figs}
+    results['perm'] = {'value': perm,
+                       'error': perm_err}
+
+    print_to_screen('Overall results', level='success')
+    print_to_screen('===============', level='success')
+    print_to_screen()
+    print_value_error('REPPTIS Crossing probability',
+                      results['pcrossrun'][-1],
+                      results['pcrossrun_hav_rele'], level='success')
+    print_to_screen()
+    print_value_error(f'Initial flux (units 1/{units})', flux,
+                      flux_error, level='success')
+    print_to_screen()
+    print_value_error(f'Rate constant (units 1/{units})', rate,
+                      rate_error, level='success')
+    if permeability:
+        print_to_screen()
+        print_value_error('Xi', xi, xi_err, level='success')
+        print_to_screen()
+        print_value_error(f'Tau/dz (unit: {units}/OP-unit)',
+                          tau, tau_err, level='success')
+        print_to_screen()
+        print_value_error(f'Permeability (unit: OP-unit/{units})',
+                          perm, perm_err, level='success')
     return results
 
 
@@ -403,11 +570,12 @@ def run_mdflux_analysis(settings, plotter, txt_plotter):
     """
     sim = settings['simulation']
     sim_task = sim['task']
+    exe_path = settings['simulation'].get('exe-path', os.getcwd())
     files = []
     for file_type in _FILES[sim_task]:
         filename = _FILES[sim_task][file_type]
-        if os.path.isfile(filename):
-            files.append((file_type, filename))
+        if os.path.isfile(os.path.join(exe_path, filename)):
+            files.append((file_type, os.path.join(exe_path, filename)))
     msgtxt = 'Running analysis of a MD flux simulation...'
     print_to_screen(msgtxt, level='info')
     print_to_screen()
@@ -473,14 +641,11 @@ def read_first_block(file_type, file_name):
     """
     first_block = None
     class_map = {'energy': EnergyFile, 'order': OrderFile, 'cross': CrossFile}
-    try:
-        klass = class_map[file_type]
-    except KeyError:
-        logger.error(
-            'Unknown file type "%s" requested for analysis.',
-            file_type
-        )
+    if file_type not in class_map:
         raise ValueError('Unknown file type requested in analysis.')
+
+    klass = class_map[file_type]
+
     with klass(file_name, 'r') as fileobj:
         for block in fileobj.load():
             if first_block is None:
@@ -531,7 +696,8 @@ def output_results(file_type, plotter, result, rawdata):
         return plotter.output_energy(result, rawdata)
     if file_type == 'pathensemble':
         return plotter.output_path(result, rawdata)
-    return None
+    if file_type == 'pathensemble_repptis':
+        return plotter.output_pppath(result, rawdata)
 
 
 def analyse_file(file_type, file_name, settings):
@@ -566,7 +732,7 @@ def analyse_file(file_type, file_name, settings):
     """
     function = _ANALYSIS_FUNCTIONS.get(file_type, None)
     if function is None:
-        msgtxt = 'Unknown file type "{}" requested!'.format(file_type)
+        msgtxt = f'Unknown file type "{file_type}" requested!'
         logger.error(msgtxt)
         raise ValueError(msgtxt)
     results, raw_data = None, None
@@ -574,12 +740,13 @@ def analyse_file(file_type, file_name, settings):
         # Read the first block of raw data and analyse it:
         raw_data = read_first_block(file_type, file_name)
         results = function(raw_data, settings)
-    elif file_type == 'pathensemble':
+    elif file_type in ('pathensemble', 'pathensemble_repptis'):
         # Create a PathEnsembleFile object to use for the analysis.
+        interfaces = settings['simulation']['interfaces']
         ensemble_settings = {
             'ensemble_number': settings['tis']['ensemble_number'],
-            'interfaces': settings['simulation']['interfaces'],
-            'detect': settings['tis']['detect'],
+            'interfaces': interfaces,
+            'detect': settings['tis'].get('detect', interfaces[1])
         }
         raw_data = PathEnsembleFile(file_name, 'r', ensemble_settings)
         results = function(raw_data, settings)
@@ -587,7 +754,7 @@ def analyse_file(file_type, file_name, settings):
 
 
 def analyse_and_output_matched(raw_data, plotter, txt_plotter,
-                               settings=None, flux=None):
+                               settings, flux=None):
     """Analyse and output matched probability.
 
     This will calculate the over-all crossing probability by combining
@@ -651,3 +818,206 @@ def analyse_and_output_matched(raw_data, plotter, txt_plotter,
                                                     detect,
                                                     result)
     return result, figures, outtxt
+
+
+def perm_figures(results0, plotter):
+    out = results0['out']
+    # Quick check to see if we need to do something
+    if 'xi' not in out:
+        return None, None
+    xi = out['xi']
+    xierror = out['xierror']
+
+    bin_edges = out['tau_bin']
+    tau = out['tau']
+    tauerror = out['tauerror']
+    tau_ref = out['tau_ref']
+    tau_ref_bins = out['tau_ref_bins']
+    xi_figures = plotter.output_xi(xi, xierror)
+    tau_figures = plotter.output_tau(tau, tauerror, bin_edges,
+                                     tau_ref, tau_ref_bins)
+    return xi_figures, tau_figures
+
+
+def repptis_running_pcross_analysis(l_ptypes):
+    """Recursive block analysis for repptis.
+
+    Parameters
+    ----------
+    l_ptypes : list
+        List of cumsum ptypes for the ensembles [0+-'], [1+-], ... [N-1+-].
+
+    Returns
+    -------
+    results : dict
+        The results from the analysis.
+
+    """
+    l_locps = []
+    for ptypes in l_ptypes:  # loop over ensembles
+        # if a division by zero occurs, we set the probability to NaN
+        # casting to floats for true_divide
+        ptypes = ptypes.astype(float)
+        pmps = np.divide(ptypes[:, 0], ptypes[:, 0]+ptypes[:, 1],
+                         out=np.full_like(ptypes[:, 0], np.nan),
+                         where=(ptypes[:, 0]+ptypes[:, 1]) != 0)
+        pmms = np.divide(ptypes[:, 1], ptypes[:, 0]+ptypes[:, 1],
+                         out=np.full_like(ptypes[:, 0], np.nan),
+                         where=(ptypes[:, 0]+ptypes[:, 1]) != 0)
+        ppps = np.divide(ptypes[:, 2], ptypes[:, 2]+ptypes[:, 3],
+                         out=np.full_like(ptypes[:, 2], np.nan),
+                         where=(ptypes[:, 2]+ptypes[:, 3]) != 0)
+        ppms = np.divide(ptypes[:, 3], ptypes[:, 2]+ptypes[:, 3],
+                         out=np.full_like(ptypes[:, 2], np.nan),
+                         where=(ptypes[:, 2]+ptypes[:, 3]) != 0)
+        # we have to_list them, as we will append them until all have N_max cyc
+        l_locps.append([pmms.tolist(), pmps.tolist(),
+                        ppps.tolist(), ppms.tolist()])
+    # So, l_locps: list of lists of lists: n_ensembles x 4 x n_blocks
+    # extend the l_locps to the same length. We copy the last element of the
+    # list until the length is the same as the longest list
+    max_len = max([len(ll[0]) for ll in l_locps])
+    for ll in l_locps:
+        while len(ll[0]) < max_len:
+            for i in range(4):
+                ll[i].append(ll[i][-1])
+    # We can now calculate the global crossing probabilities, for each cycle
+    pcross_run = []
+    for icyc in range(max_len):
+        # We have to get the local crossing probabilities for each ensemble
+        l_pcross = [[ll[i][icyc] for i in range(4)] for ll in l_locps]
+        # so l_pcross is shape n_ensembles x 4, but we need 4 lists of
+        # length n_ensembles
+        l_pcross = list(map(list, zip(*l_pcross)))
+        # Now we calculate the global crossing probabilities
+        _, _, pcross = get_global_probz(*l_pcross)
+        # We append the last element of pcross to the running list
+        pcross_run.append(pcross[-1] if pcross is not np.nan else np.nan)
+    # Now do the recursive block analysis
+    rel_errors, nstatineff, half_av_err = recursive_block_analysis(pcross_run)
+
+    results = {'pcross': pcross,
+               'pcrossrun': pcross_run,
+               'pcrossrun_rele': rel_errors,
+               'nstatineff': nstatineff,
+               'pcrossrun_hav_rele': half_av_err}
+
+    # make into retis format
+    results['overall-cycle'] = list(range(len(pcross_run)))
+    results['overall-prun'] = pcross_run
+    results['overall-error'] = [list(range(len(rel_errors))), 0, 0,
+                                rel_errors, rel_errors[-1]]
+    return results
+
+
+def get_global_probz(pmps, pmms, ppps, ppms):
+    """Return the global crossing probabilities for the PPTIS simulation.
+
+    This follows the recursive relation
+    P_plus[j] = (pLMR[j-1]*P_plus[j-1]) / (pLMR[j-1]+pLML[j-1]*P_min[j-1])
+    P_min[j] = (pRML[j-1]P_min[j-1])/(pLMR[j-1]+pLML[j-1]*P_min[j-1])
+    where P_plus[0] = 1, P_min[0] = 1, and j is the ensemble number.
+
+    Parameters
+    ----------
+    pmps : list of floats
+        The local probability (P) of having type LMR (MinusPlus) for each
+        ensemble (S).
+    pmms : list of floats
+        Local LML
+    ppps : list of floats
+        Local RMR
+    ppms : list of floats
+        Local RML
+
+    Returns
+    -------
+    pmin : list of floats
+        Float per ensemble i. Represents the probability of crossing A earlier
+        than i+1, given that the path crossed i.
+    pplus : list of floats
+        Float per ensemble i. Represents the probability of crossing i+1
+        earlier than A, given that the path crossed i.
+    pcross : list of floats
+        Float per ensemble i. Represents the TIS probability of crossing i+1.
+    """
+    # if there is any NaN in pmps, pmms, ppps, ppms, return NaN
+    if np.isnan(pmps).any() or np.isnan(pmms).any() or \
+            np.isnan(ppps).any() or np.isnan(ppms).any():
+        return [np.nan, np.nan, np.nan]
+    pplus, pmin, pcross = [1.], [1.], [1., pmps[0]]
+    for i, pmp, pmm, _, ppm in zip(range(len(pmps)), pmps, pmms, ppps, ppms):
+        if i == 0:  # This is [0^{\pm}'], so skip
+            continue
+        # Calculate the global crossing probabilities
+        # if divide by zero, or divide by NaN, return NaN
+        if pmp + pmm * pmin[-1] == 0 or\
+                (pmp is np.nan) or\
+                (pmm * pmin[-1] is np.nan):
+            return [np.nan, np.nan, np.nan]
+        pplus.append((pmp*pplus[-1])/(pmp+pmm*pmin[-1]))
+        pmin.append((ppm*pmin[-1])/(pmp+pmm*pmin[-1]))
+        # Calculate the TIS probabilities
+        pcross.append(pmps[0]*pplus[-1])
+    return pmin, pplus, pcross
+
+
+def recursive_block_analysis(flist, minblocks=5):
+    """Run a recursive block analysis on (time-series) data f.
+
+    Parameters
+    ----------
+    flist : list of floats
+        The data to analyse.
+    minblocks : int, optional
+        The minimum number of blocks to use for the analysis.
+
+    Returns
+    -------
+    rel_errors : list of floats
+        The relative errors for each block length.
+    nstatineff : float
+        The statistical inefficiency.
+    half_av_err : float
+        The average error for the second half of the relative errors.
+
+    """
+    # flist is a list of floats, but we need to remove the np.nan's and 0's
+    flist = np.array(flist)
+    flist = flist[~np.isnan(flist)]
+    flist = flist[flist != 0]
+    # We now run the recursive blocking analysis
+    # If we don't have enough data, we don't want the entire analysis to
+    # fail. So just return NaNs, such that we still get those beautiful local
+    # plots in the report PDF.
+    if len(flist) < minblocks:
+        return [np.nan], np.nan, np.nan
+    bestavg = flist[-1]
+    maxblocklen = int(len(flist)/minblocks)
+    rel_errors = []
+    for blocklen in range(1, maxblocklen+1):
+        runav_red = flist[blocklen-1::blocklen]
+        blocks = recursive_blocks(runav_red)
+        sum_quad_diff = np.sum(np.fromiter(((b-bestavg)**2 for b in blocks),
+                               dtype=float))
+        nb = len(blocks)
+        aerr2 = sum_quad_diff/(nb*(nb-1))
+        aerr = np.sqrt(aerr2)
+        rerr = aerr/bestavg
+        rel_errors.append(rerr)
+
+    # We will now take the mean of the second half of the relative errors
+    half_av_err = np.mean(rel_errors[int(len(rel_errors)/2):])
+    nstatineff = (half_av_err/rel_errors[0])**2
+    # Now we have to add the NaN's back in, as 0's
+    return rel_errors, nstatineff, half_av_err
+
+
+def recursive_blocks(recu):
+    blocks = []
+    for i in range(len(recu)):
+        if i == 0:
+            blocks.append(recu[i])
+        else:
+            blocks.append((i + 1) * recu[i] - i * recu[i - 1])
+    return blocks

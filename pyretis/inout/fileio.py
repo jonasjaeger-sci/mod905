@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Module defining the base classes for the PyRETIS output.
 
@@ -16,7 +16,6 @@ read_some_lines (:py:func:`.read_some_lines`)
     Method to read lines from PyRETIS data files.
 
 """
-from datetime import datetime
 import os
 import logging
 from pyretis.inout.common import OutputBase, create_backup
@@ -52,11 +51,6 @@ class FileIO(OutputBase):
     """
 
     target = 'file'
-    FILE_FLUSH = 10
-    """int : The interval for flushing to the file. That is, we will
-    flush if the time since the last flush is larger than this
-    value. Note that this is only checked when the writing method
-    (:py:meth:`.write`) is called."""
 
     def __init__(self, filename, file_mode, formatter, backup=True):
         """Set up the file object.
@@ -67,7 +61,7 @@ class FileIO(OutputBase):
             The path to the file to open or read.
         file_mode : string
             Specifies the mode for opening the file.
-        formatter : object like :py:class:`.OutputFormatter`
+        formatter : object like py:class:`.OutputFormatter`
             The object responsible for formatting output.
         backup : boolean, optional
             Defines how we handle cases where we write to a
@@ -91,11 +85,11 @@ class FileIO(OutputBase):
         """Open a file for reading."""
         if not self.file_mode.startswith('r'):
             raise ValueError(
-                ('Inconsistent file mode "{}" '
-                 'for reading').format(self.file_mode)
+                f'Inconsistent file mode "{self.file_mode}" for reading'
             )
         try:
-            self.fileh = open(self.filename, self.file_mode)
+            encoding = 'utf-8' if 'b' in self.file_mode else None
+            self.fileh = open(self.filename, self.file_mode, encoding=encoding)
         except (OSError, IOError) as error:
             logger.critical(
                 'Could not open file "%s" for reading', self.filename
@@ -112,8 +106,7 @@ class FileIO(OutputBase):
         """
         if not self.file_mode[0] in ('a', 'w'):
             raise ValueError(
-                ('Inconsistent file mode "{}" '
-                 'for writing').format(self.file_mode)
+                f'Inconsistent file mode "{self.file_mode}" for writing'
             )
         msg = []
         try:
@@ -131,7 +124,8 @@ class FileIO(OutputBase):
                         logger.debug(
                             'Overwriting existing file "%s"', self.filename
                         )
-            self.fileh = open(self.filename, self.file_mode)
+            encoding = 'utf-8' if 'b' in self.file_mode else None
+            self.fileh = open(self.filename, self.file_mode, encoding=encoding)
         except (OSError, IOError) as error:  # pragma: no cover
             logger.critical(
                 'Could not open file "%s" for writing', self.filename
@@ -153,7 +147,7 @@ class FileIO(OutputBase):
             return self.open_file_read()
         if self.file_mode[0] in ('a', 'w'):
             return self.open_file_write()
-        raise ValueError('Unknown file mode "{}"'.format(self.file_mode))
+        raise ValueError(f'Unknown file mode "{self.file_mode}"')
 
     def load(self):
         """Read blocks or lines from the file."""
@@ -182,22 +176,15 @@ class FileIO(OutputBase):
         if self.fileh is not None and not self.fileh.closed:
             try:
                 if end is not None:
-                    self.fileh.write('{}{}'.format(towrite, end))
+                    self.fileh.write(f'{towrite}{end}')
                     status = True
                 else:
                     self.fileh.write(towrite)
                     status = True
             except (OSError, IOError) as error:  # pragma: no cover
-                msg = 'Write I/O error ({}): {}'.format(error.errno,
-                                                        error.strerror)
+                msg = f'Write I/O error ({error.errno}): {error.strerror}'
                 logger.critical(msg)
-            if self.last_flush is None:
-                self.flush()
-                self.last_flush = datetime.now()
-            delta = datetime.now() - self.last_flush
-            if delta.total_seconds() > self.FILE_FLUSH:  # pragma: no cover
-                self.flush()
-                self.last_flush = datetime.now()
+            self.flush()
             return status
         if self.fileh is not None and self.fileh.closed:
             logger.warning('Ignored writing to closed file %s', self.filename)
@@ -255,11 +242,11 @@ class FileIO(OutputBase):
 
     def __str__(self):
         """Return basic info."""
-        msg = ['FileIO (file: "{}")'.format(self.filename)]
+        msg = [f'FileIO (file: "{self.filename}")']
         if self.fileh is not None and not self.fileh.closed:
             msg += ['\t* File is open']
-            msg += ['\t* Mode: {}'.format(self.fileh.mode)]
-        msg += ['\t* Formatter: {}'.format(self.formatter)]
+            msg += [f'\t* Mode: {self.fileh.mode}']
+        msg += [f'\t* Formatter: {self.formatter}']
         return '\n'.join(msg)
 
 
@@ -326,7 +313,7 @@ def read_some_lines(filename, line_parser, block_label='#'):
     new_block = {'comment': [], 'data': []}
     yield_block = False
     read_comment = False
-    with open(filename, 'r') as fileh:
+    with open(filename, 'r', encoding='utf-8') as fileh:
         for i, line in enumerate(fileh):
             stripline = line.strip()
             if stripline.startswith(block_label):

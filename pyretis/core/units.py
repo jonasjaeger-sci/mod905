@@ -1,5 +1,5 @@
 # *- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 r"""This module defines natural constants and unit conversions.
 
@@ -275,7 +275,8 @@ logger.addHandler(logging.NullHandler())
 
 __all__ = ['generate_conversion_factors', 'generate_inverse',
            'bfs_convert', 'convert_bases', 'print_table',
-           'write_conversions', 'read_conversions']
+           'write_conversions', 'read_conversions', 'units_from_settings',
+           'create_conversion_factors']
 
 
 CAL = 4184.  # Define 1 kcal = `CAL` J.

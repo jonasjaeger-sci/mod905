@@ -10,8 +10,6 @@ The folders are:
 
 * ``gromacs2``: Which contains a test using the PyRETIS ``GromacsEngine2``.
 
-* ``gromacs_input``: Which contains the input files for GROMACS.
-
 Instructions
 ------------
 

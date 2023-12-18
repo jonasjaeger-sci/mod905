@@ -4,7 +4,7 @@ Retis 1D example
 Simulation
 ----------
 task = retis
-steps = 16
+steps = 5
 interfaces = [-0.9, -0.7, -0.5, -0.3]
 
 System
@@ -50,13 +50,13 @@ load_folder = pippo
 
 Particles
 ---------
-position = {'file': 'initial.xyz'}
+position = {'input_file': 'initial.xyz'}
 velocity = {'generate': 'maxwell',
             'momentum': False,
             'seed': 0}
 mass = {'Ar': 1.0}
 name = ['Ar']
-type = [0]
+ptype = [0]
 
 Forcefield settings
 -------------------

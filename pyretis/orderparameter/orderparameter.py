@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """This file contains classes to represent order parameters.
 
@@ -52,6 +52,8 @@ logger.addHandler(logging.NullHandler())
 __all__ = [
     'OrderParameter',
     'Position',
+    'Permeability',
+    'PermeabilityMinusOffset',
     'Velocity',
     'Distance',
     'Distancevel',
@@ -124,11 +126,17 @@ class OrderParameter:
         """Return a simple string representation of the order parameter."""
         msg = [
             f'Order parameter: "{self.__class__.__name__}"',
-            f'{self.description}',
+            f'{self.description}'
         ]
         if self.velocity_dependent:
             msg.append('This order parameter is velocity dependent.')
         return '\n'.join(msg)
+
+    def load_restart_info(self, info):
+        """Load the orderparameter restart info."""
+
+    def restart_info(self):
+        """Save any mutatable parameters for the restart."""
 
 
 class Position(OrderParameter):
@@ -151,7 +159,7 @@ class Position(OrderParameter):
 
     """
 
-    def __init__(self, index, dim='x', periodic=False):
+    def __init__(self, index, dim='x', periodic=False, description=None):
         """Initialise the order parameter.
 
         Parameters
@@ -166,8 +174,9 @@ class Position(OrderParameter):
             applied to the position.
 
         """
-        txt = f'Position of particle {index} (dim: {dim})'
-        super().__init__(description=txt, velocity=False)
+        if description is None:
+            description = f'Position of particle {index} (dim: {dim})'
+        super().__init__(description=description, velocity=False)
         self.periodic = periodic
         self.index = index
         self.dim = {'x': 0, 'y': 1, 'z': 2}.get(dim, None)
@@ -196,6 +205,169 @@ class Position(OrderParameter):
         if self.periodic:
             lamb = system.box.pbc_coordinate_dim(lamb, self.dim)
         return [lamb]
+
+
+class Permeability(Position):
+    """A positional order parameter for calculating parmeability.
+
+    This class defines a very simple order parameter which is just
+    the position of a given particle, but it allows for the mirror move.
+
+    Attributes
+    ----------
+    index : integer
+        This is the index of the atom which will be used, i.e.
+        ``system.particles.pos[index]`` will be used.
+    dim : integer
+        This is the dimension of the coordinate to user:
+        0, 1 or 2 for 'x', 'y' or 'z'.
+    periodic : boolean
+        This determines if periodic boundaries should be applied to
+        the position or not.
+    offset : float
+        The offset to apply before returning, l(x) = pos(x+offset).
+        This allows for effectively moving the periodic boundary position.
+        Should be defined in the same space as this orderparameter
+        (relative or not).
+    mirror_pos : float
+        The position of the mirror plane around which we mirror when the
+        mirror function is called. Should be defined in the same space as this
+        orderparameter (relative or not).
+    relative : boolean
+        If we should map the position to be relative to the box-vector.
+        Defaults to True as that is the only correct option for NPT.
+        For NVT sampling it can be set to False.
+
+    """
+
+    def __init__(self, index, dim='z', offset=0., mirror_pos=0.,
+                 relative=True):
+        """Initialise the order parameter.
+
+        Parameters
+        ----------
+        index : int
+            This is the index of the atom we will use the position of.
+        dim : string
+            This select what dimension we should consider,
+            it should equal 'x', 'y' or 'z'.
+        offset : float,
+            The offset to add to the position, used to change the
+            effective location of the periodic boundary.
+        mirror_pos : float
+            The value of the position to mirror around. Allowing for the mirror
+            move.
+        relative : boolean
+            This determines wether the position is returned as a relative value
+            to the boxsize.
+
+        """
+        description = (f"Permeability position of particle {index} "
+                       f"(dim: {dim})")
+        super().__init__(index=index, dim=dim, periodic=True,
+                         description=description)
+
+        self.offset = offset
+        self.mirror_pos = mirror_pos
+        self.relative = relative
+        self._mirror = False
+        if relative and abs(offset) >= 1:
+            raise ValueError("Mapping to relative space, but offset is not "
+                             f"between -1 and 1, offset was : {offset}")
+        if relative and abs(mirror_pos) >= 1:
+            raise ValueError("Mapping to relative space, but mirror_pos is"
+                             "not between -1 and 1, mirror_pos was : "
+                             f"{mirror_pos}")
+
+    def calculate_s(self, system):
+        """Calculate a value that we the alter in the `calculate` function.
+
+        Parameters
+        ----------
+        system : object like :py:class:`.System`
+            The object containing the positions.
+
+        Returns
+        -------
+        out : list of floats
+            The position order parameter.
+
+        """
+        return super().calculate(system)
+
+    def calculate(self, system):
+        """Calculate the `compute_s` order parameter and alters it.
+
+        Parameters
+        ----------
+        system : object like :py:class:`.System`
+            The object containing the positions.
+
+        Returns
+        -------
+        out : list of floats
+            The position order parameter.
+
+        """
+        # Just get the position and unwrap it
+        values = self.calculate_s(system)
+        value = values.pop(0)
+
+        # Now map to relative space or not
+        if self.relative and system.box is not None:
+            value /= system.box.length[self.dim]
+            box = 1
+            l_box = system.box.low[self.dim]/system.box.length[self.dim]
+        elif system.box is not None:
+            box = system.box.length[self.dim]
+            l_box = system.box.low[self.dim]
+        else:
+            box = None
+            l_box = 0
+        # Map to mirrored space if required
+        if self._mirror:
+            value = 2*self.mirror_pos-value
+        # Apply lowest_box
+        value -= l_box
+
+        # Add offset
+        value += self.offset
+
+        # Wrap box
+        if box is not None:
+            value = np.mod(value, box)
+        # Reapply lowest box if  not in relative space
+
+        if not self.relative:
+            value += l_box
+        return [value, self.index, (-1)**self._mirror]+values
+
+    def mirror(self):
+        """Swap this object around the mirror plane."""
+        # Make mirror of the OP
+        self._mirror = not self._mirror
+
+    def restart_info(self):
+        """Return the mutable attributes for the restart."""
+        info = {'index': self.index,
+                'mirror': self._mirror}
+
+        return info
+
+    def load_restart_info(self, info):
+        """Load the mutable attributes from restart."""
+        self.index = info['index']
+        self._mirror = info['mirror']
+
+
+class PermeabilityMinusOffset(Permeability):
+    """A positional order parameter for calculating parmeability - offset."""
+
+    def calculate(self, system):
+        """Calculate the permeability op and subtract the offset."""
+        # Just get the permeability and unwrap it
+        values = super().calculate(system)
+        return [values[0]-self.offset]+values[1:]
 
 
 class Velocity(OrderParameter):
@@ -361,8 +533,8 @@ class Distancevel(OrderParameter):
         """
         _verify_pair(index)
         pbc = 'Periodic' if periodic else 'Non-periodic'
-        txt = (f'{pbc} rate-of-change-distance, particles '
-               f'{index[0]} and {index[1]}')
+        txt = (f'{pbc} rate-of-change-distance, particles {index[0]} and '
+               f'{index[1]}')
         super().__init__(description=txt, velocity=True)
         self.periodic = periodic
         self.index = index
@@ -382,7 +554,7 @@ class Distancevel(OrderParameter):
         Returns
         -------
         out : list of floats
-            The rate-of-chang of the distance order parameter.
+            The rate-of-change of the distance order parameter.
 
         """
         particles = system.particles
@@ -454,6 +626,34 @@ class CompositeOrderParameter(OrderParameter):
             all_order.extend(order_function.calculate(system))
         return all_order
 
+    def mirror(self):
+        """Mirrors all of the functions that allow it."""
+        order_p = self.order_parameters[0]
+        op_mirror_func = getattr(order_p, 'mirror', None)
+        if op_mirror_func is not None:
+            op_mirror_func()
+        else:
+            msg = "Attempting a mirror move, but orderparameter of \n class"
+            msg += f" '{type(order_p).__name__}' does not have the function"
+            msg += " 'mirror()'.\n"
+            msg += "Please use an OP of type 'Permeability' or implement your"
+            msg += " own mirror() function"
+            logger.warning(msg)
+        # This is safe as compound OPs should always have more than 1 OP.
+        for order_function in self.order_parameters[1:]:
+            mirror_func = getattr(order_function, 'mirror', None)
+            if mirror_func is not None:
+                mirror_func()
+
+    def restart_info(self):
+        """Return the mutable attributes for restart."""
+        return [op.restart_info() for op in self.order_parameters]
+
+    def load_restart_info(self, info):
+        """Load the mutable attributes for restart."""
+        for i, op_info in enumerate(info):
+            self.order_parameters[i].load_restart_info(op_info)
+
     def add_orderparameter(self, order_function):
         """Add an extra order parameter to calculate.
 
@@ -487,6 +687,16 @@ class CompositeOrderParameter(OrderParameter):
             )
         self.order_parameters.append(order_function)
         return True
+
+    @property
+    def index(self):
+        """Get only the index that is tracked by the orderparameter."""
+        return self.order_parameters[0].index
+
+    @index.setter
+    def index(self, var):
+        """Set only the index that is tracked by the orderparameter."""
+        self.order_parameters[0].index = var
 
     def __str__(self):
         """Return a simple string representation of the order parameter."""

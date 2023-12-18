@@ -13,7 +13,10 @@ clean:
 	find -name \*.log -delete
 	find -name mdout.mdp -delete
 	find -name \*.tpr -delete
+	-rm -rf results/pyvisa_compressed_data.hdf5
+	-rm -rf pyvisa_compressed_data*
 	-rm -rf 0*
+	-rm -rf retis-load-rc-run.rst
 	-rm -rf pippo/0*
 	-rm -rf gromacs_input/pyretis.mdp
     

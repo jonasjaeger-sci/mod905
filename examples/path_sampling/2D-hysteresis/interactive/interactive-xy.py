@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Plot raw data from a simulation."""
 # pylint: disable=invalid-name
@@ -9,18 +9,12 @@ from matplotlib import pyplot as plt
 from matplotlib.widgets import Button, RadioButtons
 from matplotlib.cm import get_cmap
 from pyretis.core import create_box, System, Particles
-from pyretis.core.units import units_from_settings
 from pyretis.core.tis import shoot, time_reversal
 from pyretis.core.retis import retis_swap
 from pyretis.initiation import initiate_path_simulation
 from pyretis.inout import print_to_screen
 from pyretis.inout.settings import parse_settings_file
-from pyretis.inout.setup import (
-    create_force_field,
-    create_system,
-    create_simulation,
-    create_engine
-)
+from pyretis.setup import create_simulation, create_force_field
 
 
 def plot_path(path, axi, axj, color, alphai=0.9, alphaj=0.9, lsj='-'):
@@ -134,7 +128,7 @@ class PlotHelper:
 
     def plot_accepted(self, idx=None):
         """Plot the accepted paths."""
-        ensembles = self.simulation.path_ensembles
+        ensembles = self.simulation.ensembles
         for i, ensemble in enumerate(ensembles):
             if idx is None:
                 alpha = 0.9
@@ -143,21 +137,17 @@ class PlotHelper:
                     alpha = 0.9
                 else:
                     alpha = 0.25
-            plot_path(ensemble.last_path, self.axi, self.axj,
+            plot_path(ensemble['path_ensemble'].last_path, self.axi, self.axj,
                       self.colors[i], alphai=0.9, alphaj=alpha)
 
     def do_shoot(self, event):
         """Perform shooting moves."""
-        ensembles = self.simulation.path_ensembles
+        ensembles = self.simulation.ensembles
         ensemble = ensembles[self.idx]
         accept, trial, status = shoot(
-            ensemble.last_path,
-            self.simulation.order_function,
-            ensemble.interfaces,
-            self.simulation.engine,
-            self.simulation.rgen,
+            ensemble,
             self.simulation.settings['tis'],
-            ensemble.start_condition
+            ensemble['path_ensemble'].start_condition
         )
         self.axi.clear()
         self.axj.clear()
@@ -165,7 +155,7 @@ class PlotHelper:
         self.plot_accepted((self.idx,))
         plot_path(trial, self.axi, self.axj, self.colors[-1], lsj='--')
         sidx = trial.generated[2]
-        spoint = ensemble.last_path.phasepoints[sidx]
+        spoint = ensemble['path_ensemble'].last_path.phasepoints[sidx]
         pos = spoint.particles.get_pos()[0]
         order = spoint.order[0]
         self.axi.scatter(pos[0], pos[1], marker='o', s=75, alpha=0.9,
@@ -179,13 +169,13 @@ class PlotHelper:
 
     def do_timereversal(self, event):
         """Perform time reversal."""
-        ensembles = self.simulation.path_ensembles
+        ensembles = self.simulation.ensembles
         ensemble = ensembles[self.idx]
         accept, trial, status = time_reversal(
-            ensemble.last_path,
-            self.simulation.order_function,
-            ensemble.interfaces,
-            ensemble.start_condition
+            ensemble['path_ensemble'].last_path,
+            ensemble['order_function'],
+            ensemble['path_ensemble'].interfaces,
+            ensemble['path_ensemble'].start_condition
         )
         self.axi.clear()
         self.axj.clear()
@@ -209,15 +199,19 @@ class PlotHelper:
             if move == 'Swap':
                 # idxs = (idx, idx + 1)
                 print_to_screen(
-                    'Swap: {} <-> {}'.format(ensemble[0].ensemble_name,
-                                             ensemble[1].ensemble_name),
+                    'Swap: {} <-> {}'.format(
+                        ensemble[0]['path_ensemble'].ensemble_name,
+                        ensemble[1]['path_ensemble'].ensemble_name
+                    ),
                     level='message'
                 )
             else:
                 # idxs = (idx,)
-                ensemble.add_path_data(trial, status)
+                ensemble['path_ensemble'].add_path_data(trial, status)
                 print_to_screen(
-                    'In ensemble: {}'.format(ensemble.ensemble_name),
+                    'In ensemble: {}'.format(
+                        ensemble['path_ensemble'].ensemble_name
+                    ),
                     level='message'
                 )
             if accept:
@@ -246,18 +240,16 @@ class PlotHelper:
 
     def do_swap(self, event):
         """Perform swapping when button is pressed."""
-        if self.idx == len(self.simulation.path_ensembles) - 1:
+        if self.idx == len(self.simulation.ensembles) - 1:
             return
         accept, trial, status = retis_swap(
-            self.simulation.path_ensembles,
+            self.simulation.ensembles,
             self.idx,
-            self.simulation.order_function,
-            self.simulation.engine,
             self.simulation.settings,
             0
         )
-        ensemble1 = self.simulation.path_ensembles[self.idx]
-        ensemble2 = self.simulation.path_ensembles[self.idx + 1]
+        ensemble1 = self.simulation.ensembles[self.idx]
+        ensemble2 = self.simulation.ensembles[self.idx + 1]
         self.last_result = ('Swap', (ensemble1, ensemble2), accept, trial,
                             status, self.idx)
         self.axi.clear()
@@ -271,15 +263,10 @@ class PlotHelper:
 
 def set_up_simulation(settings):
     """Do all the set-ups to create the simulation."""
-    units_from_settings(settings)
-    engine = create_engine(settings)
-    system = create_system(settings, engine=engine)
-    system.forcefield = create_force_field(settings)
-    keyargs = {'system': system, 'engine': engine}
-    simulation = create_simulation(settings, keyargs)
+    simulation = create_simulation(settings)
     # Also, do the initialisation here:
     for i, _ in enumerate(initiate_path_simulation(simulation, settings)):
-        ensemble = simulation.path_ensembles[i]
+        ensemble = simulation.ensembles[i]['path_ensemble']
         name = ensemble.ensemble_name
         print_to_screen('Info about ensemble {}:'.format(name),
                         level='success')
@@ -292,7 +279,7 @@ def set_up_simulation(settings):
 
 def main(inputfile='retis.rst'):
     """Run the whole interactive plotting."""
-    # Setup simulation
+    # Setup simulation:
     sim_settings = parse_settings_file(inputfile)
     simulation = set_up_simulation(sim_settings)
     # Set up for plotting:
@@ -305,7 +292,7 @@ def main(inputfile='retis.rst'):
     axbt4 = fig.add_axes([0.30, 0.04, 0.1, 0.075])
 
     cmap = get_cmap(name='tab10')
-    colors = cmap(np.linspace(0, 1, len(simulation.path_ensembles)+2))
+    colors = cmap(np.linspace(0, 1, len(simulation.ensembles)+2))
 
     myplot = PlotHelper(simulation, sim_settings, ax1, ax2, colors)
 
@@ -323,8 +310,8 @@ def main(inputfile='retis.rst'):
     rax = fig.add_axes([0.02, 0.2, 0.1, 0.6],
                        frameon=True)
     names = []
-    for ensemble in simulation.path_ensembles:
-        names.append('${}$'.format(ensemble.ensemble_name))
+    for ensemble in simulation.ensembles:
+        names.append('${}$'.format(ensemble['path_ensemble'].ensemble_name))
     radio = RadioButtons(rax, names, activecolor='#262626')
     for circle in radio.circles:
         circle.set_radius(0.02)
@@ -336,8 +323,8 @@ def main(inputfile='retis.rst'):
     myplot.plot_potential(ax1, ax2)
     plt.subplots_adjust(right=0.95, left=0.20, top=0.95,
                         bottom=0.3, wspace=0.3)
-    for i, ensemble in enumerate(simulation.path_ensembles):
-        plot_path(ensemble.last_path, ax1, ax2, colors[i])
+    for i, ensemble in enumerate(simulation.ensembles):
+        plot_path(ensemble['path_ensemble'].last_path, ax1, ax2, colors[i])
     plt.show()
 
 

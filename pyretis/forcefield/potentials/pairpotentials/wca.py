@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """This file contains a WCA double well potential.
 
@@ -93,7 +93,7 @@ class DoubleWellWCA(PotentialFunction):
             if key in self.params:
                 self.params[key] = parameters[key]
             else:
-                msg = 'Unknown parameter {} - ignored!'.format(key)
+                msg = f'Unknown parameter {key} - ignored!'
                 logger.warning(msg)
         if self.params['types'] is not None:
             self.params['types'] = set(self.params['types'])
@@ -204,8 +204,8 @@ class DoubleWellWCA(PotentialFunction):
                     (diff / self.params['width2'])
                 )
                 forceij = forceij * delta / delr
-                forces[i] += forceij
                 forces[j] -= forceij
+                forces[i] += forceij
                 virial += np.outer(forceij, delta)
         return forces, virial
 

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Test functionality for the random generator classes."""
 import logging
@@ -217,7 +217,7 @@ class RandomTest(unittest.TestCase):
 
 
 class TestReservoirSampler(unittest.TestCase):
-    """Run the tests for the ReservoirSampler classe."""
+    """Run the tests for the ReservoirSampler class."""
 
     def test_init(self):
         """Test the initialisation."""
@@ -299,6 +299,34 @@ class TestMockRandomGenerator(unittest.TestCase):
                             [0.01363436, 0.01553565]])
         self.assertTrue(np.allclose(correct, numbers))
 
+    def test_choice(self):
+        a = [1, 2, 3, 4]
+        rgen = MockRandomGenerator(seed=0)
+        correct = [4, 1, 4, 4, 3, 4, 2]
+        numbers = rgen.choice(a, 7)
+        self.assertTrue(np.allclose(numbers, correct))
+
+    def test_choice_no_size(self):
+        a = [1, 2, 3, 4]
+        rgen = MockRandomGenerator(seed=0)
+        correct = [4]
+        numbers = rgen.choice(a)
+        self.assertTrue(np.allclose(numbers, correct))
+
+    def test_choice_no_replace(self):
+        a = [1, 2, 3, 4]
+        rgen = MockRandomGenerator(seed=0)
+        correct = [4, 1, 3, 2]
+        numbers = rgen.choice(a, size=4, replace=False)
+        self.assertTrue(np.allclose(numbers, correct))
+
+    def test_choice_altered_p(self):
+        a = [1, 2, 3, 4]
+        rgen = MockRandomGenerator(seed=0)
+        correct = [1, 1, 1, 1]
+        numbers = rgen.choice(a, size=4, p=[1, 0, 0, 0])
+        self.assertTrue(np.allclose(numbers, correct))
+
 
 class TestBorgRandomGenerators(unittest.TestCase):
     """Test the state sharing random generators."""
@@ -311,21 +339,21 @@ class TestBorgRandomGenerators(unittest.TestCase):
                 norm_shift=(i == 0),
             ) for i in range(5)
         ]
-        state0 = rgens[0].get_state()
+        state0 = rgens[0].get_state()['state']
         # Are all states the same?
-        self.assertTrue(all([i.get_state() is state0 for i in rgens]))
+        self.assertTrue(all([i.get_state()['state'] is state0 for i in rgens]))
         # Did the norm_shift get set to the first value?
         self.assertTrue(all([i.norm_shift for i in rgens]))
         # Change the state of one member by requesting a number:
         _ = rgens[0].rand()
-        state1 = rgens[0].get_state()
+        state1 = rgens[0].get_state()['state']
         # Check that the state did change:
         self.assertNotEqual(state0, state1)
         # Are all states still the same?
-        self.assertTrue(all([i.get_state() == state1 for i in rgens]))
+        self.assertTrue(all([i.get_state()['state'] == state1 for i in rgens]))
         # Set state manually
-        rgens[-1].set_state(3)
-        self.assertTrue(all([i.get_state() == 3 for i in rgens]))
+        rgens[-1].set_state({'state': 3})
+        self.assertTrue(all([i.get_state()['state'] == 3 for i in rgens]))
         MockRandomGeneratorBorg.reset_state()
 
     @staticmethod
@@ -356,9 +384,9 @@ class TestBorgRandomGenerators(unittest.TestCase):
         for i in rgens:
             self.assertIs(obj, i.rgen)
         # Check that the states are the same:
-        state0 = rgens[0].get_state()
+        state0 = rgens[0].get_state()['state']
         for i in rgens:
-            self.assert_equal_npstates(state0, i.get_state())
+            self.assert_equal_npstates(state0, i.get_state()['state'])
         RandomGeneratorBorg.reset_state()
 
     def test_new_swarm(self):

@@ -1,18 +1,19 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """A GROMACS external MD integrator interface. Used for testing."""
 import logging
 import os
 import pickle
 from numpy.random import RandomState
+from pyretis.core.random_gen import RandomGeneratorBorg
 from pyretis.engines.gromacs import GromacsEngine
 from pyretis.engines.gromacs2 import GromacsEngine2
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 
-RND = RandomState(42)
+RND = RandomGeneratorBorg()
 # Here, we set a specific random number state, by
 # loading it from a file, if that file is present:
 INPUTFILE = 'pyretis_gmx_rnd.state'
@@ -50,7 +51,7 @@ def prepare_shooting_point(gro, input_file):
     """
     gen_mdp = os.path.join(gro.exe_dir, 'genvel.mdp')
     # Use specific seed:
-    seed = RND.randint(1, 10000000)
+    seed = RND.random_integers(1, 10000000)
     store_rnd_state()
     settings = {'gen_vel': 'yes', 'gen_seed': seed, 'nsteps': 0,
                 'continuation': 'no'}

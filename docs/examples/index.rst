@@ -16,6 +16,7 @@ Complete list of examples:
     examples-md.rst
     examples-tis-1d.rst
     examples-retis-1d.rst
+    examples-submoves-1d.rst
     examples-2d-hysteresis.rst
     examples-vvexternal.rst
     examples-md-fb.rst
@@ -25,4 +26,6 @@ Complete list of examples:
     examples-cp2k-hydrogen.rst
     examples-lammps-wca.rst
     examples-openmm.rst
+    examples-permeability.rst
     examples-pyvisa.rst
+    examples-pyvisa-analysis.rst

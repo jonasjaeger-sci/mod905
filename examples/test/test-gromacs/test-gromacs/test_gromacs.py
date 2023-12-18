@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """
 Here we test the basic functionality of the GROMACS engine.
@@ -29,7 +29,7 @@ from pyretis.inout.formats.gromacs import read_trr_file
 from pyretis.engines import GromacsEngine, GromacsEngine2
 
 
-plt.style.use('seaborn-deep')
+plt.style.use('seaborn-v0_8-deep')
 
 
 def clean_dir(dirname):
@@ -71,7 +71,9 @@ def run_in_steps(engine, system, order_parameter, interfaces,
     clean_dir(folder)
     engine.exe_dir = folder
     path = Path(None, maxlen=steps)
-    engine.propagate(path, system, order_parameter, interfaces,
+    engine.propagate(path,
+                     {'system': system, 'order_function': order_parameter,
+                      'interfaces': interfaces},
                      reverse=reverse)
     print_to_screen('Propagation done!')
     return path
@@ -116,8 +118,9 @@ def run_plain_gromacs(engine, system, order_parameter, input_conf,
         delim='='
     )
     input_file = os.path.join(folder, os.path.basename(input_conf))
+    tpr_file = os.path.join(folder, 'topol.tpr')
     grompp = [engine.gmx, 'grompp', '-c', input_file, '-f', mdp,
-              '-p', engine.input_files['topology'], '-o', 'topol.tpr']
+              '-p', engine.input_files['topology'], '-o', tpr_file]
     print_to_screen('Running grompp in {}'.format(exe_dir))
     engine.execute_command(grompp, cwd=exe_dir)
     conf_out = 'run.{}'.format(engine.ext)
@@ -145,18 +148,22 @@ def run_plain_gromacs(engine, system, order_parameter, input_conf,
 def main(select=1, plot=False):
     """Perform the test."""
     settings = parse_settings_file('engine-run.rst')
+    settings['engine']['input_path'] = os.path.abspath(settings['engine']
+                                                       ['input_path'])
     steps = settings['simulation']['steps']
     engine = settings['engine']
     if select == 2:
         gro = GromacsEngine2(engine['gmx'], engine['mdrun'],
                              engine['input_path'], engine['timestep'],
-                             engine['subcycles'], maxwarn=1,
+                             engine['subcycles'],
+                             maxwarn=0,
                              gmx_format=engine.get('gmx_format', 'g96'),
                              write_vel=True, write_force=True)
     else:
         gro = GromacsEngine(engine['gmx'], engine['mdrun'],
                             engine['input_path'], engine['timestep'],
-                            engine['subcycles'], maxwarn=1,
+                            engine['subcycles'],
+                            maxwarn=0,
                             gmx_format=engine.get('gmx_format', 'g96'),
                             write_vel=True, write_force=True)
     print_to_screen('Testing for: {}'.format(gro), level='info')
@@ -171,7 +178,6 @@ def main(select=1, plot=False):
     initial_conf = gro.input_files['conf']
     system.particles.set_pos((initial_conf, None))
     system.particles.set_vel(False)
-    system.particles.top = gro.input_files['conf']
     interfaces = [-float('inf'), float('inf'), float('inf')]
     order_parameter = PositionVelocity(1472, dim='z', periodic=True)
     start = time.perf_counter()

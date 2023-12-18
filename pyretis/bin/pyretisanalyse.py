@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """pyretisanalyse - An application for analysing PyRETIS simulations.
 
@@ -8,8 +8,6 @@ This script is a part of the PyRETIS library and can be used for
 analysing the result from simulations.
 
 usage: pyretisanalyse.py [-h] -i INPUT [-V]
-
-PyRETIS
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -26,6 +24,7 @@ import traceback
 import colorama
 from pyretis import __version__ as VERSION
 from pyretis.info import PROGRAM_NAME, URL, CITE, LOGO
+from pyretis.inout.common import create_backup
 from pyretis.core.units import CONSTANTS
 from pyretis.core.pathensemble import generate_ensemble_name
 from pyretis.inout.analysisio.analysisio import run_analysis
@@ -33,7 +32,6 @@ from pyretis.inout.common import (
     check_python_version,
     make_dirs,
     name_file,
-    create_backup,
 )
 from pyretis.inout.formats.formatter import (
     LOG_FMT,
@@ -42,25 +40,80 @@ from pyretis.inout.formats.formatter import (
 from pyretis.inout import print_to_screen
 from pyretis.inout.report import generate_report
 from pyretis.inout.settings import parse_settings_file
-from pyretis.visualization.orderparam_density import PathDensity
-from pyretis.visualization.common import hello_pyvisa
-from pyretis.visualization import HAS_PYQT5
-if HAS_PYQT5:
-    from pyretis.visualization.visualize import visualize_main
 
+# Set up for logging:
 logger = logging.getLogger('')
+logger.setLevel(logging.DEBUG)
+
 runpath = os.getcwd()
 
 # Hard-coded patters for report outputs:
 REPORTFILES = {
     'md-flux': 'md_flux_report',
     'retis': 'retis_report',
-    'tis-multiple': 'tis-multiple_report',
-    'tis': 'tis_report'
+    'make-tis-files': 'tis-multiple_report',
+    'tis': 'tis_report',
+    'repptis': 'repptis_report',
 }
 
-
 ERROR_FILE = 'error.txt'
+
+
+def hello_world(infile, run_dir, report_dir):
+    """Output a standard greeting for PyRETIS analysis.
+
+    Parameters
+    ----------
+    infile : string
+        String showing the location of the input file.
+    run_dir : string
+        The location where we are executing the analysis.
+    report_dir : string
+        String showing the location of where we write the output.
+
+    """
+    pyversion = sys.version.split()[0]
+    msgtxt = [LOGO]
+    msgtxt += ['                                                    Starting']
+    msgtxt += ['analysis tool!']
+    msgtxt += [f'{PROGRAM_NAME} version: {VERSION}']
+    msgtxt += [f'Python version: {pyversion}']
+    msgtxt += [f'Running in directory: {run_dir}']
+    msgtxt += [f'Report directory: {report_dir}']
+    msgtxt += [f'Input file: {infile}']
+    print_to_screen('\n'.join(msgtxt), level='message')
+    logger.info('\n'.join(msgtxt))
+
+
+def bye_bye_world():
+    """Print out the goodbye message for PyRETIS."""
+    msgtxt = f'End of {PROGRAM_NAME} analysis execution.'
+    logger.info(msgtxt)
+    print_to_screen('')
+    print_to_screen(msgtxt, level='info')
+    # display some references:
+    references = [f'{PROGRAM_NAME} references:']
+    references.append(('-') * len(references[0]))
+    for line in CITE.split('\n'):
+        if line:
+            references.append(line)
+    reftxt = '\n'.join(references)
+    logger.info(reftxt)
+    print_to_screen('')
+    print_to_screen(reftxt)
+    urltxt = f'{URL}'
+    logger.info(urltxt)
+    print_to_screen('')
+    print_to_screen(urltxt, level='info')
+
+
+def write_traceback(filename):
+    """Write the error traceback to the given file."""
+    msg = create_backup(filename)
+    if msg:
+        logger.warning(msg)
+    with open(filename, 'w', encoding='utf-8') as out:
+        out.write(traceback.format_exc())
 
 
 def get_report_name(report_type, ext, prefix=None, path=None):
@@ -108,10 +161,7 @@ def write_file(outname, report_txt):
 
     """
     with open(outname, 'wt', encoding='utf-8') as report_fh:
-        try:  # will work in python 3
-            report_fh.write(report_txt)
-        except UnicodeEncodeError:  # for python 2
-            report_fh.write(report_txt.encode('utf-8'))
+        report_fh.write(report_txt)
     return outname
 
 
@@ -133,9 +183,11 @@ def create_reports(settings, analysis_results, report_path):
         The report files created.
 
     """
-    if settings['simulation']['task'] == 'tis':
+    ens_list = settings.get('ensemble', [])
+    if settings['simulation']['task'] == 'tis' and len(ens_list) == 1:
         task = 'tis'
-        pfix = generate_ensemble_name(settings['simulation']['ensemble'])
+        ens_n = settings['ensemble'][0]['tis'].get('ensemble_number', '1')
+        pfix = generate_ensemble_name(ens_n)
     else:
         task = settings['simulation']['task']
         pfix = None
@@ -149,64 +201,7 @@ def create_reports(settings, analysis_results, report_path):
             yield reportfile
 
 
-def hello_world(infile, run_dir, report_dir):
-    """Output a standard greeting for PyRETIS analysis.
-
-    Parameters
-    ----------
-    infile : string
-        String showing the location of the input file.
-    run_dir : string
-        The location where we are executing the analysis.
-    report_dir : string
-        String showing the location of where we write the output.
-
-    """
-    pyversion = sys.version.split()[0]
-    msgtxt = [LOGO]
-    msgtxt += ['                                                    Starting']
-    msgtxt += ['analysis tool!']
-    msgtxt += [f'{PROGRAM_NAME} version: {VERSION}']
-    msgtxt += [f'Python version: {pyversion}']
-    msgtxt += [f'Running in directory: {run_dir}']
-    msgtxt += [f'Report directory: {report_dir}']
-    msgtxt += [f'Input file: {infile}']
-    print_to_screen('\n'.join(msgtxt), level='message')
-    logger.info('\n'.join(msgtxt))
-
-
-def bye_bye_world():
-    """Print out the goodbye message for PyRETIS."""
-    msgtxt = f'End of {PROGRAM_NAME} analysis execution.'
-    logger.info(msgtxt)
-    print_to_screen('')
-    print_to_screen(msgtxt, level='info')
-    # display some references:
-    references = [f'{PROGRAM_NAME} references:']
-    references.append(('-')*len(references[0]))
-    for line in CITE.split('\n'):
-        if line:
-            references.append(line)
-    reftxt = '\n'.join(references)
-    logger.info(reftxt)
-    print_to_screen('')
-    print_to_screen(reftxt)
-    urltxt = f'{URL}'
-    logger.info(urltxt)
-    print_to_screen('')
-    print_to_screen(urltxt, level='info')
-
-
-def write_traceback(filename):
-    """Write the error traceback to the given file."""
-    msg = create_backup(filename)
-    if msg:
-        logger.warning(msg)
-    with open(filename, 'w', encoding='utf-8') as out:
-        out.write(traceback.format_exc())
-
-
-def main(input_file, run_path, report_dir, pyvisa_dict=None):
+def main(input_file, run_path, report_dir):
     """Run the analysis.
 
     Parameters
@@ -217,75 +212,48 @@ def main(input_file, run_path, report_dir, pyvisa_dict=None):
         The location from which we are running the analysis.
     report_dir : string
         The location where we will write the report.
-    pyvisa_dict : dictionary, optional
-        It determines the section of pyvisa to use, it contains:
-         * `pyvisa`, boolean
-           If true, the compressor followed by the GUI will be executed
-           if an .rst file will be provided as an input (-i option),
-           while only the GUI will be executed if a pickle file will
-           be providedd as a input.
-         * `pyvisa-cmp`, boolean
-           If true, only the compressor tool will be executed. A compressed
-           file will be produced.
 
     """
     try:
-        if pyvisa_dict.get('pyvisa_compressor', False):
-            hello_pyvisa()
-            only_ops = pyvisa_dict['only_order']
-            p_data = PathDensity(iofile=input_file)
-            p_data.walk_dirs(only_ops=only_ops)
-            if pyvisa_dict['pickle']:
-                p_data.pickle_data()
-            else:
-                p_data.deepdish_data()
+        if input_file is None:
+            raise FileNotFoundError('Input file required (-i filename).')
+        if not os.path.isfile(os.path.join(run_path, input_file)):
+            raise FileNotFoundError(f'Input file "{input_file}" NOT found!')
+        # Run analysis
+        print_to_screen(f'Reading input file "{input_file}"')
+        settings = parse_settings_file(input_file)
+        # override exe-path to the one we are executing in now:
+        settings['simulation']['exe-path'] = run_path
+        units = settings['system']['units']
+        # set derived properties:
+        settings['system']['beta'] = (settings['system']['temperature'] *
+                                      CONSTANTS['kB'][units]) ** -1
+        settings['analysis']['report-dir'] = report_dir
+        msg_dir = make_dirs(report_dir)
+        print_to_screen(msg_dir)
+        task = settings['simulation']['task']
+        print_to_screen(f'Simulation task was: "{task}"')
+        print_to_screen()
 
-        elif pyvisa_dict.get('pyvisa_all', False):
-            if not HAS_PYQT5:
-                msg = ('PyQt5 is not installed. You can still generate the '
-                       'pickle by using the -pyvisa-cmp flag instead')
-                raise ImportError(msg)
-            local_runpath = os.path.dirname(os.path.realpath(input_file))
-            hello_pyvisa()
-            visualize_main(local_runpath, input_file)
-        else:
-            print_to_screen(f'Reading input file "{input_file}"')
-            settings = parse_settings_file(input_file)
-            # override exe-path to the one we are executing in now:
-            settings['simulation']['exe-path'] = run_path
-            units = settings['system']['units']
-            # set derived properties:
-            settings['system']['beta'] = (settings['system']['temperature'] *
-                                          CONSTANTS['kB'][units])**-1
-            settings['analysis']['report-dir'] = report_dir
-            msg_dir = make_dirs(report_dir)
-            print_to_screen(msg_dir)
-            task = settings['simulation']['task']
-            print_to_screen(f'Simulation task was: "{task}"')
-            print_to_screen()
+        results = run_analysis(settings)
+        print_to_screen()
+        for outfile in create_reports(settings, results, report_dir):
+            relfile = os.path.relpath(outfile, start=run_path)
+            print_to_screen(f'Report created: {relfile}',
+                            level='info')
 
-            results = run_analysis(settings)
-            print_to_screen()
-            for outfile in create_reports(settings, results, report_dir):
-                relfile = os.path.relpath(outfile, start=run_path)
-                print_to_screen(f'Report created: {relfile}', level='info')
-
-    except FileNotFoundError as error:
-        errtxt = f'{error.strerror}: {error.filename}'
-        print_to_screen(errtxt, level='error')
-        print_to_screen('Execution failed!', level='error')
     except Exception as error:  # Exceptions should subclass BaseException.
         errtxt = f'{type(error).__name__}: {error.args}'
         print_to_screen(errtxt, level='error')
         print_to_screen('Execution failed!', level='error')
         print_to_screen(f'Error traceback is written to: {ERROR_FILE}',
                         level='error')
-        write_traceback(ERROR_FILE)
+        write_traceback(os.path.join(run_path, ERROR_FILE))
     finally:
         bye_bye_world()
 
 
-def entry_point():
+def entry_point():  # pragma: no cover
     """entry_point - The entry point for the pip install of pyretisanalyse."""
     colorama.init(autoreset=True)
     parser = argparse.ArgumentParser(description=PROGRAM_NAME)
@@ -294,29 +262,13 @@ def entry_point():
         '--input',
         help=(f'Location of {PROGRAM_NAME} input file'),
         required=False,
-        default='retis.rst'
+        default=None
     )
     parser.add_argument('-V', '--version', action='version',
                         version=f'{PROGRAM_NAME} {VERSION}')
-    parser.add_argument('-pyvisa', '--pyvisa-all', action='store_true',
-                        help='Run PyVisA',
-                        default=False)
-    parser.add_argument('-pyvisa-cmp', '--pyvisa-compressor',
-                        action='store_true',
-                        help='Run PyVisA compressor tool',
-                        default=False)
-    parser.add_argument('-oo', '--only_order', action='store_true',
-                        help=('PyVisA: Use only data from order.txt files'),
-                        default=False)
-    parser.add_argument('-p', '--pickle', action='store_true',
-                        help=('PyVisA: Output pickle file, default is hdf5.'),
-                        default=False)
 
     args_dict = vars(parser.parse_args())
 
-    # set up for logging:
-    # logger = logging.getLogger('')
-    logger.setLevel(logging.DEBUG)
     # Define a console logger. This will log to sys.stderr:
     console = logging.StreamHandler()
     console.setLevel(logging.WARNING)
@@ -326,15 +278,11 @@ def entry_point():
     check_python_version()
 
     inputfile = args_dict['input']
-    # runpath = os.getcwd()
-    basepath = os.path.dirname(inputfile)
-    if not os.path.isdir(basepath):
-        basepath = os.getcwd()
     reportdir = os.path.join(runpath, 'report')
 
     hello_world(inputfile, runpath, reportdir)
-    main(inputfile, runpath, reportdir, args_dict)
+    main(inputfile, runpath, reportdir)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     entry_point()

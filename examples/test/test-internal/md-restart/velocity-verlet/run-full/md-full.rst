@@ -4,12 +4,12 @@ Molecular dynamics example settings
 Simulation settings
 -------------------
 task = md-nve
-steps = 1000
+steps = 100
 
 Engine settings
 ---------------
 class = velocityverlet
-timestep = 0.002
+timestep = 0.01
 
 System settings
 ---------------
@@ -29,7 +29,7 @@ velocity = {'generate': 'maxwell',
 
 mass = {'Ar': 1.0}
 name = ['Ar']
-type = [0]
+ptype = [0]
 
 Forcefield settings
 -------------------
@@ -46,7 +46,7 @@ Output
 prefix = md-full-
 backup = overwrite
 energy-file = 1
-order-file = 10
+order-file = 1
 cross-file = 1
-trajectory-file = 10
-restart-file = 10
+trajectory-file = 1
+restart-file = 1

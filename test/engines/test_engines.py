@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Test the engine classes."""
 import logging
 import unittest
+import copy
+from io import StringIO
+from unittest.mock import patch
 import numpy as np
 from pyretis.engines import (
     MDEngine,
@@ -12,6 +15,7 @@ from pyretis.engines import (
     Verlet,
 )
 from pyretis.core import System, create_box, Particles
+from pyretis.core.common import big_fat_comparer
 from pyretis.core.particlefunctions import (
     calculate_thermo,
     calculate_thermo_path,
@@ -114,6 +118,142 @@ def prepare_test_system():
 class EngineTest(unittest.TestCase):
     """Run the tests for the different Engines."""
 
+    def test_restart_internal_engine_langevin(self):
+        """Run test to check generic restart info."""
+        system = [prepare_test_system(),
+                  prepare_test_system(),
+                  prepare_test_system()]
+
+        eng = [Langevin(0.002, 0.3, rgen='mock', seed=1, high_friction=False),
+               Langevin(0.002, 0.3, rgen='mock', seed=16, high_friction=False),
+               Langevin(0.002, 0.3, rgen='mock', seed=1, high_friction=False)]
+
+        for _ in range(5):
+            eng[0].integration_step(system[0])
+            eng[1].integration_step(system[1])
+            self.assertFalse(np.allclose(system[0].particles.pos,
+                                         system[1].particles.pos))
+
+        for _ in range(16):
+            eng[1].integration_step(system[1])
+            eng[2].integration_step(system[2])
+            self.assertFalse(np.allclose(system[1].particles.pos,
+                                         system[2].particles.pos))
+
+        sav_en = copy.deepcopy(eng[0].restart_info())
+        eng[1].load_restart_info(sav_en)
+
+        sav_sys = copy.deepcopy(system[0].restart_info())
+        system[1].load_restart_info(sav_sys)
+
+        for _ in range(11):
+            eng[1].integration_step(system[1])
+
+        self.assertTrue(np.allclose(system[1].particles.pos,
+                                    system[2].particles.pos))
+        self.assertTrue(np.allclose(system[1].particles.vel,
+                                    system[2].particles.vel))
+        self.assertFalse(np.allclose(system[0].particles.pos,
+                                     system[2].particles.pos))
+        self.assertFalse(np.allclose(system[0].particles.vel,
+                                     system[2].particles.vel))
+
+    def test_restart_internal_engine_velocity_verlet(self):
+        """Run test to check generic restart info."""
+
+        system = [prepare_test_system(),
+                  prepare_test_system(),
+                  prepare_test_system()]
+
+        eng = [VelocityVerlet(0.02),
+               VelocityVerlet(0.02),
+               VelocityVerlet(0.02)]
+
+        for _ in range(5):
+            eng[0].integration_step(system[0])
+            eng[1].integration_step(system[1])
+
+        for _ in range(16):
+            eng[1].integration_step(system[1])
+            eng[2].integration_step(system[2])
+            self.assertFalse(np.allclose(system[1].particles.pos,
+                                         system[2].particles.pos))
+
+        sav_sys = copy.deepcopy(system[0].restart_info())
+        system[1].load_restart_info(sav_sys)
+
+        for _ in range(11):
+            eng[1].integration_step(system[1])
+
+        self.assertTrue(np.allclose(system[1].particles.pos,
+                                    system[2].particles.pos))
+        self.assertTrue(np.allclose(system[1].particles.vel,
+                                    system[2].particles.vel))
+        self.assertFalse(np.allclose(system[0].particles.pos,
+                                     system[2].particles.pos))
+        self.assertFalse(np.allclose(system[0].particles.vel,
+                                     system[2].particles.vel))
+
+    def test_retarts_internal(self):
+        """Check all internal engine restarts."""
+        engs = [Verlet(timestep=0.02),
+                VelocityVerlet(timestep=0.02),
+                Langevin(timestep=0.02, gamma=0.1)]
+
+        engs_base = [Verlet(timestep=1),
+                     VelocityVerlet(timestep=1),
+                     Langevin(timestep=1, gamma=1)]
+
+        for engine, reference in zip(engs, engs_base):
+            restart = engine.restart_info()
+            reference.load_restart_info(copy.deepcopy(restart))
+            if engine != reference:
+                ergen = reference.rgen.get_state()
+                rrgen = engine.rgen.get_state()
+                # todo __eq__ method for rgen should be improved?
+                self.assertTrue(big_fat_comparer(ergen, rrgen, hard=True))
+                reference.rgen = engine.rgen
+            self.assertTrue(engine == reference)
+
+    def test_restart_internal_engine_verlet(self):
+        """Run test to check verlet error in restart."""
+        system = [prepare_test_system(),
+                  prepare_test_system(),
+                  prepare_test_system()]
+
+        eng = [Verlet(timestep=0.02),
+               Verlet(timestep=0.02),
+               Verlet(timestep=0.02)]
+        eng[0].set_initial_positions(system[0].particles)
+        eng[1].set_initial_positions(system[0].particles)
+        eng[2].set_initial_positions(system[0].particles)
+
+        for _ in range(6):
+            eng[0].integration_step(system[0])
+            eng[1].integration_step(system[1])
+
+        for _ in range(16):
+            eng[1].integration_step(system[1])
+            eng[2].integration_step(system[2])
+            self.assertFalse(np.allclose(system[1].particles.pos,
+                                         system[2].particles.pos))
+
+        sav_sys = copy.deepcopy(system[0].restart_info())
+        system[1].load_restart_info(sav_sys)
+        eng[1].set_initial_positions(system[1].particles)
+
+        for _ in range(10):
+            eng[1].integration_step(system[1])
+
+        self.assertFalse(np.allclose(system[1].particles.pos,
+                                     system[2].particles.pos))
+        self.assertFalse(np.allclose(system[1].particles.vel,
+                                     system[2].particles.vel))
+        self.assertFalse(np.allclose(system[0].particles.pos,
+                                     system[2].particles.pos))
+        self.assertFalse(np.allclose(system[0].particles.vel,
+                                     system[2].particles.vel))
+
     def test_invert_dt(self):
         """Test that we can invert time."""
         eng = MDEngine(1, description='Mock engine for testing')
@@ -146,14 +286,14 @@ class EngineTest(unittest.TestCase):
         system.box = _box
         eng = MDEngine(1, description='Mock engine for testing')
         order_function = PositionVelocity(0, dim='x', periodic=False)
-        order = eng.calculate_order(order_function, system)
+        ensemble = {'system': system, 'order_function': order_function}
+        order = eng.calculate_order(ensemble)
         self.assertAlmostEqual(order[0], system.particles.pos[0])
         self.assertAlmostEqual(order[1], system.particles.vel[0])
         pos = np.array([[1.0], ])
         vel = np.array([[-1.0], ])
         box = [100.0]
-        order = eng.calculate_order(order_function, system,
-                                    xyz=pos, vel=vel, box=box)
+        order = eng.calculate_order(ensemble, xyz=pos, vel=vel, box=box)
         self.assertTrue(np.allclose(order, [1.0, -1.0]))
         self.assertTrue(np.allclose(system.box.cell, box))
 
@@ -162,28 +302,32 @@ class EngineTest(unittest.TestCase):
         system = prepare_test_system()
         eng = MDEngine(1, description='Mock engine for testing')
         rgen = MockRandomGenerator(seed=1)
-        eng.modify_velocities(system, rgen, sigma_v=None, aimless=True,
-                              momentum=False, rescale=None)
+        ensemble = {'system': system, 'rgen': rgen}
+        eng.modify_velocities(ensemble, {'aimless': True,
+                                         'momentum': False})
         self.assertAlmostEqual(system.particles.vel[0][0], rgen.rgen[1])
         deltav = np.ones_like(system.particles.vel)
-        eng.modify_velocities(system, rgen, sigma_v=deltav, aimless=False,
-                              momentum=False, rescale=None)
+        eng.modify_velocities(ensemble, {'sigma_v': deltav,
+                                         'aimless': False,
+                                         'momentum': False})
         self.assertAlmostEqual(system.particles.vel[0][0],
                                rgen.rgen[1] + rgen.rgen[2])
-        eng.modify_velocities(system, rgen, sigma_v=None, aimless=True,
-                              momentum=True, rescale=None)
+        eng.modify_velocities(ensemble, {'aimless': True,
+                                         'momentum': True})
         self.assertAlmostEqual(system.particles.vel[0][0], 0.0)
 
         system.particles.pos = np.ones_like(system.particles.pos)
         system.particles.vpot = system.potential()
-        dek, kin_new = eng.modify_velocities(system, rgen, sigma_v=None,
-                                             aimless=True, momentum=False,
-                                             rescale=6)
+        dek, kin_new = eng.modify_velocities(ensemble,
+                                             {'aimless': True,
+                                              'momentum': False,
+                                              'rescale': 6})
         self.assertAlmostEqual(6, kin_new + system.particles.vpot)
         kin_old = kin_new
-        dek, kin_new2 = eng.modify_velocities(system, rgen, sigma_v=None,
-                                              aimless=True, momentum=False,
-                                              rescale=-1)
+        dek, kin_new2 = eng.modify_velocities(ensemble,
+                                              {'aimless': True,
+                                               'momentum': False,
+                                               'rescale': -1})
         self.assertAlmostEqual(kin_old, kin_new2)
         self.assertAlmostEqual(dek, 0.0)
 
@@ -198,6 +342,7 @@ class EngineTest(unittest.TestCase):
         """
         system = prepare_test_system()
         eng = Langevin(0.002, 0.3, rgen='mock', seed=1, high_friction=False)
+
         for i in range(51):
             self.assertTrue(np.allclose(system.particles.pos,
                                         TISMOL_POS[i]))
@@ -260,6 +405,7 @@ class EngineTest(unittest.TestCase):
     def test_add_to_path(self):
         """Test that we can add to paths from the engine."""
         eng = MDEngine(1.0, 'Just testing')
+
         path = Path(None, maxlen=10)
         system = System()
         system.particles = Particles(system.get_dim())
@@ -301,6 +447,45 @@ class EngineTest(unittest.TestCase):
         self.assertFalse(success)
         self.assertTrue(stop)
         self.assertFalse(add)
+
+    def test_eq_and_ne(self):
+        """Test that engines can be compared."""
+        eng = MDEngine(1.0, 'Just testing')
+        eng1 = MDEngine(1.0, 'Just Kidding')
+        eng2 = VelocityVerlet(0.002)
+
+        with patch('sys.stdout', new=StringIO()):
+            self.assertTrue(eng != eng1)
+            self.assertTrue(eng != eng2)
+
+        eng = Langevin(0.002, 0.3, rgen='mock', seed=1, high_friction=False)
+        eng1 = Langevin(0.002, 0.3, rgen='rgen', seed=1, high_friction=False)
+        eng2 = Langevin(0.002, 0.3)
+        with patch('sys.stdout', new=StringIO()):
+            self.assertTrue(eng != eng1)
+            self.assertTrue(eng != eng2)
+
+        eng = [VelocityVerlet(0.02),
+               VelocityVerlet(0.02),
+               VelocityVerlet(0.02),
+               VelocityVerlet(0.01)]
+
+        self.assertTrue(eng[0] == eng[1])
+        self.assertTrue(eng[0] == eng[2])
+        with patch('sys.stdout', new=StringIO()):
+            self.assertTrue(eng[0] != eng[3])
+
+        eng = [Langevin(0.002, 0.3, rgen='mock', seed=1, high_friction=False),
+               Langevin(0.002, 0.3, rgen='mock', seed=16, high_friction=False),
+               Langevin(0.002, 0.3, rgen='mock', seed=1, high_friction=False)]
+
+        self.assertTrue(eng[0] == eng[2])
+        with patch('sys.stdout', new=StringIO()):
+            self.assertTrue(eng[0] != eng[1])
+            self.assertTrue(eng[0] != 'gino')
+
+        eng[0].just = 'kidding'
+        self.assertTrue(eng[0] != eng[2])
 
 
 if __name__ == '__main__':

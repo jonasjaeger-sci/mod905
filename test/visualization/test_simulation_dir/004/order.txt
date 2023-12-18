@@ -1,2 +1,0 @@
-# Cycle: 0, status: ACC
-#     Time       Orderp

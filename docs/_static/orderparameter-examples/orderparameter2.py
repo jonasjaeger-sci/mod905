@@ -1,12 +1,20 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """This file contains examples for order parameters.
 
 This file is distributed as part of the documentation of PyRETIS.
+
+Note: mdtraj needs to be installed on top of the regular PyRETIS installation.
+
 """
 import mdtraj
 from pyretis.orderparameter import OrderParameter
+
+
+def some_function_to_obtain_order(_):
+    """A always right function test."""
+    return 42
 
 
 class PlaneDistanceX(OrderParameter):
@@ -27,9 +35,7 @@ class PlaneDistanceX(OrderParameter):
         plane_position : float
             The location of the plane, along the x-axis.
         """
-        txt = 'Distance from particle {} to the plane at {}'.format(
-            index,
-            plane_position)
+        txt = f'Distance from particle {index} to a plane at {plane_position}'
         super().__init__(description=txt)
         self.index = index
         self.plane_position = plane_position

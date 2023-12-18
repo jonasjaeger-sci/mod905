@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Definition of a class for simulation tasks.
 
@@ -97,6 +97,8 @@ class SimulationTask(Task):
     first : boolean
         True if this task should be executed before the first
         step of the simulation.
+    result : string
+        This is a label for the result created by the task.
 
     """
 
@@ -144,7 +146,7 @@ class SimulationTask(Task):
             The keys are:
 
             * 'step': the current cycle number.
-            * 'start': the cycle number at the start.
+            * 'startcycle': the cycle number at the start.
             * 'stepno': the number of cycles we have performed so far.
 
         Returns
@@ -190,7 +192,7 @@ class SimulationTask(Task):
             The keys are:
 
             * 'step': the current cycle number.
-            * 'start': the cycle number at the start.
+            * 'startcycle': the cycle number at the start.
             * 'stepno': the number of cycles we have performed so far.
 
         Returns

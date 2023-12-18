@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Test the FORTRAN implementation of the Velocity Verlet integrator.
 
@@ -55,7 +55,8 @@ def run_test(steps, integrator, system=None):
     forcefieldnp = ForceField('Lennard-Jones force field',
                               potential=[potentialnp], params=[parameters])
     system.forcefield = forcefieldnp
-    simulation = Simulation(steps=steps)
+    controls = {'steps': steps}
+    simulation = Simulation(settings=None, controls=controls)
     task_integrate = {'func': integrator.integration_step,
                       'args': [system]}
     simulation.add_task(task_integrate)

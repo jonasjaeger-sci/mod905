@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """
 PyRETIS - A simulation package for rare event simulations.
 
-Copyright (c) 2022, PyRETIS Development team.
+Copyright (c) 2023, PyRETIS Development team.
 
 This file generates the version info and appends a ".beta"
 to the logo if needed.
@@ -33,7 +33,7 @@ VERSION_FMT = '{major:d}.{minor:d}.{micro:d}'
 
 # Define the text for creating .py files for PyRETIS:
 HEADER_TXT = """# -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info."""
 
 VERSION_TXT = '''{header:s}
@@ -50,6 +50,8 @@ RELEASE = {release:}
 
 if not RELEASE:
     VERSION = GIT_VERSION
+
+MIN_PYTHON_VERSION = {MIN_PYTHON_VERSION}
 '''
 
 INFO_TXT = '''{header:s}
@@ -68,6 +70,7 @@ CITE = """
     doi: https://dx.doi.org/10.1002/jcc.24900
 [2] E. Riccardi, A. Lervik, S. Roet, O. Aarøen and T. S. van Erp,
     J. Comput. Chem., 2019, doi: https://dx.doi.org/10.1002/jcc.26112
+
 """
 LOGO = r"""{logo:s}"""
 '''
@@ -75,12 +78,13 @@ LOGO = r"""{logo:s}"""
 
 # Define the PyRETIS logo:
 LOGO = r"""
-  _______                                     ___________
- /   ___ \         ___  ____  ____________   / __     __/
-/_/\ \_/ /_  __   / _ \/ __/ /_  _/ / ___/  /_/ / // /
-   /  __  / / /  / /_)  _/    / // /\ \        / // /
-  / /   \ \/ /  / _  \ /__   / // /__\ \    __/ // /__
- /_/    _\  /  /_/ |_|___/  /_//_/_____/   /_________/
+
+  _______                                     _______________
+ /   ___ \       _____  ____  ____________   / __        ___/
+/_/\ \_/ /_  __  \  _ \/ __/ /_  _/ / ___/  /_/ / // // /
+   /  __  / / /  / /_)  _/    / // /\ \        / // // / __
+  / /   \ \/ /  / _  \ /__   / // /__\ \   ___/ // // /_/ /
+ /_/    _\  /  /_/ |_|___/  /_//_/_____/  /______________/
        /___/
 """
 
@@ -198,6 +202,8 @@ def write_version_py(version):
 
     """
     full_version, git_revision, git_version = get_version_info(version)
+    min_python_version = tuple([int(x) for x in
+                                version['min_python'].split('.')])
     version_txt = VERSION_TXT.format(
         header=HEADER_TXT,
         version=full_version,
@@ -205,8 +211,9 @@ def write_version_py(version):
         git_revision=git_revision,
         git_version=git_version,
         release=version['release'],
+        MIN_PYTHON_VERSION=min_python_version
     )
-    with open(VERSION_FILE, 'wt') as vfile:
+    with open(VERSION_FILE, 'wt', encoding='utf-8') as vfile:
         vfile.write(version_txt)
     return full_version
 
@@ -215,15 +222,15 @@ def write_version_in_setup_py(version):
     """Update version for setup.py."""
     tmp = []
     comment = '# Automatically set by setup_version.py'
-    with open(SETUP_PY, 'r') as sfile:
+    with open(SETUP_PY, 'r', encoding='utf-8') as sfile:
         for lines in sfile:
             if lines.startswith('FULL_VERSION ='):
                 tmp.append(
-                    ("FULL_VERSION = '{}'  {}\n".format(version, comment))
+                    (f"FULL_VERSION = '{version}'  {comment}\n")
                 )
             else:
                 tmp.append(lines)
-    with open(SETUP_PY, 'wt') as sfile:
+    with open(SETUP_PY, 'wt', encoding='utf-8') as sfile:
         for lines in tmp:
             sfile.write(lines)
 
@@ -254,13 +261,13 @@ def update_logo(released):
         if '.beta' not in logo_txt:
             # Note: This is specific for the current logo layout!
             split = logo_txt.split('\n')
-            split[-3] = '{}.beta'.format(split[-3])
+            split[-3] = f'{split[-3]}.beta'
             logo_txt = '\n'.join(split)
     info_txt = INFO_TXT.format(
         header=HEADER_TXT,
         logo=logo_txt,
     )
-    with open(INFO_FILE, 'w') as info_out:
+    with open(INFO_FILE, 'w', encoding='utf-8') as info_out:
         info_out.write(info_txt)
 
 
@@ -302,14 +309,14 @@ def bump_version(args, version):
 def main(args):
     """Generate version information and update the relevant files."""
     version = {}
-    with open(CURRENT_VERSION_FILE, 'r') as json_file:
+    with open(CURRENT_VERSION_FILE, 'r', encoding='utf-8') as json_file:
         version = json.load(json_file)
     version = bump_version(args, version)
     full_version = write_version_py(version)
-    print('Setting version to: {}'.format(full_version))
+    print(f'Setting version to: {full_version}')
     write_version_in_setup_py(full_version)
     update_logo(version['release'])
-    with open(CURRENT_VERSION_FILE, 'w') as json_file:
+    with open(CURRENT_VERSION_FILE, 'w', encoding='utf-8') as json_file:
         json.dump(version, json_file, indent=4)
 
 

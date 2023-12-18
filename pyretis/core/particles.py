@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """This module defines a class, representing a collection of particles.
 
@@ -314,7 +314,7 @@ class Particles:
         for i, pos in enumerate(self.pos):
             part = {'pos': pos, 'vel': self.vel[i], 'force': self.force[i],
                     'mass': self.mass[i], 'imass': self.imass[i],
-                    'name': self.name[i], 'type': self.ptype[i]}
+                    'name': self.name[i], 'ptype': self.ptype[i]}
             yield part
 
     def pairs(self):
@@ -338,13 +338,14 @@ class Particles:
 
     def __str__(self):
         """Print out basic info about the particle list."""
-        return 'Particles: {}\nTypes: {}\nNames: {}'.format(
-            self.npart, np.unique(self.ptype), set(self.name)
-        )
+        basic_info = f'Particles: {self.npart}\n' + \
+                     f'Types: {np.unique(self.ptype)}\n' + \
+                     f'Names: {set(self.name)}'
+        return basic_info
 
     def restart_info(self):
         """Generate information for saving a restart file."""
-        info = {'class': self.particle_type}
+        info = {'type': self.particle_type}
         for copy_list in (self._copy_attr, self._numpy_attr):
             for attr in copy_list:
                 try:
@@ -368,8 +369,8 @@ class Particles:
             if attr in info:
                 setattr(self, attr, info[attr])
             else:
-                msg = ('Could not set "{}" for particles '
-                       'from restart info').format(attr)
+                msg = f'Could not set "{attr}" for particles ' + \
+                       'from restart info'
                 logger.error(msg)
                 raise ValueError(msg)
 
@@ -390,9 +391,6 @@ class ParticlesExt(Particles):
         If this is True, the velocities in the file represeting
         the configuration will have to be reversed before they are
         used.
-    top : string
-        The location of the file with the topology information for
-        external tools (e.g. mdtraj).
 
     """
 
@@ -400,7 +398,7 @@ class ParticlesExt(Particles):
 
     # Attributes to store when restarting/copying:
     _copy_attr = {'npart', 'name', 'ptype', 'dim',
-                  'config', 'vel_rev', 'top'}
+                  'config', 'vel_rev'}
     # Attributes which are numpy arrays:
     _numpy_attr = {'pos', 'vel', 'force', 'virial', 'mass', 'imass',
                    'ptype', 'ekin', 'vpot'}
@@ -418,7 +416,6 @@ class ParticlesExt(Particles):
         super().__init__(dim=dim)
         self.config = (None, None)
         self.vel_rev = False
-        self.top = None
 
     def add_particle(self, pos, vel, force, mass=1.0,
                      name='?', ptype=0):
@@ -457,7 +454,6 @@ class ParticlesExt(Particles):
         super().empty_list()
         self.config = (None, None)
         self.vel_rev = False
-        self.top = None
 
     def reverse_velocities(self):
         """Reverse the velocities in the system."""
@@ -485,7 +481,7 @@ class ParticlesExt(Particles):
         """Just return the positions of the particles."""
         return self.config
 
-    def set_vel(self, vel):
+    def set_vel(self, rev_vel):
         """Set velocities for the particles.
 
         Here we store information which tells if the
@@ -493,12 +489,12 @@ class ParticlesExt(Particles):
 
         Parameters
         ----------
-        vel : boolean
+        rev_vel : boolean
             The velocities to set. If True, the velocities should
             be reversed before used.
 
         """
-        self.vel_rev = vel
+        self.vel_rev = rev_vel
 
     def get_vel(self):
         """Return info about the velocities."""
@@ -506,9 +502,7 @@ class ParticlesExt(Particles):
 
     def __str__(self):
         """Print out basic info about the particle list."""
-        return 'Config: {}\nReverse velocities: {}'.format(
-            self.config, self.vel_rev
-        )
+        return f'Config: {self.config}\nReverse velocities: {self.vel_rev}'
 
 
 def get_particle_type(engine_type):
@@ -525,7 +519,7 @@ def get_particle_type(engine_type):
     try:
         return particle_map[engine_type]
     except KeyError:
-        msg = 'Unknown particle type "{}" requested.'.format(engine_type)
+        msg = f'Unknown particle type "{engine_type}" requested.'
         logger.critical(msg)
         raise ValueError(msg)
 
@@ -548,7 +542,7 @@ def particles_from_restart(restart):
     if restart_particles is None:
         logger.info('No particles were created from restart information.')
         return None
-    klass = get_particle_type(restart_particles['class'])
+    klass = get_particle_type(restart_particles['type'])
     particles = klass(dim=restart_particles['dim'])
     particles.load_restart_info(restart_particles)
     return particles

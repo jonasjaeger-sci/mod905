@@ -20,7 +20,7 @@ units = lj
 
 Particles
 ---------
-position = {'file': 'initial.gro'}
+position = {'input_file': 'initial.gro'}
 
 velocity = {'generate': 'maxwell',
             'temperature': 2.0,
@@ -29,7 +29,7 @@ velocity = {'generate': 'maxwell',
 
 mass = {'Ar': 1.0}
 name = ['Ar']
-type = [0]
+ptype = [0]
 
 Forcefield settings
 -------------------

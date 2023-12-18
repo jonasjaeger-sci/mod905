@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """This module defines the class for interfacing LAMMPS.
 
@@ -14,8 +14,10 @@ import logging
 import os
 import shlex
 import numpy as np
+from pyretis.core.common import counter
 from pyretis.engines.external import ExternalMDEngine
 from pyretis.inout.fileio import FileIO
+from pyretis.inout.settings import look_for_input_files
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
@@ -129,7 +131,7 @@ def read_lammps_log(filename):
     energy_keys = []
     energy_data = {}
     read_energy = False
-    with open(filename, 'r', encoding="utf-8") as logfile:
+    with open(filename, 'r', encoding='utf-8') as logfile:
         for lines in logfile:
             if lines.startswith('Step'):
                 # Assume that this is the start of the thermo output.
@@ -186,7 +188,7 @@ def read_lammps_input(filename):
 
     """
     settings = []
-    with open(filename, 'r', encoding="utf-8") as infile:
+    with open(filename, 'r', encoding='utf-8') as infile:
         for lines in infile:
             current_line, _, _ = lines.strip().partition('#')
             split = current_line.split()
@@ -216,7 +218,7 @@ def add_to_lammps_input(infile, outfile, to_add):
         logger.debug(
             '"%s" exists and will be overwritten by PyRETIS.', outfile
         )
-    with open(infile, 'r', encoding="utf-8") as indata:
+    with open(infile, 'r', encoding='utf-8') as indata:
         data = indata.read()
         with open(outfile, 'w', encoding='utf-8') as output:
             output.write(data)
@@ -457,7 +459,7 @@ class LAMMPSEngine(ExternalMDEngine):
         # out, and we assume that the user knows what he/she is doing.
         # We assume that these extra files will also be present and
         # stored in the given input path. Now, we look for such files:
-        self.input_files = self._look_for_input_files(
+        self.input_files = look_for_input_files(
             self.input_path,
             input_files,
         )
@@ -466,7 +468,7 @@ class LAMMPSEngine(ExternalMDEngine):
             'order': self.input_files['order'],
         }
         if extra_files is not None:
-            extra = self._look_for_input_files(
+            extra = look_for_input_files(
                 self.input_path,
                 {f'file-{i}': val for i, val in enumerate(extra_files)}
             )
@@ -546,8 +548,8 @@ class LAMMPSEngine(ExternalMDEngine):
         data = read_lammps_log(logfile)
         return data['energy']
 
-    def _propagate_from(self, name, path, system, order_function, interfaces,
-                        msg_file, reverse=False):  # pragma: no cover
+    def _propagate_from(self, name, path, ensemble, msg_file,
+                        reverse=False):  # pragma: no cover
         """
         Propagate with LAMMPS from the current system configuration.
 
@@ -557,12 +559,16 @@ class LAMMPSEngine(ExternalMDEngine):
             A name to use for the trajectory we are generating.
         path : object like :py:class:`.PathBase`
             This is the path we use to fill in phase-space points.
-        system : object like :py:class:`.System`
-            The system object gives the initial state.
-        order_function : object like :py:class:`.OrderParameter`
-            The object used for calculating the order parameter.
-        interfaces : list of floats
-            These interfaces define the stopping criterion.
+        ensemble: dict
+            It contains:
+
+            * `system`: object like :py:class:`.System`
+              The system object gives the initial state.
+            * `order_function`: object like :py:class:`.OrderParameter`
+              The object used for calculating the order parameter.
+            * `interfaces`: list of floats
+              These interfaces define the stopping criterion.
+
         msg_file : object like :py:class:`.FileIO`
             An object we use for writing out messages that are useful
             for inspecting the status of the current propagation.
@@ -609,13 +615,14 @@ class LAMMPSEngine(ExternalMDEngine):
         """Reverse the velocities for a given configuration."""
         return
 
-    def modify_velocities(self, system, rgen, sigma_v=None, aimless=True,
-                          momentum=False, rescale=None):
+    def modify_velocities(self, ensemble, vel_settings):
         """Modify velocities."""
         dek = None
+        system = ensemble['system']
         kin_old = system.particles.ekin
+        rgen = ensemble['rgen']
         kin_new = None
-        if aimless:
+        if vel_settings.get('aimless', False):
             logger.debug('Modifying velocities with LAMMPS.')
             name = 'generate_vel'
             if rgen:
@@ -631,7 +638,11 @@ class LAMMPSEngine(ExternalMDEngine):
             settings = {
                 'steps_subcycles': 0,
                 'reverse_velocities': False,
-                'generate_vel': {'seed': seed, 'rescale': rescale},
+                'generate_vel': {
+                    'seed': seed,
+                    'rescale': vel_settings.get('rescale_energy',
+                                                vel_settings.get('rescale'))
+                },
             }
             self.run_lammps(system, settings, name)
             kin_new = system.particles.ekin
@@ -652,7 +663,7 @@ class LAMMPSEngine(ExternalMDEngine):
 
         Parameters
         ----------
-        system : object like :py:class:`.System`.
+        system : object like :py:class:`.System`
             The system defines the initial state we are using.
         settings : dict
             This dict contains settings for creating the LAMMPS
@@ -714,7 +725,7 @@ class LAMMPSEngine(ExternalMDEngine):
         )
         return order, energy, settings['traj']
 
-    def integrate(self, system, steps, order_function=None, thermo='full'):
+    def integrate(self, system, steps):  # order_function=None, thermo='full'):
         """Propagate several integration steps with LAMMPS."""
         logger.debug('Integrating with LAMMPS.')
         # Add settings for this run:
@@ -725,8 +736,7 @@ class LAMMPSEngine(ExternalMDEngine):
         # Execute LAMMPS:
         self.run_lammps(system, settings, 'pyretis_md')
 
-    def propagate(self, path, system, order_function, interfaces,
-                  reverse=False):
+    def propagate(self, path, ensemble, reverse=False):
         """
         Propagate the equations of motion with the external code.
 
@@ -737,13 +747,18 @@ class LAMMPSEngine(ExternalMDEngine):
             We are here not returning a new path - this since we want
             to delegate the creation of the path to the method
             that is running `propagate`.
-        system : object like :py:class:`.System`
-            The system object gives the initial state for the
-            integration.
-        order_function : object like :py:class:`.OrderParameter`
-            The object used for calculating the order parameter.
-        interfaces : list of floats
-            These interfaces define the stopping criterion.
+        ensemble: dict
+            It contains:
+
+            * `system`: object like :py:class:`.System`
+              The system object gives the initial state for the
+              integration. The initial state is stored and the system is
+              reset to the initial state when the integration is done.
+            * `order_function`: object like :py:class:`.OrderParameter`
+              The object used for calculating the order parameter.
+            * `interfaces`: list of floats
+              These interfaces define the stopping criterion.
+
         reverse : boolean, optional
             If True, the system will be propagated backward in time.
 
@@ -755,13 +770,16 @@ class LAMMPSEngine(ExternalMDEngine):
             A text description of the current status of the propagation.
 
         """
+        initial_state = ensemble['system']
+        interfaces = ensemble['interfaces']
         logger.debug('Running propagate with: "%s"', self.description)
+        prefix = str(counter())
         if reverse:
             logger.debug('Running backward in time.')
-            name = 'trajB'
+            name = prefix + '_trajB'
         else:
             logger.debug('Running forward in time.')
-            name = 'trajF'
+            name = prefix + '_trajF'
         logger.debug('Trajectory name: "%s"', name)
         # Also create a message file for inspecting progress:
         msg_file_name = os.path.join(self.exe_dir, f'msg-{name}.txt')
@@ -771,7 +789,7 @@ class LAMMPSEngine(ExternalMDEngine):
         msg_file.write(f'# Preparing propagation with {self.description}')
         msg_file.write(f'# Trajectory label: {name}')
 
-        system = system.copy()
+        system = initial_state.copy()
         logger.debug('Initial state: %s', system)
         # For storing LAMMPS settings:
         settings = {
@@ -819,6 +837,6 @@ class LAMMPSEngine(ExternalMDEngine):
         settings = {'steps_subcycles': 0, 'reverse_velocities': False}
         self.run_lammps(phasepoint, settings, deffnm)
 
-    def calculate_order(self, order_function, system):
+    def calculate_order(self, ensemble):
         """Return the last seen order parameter."""
-        return system.order
+        return ensemble['system'].order

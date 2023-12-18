@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """A CP2K external MD integrator interface.
 
@@ -17,6 +17,11 @@ import re
 import shlex
 from pyretis.engines.external import ExternalMDEngine
 from pyretis.core.random_gen import create_random_generator
+from pyretis.inout.settings import look_for_input_files
+from pyretis.core.particlefunctions import (
+   calculate_kinetic_energy,
+   reset_momentum
+)
 from pyretis.inout.formats.xyz import (
     read_xyz_file,
     write_xyz_trajectory,
@@ -115,7 +120,8 @@ def write_for_step_vel(infile, outfile, timestep, subcycles, posfile, vel,
     }
     for veli in vel:
         to_update['FORCE_EVAL->SUBSYS->VELOCITY']['data'].append(
-            f'{veli[0]} {veli[1]} {veli[2]}')
+            f'{veli[0]} {veli[1]} {veli[2]}'
+        )
     remove = [
         'EXT_RESTART',
         'FORCE_EVAL->SUBSYS->COORD'
@@ -261,8 +267,13 @@ def write_for_continue(infile, outfile, timestep, subcycles,
     update_cp2k_input(infile, outfile, update=to_update, remove=remove)
 
 
-def write_for_genvel(infile, outfile, posfile, seed, name='genvel'):
+def write_for_genvel(infile, outfile, posfile, seed,
+                     name='genvel'):  # pragma: no cover
     """Create input file for velocity generation.
+
+    2022.05.25: Note: This function is no longer in use
+    as we now generate velocities internally. However we keep
+    this function in case of future need.
 
     Parameters
     ----------
@@ -347,7 +358,7 @@ class CP2KEngine(ExternalMDEngine):
     """
 
     def __init__(self, cp2k, input_path, timestep, subcycles,
-                 extra_files=None, seed=0):
+                 extra_files=None, exe_path=os.path.abspath('.'),  seed=0):
         """Set up the CP2K engine.
 
         Parameters
@@ -366,6 +377,8 @@ class CP2KEngine(ExternalMDEngine):
             A seed for the random number generator.
         extra_files : list
             List of extra files which may be required to run CP2K.
+        exe_path: string, optional
+            The path on which the engine is executed
 
         """
         super().__init__('CP2K external engine', timestep,
@@ -375,22 +388,27 @@ class CP2KEngine(ExternalMDEngine):
         self.cp2k = shlex.split(cp2k)
         logger.info('Command for execution of CP2K: %s', ' '.join(self.cp2k))
         # Store input path:
-        self.input_path = os.path.abspath(input_path)
-        # Store input files:
-        input_files = {
-            'conf': 'initial.xyz',
+        self.input_path = os.path.join(exe_path, input_path)
+        # Set the defaults input files:
+        default_files = {
+            'conf': f'initial.{self.ext}',
             'template': 'cp2k.inp',
         }
-        self.input_files = self._look_for_input_files(
-            self.input_path,
-            input_files,
-        )
-        self.extra_files = {}
+        # Check the presence of the defaults input files or, if absent,
+        # try to find then by extension.
+        self.input_files = look_for_input_files(self.input_path, default_files)
+
+        # todo, these info can be processed by look_for_input_files using
+        # the extra_files option.
+        self.extra_files = []
         if extra_files is not None:
-            self.extra_files = self._look_for_input_files(
-                self.input_path,
-                {f'file-{i}': val for i, val in enumerate(extra_files)}
-            )
+            for key in extra_files:
+                fname = os.path.join(self.input_path, key)
+                if not os.path.isfile(fname):
+                    logger.critical('Extra CP2K input file "%s" not found!',
+                                    fname)
+                else:
+                    self.extra_files.append(fname)
 
     def run_cp2k(self, input_file, proj_name):
         """
@@ -432,20 +450,14 @@ class CP2KEngine(ExternalMDEngine):
             if i == idx:
                 box, xyz, vel, names = convert_snapshot(snapshot)
                 if os.path.isfile(out_file):
-                    logger.warning('CP2K will overwrite %s', out_file)
+                    logger.debug('CP2K will overwrite %s', out_file)
                 write_xyz_trajectory(out_file, xyz, vel, names, box,
                                      append=False)
                 return
         logger.error('CP2K could not extract index %i from %s!',
                      idx, traj_file)
 
-    def _name_output(self, basename):
-        """Return the name of the output file."""
-        out_file = f'{basename}.{self.ext}'
-        return os.path.join(self.exe_dir, out_file)
-
-    def _propagate_from(self, name, path, system, order_function, interfaces,
-                        msg_file, reverse=False):
+    def _propagate_from(self, name, path, ensemble, msg_file, reverse=False):
         """
         Propagate with CP2K from the current system configuration.
 
@@ -460,12 +472,20 @@ class CP2KEngine(ExternalMDEngine):
             A name to use for the trajectory we are generating.
         path : object like :py:class:`.PathBase`
             This is the path we use to fill in phase-space points.
-        system : object like :py:class:`.System`
-            The system object gives the initial state.
-        order_function : object like :py:class:`.OrderParameter`
-            The object used for calculating the order parameter.
-        interfaces : list of floats
-            These interfaces define the stopping criterion.
+        ensemble : dict
+            It contains the simulations info:
+
+            * `system` : object like :py:class:`.System`
+              The system to act on.
+            * `engine` : object like :py:class:`.EngineBase`
+              This is the integrator that is used to propagate the system
+              in time.
+            * `order_function` : object like :py:class:`.OrderParameter`
+              The class used for calculating the order parameters.
+            * `interfaces` : list of floats
+              These defines the interfaces for which we will check the
+              crossing(s).
+
         msg_file : object like :py:class:`.FileIO`
             An object we use for writing out messages that are useful
             for inspecting the status of the current propagation.
@@ -482,6 +502,8 @@ class CP2KEngine(ExternalMDEngine):
 
         """
         status = f'propagating with CP2K (reverse = {reverse})'
+        system = ensemble['system']
+        interfaces = ensemble['interfaces']
         logger.debug(status)
         success = False
         left, _, right = interfaces
@@ -504,8 +526,7 @@ class CP2KEngine(ExternalMDEngine):
         write_for_continue(self.input_files['template'], continue_input,
                            self.timestep, self.subcycles, name=name)
         # Get the order parameter before the run:
-        order = self.calculate_order(order_function, system,
-                                     xyz=xyz, vel=vel, box=box)
+        order = self.calculate_order(ensemble, xyz=xyz, vel=vel, box=box)
         traj_file = os.path.join(self.exe_dir, f'{name}.{self.ext}')
         # Create a message file with some info about this run:
         msg_file.write(
@@ -554,15 +575,17 @@ class CP2KEngine(ExternalMDEngine):
             # Read config after the step
             if i < path.maxlen - 1:
                 atoms, xyz, vel, box, _ = read_cp2k_restart(restart_file)
-                order = self.calculate_order(order_function, system,
+                order = self.calculate_order(ensemble,
                                              xyz=xyz, vel=vel, box=box)
         msg_file.write('# Propagation done.')
         energy_file = out_files['energy']
         msg_file.write(f'# Reading energies from: {energy_file}')
         energy = read_cp2k_energy(energy_file)
         end = (i + 1) * self.subcycles
-        path.update_energies(energy['ekin'][:end:self.subcycles],
-                             energy['vpot'][:end:self.subcycles])
+        ekin = energy.get('ekin', [])
+        vpot = energy.get('vpot', [])
+        path.update_energies(ekin[:end:self.subcycles],
+                             vpot[:end:self.subcycles])
         for _, files in out_files.items():
             self._removefile(files)
         self._removefile(prestart_file)
@@ -571,7 +594,7 @@ class CP2KEngine(ExternalMDEngine):
         self._removefile(step_input)
         return success, status
 
-    def integrate(self, system, steps, order_function=None, thermo='full'):
+    def integrate(self, ensemble, steps, thermo='full'):
         """
         Propagate several integration steps.
 
@@ -581,16 +604,21 @@ class CP2KEngine(ExternalMDEngine):
 
         Parameters
         ----------
-        system : object like :py:class:`.System`
-            The system we are integrating.
+        ensemble: dict
+            it contains:
+
+            * `system` : object like :py:class:`.System`
+              The system object gives the initial state for the
+              integration. The initial state is stored and the system is
+              reset to the initial state when the integration is done.
+            * `order_function` : object like :py:class:`.OrderParameter`
+              The object used for calculating the order parameter.
+
         steps : integer
             The number of steps we are going to perform. Note that we
             do not integrate on the first step (e.g. step 0) but we do
             obtain the other properties. This is to output the starting
             configuration.
-        order_function : object like :py:class:`.OrderParameter`, optional
-            An order function can be specified if we want to
-            calculate the order parameter along with the simulation.
         thermo : string, optional
             Select the thermodynamic properties we are to calculate.
 
@@ -605,6 +633,8 @@ class CP2KEngine(ExternalMDEngine):
         # First, copy the required input files:
         logger.debug('Adding input files for CP2K')
         self.add_input_files(self.exe_dir)
+        system = ensemble['system']
+        order_function = ensemble.get('order_function')
         # Get positions and velocities from the input file.
         initial_conf = self.dump_frame(system)
 
@@ -628,7 +658,7 @@ class CP2KEngine(ExternalMDEngine):
                            self.timestep, self.subcycles, name=name)
         # Get the order parameter before the run:
         if order_function:
-            order = self.calculate_order(order_function, system,
+            order = self.calculate_order(ensemble,
                                          xyz=xyz, vel=vel, box=box)
         else:
             order = None
@@ -665,8 +695,9 @@ class CP2KEngine(ExternalMDEngine):
             if i < steps - 1:
                 atoms, xyz, vel, box, _ = read_cp2k_restart(restart_file)
                 if order_function:
-                    order = self.calculate_order(order_function, system,
-                                                 xyz=xyz, vel=vel, box=box)
+                    order = self.calculate_order(
+                        ensemble, xyz=xyz, vel=vel, box=box
+                    )
             energy = read_cp2k_energy(out_files['energy'])
             end = (i + 1) * self.subcycles
             results['thermo'] = {}
@@ -739,13 +770,13 @@ class CP2KEngine(ExternalMDEngine):
             The full path to where we want to add the files.
 
         """
-        for filei in self.extra_files.values():
-            basename = os.path.basename(filei)
+        for files in self.extra_files:
+            basename = os.path.basename(files)
             dest = os.path.join(dirname, basename)
             if not os.path.isfile(dest):
                 logger.debug('Adding input file "%s" to "%s"',
                              basename, dirname)
-                self._copyfile(filei, dest)
+                self._copyfile(files, dest)
 
     @staticmethod
     def _find_backup_files(dirname):
@@ -803,11 +834,15 @@ class CP2KEngine(ExternalMDEngine):
         box, xyz, vel, names = self._read_configuration(filename)
         write_xyz_trajectory(outfile, xyz, -1.0*vel, names, box, append=False)
 
-    def _prepare_shooting_point(self, input_file):
+    def _prepare_shooting_point(self, input_file):  # pragma: no cover
         """
         Create initial configuration for a shooting move.
 
         This creates a new initial configuration with random velocities.
+
+        2022.05.25: Note: This function is no longer in use
+        as we now generate velocities internally. However we keep
+        this function in case of future need.
 
         Parameters
         ----------
@@ -851,8 +886,7 @@ class CP2KEngine(ExternalMDEngine):
         )
         return conf_out, energy
 
-    def modify_velocities(self, system, rgen, sigma_v=None, aimless=True,
-                          momentum=False, rescale=None):
+    def modify_velocities(self, ensemble, vel_settings=None):
         """
         Modify the velocities of the current state.
 
@@ -860,23 +894,30 @@ class CP2KEngine(ExternalMDEngine):
 
         Parameters
         ----------
-        system : object like :py:class:`.System`
-            System is used here since we need access to the particle
-            list.
-        rgen : object like :py:class:`.RandomGenerator`
-            This is the random generator that will be used.
-        sigma_v : numpy.array, optional
-            These values can be used to set a standard deviation (one
-            for each particle) for the generated velocities.
-        aimless : boolean, optional
-            Determines if we should do aimless shooting or not.
-        momentum : boolean, optional
-            If True, we reset the linear momentum to zero after generating.
-        rescale : float, optional
-            In some NVE simulations, we may wish to re-scale the energy to
-            a fixed value. If `rescale` is a float > 0, we will re-scale
-            the energy (after modification of the velocities) to match the
-            given float.
+        ensemble: dict
+            It contains:
+
+            * `system` : object like :py:class:`.System`
+              System is used here since we need access to the particle list.
+            * `rgen` : object like :py:class:`.RandomGenerator`
+              This is the random generator that will be used.
+
+        vel_settings: dict, optional
+            It contains info about the velocity settings:
+
+            * `sigma_v` : numpy.array
+              These values can be used to set a standard deviation (one
+              for each particle) for the generated velocities.
+            * `aimless` : boolean
+               Determines if we should do aimless shooting or not.
+            * `momentum` : boolean
+              If True, we reset the linear momentum to zero after
+              generating.
+            * `rescale or rescale_energy` : float
+              In some NVE simulations, we may wish to re-scale the
+              energy to a fixed value. If `rescale` is a float > 0,
+              we will re-scale the energy (after modification of
+              the velocities) to match the given float.
 
         Returns
         -------
@@ -886,31 +927,52 @@ class CP2KEngine(ExternalMDEngine):
             The new kinetic energy.
 
         """
-        dek, kin_old, kin_new = None, None, None
-        if rescale is not None and rescale is not False and rescale > 0:
-            msgtxt = 'CP2K engine does not support energy re-scale.'
-            logger.error(msgtxt)
-            raise NotImplementedError(msgtxt)
-        kin_old = system.particles.ekin
-        if aimless:
-            pos = self.dump_frame(system)
-            posvel, energy = self._prepare_shooting_point(pos)
-            kin_new = energy['ekin'][-1]
-            system.particles.set_pos((posvel, None))
-            system.particles.set_vel(False)
-            system.particles.ekin = kin_new
-            system.particles.vpot = energy['vpot'][-1]
-        else:  # Soft velocity change, from a Gaussian distribution:
-            msgtxt = 'CP2K engine only support aimless shooting!'
-            logger.error(msgtxt)
-            raise NotImplementedError(msgtxt)
-        if momentum:
-            pass
-        if kin_old is None or kin_new is None:
+        rgen = ensemble['rgen']
+        system = ensemble['system']
+        rescale = vel_settings.get('rescale_energy',
+                                   vel_settings.get('rescale'))
+        particles = system.particles
+        pos = self.dump_frame(system)
+        box, xyz, vel, atoms = self._read_configuration(pos)
+        system.particles.vel = vel
+        if box is None:
+            box, _ = read_cp2k_box(self.input_files['template'])
+        # to-do: retrieve particles.vpot from previous energy file.
+        if None not in ((rescale, particles.vpot)) and rescale is not False:
+            if rescale > 0:
+                kin_old = rescale - particles.vpot
+                do_rescale = True
+            else:
+                logger.warning('Ignored re-scale 6.2%f < 0.0.', rescale)
+                return 0.0, calculate_kinetic_energy(particles)[0]
+        else:
+            kin_old = calculate_kinetic_energy(particles)[0]
+            do_rescale = False
+        if vel_settings.get('aimless', False):
+            vel, _ = rgen.draw_maxwellian_velocities(system)
+            system.particles.vel = vel
+        else:
+            dvel, _ = rgen.draw_maxwellian_velocities(
+                system, sigma_v=vel_settings['sigma_v'])
+            vel += dvel
+            system.particles.vel = vel
+        if vel_settings.get('momentum', False):
+            reset_momentum(particles)
+        if do_rescale:
+            system.rescale_velocities(rescale, external=True)
+        vel = system.particles.vel
+        conf_out = os.path.join(self.exe_dir, f'genvel.{self.ext}')
+        write_xyz_trajectory(conf_out, xyz, vel,
+                             atoms, box, append=False)
+        kin_new = calculate_kinetic_energy(system.particles)[0]
+        system.particles.set_pos((conf_out, None))
+        system.particles.set_vel(False)
+        system.particles.ekin = kin_new
+        if kin_old == 0.0:
             dek = float('inf')
-            logger.warning(('Kinetic energy not found for previous point.'
-                            '\n(This happens when the initial configuration '
-                            'does not contain energies.)'))
+            logger.debug(('Kinetic energy not found for previous point.'
+                          '\n(This happens when the initial configuration '
+                          'does not contain energies.)'))
         else:
             dek = kin_new - kin_old
         return dek, kin_new

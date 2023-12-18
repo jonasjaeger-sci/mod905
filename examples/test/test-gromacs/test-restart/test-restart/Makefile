@@ -13,8 +13,9 @@ clean:
 	find -name \*.log* -delete
 	find -name mdout.mdp -delete
 	find -name \*.tpr -delete
-	-rm -rf run-20/0*
-	-rm -rf run-40/0*
+	-rm -rf run-5/0*
+	-rm -rf run-10/0*
 	-rm -rf run-restart/0*
+	-rm -rf gromacs_input/conf.gro
 	-rm -rf gromacs_input/pyretis.mdp
     

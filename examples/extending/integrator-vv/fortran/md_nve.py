@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """
 Example of running a MD NVE simulation.
@@ -15,8 +15,7 @@ from matplotlib import gridspec
 from pyretis.core.units import create_conversion_factors
 from pyretis.inout.formats import ThermoTableFormatter
 from pyretis.inout.fileio import FileIO
-from pyretis.inout.setup import (create_system, create_simulation,
-                                 create_engine, create_force_field)
+from pyretis.setup import create_simulation
 # for plotting:
 from pyretis.inout.plotting import mpl_set_style
 # Define simulation settings:
@@ -50,16 +49,11 @@ settings['particles'] = {
     'velocity': {'generate': 'maxwell', 'momentum': True, 'seed': 0}
 }
 create_conversion_factors(settings['system']['units'])
-print('# Creating system from settings.')
-ljsystem = create_system(settings)
-ljsystem.forcefield = create_force_field(settings)
-print('# Creating simulation from settings.')
-sim_args = {'system': ljsystem, 'engine': create_engine(settings)}
-simulation_nve = create_simulation(settings, sim_args)
+simulation_nve = create_simulation(settings)
 print('# Creating output tasks from settings.')
 simulation_nve.set_up_output(settings, progress=False)
 msg = 'Created fcc grid with {} atoms.'
-print(msg.format(ljsystem.particles.npart))
+print(msg.format(simulation_nve.system.particles.npart))
 
 # set up extra output:
 thermo_file = FileIO('thermo-test.txt', 'w', ThermoTableFormatter())

@@ -1,44 +1,59 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Test methods for doing TIS."""
-from io import StringIO
+import copy
 import logging
+import os
+import tempfile
 import unittest
 from unittest.mock import patch
+from io import StringIO
 import numpy as np
 from pyretis.core import System, create_box, Particles
+from pyretis.core.common import big_fat_comparer
 from pyretis.core.pathensemble import PathEnsemble
+from pyretis.core.random_gen import (
+    MockRandomGenerator,
+    RandomGenerator,
+    create_random_generator)
 from pyretis.core.tis import (
+    extender,
+    make_tis,
     make_tis_step_ensemble,
+    paste_paths,
+    select_shoot,
+    shoot,
+    stone_skipping,
+    wire_fencing,
+    ss_wt_wf_metropolis_acc,
+    ss_wt_wf_acceptance,
     time_reversal,
     web_throwing,
-    stone_skipping,
-    extender,
-    select_shoot,
-    ss_wt_acceptance,
-    shoot,
-    paste_paths,
-    make_path,
 )
+from pyretis.forcefield import ForceField
 from pyretis.engines.internal import VelocityVerlet, RandomWalk
 from pyretis.initiation import initiate_path_simulation
-from pyretis.inout.setup import (
-    create_force_field,
-    create_engine,
-    create_simulation
-)
+from pyretis.inout.checker import check_engine
+from pyretis.inout.checker import check_ensemble
+from pyretis.inout.common import make_dirs
+from pyretis.inout.settings import fill_up_tis_and_retis_settings
 from pyretis.orderparameter import Position
-from pyretis.inout.setup.createsimulation import create_path_ensembles
-from pyretis.core.random_gen import MockRandomGenerator, RandomGenerator
+from pyretis.setup import create_force_field, create_engine
+from pyretis.setup.createsimulation import (create_ensemble,
+                                            create_tis_simulation)
 from .help import (
+    create_ensembles_and_paths,
     make_internal_path,
     MockEngine,
     MockEngine2,
     MockOrder,
     MockOrder2,
-    SameOrder,
+    MockPotential,
     NegativeOrder,
+    SameOrder,
+    prepare_test_settings,
+    prepare_test_simulation
 )
 
 logging.disable(logging.CRITICAL)
@@ -56,57 +71,85 @@ TISMOL_001 = [[262, 'ACC', 'ki', -0.903862, 1.007330, 1, 262],
               [262, 'BWI', 'tr', -0.903862, 1.007330, 262, 1]]
 
 
-def create_ensembles_and_paths():
+def create_ensemble_and_paths(example=0):
     """Return some test data we can use."""
-    interfaces = [-1., 0., 1., 2., 10]
-    ensembles, _ = create_path_ensembles(interfaces, 'internal',
-                                         include_zero=False)
     # Make some paths for the ensembles.
+    interfaces = [(-1., -1., 10.), (-1., 0., 10.),
+                  (-1., 1., 10.), (-1., 2., 10.)]
     starts = [(0, -1.1), (0, -1.05), (0, -1.123), (0, -1.01)]
     ends = [(100, -1.2), (100, -1.3), (100, -1.01),
             (100, 10.01)]
     maxs = [(50, -0.2), (50, 0.5), (50, 2.5), (100, 10.01)]
-    for i, j, k, ens in zip(starts, ends, maxs, ensembles):
-        path = make_internal_path(i, j, k, ens.interfaces[1])
-        ens.add_path_data(path, 'ACC')
-    return ensembles
+
+    settings = prepare_test_settings()
+    start = starts[example]
+    end = ends[example]
+    mxx = maxs[example]
+    settings['simulation']['interfaces'] = interfaces[example]
+    settings['simulation']['zero_ensemble'] = False
+    if example == 3:
+        settings['tis']['detect'] = interfaces[example][2]
+    else:
+        settings['tis']['detect'] = interfaces[example][1]
+    settings['tis']['ensemble_number'] = example
+    with patch('sys.stdout', new=StringIO()):
+        ensemble = create_ensemble(settings)
+    path = make_internal_path(start, end, mxx, ensemble['interfaces'][1])
+    ensemble['path_ensemble'].add_path_data(path, 'ACC')
+    return ensemble
 
 
-def prepare_test_simulation():
+def create_ensemble_and_paths_repptis(example=0):
+    """Creating dummy ensemble for repptis shooting tests.
+    We have 6 ensembles, with the following acceptable paths:
+        [0^-]---RMR
+        [0^+-']-LML
+        [1^+-]--LMR
+        [2^+-]--LML
+        [3^+-]--RMR
+        [4^+-]--LML
+    """
+    interfaces = [(-np.inf, -1, -1), (-1, -1, 0), (-1, 0, 1),
+                  (0, 1, 2), (1, 2, 5), (2, 5, 10)]
+    starts = [(0, -0.91), (0, -1.12), (0, -1.13), (0, -.123),
+              (0, 5.05), (0, 1.98)]
+    ends = [(100, -0.95), (100, -1.05), (100, 1.2), (100, -0.123),
+            (100, 5.04), (100, 1.96)]
+    maxs = [(50, -5.02), (50, -0.053), (50, 0.122), (50, 1.051),
+            (50, 1.973), (50, 5.48)]
+    settings = prepare_test_settings(simtype='repptis')
+    start = starts[example]
+    end = ends[example]
+    mxx = maxs[example]
+    settings['simulation']['interfaces'] = interfaces[example]
+    settings['simulation']['zero_ensemble'] = True
+    settings['simulation']['flux'] = True
+    settings['tis']['ensemble_number'] = example
+    settings['tis']['detect'] = interfaces[example][-1]
+    with patch('sys.stdout', new=StringIO()):
+        ensemble = create_ensemble(settings)
+    path = make_internal_path(start, end, mxx, ensemble['interfaces'][1])
+    ensemble['path_ensemble'].add_path_data(path, 'ACC')
+    return ensemble
+
+
+def create_simple_system():
+    """Create a simple system for testing."""
+    box = create_box(periodic=[False])
+    system = System(units='reduced', temperature=1.0, box=box)
+    particles = Particles(dim=1)
+    particles.add_particle(np.zeros((1, 1)), np.zeros((1, 1)),
+                           np.zeros((1, 1)))
+    system.particles = particles
+    system.forcefield = ForceField('empty force field',
+                                   potential=[MockPotential()])
+    return system
+
+
+def prepare_test_simulation_rnd():
     """Prepare a small system we can integrate."""
-    settings = {}
-    # Basic settings for the simulation:
-    settings['simulation'] = {'task': 'tis',
-                              'steps': 10,
-                              'exe-path': '',
-                              'interfaces': [-0.9, -0.9, 1.0]}
-    settings['system'] = {'units': 'lj', 'temperature': 0.07}
-    # Basic settings for the Langevin integrator:
-    settings['engine'] = {'class': 'Langevin',
-                          'gamma': 0.3,
-                          'high_friction': False,
-                          'seed': 1,
-                          'rgen': 'mock-borg',
-                          'timestep': 0.002}
-    # Potential parameters:
-    # The potential is: `V_\text{pot} = a x^4 - b (x - c)^2`
-    settings['potential'] = [{'a': 1.0, 'b': 2.0, 'c': 0.0,
-                              'class': 'DoubleWell'}]
-    # Settings for the order parameter:
-    settings['orderparameter'] = {'class': 'Position',
-                                  'dim': 'x', 'index': 0, 'name': 'Position',
-                                  'periodic': False}
-    # TIS specific settings:
-    settings['tis'] = {'freq': 0.5,
-                       'maxlength': 20000,
-                       'aimless': True,
-                       'allowmaxlength': False,
-                       'sigma_v': -1,
-                       'seed': 1,
-                       'rgen': 'mock-borg',
-                       'zero_momentum': False,
-                       'rescale_energy': False}
-    settings['initial-path'] = {'method': 'kick'}
+    settings = prepare_test_settings()
+    settings['tis']['rgen'] = 'rgen'
 
     box = create_box(periodic=[False])
     system = System(temperature=settings['system']['temperature'],
@@ -115,9 +158,21 @@ def prepare_test_simulation():
 
     system.forcefield = create_force_field(settings)
     system.add_particle(np.array([-1.0]), mass=1, name='Ar', ptype=0)
+    check_engine(settings)
     engine = create_engine(settings)
-    kwargs = {'system': system, 'engine': engine}
-    simulation = create_simulation(settings, kwargs)
+    settings['system']['obj'] = system
+    settings['engine']['obj'] = engine
+
+    fill_up_tis_and_retis_settings(settings)
+    check_ensemble(settings)
+    with patch('sys.stdout', new=StringIO()):
+        simulation = create_tis_simulation(settings)
+    rgen = create_random_generator({'seed': 0})
+    simulation.ensembles[0]['rgen'] = rgen
+    simulation.ensembles[0]['system'] = system
+    simulation.ensembles[0]['order_function'] = MockOrder()
+
+    simulation.ensembles[0]['path_ensemble'].start_condition = 'L'
     system.particles.vel = np.array([[0.78008019924163818]])
     return simulation, settings
 
@@ -131,29 +186,148 @@ class TISTest(unittest.TestCase):
 
     def test_tis_001(self):
         """Test a TIS simulation for 001."""
-        simulation, in_settings = prepare_test_simulation()
-        ensemble = simulation.path_ensemble
-        with patch('sys.stdout', new=StringIO()):
-            for i in range(10):
+        simulation, settings = prepare_test_simulation()
+        ensemble = simulation.ensembles[0]
+        # Magic tricks to have a backward compatibility
+        ensemble['engine'].rgen = ensemble['rgen']
+        ensemble['path_ensemble'].rgen = ensemble['engine'].rgen
+        ensemble['path_ensemble'].start_condition = 'L'
+        for i in range(10):
+            with tempfile.TemporaryDirectory() as tempdir:
+                make_dirs(os.path.join(tempdir, '002'))
+                settings['ensemble'][0]['simulation']['exe_path'] = tempdir
                 if i == 0:
-                    for _ in initiate_path_simulation(simulation, in_settings):
-                        pass
+                    with patch('sys.stdout', new=StringIO()):
+                        for _ in initiate_path_simulation(simulation,
+                                                          settings):
+                            logging.debug('Running initialisation')
                 else:
                     simulation.step()
-                path = ensemble.paths[-1]
-                path_data = [
-                    path['length'],
-                    path['status'],
-                    path['generated'][0],
-                    path['ordermin'][0],
-                    path['ordermax'][0]
-                ]
-                for j in (0, 1, 2):
-                    self.assertEqual(path_data[j], TISMOL_001[i][j])
-                self.assertAlmostEqual(path_data[3], TISMOL_001[i][3],
-                                       places=6)
-                self.assertAlmostEqual(path_data[4], TISMOL_001[i][4],
-                                       places=6)
+
+            path = ensemble['path_ensemble'].paths[-1]
+            path_data = [path['length'], path['status'], path['generated'][0],
+                         path['ordermin'][0], path['ordermax'][0]]
+            for j in (0, 1, 2):
+                self.assertEqual(path_data[j], TISMOL_001[i][j])
+            self.assertAlmostEqual(path_data[3], TISMOL_001[i][3], places=6)
+            self.assertAlmostEqual(path_data[4], TISMOL_001[i][4], places=6)
+
+    def test_tis_restart(self):
+        """Test various TIS simulation restart."""
+        sim1, settings1 = prepare_test_simulation_rnd()
+        sim2, _ = prepare_test_simulation_rnd()
+        sim3, settings3 = prepare_test_simulation_rnd()
+
+        rgen1 = create_random_generator({'seed': 0})
+        rgen2 = create_random_generator({'seed': 0})
+
+        # This test is more a reminder than else. rgen1 != rgen2
+        self.assertFalse(big_fat_comparer(rgen1, rgen2))
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            make_dirs(os.path.join(tempdir, '002'))
+            settings1['ensemble'][0]['simulation']['exe_path'] = tempdir
+            settings3['ensemble'][0]['simulation']['exe_path'] = tempdir
+            for i in range(11):
+                if i == 0:
+                    with patch('sys.stdout', new=StringIO()):
+                        for _ in initiate_path_simulation(sim1, settings1):
+                            logging.debug('Running initialisation')
+                        for _ in initiate_path_simulation(sim3, settings3):
+                            logging.debug('Running initialisation')
+                else:
+                    sim1.step()
+                    sim3.step()
+
+                lp1 = sim1.ensembles[0]['path_ensemble'].last_path
+                lp3 = sim3.ensembles[0]['path_ensemble'].last_path
+
+                pe1 = sim1.ensembles[0]['path_ensemble']
+                pe3 = sim3.ensembles[0]['path_ensemble']
+                self.assertTrue(lp1 == lp3)
+                self.assertTrue(pe1 == pe3)
+
+            sim3.step()
+
+            lp1 = sim1.ensembles[0]['path_ensemble'].last_path
+            lp3 = sim3.ensembles[0]['path_ensemble'].last_path
+
+            with patch('sys.stdout', new=StringIO()):
+                self.assertFalse(big_fat_comparer(lp1.restart_info(),
+                                                  lp3.restart_info()))
+            with self.assertRaises(ValueError):
+                big_fat_comparer(lp1.restart_info(),
+                                 lp3.restart_info(), hard=True)
+            sim2.load_restart_info(copy.deepcopy(sim1.restart_info()))
+            sim2.settings['ensemble'][0]['simulation']['exe_path'] = tempdir
+            rst1 = {}
+            rst1['order_function'] = sim1.ensembles[0]['order_function']
+            rst1['path_ensemble'] = \
+                sim1.ensembles[0]['path_ensemble'].restart_info()
+            rst1['engine'] = sim1.ensembles[0]['engine'].restart_info()
+            rst1['system'] = sim1.ensembles[0]['system'].restart_info()
+            rst1['ens-rgen'] = sim1.ensembles[0]['rgen'].get_state()
+
+            with patch('sys.stdout', new=StringIO()):
+                sim2.ensembles[0]['engine'].load_restart_info(rst1['engine'])
+                sim2.ensembles[0]['system'].load_restart_info(rst1['system'])
+                sim2.ensembles[0]['rgen'].set_state(rst1['ens-rgen'])
+                sim2.ensembles[0]['order_function'] = rst1['order_function']
+                sim2.ensembles[0]['path_ensemble'].load_restart_info(
+                    rst1['path_ensemble'])
+
+            rst2 = sim2.ensembles[0]['rgen'].get_state()
+            self.assertTrue(big_fat_comparer(rst1['ens-rgen'], rst2))
+
+            lp1 = sim1.ensembles[0]['path_ensemble'].last_path
+            lp2 = sim2.ensembles[0]['path_ensemble'].last_path
+            self.assertEqual(lp1, lp2)
+            # TODO: This is a hack: the force field is not loaded via
+            # restart for systems. Previously when there were only one
+            # system, it was assumed that the force field could just be
+            # set up again from the input settings. Structurally, I don't
+            # think the force field longer fits as a system attribute. It
+            # is perhaps better as an ensemble attribute, given that all
+            # phasepoints in an ensemble share the same force field?
+            # Anyway, for sim2 to run below, the force field will have to
+            # be set:
+            # This is done now in the initiate restart for regular simulations
+            for phasepoint in lp2.phasepoints:
+                phasepoint.forcefield = sim2.ensembles[0]['system'].forcefield
+
+            pe1 = sim1.ensembles[0]['path_ensemble']
+            pe2 = sim2.ensembles[0]['path_ensemble']
+
+            ps1, ps2 = pe1.paths[-1:][0], pe2.paths[-1:][0]
+            ps2['cycle'] = ps1['cycle']
+            pe2.paths = pe1.paths
+
+            self.assertEqual(ps1, ps2)
+            self.assertEqual(pe1, pe2)
+
+            for i in range(5):
+                sim2.step()
+
+            lp2 = copy.deepcopy(sim2.ensembles[0]['path_ensemble'].last_path)
+            pe2 = copy.deepcopy(sim2.ensembles[0]['path_ensemble'])
+
+            sim3, settings3 = prepare_test_simulation_rnd()
+            settings3['ensemble'][0]['simulation']['exe_path'] = tempdir
+            for i in range(16):
+                if i == 0:
+                    with patch('sys.stdout', new=StringIO()):
+                        for _ in initiate_path_simulation(sim3, settings3):
+                            logging.debug('Running initialisation')
+                else:
+                    sim3.step()
+
+        lp3 = sim3.ensembles[0]['path_ensemble'].last_path
+        pe3 = sim3.ensembles[0]['path_ensemble']
+
+        self.assertEqual(lp2, lp3)
+        # Small hack to fix Rgen.nstate
+        pe2.rgen = pe3.rgen
+        self.assertEqual(pe2, pe3)
 
 
 class TISTestMethod(unittest.TestCase):
@@ -161,16 +335,15 @@ class TISTestMethod(unittest.TestCase):
 
     def test_time_reversal(self):
         """Test the time reversal move."""
-        ensembles = create_ensembles_and_paths()
         status = ('ACC', 'ACC', 'ACC', 'BWI')
         accept = (True, True, True, False)
-        for ens, acc, stat in zip(ensembles, accept, status):
-            path = ens.last_path
+        for i_case, (acc, stat) in enumerate(zip(accept, status)):
+            ens = create_ensemble_and_paths(example=i_case)
+            path = ens['path_ensemble'].last_path
             accept, new_path, status = time_reversal(
-                path, SameOrder(), ens.interfaces, 'L'
-            )
-            for i, j in zip(path.phasepoints,
-                            reversed(new_path.phasepoints)):
+                path, SameOrder(), ens['path_ensemble'].interfaces,
+                start_condition='L')
+            for i, j in zip(path.phasepoints, reversed(new_path.phasepoints)):
                 parti = i.particles
                 partj = j.particles
                 # Check that positions are the same:
@@ -188,12 +361,12 @@ class TISTestMethod(unittest.TestCase):
             # Check that the ld move is not altered:
             path.set_move('ld')
             accept, new_path, status = time_reversal(
-                path, SameOrder(), ens.interfaces, 'L'
+                path, SameOrder(), ens['interfaces'], start_condition='L'
             )
             self.assertEqual(new_path.get_move(), 'ld')
             # Check that order parameters are reversed:
             accept, new_path, status = time_reversal(
-                path, NegativeOrder(), ens.interfaces, 'L'
+                path, NegativeOrder(), ens['interfaces'], start_condition='L'
             )
             for i, j in zip(path.phasepoints,
                             reversed(new_path.phasepoints)):
@@ -201,9 +374,11 @@ class TISTestMethod(unittest.TestCase):
 
     def test_shoot1(self):
         """Test the shooting move, vol 1."""
-        ensembles = create_ensembles_and_paths()
-        order_f = MockOrder()
-        engine = MockEngine(1.0)
+        ensemble = create_ensemble_and_paths(example=0)
+        ensemble['order_function'] = MockOrder()
+        ensemble['engine'] = MockEngine(timestep=1.0)
+        ensemble['system'] = create_simple_system()
+
         tis_settings = {
             'maxlength': 1000,
             'sigma_v': -1,
@@ -212,45 +387,36 @@ class TISTestMethod(unittest.TestCase):
             'rescale_energy': False,
             'allowmaxlength': False
         }
-        # Generate BTL:
-        ens = ensembles[0]
-        rgen = MockRandomGenerator(seed=1)
-        accept, _, status = shoot(ens.last_path, order_f,
-                                  ens.interfaces, engine,
-                                  rgen, tis_settings, 'L')
-        self.assertEqual(status, 'BTL')
-        self.assertFalse(accept)
         # Generate BTX:
+        accept, _, status = shoot(ensemble, tis_settings, start_cond='L')
+        self.assertEqual(status, 'BTX')
+        self.assertFalse(accept)
+        # Generate BTX with allowmaxlength:
         tis_settings['allowmaxlength'] = True
-        accept, _, status = shoot(ens.last_path, order_f,
-                                  ens.interfaces, engine,
-                                  rgen, tis_settings, 'L')
+        accept, _, status = shoot(ensemble, tis_settings, start_cond='L')
         self.assertEqual(status, 'BTX')
         self.assertFalse(accept)
         # Generate BWI:
         tis_settings['allowmaxlength'] = True
-        engine.total_eclipse = float('inf')
-        engine.delta_v = 1
-        accept, _, status = shoot(ens.last_path, order_f,
-                                  ens.interfaces, engine,
-                                  rgen, tis_settings, 'L')
+        ensemble['engine'].total_eclipse = float('inf')
+        ensemble['engine'].delta_v = 1
+        accept, _, status = shoot(ensemble, tis_settings, start_cond='L')
         self.assertEqual(status, 'BWI')
         self.assertFalse(accept)
-        # Generate ACC:
+        # Generate FTL:
         tis_settings['allowmaxlength'] = False
-        engine.total_eclipse = float('inf')
-        engine.delta_v = -0.01
-        accept, _, status = shoot(ens.last_path, order_f,
-                                  ens.interfaces, engine,
-                                  rgen, tis_settings, 'L')
-        self.assertEqual(status, 'ACC')
-        self.assertTrue(accept)
+        ensemble['engine'].total_eclipse = float('inf')
+        ensemble['engine'].delta_v = -0.01
+        accept, _, status = shoot(ensemble, tis_settings, start_cond='L')
+        self.assertEqual(status, 'FTL')
+        self.assertFalse(accept)
 
     def test_shoot2(self):
         """Test the shooting move, vol 2."""
-        ensembles = create_ensembles_and_paths()
-        order_f = MockOrder()
-        engine = MockEngine(1.0)
+        ensemble = create_ensemble_and_paths(example=2)
+        ensemble['order_function'] = MockOrder()
+        ensemble['engine'] = MockEngine(timestep=1.0)
+        ensemble['system'] = create_simple_system()
         tis_settings = {
             'maxlength': 1000,
             'sigma_v': -1,
@@ -259,99 +425,133 @@ class TISTestMethod(unittest.TestCase):
             'rescale_energy': False,
             'allowmaxlength': False,
         }
+
         # Generate NCR:
-        ens = ensembles[2]
-        path = ens.last_path
-        rgen = MockRandomGenerator(seed=1)
+        ensemble['engine'].total_eclipse = float('inf')
+        ensemble['engine'].delta_v = -0.1
+        ensemble['interfaces'] = (-1., 9., 10.)
+        accept, _, status = shoot(ensemble, tis_settings, start_cond='L')
+        self.assertEqual(status, 'NCR')
+        self.assertFalse(accept)
+
+        # Generate FTL:
+        ensemble['engine'] = MockEngine2(timestep=1.0,
+                                         interfaces=ensemble['interfaces'])
         tis_settings['allowmaxlength'] = False
-        engine.total_eclipse = float('inf')
-        engine.delta_v = -0.1
-        ens.interfaces = (-1., 9., 10.)
-        accept, _, status = shoot(ens.last_path, order_f,
-                                  (-1., 9., 10.), engine,
-                                  rgen, tis_settings, 'L')
+        ensemble['engine'].delta_v = -0.1
+        accept, _, status = shoot(ensemble, tis_settings, start_cond='L')
+        self.assertEqual(status, 'FTL')
+        self.assertFalse(accept)
+
+        # Generate FTX:
+        ensemble['engine'] = MockEngine2(timestep=1.0,
+                                         interfaces=ensemble['interfaces'])
+        tis_settings['allowmaxlength'] = True
+        ensemble['engine'].delta_v = -0.01
+        accept, _, status = shoot(ensemble, tis_settings, start_cond='L')
+        self.assertEqual(status, 'FTX')
+        self.assertFalse(accept)
+
+        # Generate FTX again - Test when move was 'ld':
+        ensemble['engine'] = MockEngine2(timestep=1.0,
+                                         interfaces=ensemble['interfaces'])
+        tis_settings['allowmaxlength'] = False
+        ensemble['path_ensemble'].last_path.set_move('ld')
+        ensemble['engine'].delta_v = -0.01
+        accept, _, status = shoot(ensemble, tis_settings, start_cond='L')
+        self.assertEqual(status, 'FTX')
+        self.assertFalse(accept)
+
+    def test_shoot_repptis(self):
+        """Test the shooting move for repptis."""
+        ensemble = create_ensemble_and_paths_repptis(example=3)
+        ensemble['order_function'] = MockOrder()
+        ensemble['engine'] = MockEngine(timestep=1.0)
+        ensemble['system'] = create_simple_system()
+
+        tis_settings = {
+            'maxlength': 100,
+            'sigma_v': -1,
+            'aimless': True,
+            'zero_momentum': False,
+            'rescale_energy': False,
+            'allowmaxlength': False
+        }
+
+        start_cond = ensemble['path_ensemble'].start_condition
+        # Generate BTX:
+        accept, _, status = shoot(ensemble, tis_settings,
+                                  start_cond=start_cond)
+        self.assertEqual(status, 'BTX')
+        self.assertFalse(accept)
+        # Generate BTX with allowmaxlength:
+        tis_settings['allowmaxlength'] = True
+        accept, _, status = shoot(ensemble, tis_settings,
+                                  start_cond=start_cond)
+        self.assertEqual(status, 'BTX')
+        self.assertFalse(accept)
+        # Generate NCR:
+        tis_settings['allowmaxlength'] = True
+        ensemble['engine'].total_eclipse = float('inf')
+        ensemble['engine'].delta_v = 1
+        accept, _, status = shoot(ensemble, tis_settings,
+                                  start_cond=start_cond)
         self.assertEqual(status, 'NCR')
         self.assertFalse(accept)
         # Generate FTL:
-        ens = ensembles[2]
-        engine = MockEngine2(1.0, ens.interfaces)
         tis_settings['allowmaxlength'] = False
-        engine.delta_v = -0.1
-        accept, _, status = shoot(ens.last_path, order_f,
-                                  ens.interfaces, engine,
-                                  rgen, tis_settings, 'L')
-        self.assertEqual(status, 'FTL')
-        self.assertFalse(accept)
-        # Generate FTX:
-        engine = MockEngine2(1.0, ens.interfaces)
-        tis_settings['allowmaxlength'] = True
-        engine.delta_v = -0.01
-        accept, _, status = shoot(path, order_f,
-                                  ens.interfaces, engine,
-                                  rgen, tis_settings, 'L')
-        self.assertEqual(status, 'FTX')
-        self.assertFalse(accept)
-        # re Generate FTL, test move 'ld' option:
-        engine = MockEngine2(1.0, ens.interfaces)
-        tis_settings['allowmaxlength'] = True
-        path.set_move('ld')
-        engine.delta_v = -0.01
-        accept, _, status = shoot(path, order_f,
-                                  ens.interfaces, engine,
-                                  rgen, tis_settings, 'L')
-        self.assertEqual(status, 'FTX')
+        ensemble['engine'].total_eclipse = float('inf')
+        ensemble['engine'].delta_v = -0.01
+        accept, _, status = shoot(ensemble, tis_settings,
+                                  start_cond=start_cond)
+        self.assertEqual(status, 'BTL')
         self.assertFalse(accept)
 
     def test_shoot_kob(self):
         """Test the shooting move when we get a KOB."""
-        ensembles = create_ensembles_and_paths()
-        order_f = MockOrder2()
-        engine = MockEngine(1.0)
+        ensemble = create_ensemble_and_paths()
+        ensemble['engine'] = MockEngine(timestep=1.0)
+        ensemble['system'] = create_simple_system()
+        ensemble['order_function'] = MockOrder2()
         tis_settings = {
             'maxlength': 1000,
             'sigma_v': -1,
             'aimless': True,
             'zero_momentum': False,
             'rescale_energy': False,
-            'allowmaxlength': False,
+            'allowmaxlength': False
         }
-        # Generate BTL:
-        ens = ensembles[0]
-        rgen = MockRandomGenerator(seed=1)
-        accept, _, status = shoot(ens.last_path, order_f,
-                                  ens.interfaces, engine,
-                                  rgen, tis_settings, 'L')
+
+        # Generate BTL
+        ensemble['rgen'] = MockRandomGenerator(seed=1)
+        accept, _, status = shoot(ensemble, tis_settings, start_cond='L')
         self.assertEqual(status, 'KOB')
         self.assertFalse(accept)
 
     def test_shoot_aiming(self):
         """Test the non aimless shooting move."""
-        ensembles = create_ensembles_and_paths()
-        order_f = MockOrder()
-        engine = MockEngine(1.0)
-        tis_settings = {
-            'maxlength': 1000,
-            'sigma_v': -1,
-            'aimless': False,
-            'zero_momentum': False,
-            'rescale_energy': False,
-            'allowmaxlength': False,
-        }
-        # Generate ACC:
-        tis_settings['allowmaxlength'] = True
-        engine.total_eclipse = float('inf')
-        engine.delta_v = -0.01
-        ens = ensembles[2]
-        rgen = MockRandomGenerator(seed=1)
-        accept, _, status = shoot(ens.last_path, order_f,
-                                  ens.interfaces, engine,
-                                  rgen, tis_settings, 'L')
+        ensemble = create_ensemble_and_paths(example=2)
+        ensemble['engine'] = MockEngine(timestep=1.0)
+        ensemble['system'] = create_simple_system()
+        ensemble['order_function'] = MockOrder()
+        ensemble['rgen'] = MockRandomGenerator(seed=1)
+        ensemble['path_ensemble'].rgen = MockRandomGenerator(seed=160)
+
+        tis_settings = {'maxlength': 1000,
+                        'sigma_v': -1,
+                        'aimless': False,
+                        'zero_momentum': False,
+                        'rescale_energy': False,
+                        'allowmaxlength': True}
+
+        # Generate ACC
+        ensemble['engine'].total_eclipse = float('inf')
+        ensemble['engine'].delta_v = -0.01
+        accept, _, status = shoot(ensemble, tis_settings, start_cond='L')
         self.assertEqual(status, 'ACC')
         self.assertTrue(accept)
         # Generate MCR:
-        accept, _, status = shoot(ens.last_path, order_f,
-                                  ens.interfaces, engine,
-                                  rgen, tis_settings, 'L')
+        accept, _, status = shoot(ensemble, tis_settings, start_cond='L')
         self.assertEqual(status, 'MCR')
         self.assertFalse(accept)
 
@@ -360,10 +560,11 @@ class TISTestMethod(unittest.TestCase):
         tis_settings = {
             'maxlength': 1000,
             'sigma_v': -1,
-            'aimless': False,
+            'aimless': True,
             'zero_momentum': False,
             'rescale_energy': False,
             'allowmaxlength': True,
+            'shooting_move': 'wt',
             'n_jumps': 22,
             'interface_sour': -1.95
         }
@@ -371,53 +572,58 @@ class TISTestMethod(unittest.TestCase):
         interfaces = [-3, -1.4, 2.3]
         order_f = Position(index=0)
         engine = VelocityVerlet(0.01)
-        rgen = RandomGenerator(seed=0)
 
         trial_path = make_internal_path((-5, 2.1), (5, 2.2), (1, -1))
         shooting_point = trial_path.phasepoints[4]
         shooting_point.idx = 4
+        shooting_point.dek = 0
+        ens = PathEnsemble(ensemble_number=1, interfaces=interfaces)
+        ens.last_path = trial_path
+        ensemble = {'interfaces': interfaces, 'engine': engine,
+                    'rgen': RandomGenerator(seed=0),
+                    'path_ensemble': ens, 'order_function': order_f}
 
-        _, path, _ = make_path(trial_path, order_f, interfaces, engine,
-                               tis_settings, maxlen=1000,
-                               shooting_point=shooting_point, start_cond='L')
-
-        interfaces = [-20, -1, 10]
-        accept, new_path, status = web_throwing(path, order_f,
-                                                interfaces, engine,
-                                                rgen, tis_settings)
-
+        _, path, _ = shoot(ensemble,
+                           tis_settings,
+                           start_cond='L',
+                           shooting_point=shooting_point
+                           )
+        ens.last_path = path
+        ensemble['interfaces'] = [-20, -1, 10]
+        accept, _, status = web_throwing(ensemble, tis_settings)
         self.assertEqual(status, 'NSG')
         self.assertFalse(accept)
 
-        interfaces = [-3, -1.4, 2.3]
-        path.generated = ('sh', 0, 0, 0)
-        accept, new_path, status = select_shoot(path, order_f,
-                                                interfaces, engine,
-                                                rgen, tis_settings,
-                                                shooting_move='wt',
-                                                start_cond='L')
-
+        ensemble['interfaces'] = [-3, -1.4, 2.3]
+        accept, _, status = select_shoot(ensemble, tis_settings,
+                                         start_cond='L')
         self.assertEqual(status, 'ACC')
         self.assertTrue(accept)
 
         tis_settings['n_jumps'] = 0
         path.generated = ('ld', 0, 0, 0)
-        accept, trial_path, status = web_throwing(path, order_f,
-                                                  interfaces, engine,
-                                                  rgen, tis_settings)
+        ensemble['path_ensemble'].last_path = path.copy()
+        accept, trial_path, status = web_throwing(ensemble, tis_settings)
 
-        # With No jumps, the final path has to be equal to the initial
+        # With No jumps, the source path should be reproduced
         for ps1, ps2 in zip(trial_path.phasepoints, path.phasepoints):
-            self.assertTrue(ps1 == ps2)  # This is a ESSENTIAL test
+            self.assertTrue(ps1 == ps2)  # This is an ESSENTIAL test
+        for ps1, ps2 in zip(trial_path.phasepoints,
+                            ensemble['path_ensemble'].last_path.phasepoints):
+            self.assertTrue(ps1 == ps2)  # This is an ESSENTIAL test
         self.assertEqual(status, 'ACC')
         self.assertTrue(accept)
-        self.assertEqual(path.generated[0], 'ld')
+        self.assertEqual(trial_path.generated[0], 'ld')
 
         tis_settings['interface_sour'] = 10
-        with self.assertRaises(ValueError):
-            web_throwing(path_old=path, order_function=order_f,
-                         interfaces=[-100., 1., 100.], engine=engine,
-                         rgen=rgen, tis_settings=tis_settings)
+        with self.assertRaises(AssertionError):
+            web_throwing(ensemble, tis_settings)
+
+        tis_settings['shooting_move'] = '00'
+        accept, _, status = select_shoot(ensemble, tis_settings,
+                                         start_cond='L')
+        self.assertEqual(status, 'ACC')
+        self.assertTrue(accept)
 
     def test_web_throwing(self):
         """Test web_throwing shooting move with rnd dynamics."""
@@ -428,7 +634,8 @@ class TISTestMethod(unittest.TestCase):
             'zero_momentum': False,
             'rescale_energy': False,
             'allowmaxlength': False,
-            'n_jumps': 16,
+            'n_jumps': 36,
+            'shooting_move': 'wt',
             'interface_sour': 0.
         }
         interfaces = [-1., 2., 9.]
@@ -437,45 +644,45 @@ class TISTestMethod(unittest.TestCase):
         rgen = RandomGenerator(seed=16)
 
         path = make_internal_path((-5, 2.1), (5, 2.2), (1, -1))
-        _, trial_path, _ = shoot(path, order_f, interfaces, engine, rgen,
-                                 tis_settings, 'L')
-        trial_path.generated = ('ld', 0, 0, 0)
+
+        ens = PathEnsemble(ensemble_number=1, interfaces=interfaces)
+        ens.last_path = path
+        ensemble = {'rgen': rgen, 'engine': engine, 'order_function': order_f,
+                    'path_ensemble': ens, 'interfaces': interfaces}
+        accept, trial_path, status = shoot(ensemble, tis_settings,
+                                           start_cond='L')
+
+        # Check that the generated path is Ok
+        self.assertEqual(status, 'ACC')
+        self.assertTrue(accept)
 
         # Generate ACC:
-        accept, path, status = web_throwing(trial_path, order_f,
-                                            interfaces, engine,
-                                            rgen, tis_settings)
-        self.assertEqual(path.generated[0], 'wt')
-        self.assertEqual(status, 'WTA')
-        self.assertFalse(accept)
+        trial_path.generated = ('ld', 0, 0, 0)
+        ensemble['path_ensemble'].last_path = trial_path
+        accept, new_path, status = web_throwing(ensemble, tis_settings)
+        self.assertEqual(new_path.generated[0], 'wt')
+        self.assertEqual(status, 'ACC')
+        self.assertTrue(accept)
 
         # iF No jumps, the extension on this absurd interfaces
         # should get lost (BTX)
-        tis_settings['n_jumps'] = 0
-        interfaces = [-300000, 2, 30000]
-        accept, path, status = select_shoot(trial_path, order_f,
-                                            interfaces, engine,
-                                            rgen, tis_settings,
-                                            shooting_move='wt',
-                                            start_cond='L')
-
+        tis_settings['n_jumps'] = 1
+        ensemble['interfaces'] = [-3000000, 2, 300000]
+        accept, new_path, status = select_shoot(ensemble, tis_settings,
+                                                start_cond='L')
         self.assertEqual(status, 'BTX')
         self.assertFalse(accept)
 
         # should generate a B to B (thus a 'BWI')
-        interfaces = [-3000000, 2, 9]
-        engine = RandomWalk(timestep=1)
-        accept, path, status = select_shoot(trial_path, order_f,
-                                            interfaces, engine,
-                                            rgen, tis_settings,
-                                            shooting_move='wt',
-                                            start_cond='L')
-
+        ensemble['interfaces'] = [-3000000, 2, 9]
+        ensemble['engine'] = RandomWalk(timestep=1)
+        accept, new_path, status = select_shoot(ensemble, tis_settings,
+                                                start_cond='L')
         self.assertEqual(status, 'BWI')
         self.assertFalse(accept)
 
-    def test_stone_skipping(self):
-        """Test stone skipping shooting move."""
+    def test_stone_skipping_fail(self):
+        """Test stone skipping shooting move failures."""
         tis_settings = {
             'maxlength': 1000,
             'sigma_v': -1,
@@ -483,32 +690,62 @@ class TISTestMethod(unittest.TestCase):
             'zero_momentum': False,
             'rescale_energy': False,
             'allowmaxlength': False,
-            'n_jumps': 0,
+            'shooting_move': 'ss',
+            'n_jumps': 16,
         }
         # Generate ACC:
         order_f = Position(index=0)
         engine = MockEngine(16.0)
-        rgen = RandomGenerator(seed=1)  # The seed helps the coverage.
+        rgen = RandomGenerator(seed=3)  # The seed helps the coverage.
         path = make_internal_path((-5, 2.1), (5, 2.2), (1, -1))
 
-        tis_settings['n_jumps'] = 16
-        accept, path, status = stone_skipping(path, order_f,
-                                              [0.7, 2., 2.5], engine,
-                                              rgen, tis_settings, 'L')
-        self.assertEqual(status, 'ACC')
-        self.assertTrue(accept)
+        ens = PathEnsemble(ensemble_number=1, interfaces=[0.7, 2., 2.5])
+        path.set_move('ki')
+        ens.last_path = path
+        ensemble = {'rgen': rgen, 'engine': engine, 'order_function': order_f,
+                    'path_ensemble': ens, 'interfaces': [0.7, 2., 2.5]}
+        accept, path, status = stone_skipping(ensemble, tis_settings,
+                                              start_cond='L')
+        self.assertEqual(status, 'BWI')
+        self.assertFalse(accept)
 
-        engine = VelocityVerlet(0.001)
-        accept, path, status = stone_skipping(path, order_f,
-                                              [0.7, 2., 1234.5], engine,
-                                              rgen, tis_settings, 'L')
+        order_f = Position(index=0)
+        engine = MockEngine(16.0)
+        path = make_internal_path((-5, 2.1), (5, 2.2), (1, -1))
+
+        ens = PathEnsemble(ensemble_number=1, interfaces=[0.7, 2., 2.5])
+        path.set_move('ss')
+        ens.last_path = path
+        ensemble = {'rgen': rgen, 'engine': engine, 'order_function': order_f,
+                    'path_ensemble': ens, 'interfaces': [0.7, 2., 2.5]}
+        tis_settings['high_accept'] = False
+        accept, path, status = stone_skipping(ensemble, tis_settings,
+                                              start_cond='L')
+        self.assertEqual(status, 'BWI')
+        self.assertFalse(accept)
+
+        # B to B test -> Rejected
+        ensemble['engine'] = VelocityVerlet(0.1)
+        ensemble['interfaces'] = [0.7, 2., 1234.5]
+        accept, path, status = stone_skipping(ensemble, tis_settings,
+                                              start_cond='L')
+        self.assertEqual(status, 'BWI')
+        self.assertFalse(accept)
+
+        ensemble['engine'] = VelocityVerlet(0.001)
+        ensemble['interfaces'] = [1110.7, 2., 1234.5]
+        ensemble['rgen'].rand()
+        # to let SS select the upper phasepoint in the only old_path crossing.
+        accept, path, status = stone_skipping(ensemble, tis_settings,
+                                              start_cond='L')
         self.assertEqual(status, 'XSS')
         self.assertFalse(accept)
 
         # Not extendable
-        accept, path, status = stone_skipping(path, order_f,
-                                              [-1000., 30., 1000.], engine,
-                                              rgen, tis_settings, 'L')
+        ensemble['path_ensemble'].last_path = path
+        ensemble['interfaces'] = [-100., 1., 100.]
+        accept, path, status = stone_skipping(ensemble, tis_settings,
+                                              start_cond='L')
         self.assertEqual(status, 'NCR')
         self.assertFalse(accept)
 
@@ -521,30 +758,32 @@ class TISTestMethod(unittest.TestCase):
             'zero_momentum': False,
             'rescale_energy': False,
             'allowmaxlength': True,
-            'n_jumps': 16,
+            'shooting_move': 'ss',
+            'n_jumps': 26,
         }
         # Generate ACC:
         interfaces = [-3, -1.4, 2.3]
         order_f = Position(index=0)
         engine = VelocityVerlet(0.01)
-        rgen = RandomGenerator(seed=0)
+        rgen = RandomGenerator(seed=5)
 
         trial_path = make_internal_path((-5, 2.1), (5, 2.2), (1, -1))
         shooting_point = trial_path.phasepoints[4]
         empty = trial_path.empty_path(rgen=RandomGenerator(seed=0),
                                       maxlen=1000)
-        engine.propagate(empty, shooting_point,
-                         order_f, interfaces,
-                         reverse=False)
+        sub_ensemble = {'interfaces': interfaces,
+                        'system': shooting_point.copy(),
+                        'order_function': order_f}
 
+        engine.propagate(empty, sub_ensemble, reverse=False)
+
+        ens = PathEnsemble(ensemble_number=1, interfaces=interfaces)
         path = empty.reverse(order_f)
-        path.set_move('ss')
-        accept, path, status = select_shoot(path, order_f,
-                                            interfaces, engine,
-                                            rgen, tis_settings,
-                                            shooting_move='ss',
+        ens.last_path = path
+        ensemble = {'rgen': rgen, 'engine': engine, 'order_function': order_f,
+                    'path_ensemble': ens, 'interfaces': interfaces}
+        accept, path, status = select_shoot(ensemble, tis_settings,
                                             start_cond='L')
-
         self.assertEqual(status, 'ACC')
         self.assertTrue(accept)
 
@@ -557,6 +796,7 @@ class TISTestMethod(unittest.TestCase):
             'zero_momentum': False,
             'rescale_energy': False,
             'allowmaxlength': False,
+            'shooting_move': 'ss',
             'n_jumps': 16,
             'high_accept': True,
         }
@@ -570,49 +810,195 @@ class TISTestMethod(unittest.TestCase):
         shooting_point = trial_path.phasepoints[4]
         empty = trial_path.empty_path(rgen=RandomGenerator(seed=0),
                                       maxlen=1000)
-        engine.propagate(empty, shooting_point,
-                         order_f, interfaces,
-                         reverse=False)
+        sub_ensemble = {'interfaces': interfaces,
+                        'system': shooting_point.copy(),
+                        'order_function': order_f}
 
-        trial_path = empty.reverse(order_f)
-        trial_path.set_move('ss')
-        accept, path, status = select_shoot(trial_path, order_f,
-                                            interfaces, engine,
-                                            rgen, tis_settings,
-                                            shooting_move='ss',
+        engine.propagate(empty, sub_ensemble, reverse=False)
+
+        path = empty.reverse(order_f)
+        ens = PathEnsemble(ensemble_number=1, interfaces=interfaces)
+        ens.last_path = path
+        ensemble = {'rgen': rgen, 'engine': engine, 'order_function': order_f,
+                    'path_ensemble': ens, 'interfaces': interfaces}
+        accept, path, status = select_shoot(ensemble, tis_settings,
                                             start_cond='L')
-
         self.assertEqual(status, 'ACC')
         self.assertTrue(accept)
 
         # Generate XSS - failed to do one stone skipping jump:
-        tis_settings['maxlength'] = 10
+        tis_settings['maxlength'] = 32
         empty = trial_path.empty_path(rgen=RandomGenerator(seed=0),
                                       maxlen=1000)
-        engine.propagate(empty, shooting_point,
-                         order_f, interfaces,
-                         reverse=False)
+        sub_ensemble = {'interfaces': interfaces,
+                        'system': shooting_point.copy(),
+                        'order_function': order_f}
+
+        engine.propagate(empty, sub_ensemble, reverse=False)
 
         path = empty.reverse(order_f)
-        path.set_move('ss')
-        accept, path, status = select_shoot(path, order_f,
-                                            interfaces, engine,
-                                            rgen, tis_settings,
-                                            shooting_move='ss',
+        ens.last_path = path
+        accept, path, status = select_shoot(ensemble, tis_settings,
                                             start_cond='L')
-
         self.assertEqual(status, 'XSS')
         self.assertFalse(accept)
 
         # Generate NSS - failed to do one step crossing:
-        engine = VelocityVerlet(0.0000001)
-        accept, path, status = select_shoot(path, order_f,
-                                            interfaces, engine,
-                                            rgen, tis_settings,
-                                            shooting_move='ss',
+        ensemble['engine'] = VelocityVerlet(0.0000001)
+        accept, path, status = select_shoot(ensemble, tis_settings,
                                             start_cond='L')
-
         self.assertEqual(status, 'NSS')
+        self.assertFalse(accept)
+
+    def test_wire_fencing_simple(self):
+        """Test the common_sense move with MockEngine."""
+        ensemble = create_ensemble_and_paths(example=0)
+        ensemble['order_function'] = MockOrder()
+        ensemble['engine'] = MockEngine(timestep=1.0)
+        ensemble['system'] = create_simple_system()
+
+        tis_settings = {
+            'maxlength': 500,
+            'sigma_v': -1,
+            'aimless': True,
+            'zero_momentum': False,
+            'rescale_energy': False,
+            'allowmaxlength': False,
+            'shooting_move': 'wf',
+            'n_jumps': 6
+        }
+        ensemble['path_ensemble'].start_condition = 'L'
+        ensemble['path_ensemble'].rgen = MockRandomGenerator(seed=0)
+        ensemble['engine'].delta_v = 0.6
+        accept, path, status = select_shoot(ensemble, tis_settings,
+                                            start_cond='L')
+        self.assertEqual(status, 'ACC')
+        self.assertTrue(accept)
+
+        ensemble['path_ensemble'].last_path = path
+        accept, path, status = wire_fencing(ensemble, tis_settings,
+                                            start_cond='L')
+        self.assertEqual(status, 'WFA')
+        self.assertFalse(accept)
+
+        ensemble['engine'].delta_v = 0.012
+        tis_settings['n_jumps'] = 2
+        accept, path, status = wire_fencing(ensemble, tis_settings,
+                                            start_cond='L')
+        self.assertEqual(status, 'NSG')
+        self.assertFalse(accept)
+
+        ensemble['interfaces'] = [-1.0, -0.9, -0.75]
+        ensemble['engine'].total_eclipse = 30
+        accept, _, status = wire_fencing(ensemble, tis_settings,
+                                         start_cond='L')
+        self.assertEqual(status, 'BWI')
+        self.assertFalse(accept)
+
+        tis_settings['maxlength'] = 20
+        accept, _, status = wire_fencing(ensemble, tis_settings,
+                                         start_cond='L')
+        self.assertEqual(status, 'FTX')
+        self.assertFalse(accept)
+
+    def test_wire_fencing_real(self):
+        """Test common sense with real dynamics."""
+        tis_settings = {
+            'maxlength': 1000,
+            'sigma_v': -1,
+            'aimless': True,
+            'zero_momentum': False,
+            'rescale_energy': False,
+            'allowmaxlength': False,
+            'shooting_move': 'wf',
+            'n_jumps': 8,
+            'high_accept': True,
+        }
+        # Generate ACC:
+        interfaces = [-1.0, -0.5, 2.0]
+        order_f = Position(index=0)
+        engine = VelocityVerlet(0.01)
+        rgen = RandomGenerator(seed=0)
+
+        path = make_internal_path((-5, 2.1), (5, 2.2), (1, -1))
+        path.set_move('wf')
+        ens = PathEnsemble(ensemble_number=1, interfaces=interfaces)
+        ens.last_path = path
+        ensemble = {'rgen': rgen, 'engine': engine, 'order_function': order_f,
+                    'path_ensemble': ens, 'interfaces': interfaces}
+
+        accept, path, status = wire_fencing(ensemble, tis_settings,
+                                            start_cond='L')
+        self.assertEqual(status, 'ACC')
+        self.assertTrue(accept)
+
+        tis_settings['high_accept'] = False
+        ensemble['rgen'].rand()     # To fail detail balance
+        accept, path, status = wire_fencing(ensemble, tis_settings,
+                                            start_cond='L')
+        self.assertEqual(status, 'WFA')
+        self.assertFalse(accept)
+
+        ensemble['interfaces'] = [-1.0, 1.5, 2.0]
+        accept, path, status = wire_fencing(ensemble, tis_settings,
+                                            start_cond='L')
+        self.assertEqual(status, 'BWI')
+        self.assertFalse(accept)
+
+        tis_settings['maxlength'] = 50
+        accept, path, status = wire_fencing(ensemble, tis_settings,
+                                            start_cond='L')
+        self.assertEqual(status, 'BTX')
+        self.assertFalse(accept)
+
+        ensemble['interfaces'] = [-1.0, 2.5, 3.0]
+        accept, path, status = wire_fencing(ensemble, tis_settings,
+                                            start_cond='L')
+        self.assertEqual(status, 'NSG')
+        self.assertFalse(accept)
+
+    def test_wire_fencing_cap(self):
+        """Test common sense with real dynamics."""
+        tis_settings = {
+            'maxlength': 1000,
+            'sigma_v': -1,
+            'aimless': True,
+            'zero_momentum': False,
+            'rescale_energy': False,
+            'allowmaxlength': False,
+            'shooting_move': 'wf',
+            'n_jumps': 6,
+            'high_accept': True,
+            'interface_cap': -0.4,
+        }
+        # Generate ACC:
+        interfaces = [-1.0, -0.5, 2.0]
+        order_f = Position(index=0)
+        engine = VelocityVerlet(0.01)
+        rgen = MockRandomGenerator(seed=0)
+
+        path = make_internal_path((-5, 2.1), (5, 2.2), (1, -1))
+        path.set_move('cs')
+        ens = PathEnsemble(ensemble_number=1, interfaces=interfaces)
+        ens.last_path = path
+        ensemble = {'rgen': rgen, 'engine': engine, 'order_function': order_f,
+                    'path_ensemble': ens, 'interfaces': interfaces}
+
+        accept, path, status = wire_fencing(ensemble, tis_settings,
+                                            start_cond='L')
+        self.assertEqual(status, 'ACC')
+        self.assertTrue(accept)
+
+        tis_settings['high_accept'] = False
+        accept, path, status = wire_fencing(ensemble, tis_settings,
+                                            start_cond='L')
+        self.assertEqual(status, 'WFA')
+        self.assertFalse(accept)
+
+        tis_settings['maxlength'] = 50
+        accept, path, status = wire_fencing(ensemble, tis_settings,
+                                            start_cond='L')
+        self.assertEqual(status, 'BTX')
         self.assertFalse(accept)
 
     def test_ss_rejected_detail_balance(self):
@@ -625,33 +1011,111 @@ class TISTestMethod(unittest.TestCase):
             'rescale_energy': False,
             'allowmaxlength': False,
             'shooting_move': 'ss',
-            'n_jumps': 2,
+            'n_jumps': 5,
             'high_accept': False
         }
         # Generate ACC:
         trial_path = make_internal_path((-5, 2.1), (5, 2.2), (1, -1))
         interfaces = [-1, -0.4, 2.1]
-        order_f = Position(index=0)
-        engine = VelocityVerlet(0.1)
-        rgen = RandomGenerator(seed=33)
-        accept, path, status = select_shoot(trial_path, order_f,
-                                            interfaces, engine,
-                                            rgen, tis_settings,
-                                            shooting_move='ss',
-                                            start_cond='L')
+        ens = PathEnsemble(ensemble_number=1, interfaces=interfaces)
+        ens.last_path = trial_path
+        ensemble = {'rgen': RandomGenerator(seed=13),
+                    'engine': VelocityVerlet(0.1),
+                    'order_function': Position(index=0),
+                    'path_ensemble': ens,
+                    'interfaces': interfaces}
+
+        accept, _, status = select_shoot(ensemble, tis_settings,
+                                         start_cond='L')
 
         self.assertEqual(status, 'BWI')
         self.assertFalse(accept)
 
         tis_settings['high_accept'] = True
-        accept, path, status = select_shoot(trial_path, order_f,
-                                            interfaces, engine,
-                                            rgen, tis_settings,
-                                            shooting_move='ss',
-                                            start_cond='L')
+        accept, _, status = select_shoot(ensemble, tis_settings,
+                                         start_cond='L')
 
         self.assertEqual(status, 'ACC')
         self.assertTrue(accept)
+
+    def test_ss_wt_wf_metropolis_acc_base(self):
+        """Test ss_wt_wf_acceptance is working properly (part 0)."""
+        # Generate a B to A path
+        order_f = Position(index=0)
+        interfaces = [-4, -2., -1.]
+        lol_path = make_internal_path((5, 5), (-5, -5), (5, 5))
+        new_path = lol_path.reverse()
+        new_path.status = 'REJ'
+        ens = PathEnsemble(ensemble_number=1, interfaces=interfaces)
+        ens.last_path = lol_path
+        ensemble = {'order_function': order_f,
+                    'interfaces': interfaces,
+                    'path_ensemble': ens}
+        tis_settings = {'high_accept': True,
+                        'shooting_move': 'ss'}
+        succ = ss_wt_wf_metropolis_acc(path_new=new_path,
+                                       ensemble=ensemble,
+                                       tis_settings=tis_settings)
+        self.assertTrue(succ)
+        self.assertEqual(new_path.status, 'ACC')
+        succ, trial_path = ss_wt_wf_acceptance(trial_path=new_path,
+                                               ensemble=ensemble,
+                                               tis_settings=tis_settings,
+                                               start_cond='R')
+        self.assertTrue(succ)
+        self.assertEqual(new_path.phasepoints[0].order,
+                         trial_path.phasepoints[-1].order)
+
+    def test_ss_wt_wf_metropolis_acc(self):
+        """Test ss_wt_wf_acceptance is working properly."""
+        order_f = Position(index=0)
+        engine = RandomWalk(timestep=0.1)
+        interfaces = [-1, 0., 1]
+        rgen = RandomGenerator(seed=0)
+        ens = PathEnsemble(ensemble_number=1, interfaces=interfaces)
+
+        ensemble = {'rgen': rgen, 'engine': engine, 'order_function': order_f,
+                    'path_ensemble': ens, 'interfaces': interfaces}
+        # Generate a B to A path
+        path = make_internal_path((5, 5), (-5, -5), (5, 5))
+
+        # Fix it and accept it
+        interfaces = [-4, -2., -1]
+        path2 = make_internal_path((-5, -5), (-5, -5), (5, 5))
+        old_path = paste_paths(path2, path)
+        ensemble['interfaces'] = interfaces
+        ensemble['path_ensemble'].last_path = old_path
+        succ = ss_wt_wf_metropolis_acc(path_new=path,
+                                       ensemble=ensemble,
+                                       tis_settings={'high_accept': True,
+                                                     'shooting_move': 'ss'})
+        self.assertFalse(succ)
+        self.assertEqual(path.status, 'BWI')
+
+        ensemble['rgen'] = RandomGenerator(seed=0)
+        ensemble['path_ensemble'].last_path = path
+        ensemble['interfaces'] = interfaces
+        succ = ss_wt_wf_metropolis_acc(path_new=old_path,
+                                       ensemble=ensemble,
+                                       tis_settings={'shooting_move': 'ss'})
+        self.assertFalse(succ)
+        self.assertEqual(old_path.status, 'SSA')
+
+        ensemble['path_ensemble'].last_path = path
+        succ = ss_wt_wf_metropolis_acc(path_new=old_path,
+                                       ensemble=ensemble,
+                                       tis_settings={'interface_sour': -2.,
+                                                     'shooting_move': 'wt'})
+        self.assertFalse(succ)
+        self.assertEqual(old_path.status, 'WTA')
+
+        ensemble['path_ensemble'].last_path = path
+        succ = ss_wt_wf_metropolis_acc(path_new=old_path,
+                                       ensemble=ensemble,
+                                       tis_settings={'high_accept': True,
+                                                     'shooting_move': 'ss'})
+        self.assertTrue(succ)
+        self.assertEqual(old_path.status, 'ACC')
 
     def test_extender(self):
         """Test extender of paths."""
@@ -668,18 +1132,20 @@ class TISTestMethod(unittest.TestCase):
             'rescale_energy': False,
             'allowmaxlength': False,
         }
+
+        ens = PathEnsemble(ensemble_number=1, interfaces=interfaces)
+        ens.last_path = path
+        ensemble = {'engine': engine, 'order_function': order_f,
+                    'path_ensemble': ens, 'interfaces': interfaces}
         # Check that nothing changes, the path is already good
-        accept, new_path, status = extender(path, order_f,
-                                            interfaces, engine,
-                                            tis_settings)
+        accept, new_path, status = extender(path, ensemble, tis_settings)
         self.assertTrue(new_path == path)
         self.assertTrue(accept)
 
         # Check that the forward expansion works, and it can fail
         path = make_internal_path((-5, 2.1), (5, 2.2), (1, -1))
         path.status = 'ACC'
-        order_f = Position(index=0)
-        engine = MockEngine(2.0)
+
         interfaces = [-1, 0., 2.7]
         tis_settings = {
             'maxlength': 1000,
@@ -689,111 +1155,22 @@ class TISTestMethod(unittest.TestCase):
             'rescale_energy': False,
             'allowmaxlength': False,
         }
-        accept, new_path, status = extender(path, order_f,
-                                            interfaces, engine,
-                                            tis_settings)
+        ensemble['path_ensemble'].last_path = path
+        accept, new_path, status = extender(path, ensemble, tis_settings)
         self.assertEqual(status, 'ACC')
         self.assertTrue(accept)
 
-        interfaces = [-1, 0., 3.]
-        accept, new_path, status = extender(new_path, order_f,
-                                            interfaces, engine,
-                                            tis_settings)
+        ensemble['interfaces'] = [-1, 0., 3.]
+        accept, new_path, status = extender(path, ensemble, tis_settings)
         self.assertEqual(status, 'FTX')
         self.assertFalse(accept)
 
-        interfaces = [2., 2.5, 3.]
-        accept, new_path, status = extender(new_path, order_f,
-                                            interfaces, engine,
-                                            tis_settings)
-        self.assertEqual(status, 'FTX')
-        self.assertFalse(accept)
-
-    def test_ss_wt_acceptance_base(self):
-        """Test ss_wt_acceptance is working properly (part 0)."""
-
-        order_f = Position(index=0)
-
-        # Generate a B to A path
-        rgen = RandomGenerator(seed=0)
-        interfaces = [-4, -2., -1.]
-        lol_path = make_internal_path((5, 5), (-5, -5), (5, 5))
-        new_path = lol_path.copy()
-        new_path.status = 'REJ'
-        new_path.set_move('ss')
-        succ = ss_wt_acceptance(path_old=lol_path, path_new=new_path,
-                                interfaces=interfaces,
-                                rgen=rgen, order_function=order_f,
-                                tis_settings={'high_accept': True})
-        self.assertTrue(succ)
-        self.assertEqual(new_path.status, 'ACC')
-
-    def test_ss_wt_acceptance(self):
-        """Test ss_wt_acceptance is working properly."""
-
-        order_f = Position(index=0)
-        engine = RandomWalk(timestep=0.1)
-        tis_settings = {
-            'maxlength': 1000,
-            'sigma_v': -1,
-            'aimless': False,
-            'zero_momentum': False,
-            'rescale_energy': False,
-            'allowmaxlength': False
-        }
-        # Test segment direction
-        # (just wrong orientation but still connecting B to A)
-        path = make_internal_path((-5, 2.1), (5, 2.2), (1, -1))
-
-        shooting_point = path.phasepoints[12]
-        shooting_point.idx = 12
-        interfaces = [-1, 0., 1]
-        rgen = RandomGenerator(seed=0)
-
-        success, _, status = make_path(path, order_f, interfaces, engine,
-                                       tis_settings, maxlen=1000,
-                                       shooting_point=shooting_point,
-                                       start_cond='L')
+        ensemble['interfaces'] = [2., 2.5, 3.]
+        accept, new_path, status = extender(path, ensemble, tis_settings)
         self.assertEqual(status, 'ACC')
-        self.assertTrue(success)
+        self.assertTrue(accept)
 
-        # Generate a B to A path
-        path = make_internal_path((5, 5), (-5, -5), (5, 5))
-
-        # Fix it and accept it
-        interfaces = [-4, -2., -1]
-        path2 = make_internal_path((-5, -5), (-5, -5), (5, 5))
-        old_path = paste_paths(path2, path)
-        old_path.set_move('ss')
-        succ = ss_wt_acceptance(old_path, path, interfaces,
-                                rgen=rgen, order_function=None,
-                                tis_settings={})
-        self.assertTrue(succ)
-        self.assertEqual(path.status, 'ACC')
-
-        rgen = RandomGenerator(seed=10)
-        old_path.set_move('ss')
-        succ = ss_wt_acceptance(path, old_path, interfaces,
-                                rgen=rgen, order_function=None,
-                                tis_settings={})
-        self.assertFalse(succ)
-        self.assertEqual(old_path.status, 'SSA')
-
-        old_path.set_move('wt')
-        succ = ss_wt_acceptance(path, old_path, interfaces,
-                                rgen=rgen, order_function=None,
-                                tis_settings={'interface_sour': -2.})
-        self.assertFalse(succ)
-        self.assertEqual(old_path.status, 'WTA')
-
-        old_path.set_move('ss')
-        succ = ss_wt_acceptance(path, old_path, interfaces,
-                                rgen=rgen, order_function=None,
-                                tis_settings={'high_accept': True})
-        self.assertTrue(succ)
-        self.assertEqual(old_path.status, 'ACC')
-
-    def test_extender_1(self):
+    def test_extender2(self):
         """Test extender behaviour in special circumstances."""
         path = make_internal_path((-1, 2.1), (-2, 2.2), (-1, -1))
         path.status = 'ACC'
@@ -812,9 +1189,10 @@ class TISTestMethod(unittest.TestCase):
             'interface_sour': 1.5
         }
         # Check that nothing changes, the path is already good
-        accept, new_path, status = extender(path, order_f,
-                                            interfaces, engine,
-                                            tis_settings)
+
+        ensemble = {'engine': engine, 'order_function': order_f,
+                    'interfaces': interfaces}
+        accept, _, status = extender(path, ensemble, tis_settings)
         self.assertEqual(status, 'ACC')
         self.assertTrue(accept)
 
@@ -823,23 +1201,17 @@ class TISTestMethod(unittest.TestCase):
         path = make_internal_path((-5, 2.1), (5, 2.2), (1, -1))
         path_new = path.reverse(order_f)
         path_new.maxlen = 1000
-        interfaces = [-1, 0., 2.4]
-        accept, path, status = extender(path_new, order_f,
-                                        interfaces, engine,
-                                        tis_settings)
+        ensemble['interfaces'] = [-1, 0., 2.4]
+        accept, path, status = extender(path, ensemble, tis_settings)
         self.assertEqual(status, 'ACC')
         self.assertTrue(accept)
 
-        accept, path, status = extender(path, order_f,
-                                        interfaces, engine,
-                                        tis_settings)
+        accept, path, status = extender(path, ensemble, tis_settings)
         self.assertEqual(status, 'ACC')
         self.assertTrue(accept)
 
         tis_settings['maxlength'] = 10
-        accept, path, status = extender(path, order_f,
-                                        interfaces, engine,
-                                        tis_settings)
+        accept, path, status = extender(path, ensemble, tis_settings)
         self.assertEqual(status, 'FTX')
         self.assertFalse(accept)
 
@@ -847,31 +1219,36 @@ class TISTestMethod(unittest.TestCase):
         path = make_internal_path((-5, 2.1), (5, 2.2), (1, -1))
         path_new = path.reverse(order_f)
         path_new.maxlen = 1000
-        accept, path, status = extender(path_new, order_f,
-                                        interfaces, engine,
-                                        tis_settings)
+
+        accept, path, status = extender(path_new, ensemble, tis_settings)
         self.assertEqual(status, 'BTX')
         self.assertFalse(accept)
 
-    def test_0_min_L(self):
+    def test_0_min_left(self):
         """Test that a path that ends up at the left interface of the
-        {0-} ensemble is rejected"""
-        ens = PathEnsemble(ensemble_number=0, interfaces=(0, 1, 2))
+        {0-} ensemble is rejected."""
+        interfaces = [0, 1, 2]
+        ens = PathEnsemble(ensemble_number=0, interfaces=interfaces)
         path = make_internal_path((0, 2.1), (100, 2.2), (50, -1),
                                   ens.interfaces[1])
         ens.add_path_data(path, status='ACC')
         order_f = MockOrder()
-        tis_settings = {'freq': 0, 'maxlength': 1000, 'sigma_v': -1,
-                        'shooting_moves': ['sh', 'sh', 'sh'],
-                        'aimless': True, 'zero_momentum': False,
-                        'rescale_energy': False, 'allowmaxlength': False}
-        eng = MockEngine(10)
-        out = make_tis_step_ensemble(path_ensemble=ens,
-                                     order_function=order_f,
-                                     engine=eng,
-                                     rgen=path.rgen,
-                                     tis_settings=tis_settings,
-                                     cycle=1)
+        engine = MockEngine(10)
+        ens.last_path = path
+        ensemble = {'engine': engine,
+                    'order_function': order_f,
+                    'rgen': path.rgen,
+                    'path_ensemble': ens,
+                    'interfaces': interfaces}
+        with tempfile.TemporaryDirectory() as tempdir:
+            settings = {'tis': {'freq': 0, 'maxlength': 1000, 'sigma_v': -1,
+                                'aimless': True, 'zero_momentum': False,
+                                'rescale_energy': False,
+                                'allowmaxlength': False},
+                        'simulation': {'task': 'tis',
+                                       'exe_path': tempdir}}
+            make_dirs(os.path.join(tempdir, '000'))
+            out = make_tis_step_ensemble(ensemble, settings, cycle=1)
 
         # Make sure this generated an L to R path
         self.assertGreater(out[1].phasepoints[0].order[0], 2)
@@ -881,27 +1258,37 @@ class TISTestMethod(unittest.TestCase):
         self.assertFalse(out[0])
         self.assertEqual(out[2], '0-L')
 
-    def test_0_min_R(self):
+    def test_0_min_right(self):
         """Test that a path that ends up at the right interface of the
         {0-} ensemble is accepted"""
-        ens = PathEnsemble(ensemble_number=0, interfaces=(0, 1, 2))
+        interfaces = [0, 1, 2]
+        ens = PathEnsemble(ensemble_number=0, interfaces=interfaces)
         path = make_internal_path((0, 2.1), (100, 2.2), (50, -1),
                                   ens.interfaces[1])
         ens.add_path_data(path, status='ACC')
         order_f = MockOrder()
-        eng = MockEngine(10, turn_around=2000)
-        out = make_tis_step_ensemble(path_ensemble=ens,
-                                     order_function=order_f,
-                                     engine=eng,
-                                     rgen=path.rgen,
-                                     tis_settings={'freq': 0,
-                                                   'maxlength': 1000,
-                                                   'sigma_v': -1,
-                                                   'aimless': True,
-                                                   'zero_momentum': False,
-                                                   'rescale_energy': False,
-                                                   'allowmaxlength': False},
-                                     cycle=1)
+        engine = MockEngine(10, turn_around=2000)
+
+        ens.last_path = path
+        ensemble = {'engine': engine,
+                    'order_function': order_f,
+                    'rgen': path.rgen,
+                    'path_ensemble': ens,
+                    'interfaces': interfaces}
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            settings = {'tis': {'freq': 0,
+                                'maxlength': 1000,
+                                'sigma_v': -1,
+                                'aimless': True,
+                                'zero_momentum': False,
+                                'rescale_energy': False,
+                                'allowmaxlength': False},
+                        'simulation': {'task': 'tis',
+                                       'exe_path': tempdir}}
+
+            make_dirs(os.path.join(tempdir, '000'))
+            out = make_tis_step_ensemble(ensemble, settings, cycle=1)
 
         # Make sure this generated an R to R path
         self.assertGreater(out[1].phasepoints[0].order[0], 2)
@@ -910,6 +1297,262 @@ class TISTestMethod(unittest.TestCase):
         # Assert if this was accepted with the right status
         self.assertTrue(out[0])
         self.assertEqual(out[2], 'ACC')
+
+    def test_make_tis(self):
+        """Test that we can do the RETIS steps."""
+        settings, ensembles = create_ensembles_and_paths()
+        ens_l = ['000', '001', '002', '003', '004']
+        rgen = MockRandomGenerator(seed=0)
+        for setting in settings['ensemble']:
+            setting['tis']['freq'] = 1
+        # Check that we can do RETIS:
+        settings['tis']['nullmoves'] = True
+        ensembles[1]['path_ensemble'].last_path.set_move('ld')
+        with tempfile.TemporaryDirectory() as tempdir:
+            for i, fld in enumerate(ens_l):
+                make_dirs(os.path.join(tempdir, fld))
+                settings['ensemble'][i]['simulation']['exe_path'] = tempdir
+            results = make_tis(ensembles, rgen, settings, cycle=0)
+            for _ in results:
+                continue
+        self.assertTrue(ensembles[1]['path_ensemble'].last_path.get_move() ==
+                        'ld')
+
+        # Check that we can do relative shoots:
+        settings['tis']['relative_shoots'] = [0.1, 0.1, 0.1, 0.1, 0.6]
+        with tempfile.TemporaryDirectory() as tempdir:
+            for i, fld in enumerate(ens_l):
+                make_dirs(os.path.join(tempdir, fld))
+                settings['ensemble'][i]['simulation']['exe_path'] = tempdir
+            settings['simulation']['exe_path'] = tempdir
+            results = make_tis(ensembles, rgen, settings, cycle=1)
+            moves = ('tr', 'ld', 'tr', 'tr', 'tr')
+            for resi in results:
+                self.assertEqual(
+                    resi['mc-move'], moves[resi['ensemble_number']]
+                )
+
+    def test_explorer(self):
+        """Test that we can use the explore approach."""
+        settings, ensembles = create_ensembles_and_paths()
+        ens_l = ['000', '001', '002', '003', '004']
+        rgen = MockRandomGenerator(seed=0)
+
+        # Check that we can explore:
+        with tempfile.TemporaryDirectory() as tempdir:
+            for i, fld in enumerate(ens_l):
+                make_dirs(os.path.join(tempdir, fld))
+                settings['ensemble'][i]['simulation']['exe_path'] = tempdir
+                settings['ensemble'][i]['simulation']['task'] = 'explore'
+                settings['ensemble'][i]['tis']['freq'] = 0
+
+            results = make_tis(ensembles, rgen, settings, cycle=0)
+            for _ in results:
+                continue
+
+        self.assertEqual(ensembles[1]['path_ensemble'].last_path.status, 'EXP')
+
+
+class TestPermMethods(unittest.TestCase):
+    def setUp(self):
+        self.settings, ensembles = create_ensembles_and_paths()
+        self.settings['tis']['maxlength'] = 1000
+        self.ens = ensembles[0]
+        self.ens['interfaces'][0] = -2.0
+
+        self.ens['path_ensemble'].start_cond = set(['L', 'R'])
+
+    def test_to_many_weights(self):
+        # Set settings to something crazy
+        self.settings['tis']['freq'] = 2
+        with self.assertRaises(ValueError):
+            make_tis_step_ensemble(self.ens, self.settings, 0)
+
+    def test_breaking_rgen(self):
+        class BrokenChoiceRgen:
+            def choice(self, _, __, p):
+                """Broken function."""
+                return f'Broken {p}'
+        broken_choice = BrokenChoiceRgen()
+        self.ens['rgen'] = broken_choice
+        with self.assertRaises(RuntimeError):
+            make_tis_step_ensemble(self.ens, self.settings, 0)
+
+    def test_mirror_selection(self):
+        self.settings['tis']['freq'] = 0
+        self.settings['tis']['mirror_freq'] = 1
+        path = self.ens['path_ensemble'].last_path
+        accept, trial, _ = make_tis_step_ensemble(self.ens,
+                                                  self.settings, 1)
+        assert accept is True
+        assert trial.status == 'ACC'
+        for i, j in zip(path.phasepoints, trial.phasepoints):
+            # Mirrored mock order is just mirrored around 0
+            assert i.order[0] == -j.order[0]
+        assert trial.generated[0] == 'mr'
+
+    def test_mirror_dont_override_ld(self):
+        self.settings['tis']['freq'] = 0
+        self.settings['tis']['mirror_freq'] = 1
+        self.ens['path_ensemble'].last_path.set_move('ld')
+
+        accept, trial, _ = make_tis_step_ensemble(self.ens, self.settings, 1)
+        assert accept is True
+        assert trial.status == 'ACC'
+        assert trial.generated[0] == 'ld'
+
+    def test_no_valid_target_swap(self):
+        self.settings['tis']['freq'] = 0
+        self.settings['tis']['target_freq'] = 1
+        # Target index is the same as op.index, so no valid points to swap to
+        self.settings['tis']['target_indices'] = [1]
+        self.ens['order_function'].index = 1
+        accept, trial, status = make_tis_step_ensemble(self.ens,
+                                                       self.settings, 1)
+        assert accept is False
+        assert status == "TSS"
+        assert trial.generated[0] == 'ts'
+        assert self.ens['order_function'].index == 1
+
+    def test_current_index_not_in_target_indices(self):
+        self.settings['tis']['freq'] = 0
+        self.settings['tis']['target_freq'] = 1
+        # Target index is the same as op.index, so no valid points to swap to
+        self.settings['tis']['target_indices'] = [1]
+        self.ens['order_function'].index = 0
+        with self.assertRaisesRegex(ValueError, "0, is not part of the target "
+                                    r"indices: \[1\]"
+                                    ):
+            make_tis_step_ensemble(self.ens, self.settings, 1)
+
+    def test_mc_rejection(self):
+        self.settings['tis']['freq'] = 0
+        self.settings['tis']['target_freq'] = 1
+        self.settings['tis']['target_indices'] = [0, 1]
+        self.ens['order_function'].index = 1
+        # Here we hack the random rgen to give a number above 1 at the right
+        # time (documented incase this order changes)
+        # 0 = select move
+        # 1 = select index to shoot
+        # 2 = determine acceptance <= alter this one
+        self.ens['rgen'].rgen[2] = 1.1
+        accept, trial, status = make_tis_step_ensemble(self.ens,
+                                                       self.settings, 1)
+        assert accept is False
+        assert status == "TSA"
+        assert trial.generated[0] == 'ts'
+        assert self.ens['order_function'].index == 1
+
+    def test_btx_rejection(self):
+        self.settings['tis']['freq'] = 0
+        self.settings['tis']['target_freq'] = 1
+        self.settings['tis']['target_indices'] = [0, 1]
+        self.ens['order_function'].index = 1
+        # Due to the mock rgen we know the backward path will be length 2
+        self.settings['tis']['maxlength'] = 2
+        accept, trial, status = make_tis_step_ensemble(self.ens,
+                                                       self.settings, 1)
+        assert accept is False
+        assert status == "BTX"
+        assert trial.generated[0] == 'ts'
+        assert self.ens['order_function'].index == 1
+
+    def test_ftx_rejection(self):
+        self.settings['tis']['freq'] = 0
+        self.settings['tis']['target_freq'] = 1
+        self.settings['tis']['target_indices'] = [0, 1]
+        self.ens['order_function'].index = 1
+        # Due to the mock rgen we know the backward path will be length 2
+        # Forward will be 9, so test 3 to see if we run, but still end with FTX
+        self.settings['tis']['maxlength'] = 3
+        accept, trial, status = make_tis_step_ensemble(self.ens,
+                                                       self.settings, 1)
+        assert accept is False
+        assert status == "FTX"
+        assert trial.generated[0] == 'ts'
+        assert self.ens['order_function'].index == 1
+
+    def test_not_all_bw_frames_are_valid(self):
+        # Normal path will trigger forward cut, try backwards instead
+        path = make_internal_path((0, -2.1), (100, -1.0), (100, -1.0))
+
+        self.settings['tis']['freq'] = 0
+        self.settings['tis']['target_freq'] = 1
+        self.settings['tis']['target_indices'] = [0, 1]
+        self.ens['order_function'].index = 1
+        self.ens['path_ensemble'].last_path = path
+        accept, trial, status = make_tis_step_ensemble(self.ens,
+                                                       self.settings, 1)
+        assert accept is True
+        assert status == "ACC"
+        assert trial.generated[0] == 'ts'
+        assert self.ens['order_function'].index == 0
+
+    def test_identity_target_swap(self):
+        # index is not used in op, so this should return an identical path
+        self.settings['tis']['freq'] = 0
+        self.settings['tis']['target_freq'] = 1
+        self.settings['tis']['target_indices'] = [1, 0]
+        self.ens['order_function'].index = 1
+        path = self.ens['path_ensemble'].last_path
+        accept, trial, status = make_tis_step_ensemble(self.ens,
+                                                       self.settings, 1)
+        assert accept is True
+        assert status == "ACC"
+        assert trial.generated[0] == 'ts'
+        assert self.ens['order_function'].index == 0
+        for i, j in zip(path.phasepoints, trial.phasepoints):
+            assert i.order == j.order
+
+    def test_m_pass_for_l_r_start_cond(self):
+        path = make_internal_path((0, -2.01), (100, -2.01), (50, -1.01))
+        self.ens['path_ensemble'].start_condition = ("R", "L")
+        self.ens['path_ensemble'].last_path = path
+        self.ens['engine'] = MockEngine(-10)
+
+        self.settings['tis'] = {'freq': 0,
+                                'maxlength': 1000,
+                                'sigma_v': -1,
+                                'aimless': True,
+                                'zero_momentum': False,
+                                'rescale_energy': False,
+                                'allowmaxlength': False}
+
+        _, _, status = shoot(self.ens, self.settings['tis'], ('L', 'R'))
+        assert status == 'ACC'
+
+    def test_bw_extend(self):
+        # Start with an incomplete path so we must extend
+        path = make_internal_path((0, -1.9), (100, -1.1), (100, -1.1))
+        self.settings['tis']['freq'] = 0
+        self.settings['tis']['target_freq'] = 1
+        self.settings['tis']['target_indices'] = [1, 0]
+        self.ens['order_function'].index = 1
+        self.ens['path_ensemble'].last_path = path
+        accept, trial, status = make_tis_step_ensemble(self.ens,
+                                                       self.settings, 1)
+        # Due to mock engine this will be BTX
+        assert accept is False
+        assert status == "BTX"
+        assert trial.length > path.length
+        assert self.ens['order_function'].index == 1
+
+    def test_fw_extend(self):
+        # Start with an incomplete path so we must extend
+        path = make_internal_path((0, -2.001), (100, -1.1), (100, -1.1))
+        self.settings['tis']['freq'] = 0
+        self.settings['tis']['target_freq'] = 1
+        self.settings['tis']['target_indices'] = [1, 0]
+        self.ens['order_function'].index = 1
+        self.ens['path_ensemble'].last_path = path
+        accept, trial, status = make_tis_step_ensemble(self.ens,
+                                                       self.settings, 1)
+        # Due to mock engine this will be FTX
+        assert accept is True
+        assert status == "ACC"
+        # Make sure we actually did md
+        assert trial.length > path.length
+        assert self.ens['order_function'].index == 0
 
 
 if __name__ == '__main__':

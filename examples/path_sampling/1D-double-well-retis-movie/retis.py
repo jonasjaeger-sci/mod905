@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """This is a simple RETIS example.
 
@@ -8,13 +8,15 @@ aim to calculate the crossing probability and the rate constant.
 
 Have fun!
 """
+import colorama
 import numpy as np
 from tqdm import tqdm
-from pyretis.core import System, create_box, Particles
 from pyretis.initiation import initiate_path_simulation
 from pyretis.core.properties import Property
-from pyretis.inout.setup import (create_force_field, create_engine,
-                                 create_orderparameter, create_simulation)
+from pyretis.inout.settings import (fill_up_tis_and_retis_settings,
+                                    _add_default_settings,
+                                    _add_specific_default_settings)
+from pyretis.setup import create_simulation
 from pyretis.analysis.path_analysis import _pcross_lambda_cumulative
 
 INTERFACES = [-0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, 1.0]
@@ -26,8 +28,14 @@ SETTINGS['simulation'] = {
     'steps': 150,
     'interfaces': INTERFACES
 }
+# Basic settings for the simulation box:
+SETTINGS['box'] = {'cell': [3]}
+
 # Basic settings for the system:
-SETTINGS['system'] = {'units': 'lj', 'temperature': 0.07}
+SETTINGS['system'] = {'units': 'lj',
+                      'temperature': 0.09,
+                      'dimensions': 1}
+
 # Basic settings for the Langevin integrator:
 SETTINGS['engine'] = {
     'class': 'Langevin',
@@ -36,6 +44,12 @@ SETTINGS['engine'] = {
     'seed': 0,
     'timestep': 0.002
 }
+# Particles:
+SETTINGS['particles'] = {'mass': {'Ar': 1.0},
+                         'name': ['Ar'],
+                         'ptype': [0],
+                         'position': {'generate': '1d'}}
+
 # Potential parameters:
 # The potential is: `V_\text{pot} = a x^4 - b (x - c)^2`
 SETTINGS['potential'] = [
@@ -73,30 +87,9 @@ SETTINGS['retis'] = {
 # For convenience:
 TIMESTEP = SETTINGS['engine']['timestep']
 ANALYSIS = {'ngrid': 100, 'nblock': 5}
-
-
-def set_up_system(settings):
-    """Set up the system.
-
-    Parameters
-    ----------
-    settings : dict
-        The settings required to set up the system.
-
-    Returns
-    -------
-    sys : object like :py:class:`.System`
-        A system object we can use in a simulation.
-
-    """
-    box = create_box(periodic=[False])
-    sys = System(temperature=settings['system']['temperature'],
-                 units=settings['system']['units'], box=box)
-    sys.forcefield = create_force_field(settings)
-    sys.order_function = create_orderparameter(settings)
-    sys.particles = Particles(dim=1)
-    sys.add_particle(np.array([-1.0]), mass=1, name='Ar', ptype=0)
-    return sys
+_add_default_settings(SETTINGS)
+_add_specific_default_settings(SETTINGS)
+fill_up_tis_and_retis_settings(SETTINGS)
 
 
 def step_txt(ensembles, retis_result, prun):
@@ -104,8 +97,9 @@ def step_txt(ensembles, retis_result, prun):
 
     Parameters
     ----------
-    ensembles : list of objects like :py:class:`.PathEnsemble`
-        The different path ensembles we are simulating.
+    ensembles : list of dicts, it contains:
+       *  path_ensemble: objects like :py:class:`.PathEnsemble`
+               The different path ensembles we are simulating.
     retis_result : list of lists
         The results from a RETIS simulation step.
     prun : list of floats
@@ -126,24 +120,25 @@ def step_txt(ensembles, retis_result, prun):
     # i.e. the initial force evaluation since this can be stored in memory,
     # along the path -> i.e. we can avoid it.
     for ensemble in ensembles:
-        name = ensemble.ensemble_name
-        idx = ensemble.ensemble_number
+        path_ensemble = ensemble['path_ensemble']
+        name = path_ensemble.ensemble_name
+        idx = path_ensemble.ensemble_number
         name_of_move = retis_result['move-{}'.format(idx)]
         accepted = retis_result['accept-{}'.format(idx)]
         line = []
         if name_of_move == 'swap':
             idx2 = retis_result['all-{}'.format(idx)]['swap-with']
-            name2 = ensembles[idx2].ensemble_name
+            name2 = ensembles[idx2]['path_ensemble'].ensemble_name
             move = '{} {},'.format(name_of_move, name2)
             if idx == 0 or (idx == 1 and idx2 == 0):
                 # Evaluate forces when swapping [0^-] <-> [0^+]:
-                force += ensemble.paths[-1]['length'] - 2
+                force += path_ensemble.paths[-1]['length'] - 2
         elif name_of_move == 'tis':
             trial_path = retis_result['path-{}'.format(idx)]
             tis_move = trial_path.generated[0]
             move = '{} ({}),'.format(name_of_move, tis_move)
             if tis_move == 'sh':
-                force += ensemble.paths[-1]['length'] - 1
+                force += path_ensemble.paths[-1]['length'] - 1
         else:
             move = '{},'.format(name_of_move)
         line.append('{}: {:11s}'.format(name, move))
@@ -154,12 +149,12 @@ def step_txt(ensembles, retis_result, prun):
     return txt, force
 
 
-def probability_path_ensemble(ensemble, step, prun, orderp):
+def probability_path_ensemble(path_ensemble, step, prun, orderp):
     """Update running estimates of probabilities for an ensemble.
 
     Parameters
     ----------
-    ensemble : objects like :py:class:`.PathEnsemble`
+    path_ensemble : objects like :py:class:`.PathEnsemble`
         The ensemble to analyse.
     step : int
         The current simulation step.
@@ -183,8 +178,8 @@ def probability_path_ensemble(ensemble, step, prun, orderp):
         parameter.
 
     """
-    ordermax = ensemble.last_path.ordermax[0]
-    success = 1 if ordermax > ensemble.detect else 0
+    ordermax = path_ensemble.last_path.ordermax[0]
+    success = 1 if ordermax > path_ensemble.detect else 0
     if prun is None:
         prun = success
     else:
@@ -194,8 +189,8 @@ def probability_path_ensemble(ensemble, step, prun, orderp):
         ordernew = np.array([ordermax])
     else:
         ordernew = np.append(orderp, ordermax)
-    ordermax = min(max(ordernew), max(ensemble.interfaces))
-    ordermin = ensemble.interfaces[1]
+    ordermax = min(max(ordernew), max(path_ensemble.interfaces))
+    ordermin = path_ensemble.interfaces[1]
     pcross, lamb = _pcross_lambda_cumulative(ordernew, ordermin, ordermax,
                                              ANALYSIS['ngrid'])
     return prun, ordernew, lamb, pcross
@@ -228,9 +223,10 @@ def analyse_path_ensembles(ensembles, step, variables):
 
     Parameters
     ----------
-    ensembles : a list of objects like :py:class:`.PathEnsemble`
-        These objects contain information about accepted paths for the
-        different path ensembles.
+    ensembles : a list of dicts. They contain:
+      *  objects like :py:class:`.PathEnsemble`
+             These objects contain information about accepted paths for the
+             different path ensembles.
     step : integer
         The current step number.
     variables : dict of objects
@@ -249,8 +245,8 @@ def analyse_path_ensembles(ensembles, step, variables):
             'kab': 0, 'kabe': float('inf')}
     length0 = variables['length0']
     length1 = variables['length1']
-    length0.add(ensembles[0].last_path.length)
-    length1.add(ensembles[1].last_path.length)
+    length0.add(ensembles[0]['path_ensemble'].last_path.length)
+    length1.add(ensembles[1]['path_ensemble'].last_path.length)
     flux = 1.0 / ((length0.mean + length1.mean - 4.0) * TIMESTEP)
     calc['flux'] = flux
     variables['flux'].append(flux)
@@ -264,15 +260,13 @@ def analyse_path_ensembles(ensembles, step, variables):
             continue
         prun = variables['prun'][i]
         orderp = variables['orderp'][i]
-        prun, ordernew, lamb, pcross = probability_path_ensemble(ensemble,
-                                                                 step,
-                                                                 prun,
-                                                                 orderp)
+        prun, ordernew, lamb, pcross = probability_path_ensemble(
+            ensemble['path_ensemble'], step, prun, orderp)
         variables['orderp'][i] = ordernew
         variables['prun'][i] = prun
         variables['pcross'][i] = pcross
         variables['lamb'][i] = lamb
-        idx = np.where(lamb <= ensemble.detect)[0]
+        idx = np.where(lamb <= ensemble['path_ensemble'].detect)[0]
         matched_lamb.extend(lamb[idx])
         matched_prob.extend(pcross[idx] * accprob)
         accprob *= prun
@@ -296,21 +290,18 @@ def analyse_path_ensembles(ensembles, step, variables):
 
 def main():
     """Just run the simulation."""
-    print('# CREATING SYSTEM...')
-    system = set_up_system(SETTINGS)
-    print('# CREATING SIMULATION...')
-    sim_args = {'system': system, 'engine': create_engine(SETTINGS)}
-    simulation = create_simulation(SETTINGS, sim_args)
+    colorama.init(autoreset=True)
+    simulation = create_simulation(SETTINGS)
     print(simulation)
     print('# INITIATING TRAJECTORIES...')
     print('# GENERATING INITIAL PATHS')
     for i, _ in enumerate(initiate_path_simulation(simulation, SETTINGS)):
-        ensemble = simulation.path_ensembles[i]
-        name = ensemble.ensemble_name
+        path_ensemble = simulation.ensembles[i]['path_ensemble']
+        name = path_ensemble.ensemble_name
         print('Info about ensemble {}:'.format(name))
-        print(ensemble)
+        print(path_ensemble)
         print('Info about the initial path:')
-        print(ensemble.last_path)
+        print(path_ensemble.last_path)
         print('')
     # We make a dictionary of these variable for easier access:
     # Set up some variables for storing results:
@@ -323,14 +314,15 @@ def main():
                  'lamb': [None for _ in INTERFACES],
                  'pcross': [None for _ in INTERFACES]}
     # Let us look at the resulting path ensembles and paths:
-    ensembles = simulation.path_ensembles
+    ensembles = simulation.ensembles
     analyse_path_ensembles(ensembles, 0, variables)
     for ensemble in ensembles:
-        name = ensemble.ensemble_name
+        path_ensemble = ensemble['path_ensemble']
+        name = path_ensemble.ensemble_name
         print('Info about ensemble {}:'.format(name))
-        print(ensemble)
+        print(path_ensemble)
         print('Info about the initial path:')
-        print(ensemble.last_path)
+        print(path_ensemble.last_path)
         print('')
     # Run the rest of the simulation.
     ftot = 0

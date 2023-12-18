@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Definition of a class for handling output related to simulations.
 
@@ -69,7 +69,7 @@ The output tasks are defined as dictionaries with the following keys:
 * when : string
     Determines what input setting from the "output" section is used to
     define the output frequency. Default values are defined by the
-    output section, see :py:mod:`.settings`.
+    output section, see: py:mod:`pyretis.inout.settings.settings`.
 * formatter : object like :py:class:`.OutputFormatter`
     Selects the formatter for the output.
 * writer : object like :py:class:`.OutputBase`
@@ -190,7 +190,7 @@ class Task:
 
     Attributes
     ----------
-    _when : dict
+    when : dict
         Determines when the task should be executed.
 
     """
@@ -399,7 +399,7 @@ def get_task_type(task, engine):
 
     """
     if task['type'] == 'path-traj-{}':
-        if engine is None or engine.engine_type == 'internal':
+        if engine is None or engine.engine_type in ('internal', 'openmm'):
             fmt = 'int'
         else:
             fmt = 'ext'
@@ -457,9 +457,9 @@ def task_from_settings(task, settings, directory, engine, progress=False):
         special for external engines. If no engine is given, we do
         not do anything special.
     progress : boolean, optional
-            For some simulations, the user may select to display a
-            progress bar. We will then just disable the other screen
-            output.
+        For some simulations, the user may select to display a
+        progress bar. We will then just disable the other screen
+        output.
 
     Returns
     -------

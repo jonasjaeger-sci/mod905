@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Test the SimulationTask class."""
 import logging
 import unittest
 from pyretis.simulation.simulation_task import SimulationTask
-from .test_helpers import turn_on_logging
+from .help import turn_on_logging
 logging.disable(logging.CRITICAL)
 
 

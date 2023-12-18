@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Test the LAMMPSEngine class."""
 import logging
@@ -25,7 +25,7 @@ logging.disable(logging.CRITICAL)
 HERE = os.path.abspath(os.path.dirname(__file__))
 INPUT_PATH = os.path.join(HERE, 'lammps_input')
 # Define some error messages we expect:
-MISSING_FILE_MSG = 'Missing LAMMPS Engine input file'
+MISSING_FILE_MSG = 'Missing input file'
 MISSING_REVVEL_MSG = "'reverse_velocities'"
 AIMLESS_ERROR_MSG = 'LAMMPS only support the aimless velocity modification.'
 
@@ -117,7 +117,7 @@ def read_seed(lammps_input):
 def read_raw_file(filename):
     """Return the lines from a file."""
     lines = []
-    with open(filename, 'r') as infile:
+    with open(filename, 'r', encoding="utf8") as infile:
         lines = [i.strip() for i in infile]
     return lines
 
@@ -160,7 +160,7 @@ class LAMMPSEngineMethodsTest(unittest.TestCase):
             )
             temp.flush()
             data = []
-            with open(temp.name, 'r') as infile:
+            with open(temp.name, 'r', encoding="utf8") as infile:
                 data = [i.strip() for i in infile]
             # Here written and data will differ, since data contains
             # the full output. But written should be contained in data,
@@ -297,7 +297,8 @@ class LAMMPSEngineTest(unittest.TestCase):
                   'lammps_test.screen')]
             ]
             for filei, correcti in zip(('stdout.txt', 'stderr.txt'), correct):
-                with open(os.path.join(tempdir, filei), 'r') as output:
+                with open(os.path.join(tempdir, filei), 'r',
+                          encoding="utf8") as output:
                     lines = output.readlines()
                     self.assertEqual(len(lines), len(correcti))
                     for i, j in zip(lines, correcti):
@@ -369,28 +370,33 @@ class LAMMPSEngineTest(unittest.TestCase):
             # Add some fake data:
             system.order = [-1, -1]
             system.particles.ekin = None
-            dek, kin_new = engine.modify_velocities(system, None)
+            ensemble = {'system': system, 'rgen': None}
+            vel_settings = {'aimless': True}
+            dek, kin_new = engine.modify_velocities(ensemble, vel_settings)
             self.assertAlmostEqual(4.0, kin_new)
             self.assertEqual(float('inf'), dek)
             self.assertTrue(np.allclose([1., -1.], system.order))
             # Check the calculate order:
             self.assertIs(
                 system.order,
-                engine.calculate_order(order_function=None, system=system)
+                engine.calculate_order(ensemble),
             )
             # Check the created input file for LAMMPS:
             seed = read_seed(os.path.join(tempdir, 'generate_vel.in'))
             self.assertEqual(seed, 1)
             # Test that we can set the seed:
             rgen = create_random_generator({'rgen': 'mock'})
-            dek, kin_new = engine.modify_velocities(system, rgen)
+            ensemble = {'system': system, 'rgen': rgen}
+            vel_settings = {'aimless': True}
+            dek, kin_new = engine.modify_velocities(ensemble, vel_settings)
             self.assertAlmostEqual(4.0, kin_new)
             self.assertAlmostEqual(0.0, dek)
             self.assertTrue(np.allclose([1., -1.], system.order))
             seed = read_seed(os.path.join(tempdir, 'generate_vel.in'))
             self.assertAlmostEqual(1675209429, seed)
             with self.assertRaises(ValueError) as context:
-                engine.modify_velocities(system, None, aimless=False)
+                vel_settings = {'aimless': False}
+                engine.modify_velocities(ensemble, vel_settings)
             except_str = str(context.exception)
             self.assertEqual(except_str, AIMLESS_ERROR_MSG)
 
@@ -405,8 +411,13 @@ class LAMMPSEngineTest(unittest.TestCase):
             system = create_system_for_lammps()
             # Run "forward" until we cross the last interface:
             path = Path(rgen=None, maxlen=10)
+            ensemble = {
+                'system': system,
+                'order_function': None,
+                'interfaces': [-1.0, 0.0, 80.0]
+            }
             success, _ = engine.propagate(
-                path, system, None, [-1., 0., 80.], reverse=False
+                path=path, ensemble=ensemble, reverse=False
             )
             # Check that the stopping condition is correctly written
             # to the input file.
@@ -414,7 +425,8 @@ class LAMMPSEngineTest(unittest.TestCase):
                 'fix op_stop_right all halt 10 v_op_1 > 80.0',
                 'fix op_stop_left all halt 10 v_op_1 < -1.0'
             )
-            lmp_in = read_raw_file(os.path.join(tempdir, 'trajF.in'))
+            pref = [i for i in os.listdir(tempdir) if i[0].isdigit()][0][0]
+            lmp_in = read_raw_file(os.path.join(tempdir, pref + '_trajF.in'))
             for i in correct:
                 self.assertIn(i, lmp_in)
             self.assertTrue(success)
@@ -422,25 +434,28 @@ class LAMMPSEngineTest(unittest.TestCase):
             traj = [i.particles.get_pos() for i in path.phasepoints]
             for i, point in enumerate(traj):
                 self.assertEqual(point[1], i*engine.subcycles)
-                self.assertEqual(
-                    point[0], os.path.join(tempdir, 'trajF.lammpstrj')
-                )
+                self.assertTrue(tempdir in point[0])
+                self.assertTrue('trajF.lammpstrj' in point[0])
             self.assertFalse(
                 any(i.particles.get_vel() for i in path.phasepoints)
             )
             # Run "forward" until we exceed the max length:
             path = Path(rgen=None, maxlen=4)
+            ensemble = {
+                'system': system,
+                'order_function': None,
+                'interfaces': [-1., 0., float('inf')],
+            }
             success, _ = engine.propagate(
-                path, system, None, [-1., 0., float('inf')], reverse=False
+                path=path, ensemble=ensemble, reverse=False,
             )
             self.assertFalse(success)
             self.assertEqual(path.length, path.maxlen)
             traj = [i.particles.get_pos() for i in path.phasepoints]
             for i, point in enumerate(traj):
                 self.assertEqual(point[1], i*engine.subcycles)
-                self.assertEqual(
-                    point[0], os.path.join(tempdir, 'trajF.lammpstrj')
-                )
+                self.assertTrue(tempdir in point[0])
+                self.assertTrue('trajF.lammpstrj' in point[0])
             self.assertFalse(
                 any(i.particles.get_vel() for i in path.phasepoints)
             )
@@ -456,17 +471,21 @@ class LAMMPSEngineTest(unittest.TestCase):
             system = create_system_for_lammps()
             # Run "forward" until we cross the last interface:
             path = Path(rgen=None, maxlen=4)
+            ensemble = {
+                'system': system,
+                'order_function': None,
+                'interfaces': [-1, 0.0, 42.0]
+            }
             success, _ = engine.propagate(
-                path, system, None, [-1, 0., 42.], reverse=True,
+                path=path, ensemble=ensemble, reverse=True
             )
             self.assertFalse(success)
             self.assertEqual(path.length, 4)
             traj = [i.particles.get_pos() for i in path.phasepoints]
             for i, point in enumerate(traj):
                 self.assertEqual(point[1], i*engine.subcycles)
-                self.assertEqual(
-                    point[0], os.path.join(tempdir, 'trajB.lammpstrj')
-                )
+                self.assertTrue('trajB.lammpstrj' in point[0])
+                self.assertTrue(tempdir in point[0])
             self.assertTrue(
                 all(i.particles.get_vel() for i in path.phasepoints)
             )

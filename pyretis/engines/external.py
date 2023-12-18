@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Definition of external engines.
 
@@ -23,6 +23,7 @@ from pyretis.core.common import counter
 from pyretis.inout import print_to_screen
 from pyretis.inout.fileio import FileIO
 from pyretis.engines.engine import EngineBase
+from pyretis.inout.formats.cp2k import read_cp2k_box
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
@@ -101,48 +102,10 @@ class ExternalMDEngine(EngineBase):
         super().__init__(description)
         self.timestep = timestep
         self.subcycles = subcycles
+        self.ext = 'xyz'
+        self.input_files = {}
 
-    def _look_for_input_files(self, input_path, required,
-                              optional_files=None):
-        """Check that required files are present.
-
-        The required files are needed to run a simulation with the
-        external engine. We will fail if these are missing. There
-        might also be optional files which are not required, but
-        might be passed in here. If these are not present we will
-        not fail, but delete the reference to this file.
-
-        Parameters
-        ----------
-        input_path : string
-            The path to the folder where the input files are stored.
-        required : dict of strings
-            These are the file names of the required files.
-        optional_files : list of strings, optional
-            These are the file names of the optional files.
-
-        Returns
-        -------
-        out : dict
-            The paths to the required and optional files we found.
-
-        """
-        input_files = {}
-        for key, val in required.items():
-            input_files[key] = os.path.join(input_path, val)
-            if not os.path.isfile(input_files[key]):
-                if optional_files and key in optional_files:
-                    del input_files[key]
-                    continue
-                msg = (f'Missing {self.description} input file '
-                       f'"{input_files[key]}"')
-                logger.error(msg)
-                raise ValueError(msg)
-            logger.debug('%s input %s: %s', self.description, key,
-                         input_files[key])
-        return input_files
-
-    def integration_step(self, system):
+    def integration_step(self, ensemble):
         """
         Perform a single time step of the integration.
 
@@ -243,8 +206,8 @@ class ExternalMDEngine(EngineBase):
         """
         reg = re.compile(fr'(.*?){delim}')
         written = set()
-        with open(sourcefile, 'r', encoding="utf-8") as infile, \
-             open(outputfile, 'w', encoding="utf-8") as outfile:
+        with open(sourcefile, 'r', encoding='utf-8') as infile, \
+                open(outputfile, 'w', encoding='utf-8') as outfile:
             for line in infile:
                 to_write = line
                 key = reg.match(line)
@@ -289,7 +252,7 @@ class ExternalMDEngine(EngineBase):
         """
         reg = re.compile(fr'(.*?){delim}')
         settings = {}
-        with open(sourcefile, 'r', encoding="utf-8") as infile:
+        with open(sourcefile, 'r', encoding='utf-8') as infile:
             for line in infile:
                 key = reg.match(line)
                 if key:
@@ -362,7 +325,8 @@ class ExternalMDEngine(EngineBase):
                 logger.error('STDOUT, see file: %s', out_name)
                 logger.error('STDERR, see file: %s', err_name)
                 msg = (f'Execution of external program ({self.description}) '
-                       f'failed. Return code: {return_code}')
+                       f'failed with command:\n {cmd2}.\n'
+                       f'Return code: {return_code}')
                 raise RuntimeError(msg)
         if return_code is not None and return_code == 0:
             self._removefile(out_name)
@@ -373,7 +337,7 @@ class ExternalMDEngine(EngineBase):
     def _movefile(source, dest):
         """Move file from source to destination."""
         logger.debug('Moving: %s -> %s', source, dest)
-        os.rename(source, dest)
+        shutil.move(source, dest)
 
     @staticmethod
     def _copyfile(source, dest):
@@ -411,8 +375,7 @@ class ExternalMDEngine(EngineBase):
         files = [item.name for item in os.scandir(dirname) if item.is_file()]
         self._remove_files(dirname, files)
 
-    def calculate_order(self, order_function, system,
-                        xyz=None, vel=None, box=None):
+    def calculate_order(self, ensemble, xyz=None, vel=None, box=None):
         """
         Calculate order parameter from configuration in a file.
 
@@ -422,10 +385,15 @@ class ExternalMDEngine(EngineBase):
 
         Parameters
         ----------
-        order_function : object like :py:class:`.OrderParameter`
-            The class used for calculating the order parameter.
-        system : object like :py:class:`.System`
-            The object the order parameter is acting on.
+        ensemble : dict
+            It contains:
+
+            * `system` : object like :py:class:`.System`
+              This is the system that contains the particles we are
+              investigating
+            * `order_function` : object like :py:class:`.OrderParameter`
+              The object used for calculating the order parameter.
+
         xyz : numpy.array, optional
             The positions to use, in case we have already read them
             somewhere else. We will then not attempt to read them again.
@@ -441,6 +409,8 @@ class ExternalMDEngine(EngineBase):
 
         """
         # Convert system into an internal representation:
+        system = ensemble['system']
+        order_function = ensemble['order_function']
         if any((xyz is None, vel is None, box is None)):
             out = self._read_configuration(system.particles.config[0])
             box = out[0]
@@ -452,24 +422,33 @@ class ExternalMDEngine(EngineBase):
                 system.particles.vel = -1.0 * vel
         else:
             system.particles.vel = vel
+        if box is None and self.input_files.get('template', False):
+            # CP2K specific box initiation:
+            box, _ = read_cp2k_box(ensemble['engine'].input_files['template'])
+
         system.update_box(box)
         return order_function.calculate(system)
 
-    def kick_across_middle(self, system, order_function, rgen, middle,
-                           tis_settings):
-        """Force a phase point across the middle interface.
+    def kick_across_middle(self, ensemble, middle, tis_settings):
+        """
+        Force a phase point across the middle interface.
 
         This is accomplished by repeatedly kicking the phase point so
         that it crosses the middle interface.
 
         Parameters
         ----------
-        system : object like :py:class:`.System`
-            This is the system that we are investigating.
-        order_function : object like :py:class:`.OrderParameter`
-            The object used for calculating the order parameter.
-        rgen : object like :py:class:`.RandomGenerator`
-            This is the random generator that will be used.
+        ensemble: dict
+            It contains:
+
+            * `system`: object like :py:class:`.System`
+              This is the system that contains the particles we are
+              investigating.
+            * `order_function`: object like :py:class:`.OrderParameter`
+              The object used for calculating the order parameter.
+            * `rgen`: object like :py:class:`.RandomGenerator`
+              This is the random generator that will be used.
+
         middle : float
             This is the value for the middle interface.
         tis_settings : dict
@@ -490,6 +469,7 @@ class ExternalMDEngine(EngineBase):
         This function will update the input system state.
 
         """
+        system = ensemble['system'].copy()
         logger.info('Kicking with external integrator: %s', self.description)
         # We search for crossing with the middle interface and do this
         # by sequentially kicking the initial phase point
@@ -497,8 +477,7 @@ class ExternalMDEngine(EngineBase):
         initial_file = self.dump_frame(system)
         # Create a "previous file" for storing the state before a new kick:
         prev_file = os.path.join(
-            self.exe_dir,
-            f'p_{os.path.basename(initial_file)}'
+            self.exe_dir, f'p_{os.path.basename(initial_file)}'
         )
         msg_file_name = os.path.join(self.exe_dir, 'msg-kick.txt')
         msg_file = FileIO(msg_file_name, 'w', None, backup=False)
@@ -506,41 +485,39 @@ class ExternalMDEngine(EngineBase):
         msg_file.write(f'Kick initiation for {self.description}')
         self._copyfile(initial_file, prev_file)
         # Update so that we use the prev_file:
-        system.particles.set_pos((prev_file, None, None))
+        ensemble['system'].particles.set_pos((prev_file, None, None))
         logger.info('Searching for crossing with: %9.6g', middle)
         print_to_screen(f'Searching for crossing with: {middle}')
         print_to_screen(f'Writing progress to: {msg_file_name}')
+
         while True:
             msg_file.write('New kick:')
             # Do kick from current state:
             msg_file.write('\tModify velocities...')
-            self.modify_velocities(system,
-                                   rgen,
-                                   sigma_v=None,
-                                   aimless=True,
-                                   momentum=False,
-                                   rescale=None)
+            vel_settings = {'sigma_v': None, 'aimless': True,
+                            'momentum': False, 'rescale': None}
+            self.modify_velocities(ensemble, vel_settings)
             # Update order parameter in case it's velocity dependent:
-            curr = self.calculate_order(order_function, system)[0]
+            curr = self.calculate_order(ensemble)[0]
             msg_file.write(f'\tAfter kick: {curr}')
-            # Store the kicked configuration as the previous config.
-            self._movefile(system.particles.get_pos()[0], prev_file)
-            system.particles.set_pos((prev_file, None, None))
-            previous = system.copy()
-            previous.order = curr
+            previous = ensemble['system'].copy()
+            previous.order = [curr]
             # Update system by integrating forward:
             msg_file.write('\tIntegrate forward...')
-            conf = self.step(system, 'gen_kick')
+            conf = self.step(ensemble['system'], 'kicked')
             curr_file = os.path.join(self.exe_dir, conf)
             # Compare previous order parameter and the new one:
             prev = curr
-            curr = self.calculate_order(order_function, system)[0]
+            curr = self.calculate_order(ensemble)[0]
             txt = f'{prev} -> {curr} | {middle}'
             msg_file.write(f'\t{txt}')
             if (prev <= middle < curr) or (curr < middle <= prev):
                 logger.info('Crossed middle interface: %s', txt)
                 msg_file.write('\tCrossed middle interface!')
                 # Middle interface was crossed, just stop the loop.
+                self._copyfile(curr_file, prev_file)
+                # Update file name after moving:
+                system.particles.set_pos((prev_file, None, None))
                 break
             if (prev <= curr < middle) or (middle < curr <= prev):
                 # Getting closer, keep the new point:
@@ -550,13 +527,13 @@ class ExternalMDEngine(EngineBase):
                 )
                 self._movefile(curr_file, prev_file)
                 # Update file name after moving:
-                system.particles.set_pos((prev_file, None, None))
+                ensemble['system'].particles.set_pos((prev_file, None, None))
             else:  # We did not get closer, fall back to previous point:
                 logger.debug('Did not get closer to middle: %s', txt)
                 msg_file.write(
                     '\tDid not get closer, fall back to previous point.'
                 )
-                system.particles = previous.particles.copy()
+                ensemble['system'] = previous.copy()
                 curr = previous.order
                 self._removefile(curr_file)
             msg_file.flush()
@@ -580,8 +557,7 @@ class ExternalMDEngine(EngineBase):
         """
         return
 
-    def propagate(self, path, system, order_function, interfaces,
-                  reverse=False):
+    def propagate(self, path, ensemble, reverse=False):
         """
         Propagate the equations of motion with the external code.
 
@@ -595,13 +571,18 @@ class ExternalMDEngine(EngineBase):
             We are here not returning a new path - this since we want
             to delegate the creation of the path to the method
             that is running `propagate`.
-        system : object like :py:class:`.System`
-            The system object gives the initial state for the
-            integration.
-        order_function : object like :py:class:`.OrderParameter`
-            The object used for calculating the order parameter.
-        interfaces : list of floats
-            These interfaces define the stopping criterion.
+        ensemble: dict
+            It contains:
+
+            * `system` : object like :py:class:`.System`
+              The system object gives the initial state for the
+              integration. The initial state is stored and the system is
+              reset to the initial state when the integration is done.
+            * `order_function` : object like :py:class:`.OrderParameter`
+              The object used for calculating the order parameter.
+            * `interfaces` : list of floats
+              These interfaces define the stopping criterion.
+
         reverse : boolean, optional
             If True, the system will be propagated backward in time.
 
@@ -614,7 +595,12 @@ class ExternalMDEngine(EngineBase):
 
         """
         logger.debug('Running propagate with: "%s"', self.description)
+
         prefix = str(counter())
+        if ensemble.get('path_ensemble', False):
+            prefix = ensemble['path_ensemble'].ensemble_name_simple + '_' \
+                     + prefix
+
         if reverse:
             logger.debug('Running backward in time.')
             name = prefix + '_trajB'
@@ -630,7 +616,8 @@ class ExternalMDEngine(EngineBase):
         msg_file.write(f'# Preparing propagation with {self.description}')
         msg_file.write(f'# Trajectory label: {name}')
 
-        system = system.copy()
+        initial_state = ensemble['system'].copy()
+        system = ensemble['system']
         initial_file = self.dump_frame(system, deffnm=prefix + '_conf')
         msg_file.write(f'# Initial file: {initial_file}')
         logger.debug('Initial state: %s', system)
@@ -650,22 +637,21 @@ class ExternalMDEngine(EngineBase):
         system.particles.set_pos((initial_conf, None))
         system.particles.set_vel(reverse)
         # Propagate from this point:
-        msg_file.write(f'# Interfaces: {interfaces}')
+        msg_file.write(f'# Interfaces: {ensemble["interfaces"]}')
         success, status = self._propagate_from(
             name,
             path,
-            system,
-            order_function,
-            interfaces,
+            ensemble,
             msg_file,
             reverse=reverse
         )
+        # Reset to initial state:
+        ensemble['system'] = initial_state
         msg_file.close()
         return success, status
 
     @abstractmethod
-    def _propagate_from(self, name, path, system, order_function, interfaces,
-                        msg_file, reverse=False):
+    def _propagate_from(self, name, path, ensemble, msg_file, reverse=False):
         """
         Run the actual propagation using the specific engine.
 
@@ -680,12 +666,18 @@ class ExternalMDEngine(EngineBase):
             A name to use for the trajectory we are generating.
         path : object like :py:class:`.PathBase`
             This is the path we use to fill in phase-space points.
-        system : object like :py:class:`.System`
-            The system object gives the initial state.
-        order_function : object like :py:class:`.OrderParameter`
-            The object used for calculating the order parameter.
-        interfaces : list of floats
-            These interfaces define the stopping criterion.
+        ensemble: dict
+            It contains:
+
+            * `system` : object like :py:class:`.System`
+              The system object gives the initial state for the
+              integration. The initial state is stored and the system is
+              reset to the initial state when the integration is done.
+            * `order_function` : object like :py:class:`.OrderParameter`
+              The object used for calculating the order parameter.
+            * `interfaces` : list of floats
+              These interfaces define the stopping criterion.
+
         msg_file : object like :py:class:`.FileIO`
             An object we use for writing out messages that are useful
             for inspecting the status of the current propagation.
@@ -703,8 +695,25 @@ class ExternalMDEngine(EngineBase):
         return
 
     def _name_output(self, basename):
-        """Return the name of the output file."""
-        return os.path.join(self.exe_dir, basename)
+        """
+        Create a file name for the output file.
+
+        This method is used when we dump a configuration to add
+        the correct extension for GROMACS (either gro or g96).
+
+        Parameters
+        ----------
+        basename : string
+            The base name to give to the file.
+
+        Returns
+        -------
+        out : string
+            A file name with an extension.
+
+        """
+        out_file = f'{basename}.{self.ext}'
+        return os.path.join(self.exe_dir, out_file)
 
     def dump_config(self, config, deffnm='conf'):
         """Extract configuration frame from a system if needed.

@@ -9,7 +9,7 @@ installed **after** installing PyRETIS when using pip:
 pip install git+https://github.com/mdtraj/mdtraj.git
 ```
 
-Please note that PyRETIS only supports **Python 3.6** or **Python 3.7**.
+Please note that PyRETIS only supports **Python 3.7** or **Python 3.8**.
 
 
 Installing PyRETIS using pip or conda

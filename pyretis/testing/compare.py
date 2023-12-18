@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Methods that might be useful for several tests.
 
@@ -50,12 +50,11 @@ def read_files(*files, read_comments=True):
     all_data = []
     for filename in files:
         data = []
-        with open(filename, 'r') as infile:
+        with open(filename, 'r', encoding="utf8") as infile:
             for line in infile:
                 if not read_comments and line.strip().startswith('#'):
                     continue
-                else:
-                    data.append(line)
+                data.append(line)
         all_data.append(data)
     return all_data
 
@@ -85,13 +84,12 @@ def compare_files_lines(file1, file2, skip=None):
     data1, data2 = all_data[0], all_data[1]
     if len(data1) != len(data2):
         return False, 'The number of lines in the files differ'
-    for i, (linei, linej) in enumerate(zip(data1, data2)):
+    for i, (lini, linj) in enumerate(zip(data1, data2)):
         if skip and i in skip:
             continue
-        if not linei == linej:
-            return False, 'Line {} differs: {} != {}'.format(
-                i, linei.strip(), linej.strip()
-            )
+        if not lini == linj:
+            return False, f'Line {i} differs: {lini.strip()} != {linj.strip()}'
+
     return True, 'Files are equal'
 
 
@@ -299,6 +297,6 @@ def compare_pathensemble_files(file1, file2, rel_tol=1e-5, skip=None):
                     func(stuff1[col]), func(stuff2[col]), rel_tol=rel_tol
                 )
             if not check:
-                return False, 'Files differ on line {}, column {}'.format(i,
-                                                                          col)
+                return False, f'Files differ on line {i}, column {col}'
+
     return True, 'Files are equal'

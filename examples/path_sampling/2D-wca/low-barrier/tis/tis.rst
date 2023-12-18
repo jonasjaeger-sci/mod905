@@ -4,7 +4,7 @@ TIS simulation 2D WCA, low barrier
 
 Simulation
 ----------
-task = tis-multiple
+task = make-tis-files
 steps = 1000000
 interfaces = [1.2, 1.24, 1.26, 1.32, 1.58]
 
@@ -41,11 +41,11 @@ method = kick
 
 Particles
 ---------
-position = {'file': '../initial.xyz'}
+position = {'input_file': '../initial.xyz'}
 velocity = {'scale': 9.0}
 mass = {'A': 1.0, 'B': 1.0}
 name = ['A', 'A', 'A', 'A', 'A', 'A', 'A', 'B', 'B']
-type = [0, 0, 0, 0, 0, 0, 0, 1, 1]
+ptype = [0, 0, 0, 0, 0, 0, 0, 1, 1]
 
 Forcefield settings
 -------------------

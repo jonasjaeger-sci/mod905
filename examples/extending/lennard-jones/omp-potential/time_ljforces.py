@@ -29,8 +29,7 @@ def set_up_initial_state(nlattice=5):
     sys.particles = Particles(dim=3)
     for pos in lattice:
         sys.add_particle(name='Ar', pos=pos, mass=1.0, ptype=0)
-    msg = 'Created lattice with {} atoms.'
-    print(msg.format(sys.particles.npart))
+    print(f'Created lattice with {sys.particles.npart} atoms.')
     return sys
 
 
@@ -43,14 +42,14 @@ def test_wrapper(func, *args, **kwargs):
 
 def test_function(function, system, repeat=3, number=5):
     """Run the test for a function."""
-    print('Testing function: {}'.format(function.__name__))
+    print(f'Testing function: {function.__name__}')
     wrapped = test_wrapper(function, system)
     res = timeit.repeat(wrapped, repeat=repeat, number=number)
     best = min(res) / float(number)
     avg = np.average([resi / float(number) for resi in res])
     std = np.std([resi / float(number) for resi in res])
-    print('Best: {}'.format(best))
-    print('Average: {} +- {}'.format(avg, std))
+    print(f'Best: {best}')
+    print(f'Average: {avg} +- {std}')
     return best, avg, std
 
 

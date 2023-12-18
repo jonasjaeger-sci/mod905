@@ -10,7 +10,7 @@
 	pycodestyle
 
 coverage:
-	coverage run -m unittest discover -s test
+	coverage run -p -m unittest discover -s test
 	coverage html
 	coverage xml
  

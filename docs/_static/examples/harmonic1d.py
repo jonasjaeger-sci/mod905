@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """A 1D harmonic potential."""
 from matplotlib import pyplot as plt
@@ -48,13 +48,13 @@ if __name__ == '__main__':
     system.particles = Particles(dim=1)
     system.add_particle(pos=np.zeros(1))
     # Do some plotting, first calculate the potential as some locations:
-    vpot = []
-    pos = np.linspace(-2.5, 2.5, 100)
-    for xi in pos:
+    vpotentials = []
+    positions = np.linspace(-2.5, 2.5, 100)
+    for xi in positions:
         system.particles.pos = xi
-        vpot.append(forcefield.evaluate_potential(system))
+        vpotentials.append(forcefield.evaluate_potential(system))
     # And plot it using matplotlib:
     fig = plt.figure()
     ax1 = fig.add_subplot(111)
-    ax1.plot(pos, vpot, lw=3)
+    ax1.plot(positions, vpotentials, lw=3)
     plt.show()

@@ -10,3 +10,4 @@ cd cp2k-run
 cp2k -i cp2k.inp
 cd ..
 python compare_cp2k_energies.py pyretis-cp2k-1.ener cp2k-run/TEST-1.ener
+make clean

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """This file contains functions used for initiation of paths.
 
@@ -19,7 +19,7 @@ initiate_kicki (:py:func:`.initiate_kicki`)
     velocities to find the crossing with the interfaces.
 
 initiate_kick_max (:py:func:`.initiate_kick_max`)
-    A method similar to :py:meth:`.initiate_kick`. Here, if possible,
+    A method similar to py:meth:`.initiate_kick`. Here, if possible,
     we will use points from the previous paths, closest to the target
     interface.
 
@@ -33,10 +33,10 @@ fix_path_by_tis (:py:func:`.fix_path_by_tis`)
 """
 import copy
 import logging
+from pyretis.core.common import compute_weight
 from pyretis.core.path import paste_paths, Path
-from pyretis.core.tis import make_tis_step
+from pyretis.core.tis import shoot, time_reversal
 from pyretis.inout.screen import print_to_screen
-from pyretis.core.random_gen import create_random_generator
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
@@ -51,7 +51,7 @@ __all__ = [
 ]
 
 
-def initiate_kick(simulation, cycle, settings):
+def initiate_kick(simulation, settings, cycle):
     """Run the initiation method for several ensembles.
 
     Please see documentation for :py:func:`.initiate_path_ensemble_kick`.
@@ -61,39 +61,34 @@ def initiate_kick(simulation, cycle, settings):
     start = init_settings.get('kick-from', 'initial').lower()
     if start == 'previous':
         logger.info('Kick-initiate using previous configuration')
-        return initiate_kick_max(simulation, cycle)
+        return initiate_kick_max(simulation, settings, cycle)
     if start == 'initial':
         logger.info('Kick-initiate using initial configuration')
-        return initiate_kicki(simulation, cycle)
-    errtxt = 'Unknown argument {} for kick-from'.format(start)
+        return initiate_kicki(simulation, settings, cycle)
+    errtxt = f'Unknown argument {start} for kick-from'
     logger.error(errtxt)
     raise ValueError(errtxt)
 
 
-def initiate_kicki(simulation, cycle):
-    """Run the initiation for several ensembles.
+def initiate_kicki(simulation, settings, cycle):
+    """Run the initialization for several ensembles.
 
     Please see documentation for :py:func:`.initiate_path_ensemble_kick`.
 
     """
-    for ensemble in simulation.path_ensembles:
-        print_to_screen(
-            'Running "kick" initiation in: {}'.format(ensemble.ensemble_name)
-        )
-        logger.info('Initiating path ensemble: %s', ensemble.ensemble_name)
+    for ensemble, set_ens in zip(simulation.ensembles, settings['ensemble']):
+        ens_name = ensemble['path_ensemble'].ensemble_name
+        print_to_screen(f'Running "kick" initiation in: {ens_name}')
+        logger.info('Initiating path ensemble: %s',
+                    ensemble['path_ensemble'].ensemble_name)
         accept, initial_path, status = initiate_path_ensemble_kick(
             ensemble,
-            simulation.system,
-            simulation.order_function,
-            simulation.engine,
-            simulation.rgen,
-            simulation.settings['tis'],
-            cycle
-        )
-        yield accept, initial_path, status, ensemble
+            set_ens['tis'],
+            cycle)
+        yield accept, initial_path, status, ensemble['path_ensemble']
 
 
-def initiate_kick_max(simulation, cycle):
+def initiate_kick_max(simulation, settings, cycle):
     """Run the initiation for several ensembles.
 
     This method is similar to :py:func:`.initiate_kick`, but here we
@@ -104,15 +99,14 @@ def initiate_kick_max(simulation, cycle):
 
     """
     last_paths = []
-    last_path = None
-    for ensemble in simulation.path_ensembles:
-        logger.info('Initiating path ensemble %s', ensemble.ensemble_name)
-        print_to_screen(
-            'Running kick-max initiation in: {}'.format(ensemble.ensemble_name)
-        )
+    for ensemble, set_ens in zip(simulation.ensembles, settings['ensemble']):
+        path_ensemble = ensemble['path_ensemble']
+        logger.info('Initiating path ensemble %s', path_ensemble.ensemble_name)
+        ens_name = path_ensemble.ensemble_name
+        print_to_screen(f'Running kick-max initiation in: {ens_name}')
         if last_paths:
-            # Look for the phase point closest to the middle interface
-            middle = ensemble.interfaces[1]
+            # Look for the phase point closest to the middle interface.
+            middle = path_ensemble.interfaces[1]
             current = None
             min_dist = float('inf')
             for last_path in last_paths:
@@ -120,40 +114,38 @@ def initiate_kick_max(simulation, cycle):
                     dist = middle - phase_point.order[0]
                     if 0 <= dist <= min_dist:
                         min_dist = dist
-                        current = phase_point
+                        current = phase_point.copy()
             if current is not None:
                 logger.info('Initial state set to: %s', current)
-                simulation.system = current
+                ensemble['system'] = current
         accept, initial_path, status = initiate_path_ensemble_kick(
             ensemble,
-            simulation.system,
-            simulation.order_function,
-            simulation.engine,
-            simulation.rgen,
-            simulation.settings['tis'],
-            cycle
-        )
+            set_ens['tis'],
+            cycle)
         last_paths.append(initial_path)
-        yield accept, initial_path, status, ensemble
+        yield accept, initial_path, status, path_ensemble
 
 
-def initiate_path_ensemble_kick(path_ensemble, system, order_function,
-                                engine, rgen, tis_settings, cycle):
+def initiate_path_ensemble_kick(ensemble, tis_settings, cycle):
     """Run the "kick" initiate for a given ensemble.
 
     Parameters
     ----------
-    path_ensemble : object like :py:class:`.PathEnsemble`
-        The path ensemble to create an initial path for.
-    system : object like :py:class:`.System`
-        The system is used here since we need access to the temperature
-        and to the particle list.
-    order_function : object like :py:class:`.OrderParameter`
-        The class used for obtaining the order parameter(s).
-    engine : object like :py:class:`.EngineBase`
-        The engine to use for propagating a path.
-    rgen : object like :py:class:`.RandomGenerator`
-        This is the random generator that will be used.
+    ensemble: dict
+        It contains:
+
+        * `path_ensemble` : object like :py:class:`.PathEnsemble`
+          The path ensemble to create an initial path for.
+        * `system` : object like :py:class:`.System`
+          The system is used here since we need access to the temperature
+          and to the particle list.
+        * `order_function` : object like :py:class:`.OrderParameter`
+          The class used for obtaining the order parameter(s).
+        * `engine` : object like :py:class:`.EngineBase`
+          The engine to use for propagating a path.
+        * `rgen` : object like :py:class:`.RandomGenerator`
+          This is the random generator that will be used.
+
     tis_settings : dict
         This dictionary contains the TIS settings.
     cycle : integer, optional
@@ -164,34 +156,30 @@ def initiate_path_ensemble_kick(path_ensemble, system, order_function,
     -------
     out[0] : boolean
         True if the initial path was accepted.
-    out[1] : object like :py:class:`.PathBase`
+    out[1] : object like py:class:`.PathBase`
         The initial path.
     out[2] : string
         The status of the path.
 
     """
     initial_path = None
-    status = ''
-    accept = False
     logger.info('Will generate initial path by kicking')
-    engine.exe_dir = path_ensemble.directory['generate']
-    for attempt in generate_initial_path_kick(system, order_function,
-                                              path_ensemble,
-                                              engine, rgen,
-                                              tis_settings):
+    ensemble['engine'].exe_dir = \
+        ensemble['path_ensemble'].directory['generate']
+
+    for attempt in generate_initial_path_kick(ensemble, tis_settings):
         if attempt[0] is True:
             initial_path = attempt[-1]
             break
     accept = True
     status = 'ACC'
-    path_ensemble.add_path_data(initial_path, status, cycle)
-    # Ask the engine to do clean up after the intialisation:
-    engine.clean_up()
+    ensemble['path_ensemble'].add_path_data(initial_path, status, cycle)
+    # Ask the engine to do clean up after the initialisation:
+    ensemble['engine'].clean_up()
     return accept, initial_path, status
 
 
-def generate_initial_path_kick(system, order_function, path_ensemble, engine,
-                               rgen, tis_settings):
+def generate_initial_path_kick(ensemble, tis_settings):
     """Generate an initial path with the kicking method.
 
     This function will generate an initial path by repeatedly kicking a
@@ -205,17 +193,21 @@ def generate_initial_path_kick(system, order_function, path_ensemble, engine,
 
     Parameters
     ----------
-    system : object like :py:class:`.System`
-        This is the system that contains the particles we are
-        investigating.
-    order_function : object like :py:class:`.OrderParameter`
-        The class used for obtaining the order parameter(s).
-    path_ensemble : object like :py:class:`.PathEnsemble`
-        The path ensemble to create an initial path for.
-    engine : object like :py:class:`.EngineBase`
-        The engine to use for propagating a path.
-    rgen : object like :py:class:`.RandomGenerator`
-        This is the random generator that will be used.
+    ensemble: dict.
+        It contains:
+
+        * `path_ensemble` : object like :py:class:`.PathEnsemble`
+          The path ensemble to create an initial path for.
+        * `system` : object like :py:class:`.System`
+          System is used here since we need access to the temperature
+          and to the particle list.
+        * `order_function` : object like :py:class:`.OrderParameter`
+          The class used for obtaining the order parameter(s).
+        * `engine` : object like :py:class:`.EngineBase`
+          The engine to use for propagating a path.
+        * `rgen` : object like :py:class:`.RandomGenerator`
+          This is the random generator that will be used.
+
     tis_settings : dict
         This dictionary contains settings for TIS. Explicitly used here:
 
@@ -233,37 +225,72 @@ def generate_initial_path_kick(system, order_function, path_ensemble, engine,
         initial path. Otherwise, this is equal to None.
 
     """
-    interfaces = path_ensemble.interfaces
+    engine = ensemble['engine']
+    interfaces = ensemble['path_ensemble'].interfaces
+    rgen = ensemble['path_ensemble'].rgen
+    initial_system = ensemble['system'].copy()
+    middle = interfaces[1]
+    kick_required = True
+    if set(ensemble['path_ensemble'].start_condition) == set(['R', 'L']):
+        initial_op = initial_system.order[0]
+        logger.info("Initial OP: %s", initial_op)
+
+        # If we are allowed to end anywhere and the initial system is between
+        # the two interfaces, don't kick.
+        if interfaces[0] < initial_op < interfaces[-1]:
+            kick_required = False
+        # Else kick to the closest interfaces
+        elif abs(interfaces[0]-initial_op) < abs(interfaces[-1]-initial_op):
+            middle = interfaces[0]
+        else:
+            middle = interfaces[-1]
+    maxlen = tis_settings['maxlength']
+
     while True:
-        logger.info('Seaching crossing with middle interface')
         # Start from the initial system:
-        system_copy = system.copy()
-        leftpoint, _ = engine.kick_across_middle(system_copy,
-                                                 order_function,
-                                                 rgen, interfaces[1],
-                                                 tis_settings)
+        ensemble['system'] = initial_system.copy()
+        ensemble['interfaces'] = interfaces
+        if kick_required:
+            logger.info('Searching crossing with middle interface')
+            left_point, right_point = engine.kick_across_middle(ensemble,
+                                                                middle,
+                                                                tis_settings)
+        else:
+            logger.info('Not searching a crossing with the middle interface')
+            right_point = initial_system.copy()
+            # Set starting point for both propagators to the current system
+            left_point = initial_system.copy()
+
         logger.info('Propagating from crossing points')
         # kick_across_middle will return two points, one immediately
         # left of the interface and one immediately right of the
         # interface. So we have two points (`leftpoint` and the
         # current `system.particles`). We then propagate the current
         # phase point forward:
-        maxlen = tis_settings['maxlength']
-        logger.info('Propagating forward for initial path')
+        logger.info('Propagating forward from crossing points '
+                    'for initial path')
         path_forw = Path(rgen=rgen, maxlen=maxlen)
-        success, msg = engine.propagate(path_forw, system_copy, order_function,
-                                        interfaces, reverse=False)
+        ensemble['system'] = right_point
+        success, msg = engine.propagate(path_forw, ensemble,
+                                        reverse=False)
+
+        if 'exp' in tis_settings.get('shooting_move', 'sh'):
+            path_forw.status = 'ACC'
+            path_forw.generated = ('ki', 0, 0, 0)
+            yield (True, 'Initial path generated.', path_forw)
+
         if not success:
             logger.warning('Forward path not successful: %s', msg)
-            yield (False, 'Forward path failed: {}'.format(msg), None)
+            yield (False, f'Forward path failed: {msg}', None)
             continue
         # And we propagate the `leftpoint` backward:
         path_back = Path(rgen=rgen, maxlen=maxlen)
-        success, msg = engine.propagate(path_back, leftpoint, order_function,
-                                        interfaces, reverse=True)
+        ensemble['system'] = left_point
+        success, msg = engine.propagate(path_back, ensemble,
+                                        reverse=True)
         if not success:
             logger.warning('Backward path not successful: %s', msg)
-            yield (False, 'Backward path failed: {}'.format(msg), None)
+            yield (False, f'Backward path failed: {msg}', None)
             continue
         # Merge backward and forward, here we do not set maxlen since
         # both backward and forward may have this length:
@@ -283,24 +310,25 @@ def generate_initial_path_kick(system, order_function, path_ensemble, engine,
         #    additional TIS moves.
         # 3) We can start at wrong interface and end at the starting
         #    condition. To fix this, we reverse the path.
-        if start == path_ensemble.start_condition:  # Case 0) and 1):
+        if start in set(ensemble['path_ensemble'].start_condition):
+            # Case 0) & 1):
             break
         else:
             # Now we do the other cases:
-            if end == path_ensemble.start_condition:
+            if end in set(ensemble['path_ensemble'].start_condition):
                 # Case 3) (and start != start_cond):
                 logger.info('Initial path is in the wrong direction')
-                initial_path = initial_path.reverse(order_function)
+                initial_path = initial_path.reverse(ensemble['order_function'])
                 logger.info('Initial path has been reversed!')
                 break
             elif end == start:
                 # Case 2):
-                logger.info('Initial path start/end at wrong interfaces')
+                logger.info('Initial path starts and ends at wrong interface')
                 logger.info('Will perform TIS moves to fix it!')
                 yield (False, 'Trying to fix path by TIS moves', None)
-                initial_path = fix_path_by_tis(initial_path, order_function,
-                                               path_ensemble, engine,
-                                               tis_settings, rgen)
+
+                initial_path = fix_path_by_tis(initial_path, ensemble,
+                                               tis_settings)
                 break
             else:
                 # This is reached if the start/end conditions
@@ -311,6 +339,15 @@ def generate_initial_path_kick(system, order_function, path_ensemble, engine,
                 continue
     initial_path.status = 'ACC'
     initial_path.generated = ('ki', 0, 0, 0)
+    if tis_settings.get('high_accept', False):
+        move = tis_settings.get('shooting_move', 'sh')
+        if move == 'wf':
+            int_cap = tis_settings.get('interface_cap', interfaces[2])
+            interfaces = [interfaces[0], interfaces[1], int_cap]
+        if move in ('ss', 'wf'):
+            initial_path.weight = compute_weight(initial_path,
+                                                 interfaces,
+                                                 move)
     yield (True, 'Initial path generated.', initial_path)
 
 
@@ -340,7 +377,7 @@ def _get_help(start_cond, interfaces):
     """
     left, middle, right = interfaces
     improved, done = None, None
-    if start_cond == 'R':
+    if start_cond == 'R' or middle == right:
         def improved_r(newp, current):
             """Return True if new path is an improvement."""
             return (newp.ordermax[0] > current.ordermax[0] and
@@ -352,7 +389,7 @@ def _get_help(start_cond, interfaces):
 
         improved = improved_r
         done = done_r
-    elif start_cond == 'L':
+    elif start_cond == 'L' or middle == left:
         def improved_l(newp, current):
             """Return True if new path is an improvement."""
             return (newp.ordermin[0] < current.ordermin[0] and
@@ -370,8 +407,7 @@ def _get_help(start_cond, interfaces):
     return improved, done
 
 
-def fix_path_by_tis(initial_path, order_function, path_ensemble,
-                    engine, tis_settings, rgen=None):
+def fix_path_by_tis(initial_path, ensemble, tis_settings):
     """Fix a path that starts and ends at the wrong interfaces.
 
     The given path is amended by performing TIS moves (shooting and
@@ -383,12 +419,21 @@ def fix_path_by_tis(initial_path, order_function, path_ensemble,
     initial_path : object like :py:class:`.PathBase`
         This is the initial path to fix. It starts & ends at the
         wrong interface.
-    order_function : object like :py:class:`.OrderParameter`
-        The object used for calculating the order parameter(s).
-    path_ensemble : object like :py:class:`.PathEnsemble`
-        The path ensemble to create an initial path for.
-    engine : object like :py:class:`.EngineBase`
-        The engine to use for propagating a path.
+    ensemble: dict.
+        It contains:
+
+        * `path_ensemble` : object like :py:class:`.PathEnsemble`
+          The path ensemble to create an initial path for.
+        * `system` : object like :py:class:`.System`
+          System is used here since we need access to the temperature
+          and to the particle list.
+        * `order_function` : object like :py:class:`.OrderParameter`
+          The class used for obtaining the order parameter(s).
+        * `engine` : object like :py:class:`.EngineBase`
+          The engine to use for propagating a path.
+        * `rgen` : object like :py:class:`.RandomGenerator`
+          This is the random generator that will be used.
+
     tis_settings : dict
         Settings for TIS method, here we explicitly use:
 
@@ -398,8 +443,6 @@ def fix_path_by_tis(initial_path, order_function, path_ensemble,
 
         Note that we here explicitly set some local TIS settings for
         use in the `make_tis_step` function.
-    rgen : object like :py:class:`.RandomGenerator`, optional.
-        This is the random generator that will be used.
 
     Returns
     -------
@@ -409,47 +452,53 @@ def fix_path_by_tis(initial_path, order_function, path_ensemble,
     """
     logger.debug('Attempting to fix path by running TIS moves.')
 
-    if rgen is None:
-        rgen = create_random_generator(tis_settings)
-
+    path_ensemble = ensemble['path_ensemble']
     local_tis_settings = copy.deepcopy(tis_settings)
     local_tis_settings['allowmaxlength'] = True
     local_tis_settings['aimless'] = True
-    local_tis_settings['freq'] = 0.5
     improved, check_ok = _get_help(path_ensemble.start_condition,
                                    path_ensemble.interfaces)
 
     backup_path = True
     path_ok = False
 
+    path_ensemble.last_path = initial_path
+
     while not path_ok:
         logger.debug('Performing a TIS move to improve the initial path')
         if backup_path:  # Move the initial path to safe place:
             logger.debug('Moving initial_path')
-            path_ensemble.move_path_to_generated(initial_path, prefix='_')
+            path_ensemble.move_path_to_generate(initial_path, '_')
             backup_path = False
-        shooting_move = 'sh'
-        accept, trial, _ = make_tis_step(
-            initial_path,
-            order_function,
-            path_ensemble.interfaces,
-            engine,
-            rgen,
-            local_tis_settings,
-            path_ensemble.start_condition,
-            shooting_move
-        )
+
+        accept, trial, _ = time_reversal(initial_path,
+                                         ensemble['order_function'],
+                                         path_ensemble.interfaces,
+                                         path_ensemble.start_condition)
+
+        if not accept:
+            target = path_ensemble.interfaces[1]
+            best_frame = ensemble['system']
+
+            for phasepoint in initial_path.phasepoints:
+                if abs(best_frame.order[0] - target) > \
+                        abs(phasepoint.order[0] - target):
+                    best_frame = phasepoint.copy()
+
+            accept, trial, _ = shoot(ensemble,
+                                     local_tis_settings,
+                                     path_ensemble.start_condition,
+                                     best_frame)
 
         if accept:
             if improved(trial, initial_path):
                 logger.debug('TIS move improved path.')
                 initial_path = trial
+                path_ensemble.last_path = initial_path
                 backup_path = True
             else:
                 logger.debug('TIS move did not improve path')
             path_ok = check_ok(initial_path)
-        else:
-            logger.debug('TIS move did not improve path')
     initial_path.generated = ('ki', 0, 0, 0)
     initial_path.status = 'ACC'
     return initial_path

@@ -1,3 +1,5 @@
+pyretis.simulation package
+==========================
 
 .. _api-simulation:
 

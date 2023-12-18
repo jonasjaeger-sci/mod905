@@ -14,7 +14,7 @@ from colorama import Fore
 from pylint.epylint import py_run
 
 
-SCORE_THRESHOLD = 9.1
+SCORE_THRESHOLD = 9.2
 
 
 def look_for_source_files(rootdir, skip=None):

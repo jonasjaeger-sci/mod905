@@ -42,12 +42,12 @@ swapsimul = True
 Initial-path
 ------------
 method = load
-load_folder = load
+load_folder = loader
 top_file = gmx_input/conf.gro
 
 Orderparameter
 --------------
-class = Distance
+class = DistanceL
 module = orderp.py
 idx1 = 0
 idx2 = 3

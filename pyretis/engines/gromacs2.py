@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """A GROMACS external MD integrator interface.
 
@@ -14,6 +14,7 @@ GromacsEngine2
 import logging
 import os
 import shlex
+import signal
 import subprocess
 from time import sleep
 from pyretis.core.box import box_matrix_to_list
@@ -44,8 +45,9 @@ class GromacsEngine2(GromacsEngine):
     """
 
     def __init__(self, gmx, mdrun, input_path, timestep, subcycles,
-                 maxwarn=0, gmx_format='g96', write_vel=True,
-                 write_force=False):
+                 exe_path=os.path.abspath('.'),
+                 maxwarn=0, gmx_format='gro', write_vel=True,
+                 write_force=False, domain_decomp=False):
         """Set up the GROMACS engine.
 
         Parameters
@@ -60,6 +62,8 @@ class GromacsEngine2(GromacsEngine):
             The time step used in the GROMACS MD simulation.
         subcycles : integer
             The number of steps each GROMACS MD run is composed of.
+        exe_path : string, optional
+            The absolute path at which the main PyRETIS simulation will be run.
         maxwarn : integer, optional
             Setting for the GROMACS ``grompp -maxwarn`` option.
         gmx_format : string, optional
@@ -68,14 +72,18 @@ class GromacsEngine2(GromacsEngine):
             Determines if GROMACS should write velocities or not.
         write_force : boolean, optional
             Determines if GROMACS should write forces or not.
-
+        domain_decomp: boolean, optional
+            Wheter GROMACS uses domain decomposition or not. This will not
+            set the domain decomposition behavior, the user should know
+            know this.
         """
         super().__init__(gmx, mdrun, input_path, timestep, subcycles,
+                         exe_path=exe_path,
                          maxwarn=maxwarn, gmx_format=gmx_format,
-                         write_vel=write_vel, write_force=write_force)
+                         write_vel=write_vel, write_force=write_force,
+                         domain_decomp=domain_decomp)
 
-    def _propagate_from(self, name, path, system, order_function, interfaces,
-                        msg_file, reverse=False):
+    def _propagate_from(self, name, path, ensemble, msg_file, reverse=False):
         """
         Propagate with GROMACS from the current system configuration.
 
@@ -90,12 +98,18 @@ class GromacsEngine2(GromacsEngine):
             A name to use for the trajectory we are generating.
         path : object like :py:class:`pyretis.core.Path.PathBase`
             This is the path we use to fill in phase-space points.
-        system : object like `System` from `pyretis.core.system`
-            The system object gives the initial state.
-        order_function : object like `pyretis.orderparameter.OrderParameter`
-            The object used for calculating the order parameter.
-        interfaces : list of floats
-            These interfaces define the stopping criterion.
+        ensemble: dict
+            it contains:
+
+            * `system` : object like :py:class:`.System`
+              The system object gives the initial state for the
+              integration. The initial state is stored and the system is
+              reset to the initial state when the integration is done.
+            * `order_function` : object like :py:class:`.OrderParameter`
+              The object used for calculating the order parameter.
+            * `interfaces` : list of floats
+              These interfaces define the stopping criterion.
+
         msg_file : object like :py:class:`.FileIO`
             An object we use for writing out messages that are useful
             for inspecting the status of the current propagation.
@@ -111,6 +125,9 @@ class GromacsEngine2(GromacsEngine):
 
         """
         status = f'propagating with GROMACS (reverse = {reverse})'
+        system = ensemble['system']
+        interfaces = ensemble['interfaces']
+        order_function = ensemble['order_function']
         logger.debug(status)
         success = False
         left, _, right = interfaces
@@ -118,7 +135,7 @@ class GromacsEngine2(GromacsEngine):
         # we will just use it:
         initial_conf = system.particles.get_pos()[0]
         # Get the current order parameter:
-        order = self.calculate_order(order_function, system)
+        order = self.calculate_order(ensemble)
         msg_file.write(
             f'# Initial order parameter: {" ".join([str(i) for i in order])}'
         )
@@ -142,7 +159,7 @@ class GromacsEngine2(GromacsEngine):
         # Remove some of these files if present (e.g. left over from a
         # crashed simulation). This is so that GromacsRunner will not
         # start reading a .trr left from a previous simulation.
-        remove = [value for key, value in out_files.items() if key != 'tpr']
+        remove = [val for key, val in out_files.items() if key != 'tpr']
         self._remove_files(self.exe_dir, remove)
         tpr_file = out_files['tpr']
         trr_file = os.path.join(self.exe_dir, out_files['trr'])
@@ -160,18 +177,13 @@ class GromacsEngine2(GromacsEngine):
                 # Also provide the loaded positions since they are
                 # available:
                 system.particles.pos = data['x']
-                if 'v' in data:
-                    system.particles.vel = data['v']
-                    if reverse:
-                        system.particles.vel *= -1
-                else:
-                    system.particles.vel = None
+                system.particles.vel = data.get('v', None)
+                if system.particles.vel is not None and reverse:
+                    system.particles.vel *= -1
                 length = box_matrix_to_list(data['box'])
                 system.update_box(length)
                 order = order_function.calculate(system)
-                msg_file.write(
-                    f'{i} {" ".join([str(j) for j in order])}'
-                )
+                msg_file.write(f'{i} {" ".join([str(j) for j in order])}')
                 snapshot = {'order': order,
                             'config': (trr_file, i),
                             'vel_rev': reverse}
@@ -188,13 +200,14 @@ class GromacsEngine2(GromacsEngine):
         energy = self.get_energies(out_files['edr'])
         path.update_energies(energy['kinetic en.'], energy['potential'])
         logger.debug('Removing GROMACS output after propagate.')
-        remove = [val for key, val in out_files.items() if key not in ('trr',)]
+        remove = [val for key, val in out_files.items()
+                  if key not in ('trr', 'gro', 'g96')]
         self._remove_files(self.exe_dir, remove)
         self._remove_gromacs_backup_files(self.exe_dir)
         msg_file.flush()
         return success, status
 
-    def integrate(self, system, steps, order_function=None, thermo='full'):
+    def integrate(self, ensemble, steps, thermo='full'):
         """
         Perform several integration steps.
 
@@ -204,16 +217,21 @@ class GromacsEngine2(GromacsEngine):
 
         Parameters
         ----------
-        system : object like :py:class:`.System`
-            The system we are integrating.
+        ensemble: dict
+            it contains:
+
+            * `system` : object like :py:class:`.System`
+              The system object gives the initial state for the
+              integration. The initial state is stored and the system is
+              reset to the initial state when the integration is done.
+            * `order_function` : object like :py:class:`.OrderParameter`
+              The object used for calculating the order parameter.
+
         steps : integer
             The number of steps we are going to perform. Note that we
             do not integrate on the first step (e.g. step 0) but we do
             obtain the other properties. This is to output the starting
             configuration.
-        order_function : object like :py:class:`.OrderParameter`, optional
-            An order function can be specified if we want to
-            calculate the order parameter along with the simulation.
         thermo : string, optional
             Select the thermodynamic properties we are to obtain.
 
@@ -224,12 +242,14 @@ class GromacsEngine2(GromacsEngine):
             and order parameter(s) and energies (if calculated).
 
         """
-        logger.debug('Integrating using GROMACS')
+        logger.debug('Integrating with GROMACS')
         # Dump the initial config:
+        system = ensemble['system']
+        order_function = ensemble.get('order_function')
         initial_file = self.dump_frame(system)
         self.energy_terms = self.select_energy_terms(thermo)
         if order_function:
-            order = self.calculate_order(order_function, system)
+            order = self.calculate_order(ensemble)
         else:
             order = None
         name = 'pyretis-gmx'
@@ -262,10 +282,7 @@ class GromacsEngine2(GromacsEngine):
         with GromacsRunner(cmd, trr_file, edr_file, self.exe_dir) as gro:
             for i, data in enumerate(gro.get_gromacs_frames()):
                 system.particles.pos = data['x']
-                if 'v' in data:
-                    system.particles.vel = data['v']
-                else:
-                    system.particles.vel = None
+                system.particles.vel = data.get('v', None)
                 length = box_matrix_to_list(data['box'])
                 system.update_box(length)
                 results = {}
@@ -372,9 +389,10 @@ def read_remaining_trr(filename, fileh, start):
         new_bytes = bytes_read
         try:
             header, new_bytes = read_trr_header(fileh)
-        except EOFError:
+        except EOFError:  # pragma: no cover
             # Just assume that we have reached the end of the
-            # file and we just stop here.
+            # file and we just stop here. It should not be reached,
+            # kept for safety
             stop = True
             continue
         if header is not None:
@@ -384,8 +402,9 @@ def read_remaining_trr(filename, fileh, start):
                 if data is not None:
                     bytes_read += new_bytes
                     yield header, data, bytes_read
-            except EOFError:
+            except EOFError:  # pragma: no cover
                 # Hopefully, this code should not be reached.
+                # kept for safety
                 stop = True
                 continue
 
@@ -416,6 +435,9 @@ class GromacsRunner:
         The current inode we are using for the file.
     stop_read : boolean
         If this is set to True, we will stop the reading.
+    SLEEP : float
+        How long we wait after an unsuccessful read before
+        reading again.
     data_size : integer
         The size of the data (x, v, f, box, etc.) in the TRR file.
     header_size : integer
@@ -424,11 +446,9 @@ class GromacsRunner:
     """
 
     SLEEP = 0.1
-    """float : How long we wait (seconds) after an unsuccessful read
-    from a TRR file before we attempt reading again."""
 
     def __init__(self, cmd, trr_file, edr_file, exe_dir):
-        """Set the GROMACS commands and the files we need.
+        """Set the GROMACS command and the files we need.
 
         Parameters
         ----------
@@ -473,7 +493,8 @@ class GromacsRunner:
             stdout=self.stdout,
             stderr=self.stderr,
             shell=False,
-            cwd=self.exe_dir
+            cwd=self.exe_dir,
+            preexec_fn=os.setsid,
         )
         present = []
         # Wait for the TRR/EDR files to appear:
@@ -596,8 +617,8 @@ class GromacsRunner:
                         pass
             if self.running.returncode is None:
                 logger.debug('Terminating GROMACS execution')
-                self.running.terminate()
-                logger.debug('Waiting for GROMACS termination')
+                os.killpg(os.getpgid(self.running.pid), signal.SIGTERM)
+
             self.running.wait(timeout=360)
         self.stop_read = True
         self.close()  # Close the TRR file.

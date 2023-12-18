@@ -172,7 +172,10 @@ in the last path ensemble) is shown in :numref:`fig_gromacs_hydrate_traj`.
 
     Snapshots from a trajectory in the last path ensemble.
     The methane molecule (colored blue) exits from the starting cage
-    and enter the next cage.
+    and enter the next cage. This can be visualized by selecting a
+    reactive trajectory from the simulation, and pressing the Play-
+    button in the Analysis-tab of PyVisA
+
 
 References
 ----------

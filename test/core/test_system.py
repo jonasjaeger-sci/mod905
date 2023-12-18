@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Test the system class from pyretis.core.system"""
-import copy
 import logging
 import unittest
 import numpy as np
@@ -138,7 +137,9 @@ class SystemTest(unittest.TestCase):
         self.assertTrue(np.allclose(vel, correct_vel))
         logging.disable(logging.INFO)
         with self.assertLogs('pyretis.core.system', level='ERROR'):
-            syst.generate_velocities(rgen='mock', distribution='fake news')
+            with self.assertLogs('pyretis.core.random_gen', level='CRITICAL'):
+                syst.generate_velocities(rgen='mock',
+                                         distribution='fake news')
         logging.disable(logging.CRITICAL)
 
     def test_calculate_temp(self):
@@ -205,10 +206,6 @@ class SystemTest(unittest.TestCase):
                             system_copy.temperature['set'])
         self.assertNotEqual(system, system_copy)
         system.temperature['dof'] = np.array([2, 2, 2])
-        # By construction, this should fail:
-        system_copy = system.copy()
-        system.forcefield = copy.deepcopy(system_copy.forcefield)
-        self.assertNotEqual(system, system_copy)
         # Test what happens is some attribute is missing:
         del system.temperature
         system_copy = system.copy()
@@ -218,12 +215,13 @@ class SystemTest(unittest.TestCase):
         # Test if particles/box are None:
         system = System()
         system_copy = system.copy()
-        self.assertEqual(system, system_copy)
+        self.assertTrue(system == system_copy)
+        self.assertFalse(system != system_copy)
         # Test if articles/box are missing:
         del system.box
         del system.particles
         with self.assertRaises(AttributeError):
-            system_copy = system.copy()
+            system.copy()
 
 
 if __name__ == '__main__':

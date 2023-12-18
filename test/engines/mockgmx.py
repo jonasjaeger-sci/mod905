@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """This is a mock engine for testing of an external GROMACS engine.
 
@@ -67,6 +67,15 @@ def fake_gmx_grompp(gmx_args):
                 fileh.write(lines)
 
 
+def fake_gmx_editconf(gmx_args):
+    """Fake the gmx editconf command."""
+    print('Running gmx editconf...', file=sys.stdout)
+    need_args = {'-f': None, '-o': None}
+    simple_parser(gmx_args, need_args)
+    check_that_files_exist(('-f',), need_args)
+    read_write_gromacs(need_args['-f'], need_args['-o'], ' '.join(gmx_args))
+
+
 def fake_gmx_trjconv(gmx_args):
     """Fake the gmx trjconv command."""
     print('Running gmx trjconv...', file=sys.stdout)
@@ -110,6 +119,7 @@ if __name__ == '__main__':
         'grompp': fake_gmx_grompp,
         'convert-tpr': fake_gmx_converttpr,
         'trjconv': fake_gmx_trjconv,
+        'editconf': fake_gmx_editconf,
     }
     args1 = None
     try:

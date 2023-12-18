@@ -1,20 +1,21 @@
 """Update copyright info for PyRETIS."""
-import os
+import pathlib
 import re
 import subprocess
 import sys
 import tempfile
+from os import environ
 from datetime import date
 
 NEW_YEAR = str(date.today().year)
 COPYRIGHT = re.compile('copyright', re.IGNORECASE)
 # Assume that we won't do PyRETIS after 2099 ;-)
 YEAR = re.compile('20[0-9][0-9]')
-FILES_TO_IGNORE = {'pyc', '.coverage', '.swp'}
+SUFFIX_TO_IGNORE = {'pyc', 'coverage', 'swp'}
 # Set up environment for subprocess:
 ENV = {}
 for key in {'SYSTEMROOT', 'PATH'}:
-    val = os.environ.get(key)
+    val = environ.get(key)
     if val is not None:
         ENV[key] = val
 ENV['LANGUAGE'] = 'C'
@@ -43,51 +44,47 @@ def is_file_in_repo(filename):
 
 def look_for_files(rootdir):
     """Locate files recursively in the given root directory."""
-    for root, _, filenames in os.walk(rootdir):
-        for filename in filenames:
-            filepath = os.path.join(root, filename)
-            ignore = False
-            for i in FILES_TO_IGNORE:
-                if filepath.endswith(i):
-                    ignore = True
-                    break
-            if not ignore:
-                is_in_repo = is_file_in_repo(filepath)
-                if is_in_repo:
-                    yield filepath
+    filepaths = [x for x in rootdir.rglob('*') if x.is_file()]
+    for filepath in filepaths:
+        ignore = (filepath.suffix in SUFFIX_TO_IGNORE)
+        if not ignore:
+            is_in_repo = is_file_in_repo(filepath)
+            if is_in_repo:
+                yield filepath
 
 
 def replace_copyright(filename):
     """Replace copyright information in the given input file."""
     replace = False
     print('Processing file: {}'.format(filename))
-    with tempfile.NamedTemporaryFile() as tmp:
-        with open(tmp.name, 'w') as outputfile:
-            with open(filename, 'r') as inputfile:
-                try:
-                    for lines in inputfile:
-                        copy = [i for i in COPYRIGHT.findall(lines)]
-                        year = [i for i in YEAR.findall(lines)]
-                        if copy and year:
-                            print('\t- Found copyright & year')
-                            replace = True
-                            # Replace the years found with the new year:
-                            for i in year:
-                                lines = lines.replace(i, NEW_YEAR)
-                        outputfile.write(lines)
-                except UnicodeDecodeError:
-                    print('\t- Skipping file due to decoding error...')
-        tmp.flush()
+    with tempfile.NamedTemporaryFile('r+') as tempf:
+        with filename.open('r') as inputfile:
+            try:
+                for lines in inputfile:
+                    copy = [i for i in COPYRIGHT.findall(lines)]
+                    year = [i for i in YEAR.findall(lines)]
+                    if copy and year:
+                        print('\t- Found copyright & year')
+                        replace = True
+                        # Replace the years found with the new year:
+                        for i in year:
+                            lines = lines.replace(i, NEW_YEAR)
+                    tempf.write(lines)
+            except UnicodeDecodeError:
+                print('\t- Skipping file due to decoding error...')
+        tempf.flush()
         if replace:
-            with open(tmp.name, 'r') as inputfile:
-                with open(filename, 'w') as outputfile:
-                    outputfile.write(inputfile.read())
+            # Move to start of file again
+            tempf.seek(0)
+            with filename.open('w') as outputfile:
+                outputfile.write(tempf.read())
     return replace
 
 
 def main(rootdir):
     """Search and replace copyright information in all files found."""
     replaced = []
+    rootdir = pathlib.Path(rootdir)
     for filename in look_for_files(rootdir):
         if replace_copyright(filename):
             replaced.append(filename)

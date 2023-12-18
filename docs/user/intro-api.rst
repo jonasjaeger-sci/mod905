@@ -505,9 +505,6 @@ the following sub-packages:
 * :py:mod:`pyretis.inout.report` which is used to
   generate reports with results from different simulations.
 
-* :py:mod:`pyretis.inout.setup` which handles creation of objects
-  from simulation settings.
-
 Again, we refer to the
 :ref:`pyretis API documentation <api-inout>` for more
 information about these sub-packages.
@@ -520,6 +517,19 @@ The initiation sub-package
 The :py:mod:`pyretis.initiation` sub-package contains methods to
 initialize path ensembles. We refer the reader to the
 :ref:`pyretis API documentation <api-initiation>` for more
+information about this sub-package.
+
+.. _user-guide-intro-api-setup:
+
+The setup sub-package
+---------------------
+
+The setup library contains methods to construct the main
+objects of PyRETIS from settings and from restart info.
+
+The :py:mod:`pyretis.setup` which handles creation of objects
+from simulation settings.
+:ref:`pyretis API documentation <api-setup>` for more
 information about this sub-package.
 
 .. _user-guide-intro-api-tools:
@@ -628,12 +638,12 @@ done as follows:
    from pyretis.inout.settings import parse_settings_file
    from pyretis.inout.setup import create_orderparameter
    from pyretis.tools.recalculate_order import recalculate_order
-   
+ 
    settings = parse_settings_file('retis.rst')
    order_parameter = create_orderparameter(settings)
    options = {'reverse': False, 'maxidx': None, 'minidx': None}
    order = recalculate_order(order_parameter, 'traj.trr', options)
-   
+ 
    with OrderFile('order.txt', 'w') as outfile:
        outfile.write('# Order parameters')
        for step, data in enumerate(order):

@@ -1,16 +1,21 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Test the FileIO class."""
 import filecmp
 import logging
 import os
+import shutil
+import pathlib
 import tempfile
 import unittest
+from io import StringIO
+from unittest.mock import patch
 import numpy as np
 from numpy.random import randint, rand
 from pyretis.core.path import Path
 from pyretis.core.pathensemble import PathEnsemble
+from pyretis.inout.analysisio.analysisio import run_analysis, read_first_block
 from pyretis.inout.formats.formatter import OutputFormatter
 from pyretis.inout.formats.snapshot import read_txt_snapshots
 from pyretis.inout.fileio import FileIO
@@ -20,6 +25,7 @@ from pyretis.inout.formats.order import OrderFile, OrderPathFile
 from pyretis.inout.formats.pathensemble import PathEnsembleFile
 from pyretis.inout.formats.path import PathExtFile, PathIntFile
 from pyretis.inout.formats.snapshot import SnapshotFile
+from pyretis.inout.settings import parse_settings_file
 from .help import (
     assert_equal_path_dict,
     create_external_path,
@@ -58,6 +64,167 @@ PATH_DATA = [
 ]
 
 
+class TestAnaIo(unittest.TestCase):
+    """Test the analysisio files."""
+    def test_read_first_block(self):
+        """Test read first block function."""
+        with tempfile.TemporaryDirectory() as tempdir:
+            filegone = os.path.join(tempdir, 'Mordvichev')
+            pathlib.Path(filegone).touch(exist_ok=True)
+            out = read_first_block(file_type='energy', file_name=filegone)
+            self.assertEqual(out, None)
+            with self.assertRaises(ValueError) as ext:
+                read_first_block(file_type='BT2', file_name=filegone)
+            self.assertIn('Unknown file type', str(ext.exception))
+            filetest = os.path.join(HERE, 'order-data.txt')
+            with turn_on_logging():
+                with self.assertLogs(
+                        'pyretis.inout.analysisio.analysisio',
+                        level='WARNING'):
+                    read_first_block(file_type='order', file_name=filetest)
+
+    def test_run_analysis(self):
+        """Test analysisio function"""
+        lines = ['']*8
+        moves = ['ki', 'sh', 'ki', 'sh', 'ld', 'xx', 'sh']
+        line = "         2          3          0 L M R      99 ACC "
+        line += "sh -9.108621358e-00  1.007510172e+01       0"
+        line += "      98  0.000000000e+00       0       0  1.00e+00\n"
+        hline = "# Cycle: 1, status: ACC, move: ('sh', -1.430, 18, 14)\n"
+        olines = ['#     Time       Orderp\n',
+                  '          0     0.11319\n', '          1    -0.1367\n',
+                  '          2    -0.78098\n', '          3    -1.0238\n',
+                  '          4    -1.11127\n', '          5    -1.2367\n',
+                  '          6    -0.58084\n', '          7     0.0238\n',
+                  '          8    -1.06811\n', '          9     0.1131\n',
+                  '         10     1.06811\n', '         11     0.3131\n']
+
+        elines = ['#     Time      Potential        Kinetic\n',
+                  '          0   -1706.522027    1267.214065\n',
+                  '          1   -8706.550067    1167.214065\n',
+                  '          2  -18720.057124    1780.765874\n',
+                  '          3  -18706.550067    1767.214065\n',
+                  '          4  -18705.164689    1765.349001\n',
+                  '          5  -18629.768664    1691.047800\n',
+                  '          6  -18677.061888    1737.016339\n',
+                  '          7  -18567.169855    1628.072515\n',
+                  '          8  -18515.405500    1576.664809\n',
+                  '          9  -18515.405500    1576.664809\n',
+                  '         10  -18583.703121    1643.763063\n',
+                  '         11  -18583.703121    1643.763063\n']
+        elines2 = [
+            '# Time       Potential      Kinetic       Total    Temperature\n',
+            '   0      -0.165063      0.000000      -0.165063      0.000000\n',
+            '   1      -0.164748      0.000853      -0.163895      0.001706\n',
+            '   2      -0.164173      0.001763      -0.162411      0.003526\n',
+            '   3      -0.163650      0.002079      -0.161571      0.004157\n',
+            '   4      -0.163075      0.001212      -0.161863      0.002424\n',
+            '   5      -0.162872      0.000026      -0.162847      0.000051\n',
+            '   6      -0.163122      0.000634      -0.162489      0.001267\n',
+            '   7      -0.163780      0.003669      -0.160110      0.007339\n',
+            '   8      -0.164685      0.004810      -0.159874      0.009620\n',
+            '   9      -0.164685      0.004810      -0.159874      0.009620\n',
+            '  10      -0.164685      0.004810      -0.159874      0.009620\n',
+            '  11      -0.174685      0.008810      -0.129874      0.008620\n']
+
+        clines = [' #     Step  Int Dir \n', '         3    1   - \n',
+                  '         1    2   +  \n', '         4    1   - \n',
+                  '         6    2   +  \n', '         7    1   - \n',
+                  '         6    2   +  \n', '         7    1   - \n',
+                  '         6    2   -  \n', '         7    1   + \n',
+                  '         8    1   -  \n', '         9    1   + \n']
+
+        for j in range(7):
+            lines[j] = line.replace('sh', moves[j])
+        lines[7] = line.replace('ACC', 'BWI')
+        lines[0] = line.replace('L', 'R')
+        lines[1] = line.replace('L', 'R')
+
+        input_file = os.path.join(HERE, 'settings-retis.rst')
+        settings = parse_settings_file(input_file)
+        settings['simulation']['interfaces'] = [-0.9, -0.8, 0]
+        with tempfile.TemporaryDirectory() as tempdir:
+            for i in ['000', '001', '002']:
+                i_folder = os.path.join(tempdir, i)
+                os.mkdir(i_folder)
+                with open(i_folder + '/pathensemble.txt', 'w',
+                          encoding='utf-8') as f_p, \
+                        open(i_folder + '/energy.txt', 'w',
+                             encoding='utf-8') as f_e, \
+                        open(i_folder + '/order.txt', 'w',
+                             encoding='utf-8') as f_o:
+                    for line in lines:
+                        f_p.write(line)
+                        f_e.write(hline)
+                        for line in elines:
+                            f_e.write(line)
+                        f_o.write(hline)
+                        for line in olines:
+                            f_o.write(line)
+            settings['simulation']['exe-path'] = tempdir
+            settings['analysis']['report-dir'] = tempdir
+            with patch('sys.stdout', new=StringIO()) as stdout:
+                run_analysis(settings)
+            self.assertIn('Pathensemble data', stdout.getvalue().strip())
+            self.assertIn('99.000000', stdout.getvalue().strip())
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            with open(os.path.join(tempdir, 'pathensemble.txt'), 'w',
+                      encoding='utf-8') as f_p, \
+                    open(os.path.join(tempdir, 'energy.txt'), 'w',
+                         encoding='utf-8') as f_e, \
+                    open(os.path.join(tempdir, 'order.txt'), 'w',
+                         encoding='utf-8') as f_o, \
+                    open(os.path.join(tempdir, 'cross.txt'), 'w',
+                         encoding='utf-8') as c_r:
+                for line in lines:
+                    f_p.write(line)
+                for line in elines2:
+                    f_e.write(line)
+                f_o.write(hline)
+                for line in olines:
+                    f_o.write(line)
+                for line in clines:
+                    c_r.write(line)
+                inputfile = os.path.join(HERE, 'settings.rst')
+            settings = parse_settings_file(inputfile)
+            settings['simulation']['exe-path'] = tempdir
+            settings['analysis']['report-dir'] = tempdir
+            settings['simulation']['task'] = 'md-flux'
+            settings['simulation']['endcycle'] = 8
+            settings['simulation']['interfaces'] = [-0.9, -0.8]
+            with patch('sys.stdout', new=StringIO()) as stdout:
+                run_analysis(settings)
+            self.assertIn('0.2500', stdout.getvalue().strip())
+            self.assertIn('0.3750', stdout.getvalue().strip())
+
+        settings['simulation']['task'] = 'mistery'
+        with self.assertRaises(ValueError) as err:
+            run_analysis(settings)
+            self.assertIn('Unknown ', err.exception)
+
+        # repptis analysis
+        with tempfile.TemporaryDirectory() as tempdir:
+            # copy pptis/pathensemble.txt files to tempdir
+            for i, ens in enumerate(['000', '001', '002', '003']):
+                os.mkdir(os.path.join(tempdir, ens))
+                shutil.copy(
+                    os.path.join(HERE, 'pptis/pathensemble'+str(i)+'.txt'),
+                    os.path.join(tempdir, ens, 'pathensemble.txt')
+                )
+            inputfile = os.path.join(HERE, 'pptis/retis.rst')
+            settings = parse_settings_file(inputfile)
+            settings['simulation']['exe-path'] = tempdir
+            settings['analysis']['report-dir'] = tempdir
+            settings['simulation']['task'] = 'repptis'
+            with patch('sys.stdout', new=StringIO()) as stdout:
+                run_analysis(settings)
+            # flux
+            self.assertIn('0.862851052', stdout.getvalue().strip())
+            # pcross
+            self.assertIn('2.213477168e-03', stdout.getvalue().strip())
+
+
 class TestFileIO(unittest.TestCase):
     """Test the FileIO class."""
 
@@ -81,25 +248,25 @@ class TestFileIO(unittest.TestCase):
         # Test when a file exists:
         filename = os.path.join(HERE, 'already_exists2')
         remove_file(filename)
-        remove_file('{}_000'.format(filename))
-        with open(filename, 'w') as fileh:
+        remove_file(f'{filename}_000')
+        with open(filename, 'w', encoding='utf-8') as fileh:
             fileh.write('test')
         fileio = FileIO(filename, 'w', None, backup=True)
         fileio.open()
         fileio.write('text')
         self.assertIsNotNone(fileio.fileh)
         self.assertTrue(os.path.isfile(filename))
-        self.assertTrue(os.path.isfile('{}_000'.format(filename)))
+        self.assertTrue(os.path.isfile(f'{filename}_000'))
         del fileio
         remove_file(filename)
-        remove_file('{}_000'.format(filename))
+        remove_file(f'{filename}_000')
         # Test for invalid filename + context manager:
         with turn_on_logging():
             with self.assertLogs('pyretis.inout.fileio',
                                  level='CRITICAL'):
                 with FileIO('/#"½%&?<><|*', 'r', None) as some_file:
                     self.assertEqual(some_file.file_mode, 'r')
-                    lines = [i for i in some_file]
+                    lines = list(some_file)
                     self.assertFalse(lines)
         # Test for weird mode:
         fileio = FileIO('some-file', 'q', None)
@@ -147,8 +314,8 @@ class TestFileIO(unittest.TestCase):
         """Test generic reading."""
         filename = os.path.join(HERE, 'energy.txt')
         correct = []
-        with open(filename, 'r') as infile:
-            correct = [line for line in infile]
+        with open(filename, 'r', encoding='utf-8') as infile:
+            correct = list(infile)
         lines = []
         with FileIO(filename, 'r', OutputFormatter('test')) as fileio:
             for line in fileio:
@@ -156,7 +323,7 @@ class TestFileIO(unittest.TestCase):
         self.assertListEqual(lines, correct)
         with FileIO(filename, 'r', OutputFormatter('test')) as fileio:
             fileio.close()
-            lines = [line for line in fileio]
+            lines = list(fileio)
             self.assertFalse(lines)
 
     def test_load(self):
@@ -214,8 +381,8 @@ class TestEnergyFile(unittest.TestCase):
             with EnergyFile(tmp.name, 'w') as efile:
                 for i in range(50):
                     rnd = rand(len(fields))
-                    raw_data.append([i] + [j for j in rnd])
-                    data = {key: j for (key, j) in zip(fields, rnd)}
+                    raw_data.append([i] + list(rnd))
+                    data = dict(zip(fields, rnd))
                     efile.output(i, data)
             tmp.flush()
             raw_data = np.array(raw_data)
@@ -309,7 +476,7 @@ class TestOrderFile(unittest.TestCase):
             with OrderFile(tmp.name, 'w') as ofile:
                 for i in range(50):
                     rnd = rand(1 + extra)
-                    raw_data.append([i] + [j for j in rnd])
+                    raw_data.append([i] + list(rnd))
                     ofile.output(i, rnd)
             tmp.flush()
             with OrderFile(tmp.name, 'r') as ofile:
@@ -337,7 +504,7 @@ class TestOrderFile(unittest.TestCase):
             for i, data in enumerate(ofile.load()):
                 self.assertEqual(
                     data['comment'][0],
-                    '# Cycle: {}, status: ACC'.format(i)
+                    f'# Cycle: {i}, status: ACC'
                 )
                 self.assertEqual(
                     data['comment'][1],
@@ -390,7 +557,7 @@ class TestPathFiles(unittest.TestCase):
             tmp.flush()
             with PathIntFile(tmp.name, 'r') as pfile:
                 for i, block in enumerate(pfile.load()):
-                    self.assertEqual('# Cycle: {}, status: ACC'.format(i),
+                    self.assertEqual(f'# Cycle: {i}, status: ACC',
                                      block['comment'][0])
 
     def test_path_ext_file(self):
@@ -403,7 +570,7 @@ class TestPathFiles(unittest.TestCase):
             tmp.flush()
             with PathExtFile(tmp.name, 'r') as pfile:
                 for i, block in enumerate(pfile.load()):
-                    self.assertEqual('# Cycle: {}, status: ACC'.format(i),
+                    self.assertEqual(f'# Cycle: {i}, status: ACC',
                                      block['comment'][0])
 
 
@@ -416,7 +583,9 @@ class TestPathEnsembleFile(unittest.TestCase):
         filename = os.path.join(HERE, 'pathensemble001.txt')
         with PathEnsembleFile(filename, 'r') as pfile:
             for i, path in enumerate(pfile.get_paths()):
-                assert_equal_path_dict(path, PATH_DATA[i])
+                ref_data = PATH_DATA[i]
+                ref_data['filename'] = filename
+                assert_equal_path_dict(path, ref_data)
 
     @staticmethod
     def _fake_path_from_dict(path_dict):
@@ -450,8 +619,7 @@ class TestPathEnsembleFile(unittest.TestCase):
             'detect': -0.8
         }
         ens = PathEnsemble(settings['ensemble_number'],
-                           settings['interfaces'],
-                           detect=settings['detect'])
+                           settings['interfaces'])
         with tempfile.NamedTemporaryFile() as tmp:
             with PathEnsembleFile(tmp.name, 'w',
                                   ensemble_settings=settings) as pfile:
@@ -517,7 +685,6 @@ class TestSnapshot(unittest.TestCase):
                 self.assertFalse(j in snap2)
         filename = os.path.join(HERE, 'config_with_error.txt')
         read3 = read_txt_snapshots(filename)
-        context = None
         with self.assertRaises(Exception) as context:
             for i in read3:
                 print(i)

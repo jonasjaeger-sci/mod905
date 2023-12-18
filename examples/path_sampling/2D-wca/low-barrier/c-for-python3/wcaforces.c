@@ -1,4 +1,4 @@
-/* Copyright (c) 2022, PyRETIS Development Team.
+/* Copyright (c) 2023, PyRETIS Development Team.
 Distributed under the LGPLv2.1+ License. See LICENSE for more info. */
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <Python.h>

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Define the class for a generic potential function.
 
@@ -81,7 +81,7 @@ class PotentialFunction:
 
     def __str__(self):
         """Return the string description of the potential."""
-        msg = ['Potential: {}'.format(self.desc)]
+        msg = [f'Potential: {self.desc}']
         strinfo = '{}: {}'
         for key in sorted(self.params):
             msg.append(strinfo.format(key, self.params[key]))

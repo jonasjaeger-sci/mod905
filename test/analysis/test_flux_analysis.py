@@ -1,19 +1,20 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """A test module for flux analysis."""
 import logging
 import unittest
+import warnings
 import os
 import pickle
 import numpy as np
+from pyretis.analysis import analyse_md_flux
 from pyretis.analysis.flux_analysis import analyse_flux, find_crossings
-from pyretis.inout.settings import SECTIONS
 from pyretis.inout.formats.cross import CrossFile
 from pyretis.inout.formats.order import OrderFile
+from pyretis.inout.settings import SECTIONS
+
 logging.disable(logging.CRITICAL)
-
-
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 
@@ -29,8 +30,22 @@ class FluxTest(unittest.TestCase):
         settings = {
             'simulation': {'endcycle': 250000, 'interfaces': [-0.9]},
             'engine': {'timestep': 0.002},
+            'particles': {'npart': 1},
+            'system': {'dimensions': 1,
+                       'temperature': 666,
+                       'beta': 1},
         }
         settings['analysis'] = SECTIONS['analysis']
+        # What if empty?
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            results_all = analyse_md_flux(crossdata=[],
+                                          energydata=[],
+                                          orderdata=np.zeros(shape=(5, 2)),
+                                          settings=settings)
+
+        results = results_all['flux']
+        self.assertFalse(results['eff_cross'])
 
         correct_file = os.path.join(HERE, 'flux-results.dat')
         for i in data:
@@ -54,6 +69,26 @@ class FluxTest(unittest.TestCase):
                                 results['errflux']):
             for i, j in zip(data1, data2):
                 self.assertTrue(np.allclose(i, j))
+
+    def test_flux_analysis_B(self):
+        """Test the flux analysis considers also flux from state B."""
+        fluxdata = [(592, 2, -1), (1171, 2, 1), (1642, 1, -1), (2279, 1, 1),
+                    (2851, 3, -1), (3497, 2, 1), (3937, 2, -1), (4838, 2, -1),
+                    (4967, 3, -1), (5288, 3, 1), (6666, 2, -1), (6727, 2, -1),
+                    (6828, 3, -1), (6869, 3, 1), (6971, 2, -1), (9294, 3, 1)]
+        settings = {
+            'simulation': {'endcycle': 9999, 'interfaces': [-0.9, -0.8, -0.7]},
+            'engine': {'timestep': 0.002},
+            'particles': {'npart': 1},
+            'system': {'dimensions': 1,
+                       'temperature': 666,
+                       'beta': 1},
+        }
+        settings['analysis'] = SECTIONS['analysis']
+        results_all = analyse_flux(fluxdata, settings)
+        self.assertEqual(results_all['eff_cross'][0][0], (637, 2279))
+        self.assertEqual(results_all['teffMD'][0], 9999.0)
+        self.assertEqual(results_all['corrMD'][0], 3.334111370456819)
 
     def test_crossing_calculation(self):
         """Test calculation of crossings from order parameter data."""

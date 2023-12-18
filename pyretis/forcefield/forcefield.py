@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """This file contains a class for a generic force field.
 
@@ -238,13 +238,13 @@ class ForceField:
             included in the force field.
 
         """
-        msg = ['Force field: {}'.format(self.desc)]
+        msg = [f'Force field: {self.desc}']
         if len(self.potential) < 1:
             msg.append('No potential functions added yet!')
         else:
             msg.append('Potential functions:')
             for i, pot in enumerate(self.potential):
-                msg.append('{}: {}'.format(i + 1, pot))
+                msg.append(f'{i + 1}: {pot}')
         return '\n'.join(msg)
 
     def print_potentials(self):
@@ -260,7 +260,7 @@ class ForceField:
             Description of the potential functions in this force field.
 
         """
-        msg = ['Force field: {}'.format(self.desc)]
+        msg = [f'Force field: {self.desc}']
         for i, pot in enumerate(self.potential):
-            msg.append('\t{}: {}'.format(i + 1, pot.desc))
+            msg.append(f'\t{i + 1}: {pot.desc}')
         return '\n'.join(msg)

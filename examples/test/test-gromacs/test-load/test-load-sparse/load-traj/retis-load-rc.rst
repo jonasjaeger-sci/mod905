@@ -5,7 +5,8 @@ Simulation
 ----------
 task = retis
 steps = 5
-interfaces = [2.19, 2.20, 2.21, 4.33]
+interfaces = [2.19, 2.22, 2.63]
+zero_left = 2.16
 
 System
 ------
@@ -47,9 +48,7 @@ swapsimul = True
 Orderparameter
 --------------
 class = Distance
-module = orderp.py
-idx1 = 0
-idx2 = 3
+index = [0, 3]
 
 Output settings
 ---------------

@@ -12,13 +12,13 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 import sys
-import os
+from pathlib import Path
 import sphinx_bootstrap_theme
 import pyretis
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-sys.path.append(os.path.abspath('ext'))
+sys.path.append(str(Path('./ext').resolve()))
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
@@ -71,14 +71,14 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = '{}'.format(PYRETIS)
-copyright = '2022, The {} team'.format(PYRETIS)
-author = 'The {} team'.format(PYRETIS)
+project = f'{PYRETIS}'
+pyretis_copyright = f'2023, The {PYRETIS} team'
+author = f'The {PYRETIS} team'
 
-rst_epilog = """
-.. |pyretis| replace:: {}
-.. |pyvisa| replace:: {}
-""".format(PYRETIS, PYVISA)
+rst_epilog = f"""
+.. |pyretis| replace:: {PYRETIS}
+.. |pyvisa| replace:: {PYVISA}
+"""
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -160,11 +160,12 @@ html_theme_options = {
     'navbar_sidebarrel': False,
     'navbar_links': [("About", "about/index"),
                      ("Installing", "user/install"),
-                     ("Getting started", "user/getting-started"),
                      ("Input file", "user/section/sections"),
+                     ("Getting started", "user/getting-started"),
+                     ("Scientific results", "user/our-results"),
                      ],
     # Render the current pages TOC in the navbar. (Default: true)
-    'navbar_pagenav': True,
+    'navbar_pagenav': False,
     # Tab name for the current pages TOC. (Default: "Page")
     'navbar_pagenav_name': "Page",
     # Global TOC depth for "site" navbar tab. (Default: 1)
@@ -199,7 +200,7 @@ html_theme_options = {
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
-html_title = '{}'.format(PYRETIS)
+html_title = f'{PYRETIS}'
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
 # html_short_title = None
@@ -304,8 +305,8 @@ latex_documents = [
     (
         master_doc,
         'pyretis.tex',
-        '{} Documentation'.format(PYRETIS),
-        'The {} team'.format(PYRETIS),
+        '{PYRETIS} Documentation',
+        'The {PYRETIS} team',
         'manual',
     ),
 ]
@@ -338,8 +339,8 @@ latex_documents = [
 man_pages = [
     (
         master_doc,
-        '{}'.format(PYRETIS),
-        u'{} Documentation'.format(PYRETIS),
+        '{PYRETIS}',
+        '{PYRETIS} Documentation',
         [author],
         1
     )
@@ -357,11 +358,11 @@ man_pages = [
 texinfo_documents = [
     (
         master_doc,
-        '{}'.format(PYRETIS),
-        '{} Documentation'.format(PYRETIS),
+        '{PYRETIS}',
+        '{PYRETIS} Documentation',
         author,
-        '{}'.format(PYRETIS),
-        '{} - rare events with Python.'.format(PYRETIS),
+        '{PYRETIS}',
+        '{PYRETIS} - rare events with Python.',
         'Miscellaneous'
     ),
 ]

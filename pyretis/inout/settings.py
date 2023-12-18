@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """This module handles parsing of input settings.
 
@@ -15,37 +15,55 @@ write_settings_file (:py:func:`.write_settings_file`)
     Method for writing settings from a simulation to a given file.
 """
 import ast
+import copy
 import logging
+import os
 import pprint
 import re
+from pyretis.inout.restart import read_restart_file
 from pyretis.inout.common import create_backup, create_empty_ensembles
+from pyretis.inout.formats.cp2k import cp2k_settings
+from pyretis.inout.formats.gromacs import gromacs_settings
 from pyretis.info import PROGRAM_NAME, URL
+from pyretis.inout.checker import check_interfaces, check_for_bullshitt
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
-__all__ = ['parse_settings_file', 'write_settings_file',
-           '_fill_up_tis_and_retis_settings']
+__all__ = ['parse_settings_file', 'write_settings_file', 'SECTIONS',
+           'fill_up_tis_and_retis_settings', 'add_default_settings']
 
 
 SECTIONS = {}
 TITLE = f'{PROGRAM_NAME} input settings'
 HEADING = '{}\n{}\nFor more info, please see: {}\nHave Fun!'
 SECTIONS['heading'] = {'text': HEADING.format(TITLE, '=' * len(TITLE), URL)}
+HERE = os.path.abspath('.')
 
 SECTIONS['simulation'] = {
     'endcycle': None,
-    'exe_path': None,
+    'exe_path': HERE,
+    'flux': None,
     'interfaces': None,
     'restart': None,
-    'rgen': None,
+    'rgen': 'rgen',
+    'seed': None,
     'startcycle': None,
     'steps': None,
     'task': 'md',
-    'zero_left': None
+    'zero_ensemble': None,
+    'zero_left': None,
+    'permeability': None,
+    'swap_attributes': None,
+    'priority_shooting': False,
+    'umbrella': None,
+    'overlap': None,
+    'maxdx': None,
+    'mincycle': None
 }
 
 SECTIONS['system'] = {
     'dimensions': 3,
+    'input_file': None,
     'temperature': 1.0,
     'units': 'lj',
 }
@@ -60,7 +78,9 @@ SECTIONS['unit-system'] = {
 
 SECTIONS['engine'] = {
     'class': None,
+    'exe_path': HERE,
     'module': None,
+    'rgen': 'rgen',
 }
 
 SECTIONS['box'] = {
@@ -75,7 +95,8 @@ SECTIONS['particles'] = {
     'name': None,
     'npart': None,
     'position': None,
-    'type': None,
+    'ptype': None,
+    'type': 'internal',
     'velocity': None,
 }
 
@@ -101,7 +122,7 @@ SECTIONS['collective-variable'] = {
 }
 
 SECTIONS['output'] = {
-    'backup': 'overwrite',
+    'backup': 'append',
     'cross-file': 1,
     'energy-file': 1,
     'pathensemble-file': 1,
@@ -119,16 +140,22 @@ SECTIONS['tis'] = {
     'detect': None,
     'freq': None,
     'maxlength': None,
+    'nullmoves': None,
     'n_jumps': None,
     'high_accept': False,
     'interface_sour': None,
+    'interface_cap': None,
+    'relative_shoots': None,
     'rescale_energy': False,
-    'rgen': None,
-    'seed': 0,
+    'rgen': 'rgen',
+    'seed': None,
     'shooting_move': 'sh',
     'shooting_moves': [],
     'sigma_v': -1,
     'zero_momentum': False,
+    'mirror_freq': 0,
+    'target_freq': 0,
+    'target_indices': [],
 }
 
 SECTIONS['initial-path'] = {
@@ -142,6 +169,10 @@ SECTIONS['retis'] = {
     'seed': None,
     'swapfreq': None,
     'swapsimul': None,
+}
+
+SECTIONS['repptis'] = {
+    'memory': None
 }
 
 SECTIONS['ensemble'] = {
@@ -160,6 +191,8 @@ SECTIONS['analysis'] = {
     'report-dir': None,
     'skipcross': 1000,
     'txt-output': 'txt.gz',
+    'tau_ref_bin': [],
+    'skip': 0
 }
 
 
@@ -215,8 +248,14 @@ def parse_settings_file(filename, add_default=True):
     if add_default:
         logger.debug('Adding default settings')
         add_default_settings(settings)
-    if settings['simulation']['task'] in {'retis'}:
-        _fill_up_tis_and_retis_settings(settings)
+        add_specific_default_settings(settings)
+    if settings['simulation']['task'] in {'retis', 'tis',
+                                          'repptis', 'pptis',
+                                          'explore', 'make-tis-files'}:
+        fill_up_tis_and_retis_settings(settings)
+        # Set up checks before to continue. This section shall GROW.
+        check_interfaces(settings)
+        check_for_bullshitt(settings)
     return _clean_settings(settings)
 
 
@@ -440,12 +479,11 @@ def _parse_section_default(raw_section):
                     new_setting = _parse_section_default(var)
                     if key_0 not in setting:
                         setting[key_0] = {}
-                    for key, value in new_setting.items():
+                    for key, val in new_setting.items():
                         if key in setting[key_0]:
-                            setting[key_0][key].update(value)
+                            setting[key_0][key].update(val)
                         else:
-                            setting[key_0][key] = value
-
+                            setting[key_0][key] = val
                 else:
                     setting[keyword] = parsed
 
@@ -523,66 +561,7 @@ def _parse_all_raw_sections(raw_sections):
     return settings
 
 
-def _check_for_bullshitt(settings):
-    """Do what is stated.
-
-    Just for the input settings.
-
-    Parameters
-    ----------
-    settings : dict
-        The current input settings.
-
-    """
-    msg = [' ']
-    success = True
-
-    if (settings['simulation']['task'] in {'retis', 'tis'} and
-            len(settings['simulation']['interfaces']) < 3):
-        msg += ['Insufficient number of interfaces for '
-                f'{settings["simulation"]["task"]}']
-        success = False
-
-    if settings['simulation']['task'] in {'tis', 'retis'}:
-        if not is_sorted(settings['simulation']['interfaces']):
-            msg += ['Interface lambda positions in the simulation '
-                    'entry are NOT sorted (small to large)']
-            success = False
-
-        if 'ensemble' in settings:
-            savelambda = []
-            for i_ens, ens in enumerate(settings['ensemble']):
-                if 'ensemble_number' not in ens and \
-                        'interface' not in ens:
-                    msg += ['An ensemble has been introduced without '
-                            'references (interface in ensemble settings)']
-                    success = False
-                else:
-                    savelambda.append(settings['simulation']['interfaces']
-                                      [i_ens])
-                    if 'interface' in ens and ens['interface'] \
-                            not in settings['simulation']['interfaces']:
-                        msg += ['An ensemble with declared interface '
-                                'is not present in the simulation interface '
-                                'list']
-                        success = False
-
-            # todo: finish this once the tis and retis
-            # interface re-numbering is completed.
-            # for i_ens, ens in enumerate(settings['ensemble']):
-            #    if {'interface', 'ensemble_number'} <= set(ens):
-            #        msg += ['interface and ensemble_number for ']
-            #        msg += ['ensemble {}'.format(i_ens)]
-            #        msg += ['are inconsistent']
-            #        success = False
-
-    if not success:
-        msgtxt = '\n'.join(msg)
-        logger.critical(msgtxt)
-        raise ValueError(msgtxt)
-
-
-def _fill_up_tis_and_retis_settings(settings):
+def fill_up_tis_and_retis_settings(settings):
     """Make the life of sloppy users easier.
 
     The full input set-up will be here completed.
@@ -598,34 +577,40 @@ def _fill_up_tis_and_retis_settings(settings):
 
     """
     create_empty_ensembles(settings)
-    ensemble_save = settings['ensemble'].copy()
+    ensemble_save = copy.deepcopy(settings['ensemble'])
 
     # The previously constructed dictionary is inserted in the settings.
     # This is done such that the specific input given per ensemble
     # OVERWRITES the general input.
-    for i_ens, _ in enumerate(ensemble_save):
+    for i_ens, val in enumerate(ensemble_save):
         for key in settings:
-            if key in ensemble_save[i_ens]:
+            if key in val:
                 if key not in SPECIAL_MULTIPLE:
-                    ensemble_save[i_ens][key] =\
-                        {**settings[key].copy(),
-                         **ensemble_save[i_ens][key].copy()}
+                    val[key] = {**copy.deepcopy(settings[key]),
+                                **copy.deepcopy(val[key])}
                 else:
                     for i_sub, sub in enumerate(settings[key]):
-                        while len(ensemble_save[i_ens][key])\
-                                < len(settings[key]):
-                            ensemble_save[i_ens][key].append({})
-                        ensemble_save[i_ens][key][i_sub] = {
-                            **sub.copy(),
-                            **ensemble_save[i_ens][key][i_sub].copy()
+                        while len(val[key]) < len(settings[key]):
+                            val[key].append({})
+                        val[key][i_sub] = {
+                            **copy.deepcopy(sub),
+                            **copy.deepcopy(val[key][i_sub])
                             }
 
-        ensemble_save[i_ens] = {**copy_settings(settings),
-                                **ensemble_save[i_ens].copy()}
+        ensemble_save[i_ens] = {**copy.deepcopy(settings),
+                                **copy.deepcopy(val)}
         del ensemble_save[i_ens]['ensemble']
 
-    for i_ens, _ in enumerate(ensemble_save):
-        settings['ensemble'][i_ens] = ensemble_save[i_ens].copy()
+    for i_ens, ens in enumerate(ensemble_save):
+        add_default_settings(settings)
+        add_specific_default_settings(settings)
+        settings['ensemble'][i_ens] = copy.deepcopy(ens)
+        if 'make-tis-files' in settings['simulation']['task']:
+            settings['ensemble'][i_ens]['simulation']['task'] = 'tis'
+    if settings['tis'].get('shooting_moves', False):
+        for i_ens, ens_set in enumerate(settings['ensemble']):
+            ens_set['tis']['shooting_move'] = \
+                settings['tis']['shooting_moves'][i_ens]
 
 
 def add_default_settings(settings):
@@ -641,15 +626,218 @@ def add_default_settings(settings):
     None, but this method might add data to the input settings.
 
     """
-    for sec, sec_value in SECTIONS.items():
+    if settings.get('initial-path', {}).get('method') == 'restart':
+        if settings['simulation'].get('restart') is None:
+            settings['simulation']['restart'] = 'pyretis.restart'
+
+    for sec, sec_val in SECTIONS.items():
         if sec not in settings:
             settings[sec] = {}
-        for key, value in sec_value.items():
-            if value is not None and key not in settings[sec]:
-                settings[sec][key] = value
+        for key, val in sec_val.items():
+            if val is not None and key not in settings[sec]:
+                settings[sec][key] = val
     to_remove = [key for key in settings if len(settings[key]) == 0]
     for key in to_remove:
         settings.pop(key, None)
+
+
+def add_specific_default_settings(settings):
+    """Add specific default settings for each simulation task.
+
+    Parameters
+    ----------
+    settings : dict
+        The current input settings.
+
+    Returns
+    -------
+    None, but this method might add data to the input settings.
+
+    """
+    task = settings['simulation'].get('task')
+    if task not in settings:
+        settings[task] = {}
+
+    if 'exp' in task:
+        settings['tis']['shooting_move'] = 'exp'
+
+    if task in {'pptis', 'tis', 'make-tis-files'}:
+        if 'flux' not in settings['simulation']:
+            settings['simulation']['flux'] = False
+        if 'zero_ensemble' not in settings['simulation']:
+            settings['simulation']['zero_ensemble'] = False
+
+    if task in {'repptis', 'retis'}:
+        if 'flux' not in settings['simulation']:
+            settings['simulation']['flux'] = True
+        if 'zero_ensemble' not in settings['simulation']:
+            settings['simulation']['zero_ensemble'] = True
+
+    eng_name = settings['engine'].get('class', 'NoneEngine')
+    if eng_name[:7].lower() in {'gromacs', 'cp2k', 'lammps'}:
+        settings['particles']['type'] = 'external'
+        settings['engine']['type'] = 'external'
+        input_path = os.path.join(settings['engine'].get('exe_path', '.'),
+                                  settings['engine'].get('input_path', '.'))
+        engine_checker = {'gromacs': gromacs_settings,
+                          'cp2k': cp2k_settings}
+        # Checks engine specific settings
+        if engine_checker.get(eng_name[:7].lower()):
+            engine_checker[eng_name[:7].lower()](settings, input_path)
+    else:
+        settings['particles']['type'] = 'internal'
+        settings['engine']['type'] = settings['engine'].get('type', 'internal')
+
+
+def settings_from_restart(settings):
+    """Overwrite the settings with restart info.
+
+    Here, we attempt to remove unwanted stuff from the input settings.
+
+    NOTE: This structure doesn't allow modifications to a simulation
+          with a restart. That is, restart ONLY extends one simulation.
+          Load should be used for any other purpose.
+
+    Parameters
+    ----------
+    settings : dict
+        The current input settings that is going to be mostly overwritten.
+
+    Returns
+    -------
+    new_set : dict
+        The current input settings with the restart info.
+    restart_info : dict
+        The info to restart the various simulation objects.
+
+    """
+    cycle = settings['simulation']['steps']
+    exe_path = settings['simulation']['exe_path']
+    filename = os.path.join(settings['simulation']['exe_path'],
+                            settings['simulation']['restart'])
+    restart = read_restart_file(filename)
+
+    if settings.get('initial-path', {}).get('flexible_restart', False):
+        new_set = copy_settings(settings)
+    else:
+        new_set = restart.pop('settings')
+    new_set['restart'] = restart
+    new_set['simulation']['startcycle'] = new_set['simulation']['steps']
+    new_set['simulation']['steps'] = cycle
+    new_set['simulation']['restart'] = filename
+    new_set['simulation']['exe_path'] = exe_path
+    # This won't loop if it is an empty list
+    for i in range(len(new_set.get('ensemble', []))):
+        new_set['ensemble'][i]['simulation']['exe_path'] = exe_path
+        new_set['ensemble'][i]['initial-path'] = {'method': 'restart'}
+        new_set['ensemble'][i]['engine']['input_path'] = \
+            settings['ensemble'][i]['engine'].get('input_path', '.')
+    # Priority shooting aims is to recover a failed job, so it must be
+    # allowed here to interfere to the initial settings.
+    new_set['simulation']['priority_shooting'] = settings['simulation'].get(
+        'priority_shooting', False)
+    new_set['engine']['input_path'] = settings['engine'].get('input_path', '.')
+
+    return new_set, restart
+
+
+def look_for_input_files(input_path, required_files,
+                         extra_files=None):
+    """Check that required files for external engines are present.
+
+    It will first search for the default files.
+    If not present, it will search for the files with the
+    same extension. In this search,
+    if there are no files or multiple files for a required
+    extension, the function will raise an Error.
+    There might also be optional files which are not required, but
+    might be passed in here. If these are not present we will
+    not fail, but delete the reference to this file.
+
+    Parameters
+    ----------
+    input_path : string
+        The path to the folder where the input files are stored.
+    required_files : dict of strings
+        These are the file names types of the required files.
+    extra_files : list of strings, optional
+        These are the file names of the extra files.
+
+    Returns
+    -------
+    out : dict
+        The paths to the required and extra files we found.
+
+    """
+    if not os.path.isdir(input_path):
+        msg = f'Input path folder {input_path} not existing'
+        raise ValueError(msg)
+
+    # Get the list of files in the input_path folder
+    files_in_input_path = \
+        [i.name for i in os.scandir(input_path) if i.is_file()]
+
+    input_files = {}
+    # Check if the required files are present
+    for file_type, file_to_check in required_files.items():
+        req_ext = os.path.splitext(file_to_check)[1][1:].lower()
+        if file_to_check in files_in_input_path:
+            input_files[file_type] = os.path.join(input_path, file_to_check)
+            logger.debug('%s input: %s', file_type, input_files[file_type])
+        else:
+            # If not present, let's try to explore the folder by extension
+            file_counter = 0
+            for file_input in files_in_input_path:
+                file_ext = os.path.splitext(file_input)[1][1:].lower()
+                if req_ext == file_ext:
+                    file_counter += 1
+                    selected_file = file_input
+
+            # Since we are guessing the correct files, give an error if
+            # multiple entries are possible.
+            if file_counter == 1:
+                input_files[file_type] = os.path.join(input_path,
+                                                      selected_file)
+                logger.warning(f'using {input_files[file_type]} '
+                               + f'as "{file_type}" file')
+            else:
+                msg = f'Missing input file "{file_to_check}" '
+                if file_counter > 1:
+                    msg += f'and multiple files have extension ".{req_ext}"'
+                raise ValueError(msg)
+
+    # Check if the extra files are present. If so, add them to the input_files.
+    # Gromacs engine takes a dictionary as extra_files, while cp2k takes a list
+    # I'm not familiar with cp2k, so I'm assuming the list format is required.
+    # Either way, both types have their merits, so I add a check for enginetype
+    if extra_files:
+        if isinstance(extra_files, dict):
+            for file_type, file_to_check in extra_files.items():
+                logger.debug('Checking for key %s and file %s', file_type,
+                             file_to_check)
+                if file_to_check in files_in_input_path:
+                    logger.debug('Found %s', file_to_check)
+                    input_files[file_type] = os.path.join(input_path,
+                                                          file_to_check)
+                else:
+                    msg = f'Extra file {file_to_check} not present '
+                    msg += f'in {input_path}'
+                    logger.info(msg)
+        elif isinstance(extra_files, list):
+            input_files['extra_files'] = []
+            for file_to_check in extra_files:
+                if file_to_check in files_in_input_path:
+                    input_files['extra_files'].append(file_to_check)
+                else:
+                    msg = f'Extra file {file_to_check} not present '
+                    msg += f'in {input_path}'
+                    logger.info(msg)
+        else:
+            msg = 'Extra files should be given in a dict or list format'
+            msg += f', but got {type(extra_files)}'
+            raise ValueError(msg)
+
+    return input_files
 
 
 def _clean_settings(settings):
@@ -737,11 +925,6 @@ def settings_to_text(settings):
     return ''.join(txt)
 
 
-def double_section_to_text(settings):
-    """Just here to not break 2.0 API, will be removed in Pyretis3."""
-    return multiple_section_to_text(settings)[1]
-
-
 def multiple_section_to_text(settings, prefix=None, pure=False):
     """Turn settings for the ensemble into text for output.
 
@@ -767,23 +950,23 @@ def multiple_section_to_text(settings, prefix=None, pure=False):
 
     """
     data = []
-    for key, value in settings.items():
+    for key in settings:
         prefix = None if pure else prefix
         if key in SPECIAL_MULTIPLE:
-            for i, entry in enumerate(value):
+            for i, entry in enumerate(settings[key]):
                 temp_prefix = f'{key}{i:d}'
                 _, txt = multiple_section_to_text(entry,
                                                   prefix=temp_prefix)
                 data.append(txt)
 
         elif key == 'interface':
-            pretty = pprint.pformat(value, width=67)
+            pretty = pprint.pformat(settings[key], width=67)
             pretty = pretty.replace('\n', '\n' + ' ' * 67)
             txt = f'{key} = {pretty}'
             data.append(txt)
 
         elif key == 'heading':
-            txt = f'{key} = {value}'
+            txt = f'{key} = {settings[key]}'
             data.append(txt)
 
         elif isinstance(settings[key], dict):
@@ -793,12 +976,12 @@ def multiple_section_to_text(settings, prefix=None, pure=False):
             else:
                 base = prefix
                 prefix += ' ' + key
-            _, txt = multiple_section_to_text(value, prefix=prefix)
+            _, txt = multiple_section_to_text(settings[key], prefix=prefix)
             prefix = base
             data.append(txt)
 
         else:
-            txt = f'{prefix} {key} = {value}'
+            txt = f'{prefix} {key} = {settings[key]}'
             data.append(txt)
 
     return prefix, '\n'.join(data)
@@ -824,10 +1007,7 @@ def section_to_text(settings, prefix=None):
     data = []
     for key in settings:
         if key == 'parameter':
-            if prefix is not None:
-                txt = section_to_text(settings[key], prefix=prefix+' '+key)
-            else:
-                txt = section_to_text(settings[key], prefix='parameter')
+            txt = section_to_text(settings[key], prefix='parameter')
         else:
             if prefix is not None:
                 leng = len(str(key)) + 3 + len(prefix) + 1
@@ -893,13 +1073,8 @@ def copy_settings(settings):
     for sec in settings:  # this is common for all simulations:
         lsetting[sec] = {}
         if sec in SPECIAL_MULTIPLE:
-            lsetting[sec] = list(settings[sec])
+            lsetting[sec] = [copy.deepcopy(j) for j in settings[sec]]
         else:
             for key in settings[sec]:
                 lsetting[sec][key] = settings[sec][key]
     return lsetting
-
-
-def is_sorted(lll):
-    """Check if a list is sorted."""
-    return all(aaa <= bbb for aaa, bbb in zip(lll[:-1], lll[1:]))

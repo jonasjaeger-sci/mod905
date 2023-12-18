@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Example of running a MD simulation using the PyRETIS library.
 
@@ -8,13 +8,13 @@ The system considered is a simple Lennard-Jones fluid.
 """
 import sys
 import numpy as np
+from matplotlib import pyplot as plt
 from pyretis.core import create_box, Particles, System
 from pyretis.simulation import SimulationNVE
 from pyretis.engines import VelocityVerlet
 from pyretis.tools import generate_lattice
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.potentials import PairLennardJonesCutnp
-from matplotlib import pyplot as plt
 
 
 # If you have a recent version of matplotlib you can make
@@ -56,7 +56,10 @@ def set_up_simulation(system):
     """Set up the simulation."""
     print('Creating simulation:')
     engine = VelocityVerlet(0.002)
-    simulation = SimulationNVE(system, engine, steps=200)
+    simulation = SimulationNVE(ensemble={'system': system,
+                                         'engine': engine},
+                               settings={},
+                               controls={'steps': 200})
     return simulation
 
 

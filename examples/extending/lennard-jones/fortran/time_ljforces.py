@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Time the FORTRAN implementation of the Lennard-Jones potential.
 
@@ -7,12 +7,12 @@ This timing is simply done by evaluating the Lennard-Jones forces
 (and potential) for different system sizes.
 """
 # pylint: disable=invalid-name
+import timeit
 import numpy as np
 from pyretis.core import System, create_box, Particles
 from pyretis.core.units import create_conversion_factors
 from pyretis.tools import generate_lattice
 from ljpotentialf import PairLennardJonesCutF
-import timeit
 
 
 def set_up_initial_state(nlattice=5):

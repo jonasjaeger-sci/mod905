@@ -1,13 +1,18 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Test the GromacsEngine class."""
 import logging
 import os
 import tempfile
+import shutil
+import struct
 import unittest
 from pyretis.core.path import Path
-from pyretis.engines.gromacs2 import GromacsEngine2
+from pyretis.engines.gromacs2 import (GromacsEngine2,
+                                      GromacsRunner,
+                                      reopen_file,
+                                      read_remaining_trr)
 from pyretis.inout.common import make_dirs
 from pyretis.orderparameter.orderparameter import Position
 from .test_helpers.test_helpers import make_test_system
@@ -70,9 +75,9 @@ class GromacsEngineTest(unittest.TestCase):
             # Propagate:
             orderp = Position(0, dim='x', periodic=False)
             path = Path(None, maxlen=8)
-            success, _ = eng.propagate(path, system, orderp,
-                                       [-0.45, 10.0, 14.0],
-                                       reverse=False)
+            ensemble = {'system': system, 'order_function': orderp,
+                        'interfaces': [-0.45, 10.0, 14.0]}
+            success, _ = eng.propagate(path, ensemble, reverse=False)
             self.assertTrue(success)
             self.assertEqual(path.length, 4)
             initial_x = -0.422
@@ -107,9 +112,9 @@ class GromacsEngineTest(unittest.TestCase):
             # Propagate:
             orderp = Position(0, dim='x', periodic=False)
             path = Path(None, maxlen=8)
-            success, _ = eng.propagate(path, system, orderp,
-                                       [-20., 10.0, 14.0],
-                                       reverse=True)
+            ensemble = {'system': system, 'order_function': orderp,
+                        'interfaces': [-20., 10.0, 14.0]}
+            success, _ = eng.propagate(path, ensemble, reverse=True)
             self.assertTrue(success)
             self.assertEqual(path.length, 4)
             initial_x = -0.422
@@ -125,7 +130,7 @@ class GromacsEngineTest(unittest.TestCase):
     def test_propagate_crash(self):
         """Test the propagate method when engine crashes."""
         with tempfile.TemporaryDirectory() as tempdir:
-            mdrun = '{} -crash'.format(MDRUN)
+            mdrun = f'{MDRUN} -crash'
             eng = GromacsEngine2(GMX, mdrun, GMX_DIR,
                                  timestep=0.002,
                                  subcycles=7,
@@ -139,13 +144,15 @@ class GromacsEngineTest(unittest.TestCase):
             # Create the system:
             system = make_test_system((eng.input_files['conf'], 0))
             # Propagate:
-            orderp = Position(0, dim='x', periodic=False)
+            order_function = Position(0, dim='x', periodic=False)
             path = Path(None, maxlen=8)
             with self.assertRaises(RuntimeError):
-                eng.propagate(path, system, orderp, [-0.45, 10.0, 14.0],
-                              reverse=False)
+                ensemble = {'system': system, 'order_function': order_function,
+                            'interfaces': [-0.45, 10.0, 14.0]}
+                eng.propagate(path, ensemble, reverse=False)
             # Check the error - output:
-            with open(os.path.join(rundir, 'stderr.txt')) as infile:
+            with open(os.path.join(rundir, 'stderr.txt'), 'r',
+                      encoding="utf8") as infile:
                 data = infile.readlines()
                 # Following assert should be 1, but is 2 while gromacs fixes
                 # their openmm imports (which raises an extra warning atm)
@@ -161,7 +168,7 @@ class GromacsEngineTest(unittest.TestCase):
         for the data to be written.
         """
         with tempfile.TemporaryDirectory() as tempdir:
-            mdrun = '{} -sleep'.format(MDRUN)
+            mdrun = f'{MDRUN} -sleep'
             eng = GromacsEngine2(GMX, mdrun, GMX_DIR, 0.002, 7,
                                  maxwarn=1, gmx_format='g96',
                                  write_vel=True,
@@ -173,11 +180,11 @@ class GromacsEngineTest(unittest.TestCase):
             # Create the system:
             system = make_test_system((eng.input_files['conf'], 0))
             # Propagate:
-            orderp = Position(0, dim='x', periodic=False)
+            order_function = Position(0, dim='x', periodic=False)
             path = Path(None, maxlen=8)
-            success, _ = eng.propagate(path, system, orderp,
-                                       [-0.45, 10.0, 14.0],
-                                       reverse=False)
+            ensemble = {'system': system, 'order_function': order_function,
+                        'interfaces': [-0.45, 10.0, 14.0]}
+            success, _ = eng.propagate(path, ensemble, reverse=False)
             self.assertTrue(success)
             self.assertEqual(path.length, 4)
             initial_x = -0.422
@@ -203,15 +210,78 @@ class GromacsEngineTest(unittest.TestCase):
             # Create the system:
             system = make_test_system((eng.input_files['conf'], 0))
             # Propagate:
-            order = Position(0, dim='x', periodic=False)
+            order_function = Position(0, dim='x', periodic=False)
             i = 0
             initial_x = -0.422
-            for step in eng.integrate(system, 5, order_function=order):
+            ensemble = {'system': system, 'order_function': order_function}
+            for step in eng.integrate(ensemble, 5):
                 j = max(i - 1, 0)
                 self.assertAlmostEqual(step['order'][0],
                                        j * eng.subcycles + initial_x, places=3)
                 i += 1
             eng.clean_up()
+            ensemble = {'system': system}
+            correct = [11.578, 14.478]
+            for i_s, step in enumerate(eng.integrate(ensemble, 1)):
+                j = max(i - 1, 0)
+                self.assertAlmostEqual(correct[i_s],
+                                       j * eng.subcycles + initial_x, places=3)
+                i += 1
+            eng.clean_up()
+
+
+class GromacsRunnerTest(unittest.TestCase):
+    """Test the Runner."""
+    def test_init(self):
+        """Test that we can initiate the runner."""
+        eng = GromacsRunner(cmd='echo',
+                            trr_file='No thank you',
+                            edr_file='Please dont insist',
+                            exe_dir='Get lost already')
+        with self.assertRaises(RuntimeError) as err:
+            eng.check_poll()
+        self.assertIn('GROMACS is not running.', str(err.exception))
+        del eng
+
+    def test_read_remaining_trr(self):
+        """Test read_remaining_trr work with corrupted trr."""
+        filepath = os.path.dirname(os.path.abspath(__file__))
+        ff_trr = os.path.join(filepath, '../inout/traj.trr')
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            new_file = os.path.join(tempdir, 'life.trr')
+            # Empty file first
+            with open(new_file, 'w', encoding="utf8"):
+                pass
+            with open(new_file, 'rb') as now:
+                read_remaining_trr(new_file, now, 0)
+            shutil.copy(ff_trr, new_file)
+
+            # Inconsistent file after
+            with open(new_file, 'ab') as now:
+                now.write(b'\x00\x00\x00\x00\x00\x00\x00\x00')
+            with open(new_file, 'rb') as now:
+                with self.assertRaises(struct.error) as err:
+                    for _ in read_remaining_trr(new_file, now, 0):
+                        read_remaining_trr(new_file, now, 0)
+            self.assertIn('unpack requires a buffer of 8 bytes',
+                          str(err.exception))
+
+    def test_reopen_file(self):
+        """Reopen a file if the inode has changed test."""
+        filepath = os.path.dirname(os.path.abspath(__file__))
+        ff_temp = os.path.join(filepath, 'config.xyz')
+        f_temp = tempfile.TemporaryFile(mode='w+')
+        inode = os.stat(ff_temp).st_ino
+        out = reopen_file(filename=ff_temp, fileh=None,
+                          inode=inode, bytes_read=None)
+
+        self.assertEqual(out, (None, None))
+
+        out = reopen_file(filename=ff_temp, fileh=f_temp,
+                          inode=16, bytes_read=0)
+        out[0].close()
+        self.assertNotEqual(out, (None, None))
 
 
 if __name__ == '__main__':

@@ -35,11 +35,9 @@ Length and shoots figures
 -------------------------
 
 .. image:: @{{ figures['lpath'] }}@
-   :width: 30%
+   :width: 45%
 .. image:: @{{ figures['shoots'] }}@
-   :width: 30%
-.. image:: @{{ figures['shoots_scaled'] }}@
-   :width: 30%
+   :width: 45%
 
 
 .. _tis-results:
@@ -50,7 +48,5 @@ TIS results for ensemble: @{{ ensemble }}@
 @{{ tables['interfaces'] }}@
 
 @{{ tables['probability'] }}@
-
-@{{ tables['path'] }}@
 
 @{{ tables['efficiency'] }}@

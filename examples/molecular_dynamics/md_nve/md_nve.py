@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Example of running a MD simulation using the PyRETIS library.
 
@@ -12,8 +12,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib import gridspec
 from pyretis.core.units import create_conversion_factors
-from pyretis.inout.setup import (create_simulation, create_force_field,
-                                 create_system, create_engine)
+from pyretis.setup import create_simulation
 from pyretis.inout.formats import ThermoTableFormatter
 from pyretis.inout.fileio import FileIO
 # for plotting:
@@ -22,7 +21,7 @@ from pyretis.inout.plotting import mpl_set_style
 settings = {}
 settings['simulation'] = {
     'task': 'md-nve',
-    'steps': 1000
+    'steps': 100
 }
 settings['system'] = {
     'units': 'lj',
@@ -50,13 +49,7 @@ settings['particles'] = {
 }
 
 create_conversion_factors(settings['system']['units'])
-print('# Creating system from settings.')
-ljsystem = create_system(settings)
-ljsystem.forcefield = create_force_field(settings)
-msg = '# Created fcc grid with {} atoms.'
-print(msg.format(ljsystem.particles.npart))
-kwargs = {'system': ljsystem, 'engine': create_engine(settings)}
-simulation_nve = create_simulation(settings, kwargs)
+simulation_nve = create_simulation(settings)
 
 # set up extra output:
 thermo_file = FileIO('thermo-test.txt', 'w', ThermoTableFormatter())

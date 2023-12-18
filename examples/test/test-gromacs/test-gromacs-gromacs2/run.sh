@@ -1,29 +1,38 @@
 #!/usr/bin/env bash
+shopt -s extglob
+set -e 
 make clean
 gmx=${1:-gmx_d}
-echo Using gmx=$gmx
-replace='s/GMXCOMMAND/'$gmx'/g'
+echo "Using gmx=$gmx"
+replace="s/GMXCOMMAND/$gmx/g"
+
+cd run-gromacs-ini
+cp ../../gmx/gromacs.py .
+cp ../../gmx/orderp.py .
+cp ../../gmx/gromacs_input gromacs_input_ini -r
+sed -e $replace retis.rst > retis-run.rst
+pyretisrun -i retis-run.rst -p
+cd ..
+
+# Test source dir change
+mv run-gromacs-ini/gromacs_input_ini run-gromacs1/gromacs_input1
+
+cp -r run-gromacs-ini/!(*.rst) run-gromacs1
+cp -r run-gromacs-ini/!(*.rst) run-gromacs2
+
 
 cd run-gromacs1
-cp ../../gmx/gromacs.py .
-cp ../../gmx/orderp.py .
 sed -e $replace retis.rst > retis-run.rst
-pyretisrun -i retis-run.rst -p -l DEBUG
-rm retis-run.rst
-rm gromacs.py
-rm orderp.py
-
+pyretisrun -i retis-run.rst -p
 cd ..
 cd run-gromacs2
-cp ../../gmx/gromacs.py .
-cp ../../gmx/orderp.py .
 sed -e $replace retis.rst > retis-run.rst
-pyretisrun -i retis-run.rst -p -l DEBUG
-rm retis-run.rst
-rm gromacs.py
-rm orderp.py
+pyretisrun -i retis-run.rst -p
 cd ..
 
 cp ../gmx/compare.py .
 python compare.py run-gromacs1 run-gromacs2 --energy_skip 'vpot'
 rm compare.py
+rm */gromacs.py
+rm */orderp.py
+make clean

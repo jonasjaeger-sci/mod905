@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Definition of numerical MD integrators.
 
@@ -27,13 +27,12 @@ Langevin (:py:class:`.Langevin`)
 """
 import logging
 import numpy as np
-from pyretis.engines.engine import EngineBase
 from pyretis.core.random_gen import create_random_generator
 from pyretis.core.particlefunctions import (calculate_kinetic_energy,
                                             calculate_thermo,
                                             calculate_thermo_path,
                                             reset_momentum)
-
+from pyretis.engines.engine import EngineBase
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
@@ -81,13 +80,12 @@ class MDEngine(EngineBase):
         self.timestep = timestep
         self.dynamics = dynamics
 
-    def integration_step(self, system):
+    def integration_step(self, _):
         """Perform a single time step of the integration.
 
         Parameters
         ----------
-        system : object like :py:class:`.System`
-            The system we are acting on.
+        - : place holder
 
         Returns
         -------
@@ -128,7 +126,7 @@ class MDEngine(EngineBase):
                 thermo_func = calculate_thermo_path
         return thermo_func
 
-    def integrate(self, system, steps, order_function=None, thermo='full'):
+    def integrate(self, ensemble, steps, thermo='full'):
         """Perform several integration steps.
 
         This method will perform several integration steps, but it will
@@ -137,16 +135,20 @@ class MDEngine(EngineBase):
 
         Parameters
         ----------
-        system : object like :py:class:`.System`
-            The system we are integrating.
+        ensemble: dict
+            It contains:
+
+            * `system` : object like :py:class:`.System`
+              The system we are integrating.
+            * `order_function` : object like :py:class:`.OrderParameter`
+              An order function can be specified if we want to
+              calculate the order parameter along with the simulation.
+
         steps : integer
             The number of steps we are going to perform. Note that we
             do not integrate on the first step (e.g. step 0) but we do
             obtain the other properties. This is to output the starting
             configuration.
-        order_function : object like :py:class:`.OrderParameter`, optional
-            An order function can be specified if we want to
-            calculate the order parameter along with the simulation.
         thermo : string, optional
             Select the thermodynamic properties we are to calculate.
 
@@ -159,6 +161,8 @@ class MDEngine(EngineBase):
 
         """
         thermo_func = self.select_thermo_function(thermo=thermo)
+        system = ensemble['system']
+        order_function = ensemble.get('order_function')
         system.potential_and_force()
         for i in range(steps):
             if i == 0:
@@ -166,8 +170,8 @@ class MDEngine(EngineBase):
             else:
                 self.integration_step(system)
             results = {'system': system}
-            if order_function:
-                results['order'] = self.calculate_order(order_function, system)
+            if order_function is not None:
+                results['order'] = self.calculate_order(ensemble)
             if thermo_func:
                 results['thermo'] = thermo_func(system)
             yield results
@@ -184,8 +188,7 @@ class MDEngine(EngineBase):
         self.timestep *= -1.0
         return self.timestep > 0.0
 
-    def propagate(self, path, initial_system, order_function, interfaces,
-                  reverse=False):
+    def propagate(self, path, ensemble, reverse=False):
         """Generate a path by integrating until a criterion is met.
 
         This function will generate a path by calling the function
@@ -200,17 +203,22 @@ class MDEngine(EngineBase):
         ----------
         path : object like :py:class:`.PathBase`
             This is the path we use to fill in phase-space points.
-            We are here not returning a new path - this since we want
+            We are here not returning a new path, this since we want
             to delegate the creation of the path (type) to the method
             that is running `propagate`.
-        initial_system : object like :py:class:`.System`
-            The system object gives the initial state for the
-            integration. The propagation will not alter the state of
-            the system.
-        order_function : object like :py:class:`.OrderParameter`
-            The object used for calculating the order parameter.
-        interfaces : list of floats
-            These interfaces define the stopping criterion.
+        ensemble: dict
+            It contains:
+
+            * `system` : object like :py:class:`.System`
+              The system object gives the initial state for the
+              integration. The initial state is stored and the system is
+              reset to the initial state when the integration is done.
+            * `order_function` : object like :py:class:`.OrderParameter`
+              An order function can be specified if we want to
+              calculate the order parameter along with the simulation.
+            * `interfaces` : list of floats
+              These interfaces define the stopping criterion.
+
         reverse : boolean, optional
             If True, the system will be propagated backward in time.
 
@@ -226,11 +234,11 @@ class MDEngine(EngineBase):
         logger.debug(status)
         success = False
         # Copy the system, so that we can propagate without altering it:
-        system = initial_system.copy()
+        system = ensemble['system']
         system.potential_and_force()  # Make sure forces are set.
-        left, _, right = interfaces
+        left, _, right = ensemble['interfaces']
         for i in range(path.maxlen):
-            system.order = self.calculate_order(order_function, system)
+            system.order = self.calculate_order(ensemble)
             ekin = calculate_kinetic_energy(system.particles)[0]
             system.particles.ekin = ekin
             status, success, stop, _ = self.add_to_path(path, system.copy(),
@@ -248,29 +256,40 @@ class MDEngine(EngineBase):
         return success, status
 
     @staticmethod
-    def modify_velocities(system, rgen, sigma_v=None, aimless=True,
-                          momentum=False, rescale=None):
+    def modify_velocities(ensemble, vel_settings):
         """Modify the velocities of the current state.
+
+        This method will modify the velocities of a time slice.
+        And it is part of the integrator since it, conceptually,
+        fits here:  we are acting on the system and modifying it.
 
         Parameters
         ----------
-        system : object like :py:class:`.System`
-            The system is used here since we need access to the particle
-            list.
-        rgen : object like :py:class:`.RandomGenerator`
-            This is the random generator that will be used.
-        sigma_v : numpy.array, optional
-            These values can be used to set a standard deviation (one
-            for each particle) for the generated velocities.
-        aimless : boolean, optional
-            Determines if we should do aimless shooting or not.
-        momentum : boolean, optional
-            If True, we reset the linear momentum to zero after generating.
-        rescale : float, optional
-            In some NVE simulations, we may wish to re-scale the energy to
-            a fixed value. If `rescale` is a float > 0, we will re-scale
-            the energy (after modification of the velocities) to match the
-            given float.
+        ensemble : dict
+            It contains:
+
+            * `system : object like :py:class:`.System`
+              This is the system that contains the particles we are
+              investigating
+            * `rgen` : object like :py:class:`.RandomGenerator`
+              This is the random generator that will be used.
+
+        vel_settings: dict.
+            It contains all the info for the velocity:
+
+            * `sigma_v` : numpy.array, optional
+              These values can be used to set a standard deviation (one
+              for each particle) for the generated velocities.
+            * `aimless` : boolean, optional
+              Determines if we should do aimless shooting or not.
+            * `momentum` : boolean, optional
+              If True, we reset the linear momentum to zero after
+              generating.
+            * `rescale or rescale_energy` : float, optional
+              In some NVE simulations, we may wish to re-scale the
+              energy to a fixed value. If `rescale` is a float > 0,
+              we will re-scale the energy (after modification of
+              the velocities) to match the given float.
 
         Returns
         -------
@@ -280,6 +299,10 @@ class MDEngine(EngineBase):
             The new kinetic energy.
 
         """
+        rgen = ensemble['rgen']
+        system = ensemble['system']
+        rescale = vel_settings.get('rescale_energy',
+                                   vel_settings.get('rescale'))
         particles = system.particles
         if rescale is not None and rescale is not False:
             if rescale > 0:
@@ -291,13 +314,14 @@ class MDEngine(EngineBase):
         else:
             kin_old = calculate_kinetic_energy(particles)[0]
             do_rescale = False
-        if aimless:
+        if vel_settings.get('aimless', False):
             vel, _ = rgen.draw_maxwellian_velocities(system)
             particles.vel = vel
         else:  # Soft velocity change, from a Gaussian distribution:
-            dvel, _ = rgen.draw_maxwellian_velocities(system, sigma_v=sigma_v)
+            dvel, _ = rgen.draw_maxwellian_velocities(
+                system, sigma_v=vel_settings['sigma_v'])
             particles.vel = particles.vel + dvel
-        if momentum:
+        if vel_settings.get('momentum', False):
             reset_momentum(particles)
         if do_rescale:
             system.rescale_velocities(rescale)
@@ -324,8 +348,7 @@ class MDEngine(EngineBase):
         return self.integration_step(system)
 
     @staticmethod
-    def calculate_order(order_function, system, xyz=None, vel=None,
-                        box=None):
+    def calculate_order(ensemble, xyz=None, vel=None, box=None):
         """Return the order parameter.
 
         This method is just to help to calculate the order parameter
@@ -333,10 +356,15 @@ class MDEngine(EngineBase):
 
         Parameters
         ----------
-        order_function : object like :py:class:`.OrderParameter`
-            The object used for calculating the order parameter(s).
-        system : object like :py:class:`.System`
-            The system containing the current positions and velocities.
+        ensemble : dict
+            It contains:
+
+            * `system` : object like :py:class:`.System`
+              This is the system that contains the particles we are
+              investigating
+            * `order_function` : object like :py:class:`.OrderParameter`
+              The object used for calculating the order parameter.
+
         xyz : numpy.array, optional
             The positions to use. Typically for internal engines, this
             is not needed. It is included here as it can be used for
@@ -353,6 +381,8 @@ class MDEngine(EngineBase):
             The calculated order parameter(s).
 
         """
+        system = ensemble['system']
+        order_function = ensemble['order_function']
         if any((xyz is None, vel is None, box is None)):
             return order_function.calculate(system)
         system.particles.pos = xyz
@@ -360,8 +390,7 @@ class MDEngine(EngineBase):
         system.box.update_size(box)
         return order_function.calculate(system)
 
-    def kick_across_middle(self, system, order_function, rgen, middle,
-                           tis_settings):
+    def kick_across_middle(self, ensemble, middle, tis_settings):
         """Force a phase point across the middle interface.
 
         This is accomplished by repeatedly kicking the phase point so
@@ -369,13 +398,17 @@ class MDEngine(EngineBase):
 
         Parameters
         ----------
-        system : object like :py:class:`.System`
-            This is the system that contains the particles we are
-            investigating
-        order_function : object like :py:class:`.OrderParameter`
-            The object used for calculating the order parameter.
-        rgen : object like :py:class:`.RandomGenerator`
-            This is the random generator that will be used.
+        ensemble : dict
+            It contains:
+
+            * `system` : object like :py:class:`.System`
+              This is the system that contains the particles we are
+              investigating
+            * `order_function` : object like :py:class:`.OrderParameter`
+              The object used for calculating the order parameter.
+            * `rgen` : object like :py:class:`.RandomGenerator`
+              This is the random generator that will be used.
+
         middle : float
             This is the value for the middle interface.
         tis_settings : dict
@@ -398,22 +431,22 @@ class MDEngine(EngineBase):
         """
         # We search for crossing with the middle interface and do this
         # by sequentially kicking the initial phase point:
+        system = ensemble['system']
         previous = system.copy()
         system.potential_and_force()  # Make sure forces are set.
-        curr = self.calculate_order(order_function, system)[0]
+        curr = self.calculate_order(ensemble)[0]
         logger.info('Kicking from: %9.6f', curr)
         while True:
             # Save current state:
             previous = system.copy()
             # Modify velocities:
-            self.modify_velocities(system,
-                                   rgen,
-                                   sigma_v=None,
-                                   aimless=True,
-                                   momentum=tis_settings['zero_momentum'],
-                                   rescale=tis_settings['rescale_energy'])
+            self.modify_velocities(
+                ensemble, {'sigma_v': None,
+                           'aimless': True,
+                           'momentum': tis_settings['zero_momentum'],
+                           'rescale': tis_settings['rescale_energy']})
             # Update order parameter in case it is velocity dependent:
-            curr = self.calculate_order(order_function, system)[0]
+            curr = self.calculate_order(ensemble)[0]
             previous.order = curr
             # Store modified velocities:
             previous.particles.set_vel(system.particles.get_vel())
@@ -421,7 +454,7 @@ class MDEngine(EngineBase):
             self.integration_step(system)
             # Compare previous order parameter and the new one:
             prev = curr
-            curr = self.calculate_order(order_function, system)[0]
+            curr = self.calculate_order(ensemble)[0]
             if curr == middle:
                 # By construction we want two points, one left and one
                 # right of the interface, and these two points should
@@ -429,16 +462,12 @@ class MDEngine(EngineBase):
                 # interface we just fall back:
                 system.particles = previous.particles.copy()
                 curr = previous.order
-                # TODO: This mehod should be improved and generalized.
-                # The generalization should be done so that this method
-                # is only defined once and not as it is now - defined
-                # for several engines.
             else:
-                if (prev < middle < curr) or (curr < middle < prev):
+                if (prev <= middle < curr) or (curr < middle <= prev):
                     # Middle interface was crossed, just stop the loop.
                     logger.info('Crossing found: %9.6f %9.6f ', prev, curr)
                     break
-                elif (prev <= curr <= middle) or (middle <= curr <= prev):
+                if (prev <= curr < middle) or (middle < curr <= prev):
                     # We are getting closer, keep the new point.
                     pass
                 else:  # We did not get closer, fall back to previous point.
@@ -525,6 +554,40 @@ class Verlet(MDEngine):
         particles.vel = (pos - self.previous_pos) * self.half_idt
         self.previous_pos, particles.pos = particles.pos, pos
         system.potential_and_force()
+
+    def restart_info(self):
+        """Return restart info.
+
+        The restart info for the engine Verlet.
+
+        Returns
+        -------
+        info : dict,
+            Contains all the updated simulation settings and counters.
+
+        """
+        info = super().restart_info()
+        info['class'] = 'Verlet'
+        for attr, value in self.__dict__.items():
+            info[attr] = value
+
+        return info
+
+    def load_restart_info(self, info):
+        """Load restart information.
+
+        Parameters
+        ----------
+        info : dict
+            The dictionary with the restart information, should be
+            similar to the dict produced by :py:func:`.restart_info`.
+
+        """
+        super().load_restart_info(info)
+        self.timestep = info.get('timestep')
+        self.half_idt = info.get('half_idt')
+        self.timestepsq = info.get('timestepsq')
+        self.previous_pos = info.get('previous_pos')
 
 
 class RandomWalk(MDEngine):
@@ -627,6 +690,39 @@ class VelocityVerlet(MDEngine):
         system.potential_and_force()
         particles.vel += self.half_timestep * particles.force * imass
 
+    def restart_info(self):
+        """Return some restart info.
+
+        The restart info for the engine VelocityVerlet.
+
+        Returns
+        -------
+        info : dict,
+            Contains all the updated simulation settings and counters.
+
+        """
+        info = super().restart_info()
+        info['class'] = 'VelocityVerlet'
+        for attr, value in self.__dict__.items():
+            info[attr] = value
+
+        return info
+
+    def load_restart_info(self, info):
+        """Load restart information.
+
+        Parameters
+        ----------
+        info : dict
+            The dictionary with the restart information, should be
+            similar to the dict produced by :py:func:`.restart_info`.
+
+        """
+        super().load_restart_info(info)
+        self.timestep = info.get('timestep')
+        self.half_timestep = info.get('half_timestep')
+        self.dynamics = info.get('dynamics')
+
 
 class Langevin(MDEngine):
     """The Langevin MD integrator.
@@ -656,6 +752,7 @@ class Langevin(MDEngine):
         * `bddt` : numpy.array
           Equal to ``dt*gamma/masses``, since the masses is a
           numpy.array this will have the same shape.
+
     param_iner : dict
         This dict contains the parameters for the non-high friction
         limit where we integrate the equations of motion according to:
@@ -779,14 +876,13 @@ class Langevin(MDEngine):
             for imass in imasses:
                 sig_ri2 = ((self.timestep * imass[0] / (beta * self.gamma)) *
                            (2. - (3. - 4.*exp_gdt + exp_gdt**2) / gammadt))
-                sig_vi2 = ((1.0 - exp_gdt**2) * imass[0] / beta)
+                sig_vi2 = (1.0 - exp_gdt**2) * imass[0] / beta
                 cov_rvi = (imass[0]/(beta * self.gamma)) * (1.0 - exp_gdt)**2
                 cov_matrix = np.array([[sig_ri2, cov_rvi],
                                        [cov_rvi, sig_vi2]])
                 self.param_iner['cov'].append(cov_matrix)
                 self.param_iner['cho'].append(np.linalg.cholesky(cov_matrix))
                 self.param_iner['mean'].append(np.zeros(2))
-                # NOTE: This can be simplified - the mean is always just zero.
 
     def integration_step(self, system):
         """Langevin integration, one time step.
@@ -852,7 +948,6 @@ class Langevin(MDEngine):
 
         """
         particles = system.particles
-        ndim = system.get_dim()
         pos_rand = np.zeros(particles.pos.shape)
         vel_rand = np.zeros(particles.vel.shape)
         if self.gamma > 0.0:
@@ -860,7 +955,7 @@ class Langevin(MDEngine):
             cho = self.param_iner['cho']
             for i, (meani, covi, choi) in enumerate(zip(mean, cov, cho)):
                 randxv = self.rgen.multivariate_normal(meani, covi, cho=choi,
-                                                       size=ndim)
+                                                       size=system.get_dim())
                 pos_rand[i] = randxv[:, 0]
                 vel_rand[i] = randxv[:, 1]
         particles.pos += (self.param_iner['a1'] * particles.vel +
@@ -872,5 +967,46 @@ class Langevin(MDEngine):
         system.force()  # Update forces.
 
         particles.vel = vel2 + self.param_iner['b2'] * particles.force
-
         system.potential()
+
+    def restart_info(self):
+        """Return restart info.
+
+        The restart info for the engine Langevin.
+
+        Returns
+        -------
+        info : dict
+            Contains all the updated simulation settings and counters.
+
+        """
+        info = super().restart_info()
+        info['class'] = 'Langevin'
+        for attr, value in self.__dict__.items():
+            if attr == 'rgen':
+                info[attr] = value.get_state()
+            else:
+                info[attr] = value
+        return info
+
+    def load_restart_info(self, info):
+        """Load restart information.
+
+        Parameters
+        ----------
+        info : dict
+            The dictionary with the restart information, should be
+            similar to the dict produced by :py:func:`.restart_info`.
+
+        """
+        super().load_restart_info(info)
+        self.timestep = info.get('timestep')
+        self.dynamics = info.get('dynamics')
+        self.gamma = info.get('gamma')
+        self.high_friction = info.get('high_friction')
+        self.param_high = info.get('param_high')
+        self.param_iner = info.get('param_iner')
+        self.init_params = info.get('init_params')
+
+        if 'rgen' in info:
+            self.rgen = create_random_generator(info['rgen'])

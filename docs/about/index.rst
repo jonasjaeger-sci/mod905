@@ -55,6 +55,9 @@ The |pyretis| team
 
 * `Sander Roet  <https://www.ntnu.no/ansatte/sander.roet>`_
 
+* `Daniel Tianhou Zhang <https://www.ntnu.no/ansatte/daniel.t.zhang>`_
+
+* `https://www.ugent.be/ea/ibitech/en/about-us/biommeda-staff-1/ir-wouter-vervust.htm>`_
 
 **Contributors:**
 
@@ -62,10 +65,11 @@ The |pyretis| team
 
 * `Ola Aarøen <https://www.ntnu.no/ansatte/ola.aaroen>`_
 
-* `Henrik Kiær <https://www.linkedin.com/in/henrikkiaer/?originalSubdomain=no>`_
-
+* `An Ghysels <https://www.ugent.be/ea/ibitech/en/about-us/biommeda-staff-1/professor-an-ghysels.htm>`_
 
 **Former Developers:**
+
+* `Henrik Kiær <https://www.linkedin.com/in/henrikkiaer/?originalSubdomain=no>`_
 
 * `Anastasia Maslechko <https://www.linkedin.com/in/anastasia-maslechko-87207b95/?originalSubdomain=ua>`_
 
@@ -77,8 +81,6 @@ The |pyretis| team
 * Oda Dahlen
 
 * Christopher Daub
-
-* An Ghysels
 
 * Mahmoud Moqadam
 
@@ -104,8 +106,14 @@ When using |pyretis|, or one of our libraries, please cite us!
 
 **Theory papers from our group:**
 
+* `REPPTIS <https://doi.org/10.1016/j.bpj.2023.02.021>`_
+
+* `Wire Fencing <https://doi.org/10.1063/5.0127249>`_
+
 * `Stone Skipping & Web Throwing <https://doi.org/10.1021/acs.jpclett.7b01617>`_
 
 * `RETIS <https://doi.org/10.1103/PhysRevLett.98.268301>`_
 
 * `TIS <https://doi.org/10.1063%2F1.1562614>`_
+
+* `Permeability calculation <https://doi.org/10.1103/PhysRevResearch.3.033068>`_

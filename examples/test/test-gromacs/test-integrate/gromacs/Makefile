@@ -19,6 +19,7 @@ clean:
 	find -name \*pyretis.mdp* -delete
 	find -name \*.tpr* -delete
 	-rm gromacs-run.rst
+	-rm */conf.gro
 	-rm conf.g96
 	-rm *pyretis-gmx*
 	-rm *gromacs-run*

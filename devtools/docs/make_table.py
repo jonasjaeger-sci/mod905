@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Helper to create tables for PyRETIS keywords."""
 import textwrap
+import pathlib
 
 
 def make_table(data, short_refs):
@@ -76,7 +77,8 @@ def read_keyword_section(filename, add_to_ref):
     sections = []
     section = []
     new_section = True
-    with open(filename) as fileobj:
+    filename = pathlib.Path(filename)
+    with filename.open() as fileobj:
         for lines in fileobj:
             if lines.startswith('* :ref:'):
                 if new_section:

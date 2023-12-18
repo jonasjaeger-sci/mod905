@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """This is a mock engine for external testing.
 
@@ -19,8 +19,8 @@ def write_energy(outfile, steps=10):
                        'Temp[K]', 'Pot.[a.u.]', 'Cons Qty[a.u.]',
                        'UsedTime[s]'])
     fmt = '{:10d} {:8.6f} {:8.6f} {:8.6f} {:8.6f} {:8.6f} {:8.6f}'
-    with open(outfile, 'w') as output:
-        output.write('{}\n'.format(header))
+    with open(outfile, 'w', encoding='utf-8') as output:
+        output.write(f'{header}\n')
         for i in range(steps):
             time = i * 0.5
             kin = i * 0.1
@@ -34,9 +34,9 @@ def write_wfn_file(outfile):
     """Write some gibberish data to represent a wfn file."""
     if os.path.isfile(outfile):
         # Just keep one backup file. This is useful for the testing.
-        backup = '{}.bak-1'.format(outfile)
+        backup = f'{outfile}.bak-1'
         os.rename(outfile, backup)
-    with open(outfile, 'w') as output:
+    with open(outfile, 'w', encoding='utf-8') as output:
         output.write('Some gibberish')
 
 
@@ -54,7 +54,7 @@ def write_xyz_file(outfile, factor, steps=10):
 
 def read_project_name(filename):
     """Get the CP2K project name."""
-    with open(filename, 'r') as infile:
+    with open(filename, 'r', encoding='utf-8') as infile:
         for lines in infile:
             if lines.find('PROJECT') != -1:
                 projname = lines.split()[-1]
@@ -68,9 +68,9 @@ def write_cp2k_restart(filename, factorx, factorv, steps=10):
     vel = (steps - 1) * factorv
     if os.path.isfile(filename):
         # Just keep one backup file. This is useful for the testing.
-        backup = '{}.bak-1'.format(filename)
+        backup = f'{filename}.bak-1'
         os.rename(filename, backup)
-    with open(filename, 'w') as outfile:
+    with open(filename, 'w', encoding='utf-8') as outfile:
         outfile.write('&FORCE_EVAL\n')
         outfile.write('&SUBSYS\n')
         outfile.write('&COORD\n')
@@ -110,19 +110,19 @@ if __name__ == '__main__':
     if not name:
         sys.exit(1)
 
-    efile = '{}-1.ener'.format(name)
+    efile = f'{name}-1.ener'
     write_energy(efile, steps=10)
 
-    wfile = '{}-RESTART.wfn'.format(name)
+    wfile = f'{name}-RESTART.wfn'
     write_wfn_file(wfile)
 
-    xfile = '{}-pos-1.xyz'.format(name)
+    xfile = f'{name}-pos-1.xyz'
     xfac = np.array([0.1, 0.2, 0.3])
     write_xyz_file(xfile, xfac, steps=10)
 
-    vfile = '{}-vel-1.xyz'.format(name)
+    vfile = f'{name}-vel-1.xyz'
     vfac = np.array([1.1, 1.2, 1.3])
     write_xyz_file(vfile, vfac, steps=10)
 
-    rfile = '{}-1.restart'.format(name)
+    rfile = f'{name}-1.restart'
     write_cp2k_restart(rfile, xfac, vfac, steps=10)

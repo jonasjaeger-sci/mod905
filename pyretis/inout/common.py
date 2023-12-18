@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """This file contains common functions for the input/output.
 
@@ -41,6 +41,7 @@ import os
 import re
 import sys
 from abc import ABCMeta, abstractmethod
+from pyretis import MIN_PYTHON_VERSION
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
@@ -52,6 +53,7 @@ __all__ = [
     'make_dirs',
     'OutputBase',
     'simplify_ensemble_name',
+    'TRJ_FORMATS'
 ]
 
 
@@ -84,16 +86,21 @@ ORDERFILES = {'order': 'order',
 # hard-coded patters for path analysis output files:
 PATHFILES = {'pcross': '{}_pcross',
              'prun': '{}_prun',
+             'prun_sl': '{}_prun_sl',
+             'prun_sr': '{}_prun_sr',
              'perror': '{}_perror',
+             'perror_sl': '{}_perror_sl',
+             'perror_sr': '{}_perror_sr',
              'lengtherror': '{}_lerror',
              'pathlength': '{}_lpath',
-             'shoots': '{}_shoots',
-             'shoots_scaled': '{}_shoots_scaled'}
+             'shoots': '{}_shoots'}
 # hard-coded patterns for matched files:
 PATH_MATCH = {'total': 'total-probability',
               'progress': 'overall-rrun',
               'error': 'overall-err',
               'match': 'matched-probability'}
+# Supported trj formats # TODO (LAMMPS missing)
+TRJ_FORMATS = ['.xyz', '.gro', '.trr', '.txt', '.g96']
 
 
 def create_backup(outputfile):
@@ -120,7 +127,7 @@ def create_backup(outputfile):
     here will be part of some more elaborate message.
 
     """
-    filename = str(outputfile)
+    filename = f'{outputfile}'
     fileid = 0
     msg = None
     while os.path.isfile(filename) or os.path.isdir(filename):
@@ -302,12 +309,14 @@ def generate_file_name(basename, directory, settings):
     return filename
 
 
-def check_python_version():  # pragma: no cover
+def check_python_version():
     """Give a warning about old python version(s)."""
-    pyversion = sys.version.split()[0]
-    if sys.version_info < (3, 0):
-        msgtxt = ('Please upgrade to Python 3.'
-                  f'\nPython {pyversion} is not supported!')
+    version = sys.version_info[:2]  # Only check major, minor
+    if version < MIN_PYTHON_VERSION:
+        msgtxt = ('Please upgrade to Python {}.{}.'
+                  '\nPython {}.{} is not supported!')
+        msgtxt = msgtxt.format(*MIN_PYTHON_VERSION,
+                               *version)
         logger.error(msgtxt)
         raise SystemExit(msgtxt)
 
@@ -317,8 +326,11 @@ class OutputBase(metaclass=ABCMeta):
 
     Attributes
     ----------
-    formatter : object like :py:class:`.OutputFormatter`
+    formatter : object like py:class:`.OutputFormatter`
         The object responsible for formatting output.
+    target : string
+        Determines where the target for the output, for
+        instance "screen" or "file".
     first_write : boolean
         Determines if we have written something yet, or
         if this is the first write.
@@ -326,18 +338,9 @@ class OutputBase(metaclass=ABCMeta):
     """
 
     target = None
-    """string or None : Determines the target for the output,
-    for instance "screen" or "file"."""
 
     def __init__(self, formatter):
-        """Create the object and attach a formatter.
-
-        Parameters
-        ----------
-        formatter : object like :py:class:`.OutputFormatter`
-            The object responsible for formatting output.
-
-        """
+        """Create the object and attach a formatter."""
         self.formatter = formatter
         self.first_write = True
 
@@ -407,8 +410,11 @@ def create_empty_ensembles(settings):
     ints = settings['simulation']['interfaces']
 
     # Determine how many ensembles are needed.
-    # (In PyRETIS 2 the flux and zero ensemble are always considered)
-    add0 = 1
+    add0 = 0
+    if not settings['simulation'].get('flux', False):
+        add0 += 1
+    if not settings['simulation'].get('zero_ensemble', True):
+        add0 += 1
 
     # if some ensembles have inputs, they need to be kept.
     if 'ensemble' in settings:
@@ -423,20 +429,26 @@ def create_empty_ensembles(settings):
     # that ensemble will be considered.
     if 'tis' in settings:
         idx = settings['tis'].get('ensemble_number')
+        detect = settings['tis'].get('detect', ints[2])
         if idx is not None:
             settings['ensemble'].append({'interface': ints[1],
-                                         'tis': {'ensemble_number': idx}})
+                                         'tis': {'ensemble_number': idx,
+                                                 'detect': detect}})
             for sav in orig_set:
                 settings['ensemble'][0] = {**settings['ensemble'][0], **sav}
             return
     # if one wants to compute the flux, the 000 ensemble is for it
     # todo remove this labelling mismatch, and give to the flux
     # a flux name folder (instead of 000), and leave 000 for the O^+ ens.
-    settings['ensemble'].append({'interface': ints[0],
-                                 'tis': {'ensemble_number': 0}})
+    if settings['simulation'].get('flux', False):
+        settings['ensemble'].append({'interface': ints[0],
+                                     'tis': {'ensemble_number': 0,
+                                             'detect': ints[1]}})
+        add = add0 + 1
     for i in range(add, len(ints)):
         settings['ensemble'].append({'interface': ints[i - 1],
-                                     'tis': {'ensemble_number': i}})
+                                     'tis': {'ensemble_number': i,
+                                             'detect': ints[i]}})
 
     # create the ensembles in setting, keeping eventual inputs.
     # nb. in the settings, specific input for an ensemble can be now given.

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Module defining the base classes for the PyRETIS output.
 
@@ -93,30 +93,40 @@ def generate_traj_names(path, target_dir):
 
 
 class PathStorage(OutputBase):
-    """A class for handling storage of external trajectories."""
+    """A class for handling storage of external trajectories.
+
+    Attributes
+    ----------
+    target : string
+        Determines the target for this output class. Here it will
+        be a file archive (i.e. a directory based collection of
+        files).
+    archive_acc : string
+        Basename for the archive with accepted trajectories.
+    archive_rej : string
+        Basename for the archive with rejected trajectories.
+    archive_traj : string
+        Basename for a sub-folder containing the actual files
+        for a trajectory.
+    formatters : dict
+        This dict contains the formatters for writing path data,
+        with default filenames used for them.
+    out_dir_fmt : string
+        A format to use for creating directories within the archive.
+        This one is applied to the step number for the output.
+
+    """
 
     target = 'file-archive'
-    """string : Determines the target for this output class.
-    Here it will be a file archive (i.e. a directory based
-    collection of files).
-    """
     archive_acc = 'traj-acc'
-    """string : Basename for the archive with accepted trajectories."""
     archive_rej = 'traj-rej'
-    """string : Basename for the archive with rejected trajectories."""
     archive_traj = 'traj'
-    """string : Basename for a sub-folder containing the actual files
-    for a trajectory."""
     formatters = {
         'order': {'fmt': OrderPathFormatter(), 'file': 'order.txt'},
         'energy': {'fmt': EnergyPathFormatter(), 'file': 'energy.txt'},
         'traj': {'fmt': PathExtFormatter(), 'file': 'traj.txt'},
     }
-    """dict : This dict contains the formatters for writing path data,
-    with default filenames used for them."""
     out_dir_fmt = '{}'
-    """string : A format to use for creating directories within the
-    archive. This one is applied to the step number for the output."""
 
     def __init__(self):
         """Set up the storage.
@@ -168,7 +178,7 @@ class PathStorage(OutputBase):
                 self.out_dir_fmt.format(step), val['file']
             )
             files.append((full_path, relative_path))
-            with open(full_path, 'w') as output:
+            with open(full_path, 'w', encoding="utf8") as output:
                 for line in fmt.format(step, (path, status)):
                     output.write('{}\n'.format(line))
         return files
@@ -192,11 +202,11 @@ class PathStorage(OutputBase):
             The files added to the archive.
 
         """
-        path, status, ensemble = data
+        path, status, path_ensemble = data
         archive = self.archive_name_from_status(status)
         # This is the path on form: /path/to/000/traj/11
         archive_path = os.path.join(
-            ensemble.directory['traj'],
+            path_ensemble.directory['traj'],
             archive,
             self.out_dir_fmt.format(step),
         )
@@ -217,6 +227,17 @@ class PathStorage(OutputBase):
             target = os.path.join(traj_dir, os.path.basename(file_dest))
             shutil.copyfile(file_src, target)
             files.append((target, file_dest))
+        # Copy the ensemble.restart file if path was accepted:
+        if data[1] == 'ACC':
+            file_src = os.path.join(path_ensemble.directory['path_ensemble'],
+                                    'ensemble.restart')
+            if os.path.isfile(file_src):
+                target = os.path.join(archive_path, 'ensemble.restart')
+                shutil.copyfile(file_src, target)
+                file_dest = os.path.join(self.out_dir_fmt.format(step),
+                                         'ensemble.restart')
+                files.append((target, file_dest))
+
         return files
 
     def write(self, towrite, end='\n'):
@@ -295,9 +316,9 @@ class PathStorageTar(PathStorage):
             The files added to the archive.
 
         """
-        path, status, ensemble = data
+        path, status, path_ensemble = data
         tar_file = self.archive_name_from_status(status)
-        tar_path = os.path.join(ensemble.directory['traj'], tar_file)
+        tar_path = os.path.join(path_ensemble.directory['traj'], tar_file)
         files = []
         # We create the files in a temporary directory and then add them
         # to the tar archive:
@@ -312,6 +333,14 @@ class PathStorageTar(PathStorage):
         files2 = generate_traj_names(path, target_dir)
         if self._add_to_archive(tar_path, files2):
             files.extend(files2)
+        # Include the ensemble.restart file if path was accepted:
+        if data[1] == 'ACC':
+            file_src = os.path.join(path_ensemble.directory['path_ensemble'],
+                                    'ensemble.restart')
+            if os.path.isfile(file_src):
+                file_dest = os.path.join(self.out_dir_fmt.format(step),
+                                         'ensemble.restart')
+                files.append((file_src, file_dest))
         return files
 
     def __str__(self):

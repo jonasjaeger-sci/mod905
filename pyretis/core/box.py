@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Definition of a class for a simulation box.
 
@@ -32,13 +32,14 @@ import logging
 import math
 import numpy as np
 from numpy.linalg import det
-from numpy import product
+from numpy import prod
 from pyretis.core.common import compare_objects
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 
-__all__ = ['create_box']
+__all__ = ['create_box', 'check_consistency', 'box_matrix_to_list',
+           'box_vector_angles', 'angles_from_box_matrix']
 
 
 def create_box(low=None, high=None, cell=None, periodic=None):
@@ -72,9 +73,9 @@ def create_box(low=None, high=None, cell=None, periodic=None):
         cell = np.array(cell, dtype=float)
 
         if len(cell) <= 3:
-            length = np.array([i for i in cell])
+            length = np.array(list(cell))
         else:  # Use the xx, yy and zz parameters:
-            length = np.array([i for i in cell[:3]])
+            length = np.array(list(cell[:3]))
         # Determine low, high, length and possible periodic:
         low, high, length, periodic = _get_low_high_length(
             low, high, length, periodic
@@ -83,7 +84,7 @@ def create_box(low=None, high=None, cell=None, periodic=None):
         low, high, length, periodic = _get_low_high_length(
             low, high, cell, periodic
         )
-        cell = np.array([i for i in length])
+        cell = np.array(list(length))
     # We can still have periodic not set:
     if periodic is None:
         logger.info(
@@ -449,7 +450,7 @@ class BoxBase(metaclass=ABCMeta):
             else:
                 try:
                     self.box_matrix = array_to_box_matrix(new_size)
-                    self.cell = [i for i in new_size]
+                    self.cell = list(new_size)
                     self.length = np.array([float(i) for i in self.cell[:3]])
                     self.high = self.low + self.length
                     self.ilength = 1.0 / self.length
@@ -458,7 +459,7 @@ class BoxBase(metaclass=ABCMeta):
 
     def bounds(self):
         """Return the boundaries of the box (low, high) as an array."""
-        return [(i, j) for i, j in zip(self.low, self.high)]
+        return list(zip(self.low, self.high))
 
     @abstractmethod
     def calculate_volume(self):
@@ -540,7 +541,7 @@ class BoxBase(metaclass=ABCMeta):
     def print_length(self, fmt=None):
         """Return a string with box lengths. Can be used for output."""
         if fmt is None:
-            return ' '.join(('{}'.format(i) for i in self.cell))
+            return ' '.join((f'{i}' for i in self.cell))
         return ' '.join((fmt.format(i) for i in self.cell))
 
     def restart_info(self):
@@ -572,6 +573,14 @@ class BoxBase(metaclass=ABCMeta):
         )
         return box_copy
 
+    def load_restart_info(self, info):
+        """Read the restart information."""
+        self.length = info.get('length')
+        self.periodic = info.get('periodic')
+        self.low = info.get('low')
+        self.high = info.get('high')
+        self.cell = info.get('cell')
+
     def __str__(self):
         """Return a string describing the box.
 
@@ -593,7 +602,7 @@ class BoxBase(metaclass=ABCMeta):
             msg = 'Dim: {}, Low: {}, high: {}, periodic: {}'
             boxstr.append(msg.format(i, low, high, periodic))
         cell = self.print_length()
-        boxstr.append('Cell: {}'.format(cell))
+        boxstr.append(f'Cell: {cell}')
         return '\n'.join(boxstr)
 
     def __eq__(self, other):
@@ -603,6 +612,10 @@ class BoxBase(metaclass=ABCMeta):
         numpy_attrs = {'low', 'high', 'length', 'ilength', 'box_matrix',
                        'cell'}
         return compare_objects(self, other, attrs, numpy_attrs)
+
+    def __ne__(self, other):
+        """Compare two box objects."""
+        return not self == other
 
 
 class RectangularBox(BoxBase):
@@ -617,7 +630,7 @@ class RectangularBox(BoxBase):
             The volume of the box.
 
         """
-        return product(self.length)
+        return prod(self.length)
 
     def pbc_coordinate_dim(self, pos, dim):
         """Apply periodic boundaries to a selected dimension only.

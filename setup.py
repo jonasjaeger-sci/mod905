@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """PyRETIS - A simulation package for rare event simulations.
 
 PyRETIS - A simulation package for rare event simulations.
-Copyright (c) 2022, PyRETIS Development Team
+Copyright (c) 2023, PyRETIS Development Team
 
 This file is part of PyRETIS.
 
@@ -26,7 +26,7 @@ from codecs import open as openc
 import pathlib
 from setuptools import setup, find_namespace_packages
 
-FULL_VERSION = '2.5.0'  # Automatically set by setup_version.py
+FULL_VERSION = '3.0.0.dev2'  # Automatically set by setup_version.py
 
 
 def get_long_description():
@@ -88,7 +88,7 @@ setup(
         'Operating System :: POSIX',
         'Programming Language :: Python :: 3 :: Only',
         'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.8',
         'Topic :: Scientific/Engineering :: Physics',
     ],
     keywords='rare-events md mc tps simulation tis retis',
@@ -97,7 +97,7 @@ setup(
         'pyretis': [
             'pyretis.mplstyle',
             'pyretis/inout/report/templates/*',
-            'pyretis/visualization/pyretisVisualizeWindow.ui'
+            'pyretis/pyvisa/pyvisaGUI.ui'
         ]
     },
     include_package_data=True,
@@ -105,7 +105,8 @@ setup(
     entry_points={
         'console_scripts': [
             'pyretisrun = pyretis.bin.pyretisrun:entry_point',
-            'pyretisanalyse = pyretis.bin.pyretisanalyse:entry_point'
+            'pyretisanalyse = pyretis.bin.pyretisanalyse:entry_point',
+            'pyvisa = pyretis.bin.pyvisa:entry_point'
         ]
     },
 )

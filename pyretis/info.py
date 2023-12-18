@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """This module just contains some info for PyRETIS.
 
@@ -16,13 +16,15 @@ CITE = """
     doi: https://dx.doi.org/10.1002/jcc.24900
 [2] E. Riccardi, A. Lervik, S. Roet, O. Aarøen and T. S. van Erp,
     J. Comput. Chem., 2019, doi: https://dx.doi.org/10.1002/jcc.26112
+
 """
 LOGO = r"""
-  _______                                     ___________
- /   ___ \         ___  ____  ____________   / __     __/
-/_/\ \_/ /_  __   / _ \/ __/ /_  _/ / ___/  /_/ / // /
-   /  __  / / /  / /_)  _/    / // /\ \        / // /
-  / /   \ \/ /  / _  \ /__   / // /__\ \    __/ // /__
- /_/    _\  /  /_/ |_|___/  /_//_/_____/   /_________/
+
+  _______                                     _______________
+ /   ___ \       _____  ____  ____________   / __        ___/
+/_/\ \_/ /_  __  \  _ \/ __/ /_  _/ / ___/  /_/ / // // /
+   /  __  / / /  / /_)  _/    / // /\ \        / // // / __
+  / /   \ \/ /  / _  \ /__   / // /__\ \   ___/ // // /_/ /
+ /_/    _\  /  /_/ |_|___/  /_//_/_____/  /______________/
        /___/
 """

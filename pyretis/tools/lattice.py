@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Some methods for generating initial lattice structures.
 
@@ -15,14 +15,16 @@ Examples
 >>> xyz, size = generate_lattice('diamond', [1, 1, 1], lcon=1)
 
 """
+import logging
 import itertools
 import numpy as np
-
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
 __all__ = ['generate_lattice']
 
 
 UNIT_CELL = {'sc': np.array([[0.0, 0.0, 0.0]]),
+             '1d': np.array([[0.0]]),
              'sq': np.array([[0.0, 0.0]]),
              'sq2': np.array([[0.0, 0.0], [0.5, 0.5]]),
              'bcc': np.array([[0.0, 0.0, 0.0], [0.5, 0.5, 0.5]]),
@@ -36,7 +38,7 @@ UNIT_CELL = {'sc': np.array([[0.0, 0.0, 0.0]]),
                                   [0.75, 0.25, 0.75], [0.75, 0.75, 0.25]])}
 
 
-def generate_lattice(lattice, repeat, lcon=None, density=None):
+def generate_lattice(lattice, repeat=None, lcon=None, density=None):
     """Generate points on a simple lattice.
 
     The lattice is one of the defined keys in the global variable
@@ -50,13 +52,17 @@ def generate_lattice(lattice, repeat, lcon=None, density=None):
         Select the kind of lattice. The following options are currently
         defined in `UNIT_CELL`:
 
-        * sc : Simple cubic lattice.
-        * sq : Square lattice (2D) with one atom in the unit cell.
-        * sq2 : Square lattice with two atoms in the unit cell.
-        * bcc : Body-centred cubic lattice.
-        * fcc : Face-centred cubic lattice.
-        * hcp : Hexagonal close-packed lattice.
-        * diamond : Diamond structure.
+         * `1d` : 1D lattice
+         * `sc` : Simple cubic lattice.
+         * `sq` : Square lattice (2D) with one atom in the unit cell.
+         * `sq2` : Square lattice with two atoms in the unit cell.
+         * `bcc` : Body-centred cubic lattice.
+         * `fcc` : Face-centred cubic lattice.
+         * `hcp` : Hexagonal close-packed lattice.
+         * `diamond` : Diamond structure.
+
+    repeat : list of integers, optional.
+        How many time the cell is replicated.
     lcon : float, optional
         The lattice constant.
     density : float, optional
@@ -86,10 +92,16 @@ def generate_lattice(lattice, repeat, lcon=None, density=None):
     npart = len(unit_cell)
     if density is not None:
         lcon = (npart / density)**(1.0 / float(ndim))
-    if lcon is None:
+    if repeat is None and density is None and lcon is None:
+        logger.debug('The construction of the simulation '
+                     'box is attempted with insufficient '
+                     'information. Please check')
+        repeat = [1]*ndim
+        lcon = 1
+    elif lcon is None:
         msgtxt = 'Could not determine lattice constant!'
         raise ValueError(msgtxt)
-    if len(repeat) < ndim:
+    elif len(repeat) < ndim:
         msgtxt = 'To few "repeat" values given: Expected {} but got {}.'
         raise ValueError(msgtxt.format(ndim, len(repeat)))
     positions = []

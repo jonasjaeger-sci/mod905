@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Module for formatting path ensemble data from PyRETIS.
 
@@ -133,11 +133,10 @@ class PathEnsembleFormatter(OutputFormatter):
             path_dict['generated'][1],
             path_dict['generated'][2],
             path_dict['generated'][3],
-            path_dict['weight']
+            path_dict['weight'],
         )
 
-    @staticmethod
-    def parse(line):
+    def parse(self, line):
         """Parse a line to a simplified representation of a path.
 
         Parameters
@@ -155,6 +154,8 @@ class PathEnsembleFormatter(OutputFormatter):
         if linec.startswith('#'):
             # This is probably the comment
             return None
+        # stip trailing comments
+        linec = linec.split('#')[0]
         data = [i.strip() for i in linec.split()]
         if len(data) < 16:
             logger.warning(
@@ -184,8 +185,9 @@ class PathEnsembleFormatter(OutputFormatter):
                 'ordermax': (float(data[10]), int(data[12])),
                 'ordermin': (float(data[9]), int(data[11])),
                 'status': str(data[7]),
-                'weight': float(data[16])
+                'weight': float(data[16]),
             }
+
         return path_info
 
     def load(self, filename):
@@ -205,10 +207,11 @@ class PathEnsembleFormatter(OutputFormatter):
 
         """
         try:
-            with open(filename, 'r') as fileh:
+            with open(filename, 'r', encoding="utf8") as fileh:
                 for line in fileh:
                     path_data = self.parse(line)
                     if path_data is not None:
+                        path_data['filename'] = filename
                         yield path_data
         except IOError as error:
             logger.critical('I/O error (%d): %s', error.errno, error.strerror)
@@ -260,8 +263,7 @@ class PathEnsembleFile(PathEnsemble, FileIO):
                     self.__class__
                 )
         PathEnsemble.__init__(self, settings['ensemble_number'],
-                              settings['interfaces'],
-                              detect=settings['detect'])
+                              settings['interfaces'])
         FileIO.__init__(self, filename, file_mode, PathEnsembleFormatter(),
                         backup=backup)
 

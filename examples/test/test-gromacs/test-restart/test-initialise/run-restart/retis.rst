@@ -4,8 +4,8 @@ Retis 1D example
 Simulation
 ----------
 task = retis
-steps = 25
-interfaces = [-0.26, -0.24, -0.22, -0.20, -0.19, -0.18]
+steps = 5
+interfaces = [-0.26, -0.24, -0.22, -0.18]
 restart = ../run-initialise/pyretis.restart
 
 System
@@ -18,7 +18,7 @@ class = GromacsEngine2R
 module = gromacs.py
 gmx = GMXCOMMAND
 mdrun = GMXCOMMAND mdrun
-input_path = ../gromacs_input
+input_path = ../../../gmx/gromacs_input
 timestep = 0.002
 subcycles = 5
 gmx_format = g96
@@ -32,7 +32,6 @@ allowmaxlength = False
 zero_momentum = False
 rescale_energy = False
 sigma_v = -1
-seed = 0
 
 Initial-path
 ------------
@@ -52,8 +51,9 @@ module = orderp.py
 
 Output settings
 ---------------
+backup = 'append'
 pathensemble-file = 1
-screen = 10
+screen = 1
 order-file = 1
 energy-file = 1
 trajectory-file = 1

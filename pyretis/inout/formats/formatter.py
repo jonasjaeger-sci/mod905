@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Module for defining the generic formatting of output data from PyRETIS.
 
@@ -67,9 +67,9 @@ def _make_header(labels, width, spacing=1):
         except IndexError:
             wid = width[-1]
         if i == 0:
-            fmt = '# {{:>{}s}}'.format(wid - 2)
+            fmt = f'# {{:>{wid-2}s}}'
         else:
-            fmt = '{{:>{}s}}'.format(wid)
+            fmt = f'{{:>{wid}s}}'
         heading.append(fmt.format(col))
     str_white = ' ' * spacing
     return str_white.join(heading)
@@ -113,10 +113,9 @@ def apply_format(value, fmt):
             deci = maxlen - 7
         else:
             deci = maxlen - 6
-        new_fmt = '{{:{0}{1}.{2}e}}'.format(align, maxlen, deci)
+        new_fmt = f'{{:{align}{maxlen}.{deci}e}}'
         return new_fmt.format(value)
-    else:
-        return str_fmt
+    return str_fmt
 
 
 def format_number(number, minf, maxf, fmtf='{0:<16.9f}', fmte='{0:<16.9e}'):
@@ -155,7 +154,7 @@ class OutputFormatter:
     ----------
     name : string
         A string which identifies the formatter.
-    _header : string
+    header : string
         A header (or table heading) with information about the
         output data.
     print_header : boolean
@@ -214,7 +213,7 @@ class OutputFormatter:
             this is something we can iterate over.
 
         """
-        out = ['{}'.format(step)]
+        out = [f'{step}']
         for i in data:
             out.append(self._FMT.format(i))
         yield ' '.join(out)

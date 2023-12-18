@@ -19,11 +19,19 @@ In this example, we perform the integration in different ways:
 
 The test can be run by executing:
 
-python test_gromacs.py
+python test_cp2k.py
 
-Note that additional settings can be set for the engine using
+and
+
+python test_cp2k_step.py
+
+Note 1: additional settings can be set for the engine using
 the engine.rst file and that you can also set the subcycles,
 timestep, and the number of steps to perform here.
+
+Note 2: test_cp2k.py will also invoke a test to compare the simulations results 
+between the forward and backward path.
+
 
 Important
 ---------

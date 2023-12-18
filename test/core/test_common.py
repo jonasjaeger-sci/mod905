@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Test methods from pyretis.core.common"""
+import os
+import sys
+import inspect
 import logging
 import unittest
 import numpy as np
@@ -9,16 +12,20 @@ from io import StringIO
 from pyretis.core.common import (
     big_fat_comparer,
     crossing_finder,
-    inspect_function,
     generic_factory,
+    import_from,
+    inspect_function,
     numpy_allclose,
-    select_and_trim_a_segment,
     segments_counter,
+    select_and_trim_a_segment,
     trim_path_between_interfaces,
+    wirefence_weight_and_pick,
     _pick_out_arg_kwargs,
 )
 from unittest.mock import patch
 from .test_path import PATHTEST0, PATHTEST1, PATHTEST2
+
+LOCAL_DIR = os.path.abspath(os.path.dirname(__file__))
 
 logging.disable(logging.CRITICAL)
 
@@ -68,7 +75,7 @@ def function7(arg1, arg2, arg3=100, *args, arg4, arg5=10):
 
 # pylint: disable=unused-argument
 def function8(arg1, arg2=100, self='something'):
-    """To test redifinition of __init__."""
+    """To test redefinition of __init__."""
 # pylint: enable=unused-argument
 
 
@@ -88,6 +95,36 @@ CORRECT = [
     {'args': ['arg1', 'arg2'], 'kwargs': ['arg3', 'arg4', 'arg5'],
      'varargs': ['args'], 'keywords': []},
 ]
+
+
+class TestImportFrom(unittest.TestCase):
+    """Test that we can import from other modules."""
+
+    def test_import(self):
+        """Test that we can import."""
+        module = os.path.join(LOCAL_DIR, 'fooengine.py')
+        klass = 'FooEngine'
+        imp = import_from(module, klass)
+        sys.path.insert(0, LOCAL_DIR)
+        from fooengine import FooEngine
+        del sys.path[0]
+        self.assertEqual(
+            inspect.getsource(imp),
+            inspect.getsource(FooEngine)
+        )
+
+    def test_import_importerror(self):
+        """Test that we can import."""
+        module = os.path.join(LOCAL_DIR, 'fooengine.py')
+        klass = 'DoesNotExist'
+        with self.assertRaises(ValueError):
+            import_from(module, klass)
+        module = 'path-that-should-not-be'
+        with self.assertRaises(ValueError):
+            import_from(module, klass)
+        module = os.path.join(LOCAL_DIR, 'isnothere.py')
+        with self.assertRaises(ValueError):
+            import_from(module, klass)
 
 
 class InspectTest(unittest.TestCase):
@@ -334,9 +371,9 @@ class TestBigFatComparer(unittest.TestCase):
 class Test_wt(unittest.TestCase):
     """Run the tests for the wt utilities."""
 
-    def test_crossing_counter(self):
+    def test_x1_crossing_finder(self):
         ph1, ph2 = crossing_finder(path=PATHTEST0, interface=2.9)
-        self.assertEqual(7, len(ph1))
+        self.assertEqual(15, ph1.order[0])
 
     def test_segments_counter(self):
         self.assertEqual(4, segments_counter(path=PATHTEST0,
@@ -345,7 +382,7 @@ class Test_wt(unittest.TestCase):
                                              interface_l=2, interface_r=9))
 
     def test_trim_path_between_interfaces(self):
-        """ Test for trimming trajectories withing a range in path space"""
+        """Test for trimming trajectories withing a range in path space."""
         path0 = trim_path_between_interfaces(path=PATHTEST0, interface_l=3.0,
                                              interface_r=7.0)
         path2 = PATHTEST2.copy()
@@ -356,8 +393,30 @@ class Test_wt(unittest.TestCase):
             self.assertTrue(path2 == path0)
             self.assertTrue(PATHTEST0 != path0)
 
+    def test_wirefence_weight_and_pick(self):
+        """Test for wirefernce function in a pathological case."""
+        path0 = trim_path_between_interfaces(path=PATHTEST0, interface_l=3.0,
+                                             interface_r=7.0)
+        # Create a path with L-L, L-R and R-R sub-paths between 1.5 and 2.5:
+        for i, j in enumerate([1]+[2]*3+[1]+[2]*1+[3]+[2]*4+[3]):
+            path0.phasepoints[i].order[0] = j
+
+        q_tot, segment = wirefence_weight_and_pick(path=path0,
+                                                   intf_l=1.5, intf_r=2.5)
+        # Only the L-L and L-R phase points to be counted
+        self.assertEqual(q_tot, 4)
+
+        # Create a path with phase points i < intf_l and i+1 > intf_r,
+        # and also a R-L sub-path:
+        for i, j in enumerate([1]+[3]*6+[2]*4+[1]):
+            path0.phasepoints[i].order[0] = j
+        q_tot, segment = wirefence_weight_and_pick(path=path0,
+                                                   intf_l=1.5, intf_r=2.5,)
+        # Only the R-L phase points to be counted
+        self.assertEqual(q_tot, 4)
+
     def test_select_and_trim_a_segment(self):
-        """ Test to trim a selected segment keeping the crossing"""
+        """Test to trim a selected segment keeping the crossing."""
         path_rnd = select_and_trim_a_segment(path=PATHTEST0, interface_l=4.1,
                                              interface_r=5.9)
         path3 = select_and_trim_a_segment(path=PATHTEST0, interface_l=4.1,
@@ -369,6 +428,17 @@ class Test_wt(unittest.TestCase):
             self.assertTrue(path3 != path_rnd)
             self.assertTrue(path1 == path3)
             self.assertTrue(path3.length == 3)
+            self.assertTrue(PATHTEST1 != path3)
+
+        path2 = path1.empty_path()
+        path2.append(path1.phasepoints[0])
+        path2.append(path1.phasepoints[1])
+
+        path3 = select_and_trim_a_segment(path=path2, interface_l=4.1,
+                                          interface_r=5.9, segment_to_pick=0)
+        with patch('sys.stdout', new=StringIO()):
+            self.assertTrue(path3 != path_rnd)
+            self.assertTrue(path3.length == 2)
             self.assertTrue(PATHTEST1 != path3)
 
 

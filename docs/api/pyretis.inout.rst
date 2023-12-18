@@ -18,7 +18,6 @@ Subpackages
     pyretis.inout.formats
     pyretis.inout.plotting
     pyretis.inout.report
-    pyretis.inout.setup
 
 List of submodules
 ------------------
@@ -30,6 +29,7 @@ List of submodules
 * :ref:`pyretis.inout.screen <api-inout-screen>`
 * :ref:`pyretis.inout.settings <api-inout-settings>`
 * :ref:`pyretis.inout.simulationio <api-inout-simulationio>`
+* :ref:`pyretis.inout.checker <api-inout-checker>`
 
 .. _api-inout-archive:
 
@@ -97,6 +97,16 @@ pyretis.inout.simulationio module
 ---------------------------------
 
 .. automodule:: pyretis.inout.simulationio
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. _api-inout-checker:
+
+pyretis.inout.checker module
+----------------------------
+
+.. automodule:: pyretis.inout.checker
     :members:
     :undoc-members:
     :show-inheritance:

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Module defining functions useful in the analysis of simulation data.
 
@@ -19,8 +19,8 @@ block_error_corr (:py:func:`.block_error_corr`)
 import numpy as np
 from pyretis.analysis.histogram import histogram_and_avg
 
-__all__ = ['running_average', 'block_error',
-           'block_error_corr']
+__all__ = ['running_average', 'block_error', 'block_error_corr']
+np.seterr(divide='ignore', invalid='ignore')
 
 
 def running_average(data):
@@ -39,8 +39,10 @@ def running_average(data):
         The running average.
 
     """
-    one = np.ones(np.shape(data))
-    return data.cumsum(axis=0) / one.cumsum(axis=0)
+    if len(data.shape) == 2:
+        w_data = data[:, 0]*data[:, 1]
+        return w_data.cumsum() / data[:, 1].cumsum()
+    return data.cumsum() / np.ones(data.shape[0]).cumsum()
 
 
 def block_error(data, maxblock=None, blockskip=1, weights=None):
@@ -58,7 +60,7 @@ def block_error(data, maxblock=None, blockskip=1, weights=None):
         The data to analyse.
     maxblock : int, optional
         Can be used to set the maximum length of the blocks to
-        consider. Note that the `maxbloc` will never be set longer
+        consider. Note that the `maxblock` will never be set longer
         than half the length in data.
     blockskip : int, optional
         This can be used to skip certain block lengths, i.e.
@@ -89,8 +91,13 @@ def block_error(data, maxblock=None, blockskip=1, weights=None):
         maxblock = len(data) // 2
     else:
         maxblock = min(maxblock, len(data) // 2)
+    indata = data
     if weights is None:
-        weights = np.ones(len(data))
+        if len(data.shape) == 1:
+            weights = np.ones(len(data))*2
+        else:
+            data = (i[0] for i in indata)
+            weights = (i[1] for i in indata)
     # define helper variables:
     blocklen = np.arange(0, maxblock, blockskip, dtype=np.int_)
     # blocklen contains the lengths of the blocks
@@ -120,20 +127,16 @@ def block_error(data, maxblock=None, blockskip=1, weights=None):
         tot_w_s[k] += blockw[k]**2
         delta1 = blockw[k] * (block[k] - block_avg[k])
         block_avg[k] = block_avg[k] + np.nan_to_num(delta1 / tot_w[k])
-        delta2 = block[k] - block_avg[k]
-        block_var[k] = block_var[k] + delta1 * delta2
+        block_var[k] = block_var[k] + delta1 * (block[k] - block_avg[k])
         # reset these blocks
         block[k] = 0.0
         blockw[k] = 0
 
-    block_var = block_var / tot_w
-    new_weights = tot_w_s / tot_w**2
-    nsamp = 1.0 / new_weights
-    bessel = nsamp / (nsamp - 1)
-    block_var = block_var * bessel
+    nsamp = tot_w * tot_w / tot_w_s
+    block_var *= nsamp / (nsamp - 1) / tot_w
     block_err = np.sqrt(block_var / nsamp)  # estimate of error
-    k = np.where(blocklen > maxblock // 2)[0]
-    block_err_avg = np.average(block_err[k])
+    block_err_avg = np.average(
+        block_err[np.where(blocklen > maxblock // 2)[0]])
     return blocklen, block_avg, block_err, block_err_avg
 
 
@@ -208,7 +211,7 @@ def mean_square_displacement(data, ndt=None):
         second column is the corresponding standard deviation.
 
     """
-    length = data.size
+    length = data.shape[0]
     if ndt is None or ndt < 1:
         ndt = length // 5
     msd = []

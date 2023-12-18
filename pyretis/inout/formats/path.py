@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Module for formatting path-trajectory data from PyRETIS.
 
@@ -75,9 +75,9 @@ class PathIntFormatter(OutputFormatter):
         path, status = data[0], data[1]
         if not path:  # E.g. when null-moves are False.
             return
-        yield '# Cycle: {}, status: {}'.format(step, status)
+        yield f'# Cycle: {step}, status: {status}'
         for i, phasepoint in enumerate(path.phasepoints):
-            yield 'Snapshot: {}'.format(i)
+            yield f'Snapshot: {i}'
             pos = phasepoint.particles.get_pos()
             vel = phasepoint.particles.get_vel()
             for posj, velj in zip(pos, vel):
@@ -106,9 +106,7 @@ class PathIntFormatter(OutputFormatter):
         raw = [float(i) for i in line.split()]
         dim = len(raw) // 2
         if not 1 <= dim <= 3:
-            raise ValueError(
-                'Malformed trajectory data: dim = {}?'.format(dim)
-            )
+            raise ValueError(f'Malformed trajectory data: dim = {dim}?')
         pos = raw[:dim]
         vel = raw[dim:2*dim]
         return pos, vel
@@ -159,7 +157,7 @@ class PathIntFormatter(OutputFormatter):
         for trajectory in read_some_lines(filename, line_parser=None):
             # These trajectories are just raw text,
             # convert to snapshots:
-            traj = [i for i in self.read_snapshots(trajectory['data'])]
+            traj = list(self.read_snapshots(trajectory['data']))
             data = {'comment': trajectory['comment'],
                     'data': traj}
             yield data
@@ -170,10 +168,15 @@ class PathExtFormatter(OutputFormatter):
 
     The external trajectories as stored as files and this path
     formatter includes the location of these files.
+
+    Attributes
+    ----------
+    FMT : string
+        The string to use for the formatting.
+
     """
 
     FMT = '{:>10}  {:>20s}  {:>10}  {:>5}'
-    """string : The string to use for the formatting."""
 
     def __init__(self):
         """Initialise the PathExtFormatter formatter."""
@@ -204,7 +207,7 @@ class PathExtFormatter(OutputFormatter):
         path, status = data[0], data[1]
         if not path:  # E.g. when null-moves are False.
             return
-        yield '# Cycle: {}, status: {}'.format(step, status)
+        yield f'# Cycle: {step}, status: {status}'
         yield self.header
         for i, phasepoint in enumerate(path.phasepoints):
             filename, idx = phasepoint.particles.get_pos()
@@ -229,7 +232,7 @@ class PathExtFormatter(OutputFormatter):
             The columns of data.
 
         """
-        return [i for i in line.split()]
+        return list(line.split())
 
 
 class PathExtFile(FileIO):

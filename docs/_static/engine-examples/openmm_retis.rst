@@ -11,6 +11,14 @@ System
 ------
 units = gromacs
 
+Engine
+------
+type = openmm
+class = openmm
+openmm_simulation = simulation
+openmm_module = openmm_sim.py
+subcycles = 10
+
 TIS settings
 ------------
 freq = 0.5
@@ -41,6 +49,6 @@ kick-from = previous
 Output
 ------
 pathensemble-file = 1
-order-file = 1
-cross-file = 1
+order-file = 5
+cross-file = 5
 trajectory-file = 5

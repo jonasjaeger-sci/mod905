@@ -5,6 +5,9 @@ omit =
     */test/*
     */setup.py
     */setup_version.py
+    */pyvisa/resources_rc.py
+    */pyvisa/visualize.py
+    openmm_module.py
     /tmp/*
 exclude_lines = 
     pragma: no cover
@@ -12,3 +15,4 @@ exclude_lines =
     def __str__
     raise NotImplementedError
     @abstractmethod
+

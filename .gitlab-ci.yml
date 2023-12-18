@@ -6,9 +6,9 @@
   artifacts:
     paths:
       - .coverage*
-    expire_in: 2 week
+    expire_in: 1 week
 
-image: python:3.9-buster
+image: python:3.11-buster
 
 .oldpy: &old_py
   image: python:3.8-buster
@@ -37,18 +37,13 @@ before_script:
   - pip install -e .
   - python -V
 
-test:
-  stage: light_test
-  script:
-  - pip install coverage
-  - coverage run -p -m unittest discover -s test
-  <<: *coverage_artifacts
-
 pylint:
   stage: style
   script:
-  - pip install -U pylint
-  - python devtools/run_linting.py --input pyretis --white-list PyQt5 mdtraj numpy
+  - apt-get install git -y
+  - git clone https://github.com/emacsorphanage/pylint.git pylint
+  - pip install -r requirements.txt
+  - python devtools/run_linting.py --input pyretis --white-list numpy PyQt5 mdtraj
   needs: []
 
 pycodestyle:
@@ -56,62 +51,81 @@ pycodestyle:
   script:
   - pip install pycodestyle
   - pycodestyle
+  needs: []
 
 pydocstyle:
   stage: style
   script:
   - pip install pydocstyle
   - pydocstyle --count pyretis
+  needs: []
 
-test_tis:
+test:
   stage: light_test
   script:
-  - cd examples/test/test-internal/tis-multiple
-  - make clean
-  - ./run.sh
+  - pip install coverage
+  - coverage run -p -m unittest discover -s test
+  <<: *coverage_artifacts
+  needs: []
 
-test_retis:
+test_pyvisa:
+  stage: light_test
+  when: manual
+  script:
+  - pip install -r requirements.txt
+  - pip install coverage
+  - apt-cache policy gromacs
+  - apt-get install -y gromacs
+  - gmx --version
+  - gmx_d --version
+  - cd examples/test/test-pyvisa/
+  - ./run-all-pyvisa.sh
+  - cd ../../../
+  - coverage run -p -m unittest discover -s test/pyvisa
+  <<: *coverage_artifacts
+  needs: []
+
+test_internal:
   stage: light_test
   script:
-  - cd examples/test/test-internal/retis
-  - make clean
-  - pyretisrun -i retis.rst -p
-  - python compare.py
-  - cd ../retis-load-sparse/load-frames
-  - make clean
-  - ./run.sh
-  - cd ../load-traj
-  - make clean
-  - ./run.sh
+  - cd examples/test/test-internal/
+  - ./run-all-internal.sh
+  needs: []
+
+test_lammps:
+  stage: heavy_test
+  when: manual
+  script:
+  - cd examples/test/test-lammps/
+  - ./run-all-lammps.sh
+  needs: []
 
 test_gromacs:
   stage: heavy_test
+  when: manual
   script:
   - apt-cache policy gromacs
   - apt-get install -y gromacs
   - gmx --version
   - gmx_d --version
-  - cd examples/test/test-gromacs/test-gromacs
-  - ./run-test1.sh gmx_d
-  - ./run-test2.sh gmx_d
-  - cd ../test-load/test-load-sparse/load-frames
-  - ./run.sh
-  - cd ../load-traj
-  - ./run.sh
+  - cd examples/test/test-gromacs/
+  - ./run-all-gromacs.sh
+  needs: []
 
 test_cp2k:
   stage: heavy_test
+  when: manual
   script:
   - apt-cache policy cp2k
   - apt-get install -y cp2k
   - cp2k -v
-  - cd examples/test/test-cp2k/test-cp2k/
-  - python test_cp2k.py
-  - cd ../test-retis-load
-  - ./run.sh
+  - cd examples/test/test-cp2k/
+  - ./run-all-cp2k.sh
+  needs: []
 
 test_openmm:
   image: continuumio/miniconda3:latest
+  when: manual
   stage: heavy_test
   before_script:
   - conda install python=3.9
@@ -119,7 +133,7 @@ test_openmm:
   - apt-get install zip gcc -y
   - conda install cmake -y
   script:
-  - conda install -c conda-forge openmm mdtraj libstdcxx-ng -y
+  - conda install -c conda-forge openmm libstdcxx-ng -y
   - pip install -r requirements.txt
   - pip install -e .
   - python -V
@@ -128,6 +142,7 @@ test_openmm:
   - pip install coverage
   - coverage run -p -m unittest discover -s test
   <<: *coverage_artifacts
+  needs: []
 
 build_docs:
   stage: style
@@ -144,37 +159,37 @@ build_docs:
     paths:
       - docs/_build/html
     expire_in: 1 week
+  needs: []
 
 test_oldpy:
    extends: test
+   when: manual
    <<: *old_py
 
-test_tis_oldpy:   
-   extends: test_tis
-   <<: *old_py
-
-test_retis_oldpy:   
-   extends: test_retis
+test_internal_oldpy:   
+   extends: test_internal
+   when: manual
    <<: *old_py
 
 test_gromacs_oldpy:   
    extends: test_gromacs
+   when: manual
    <<: *old_py
 
 test_cp2k_oldpy:   
    extends: test_cp2k
+   when: manual
    <<: *old_py
 
 test_min_version:
   extends: test
+  when: manual
   <<: *old_py
   before_script: 
     - apt-get update -qy
     - apt-get install -qy libblas-dev liblapack-dev libatlas-base-dev gfortran
     - apt-get install gcc -y
     - pip install --upgrade pip
-    - ln /usr/bin/gcc /usr/bin/gcc44
-    - ln /usr/bin/g++ /usr/bin/g++44
     - awk '{gsub(">","="); print $0}' requirements.txt  >> min_req.txt
     - grep "numpy" min_req.txt >> numpy.txt
     - grep "cython" min_req.txt >> numpy.txt 
@@ -186,13 +201,16 @@ test_min_version:
 
 .coverage:
   stage: coverage
+  needs: ["test_oldpy", "test_pyvisa", "test_openmm", "test"]
   dependencies:
-    - test
-    - test_openmm
     - test_oldpy
-  script:
+    - test_pyvisa
+    - test_openmm
+    - test
+  before_script: 
   - pip install coverage
-  - coverage combine
+  script:
+  - coverage combine --append
   - coverage xml -o coverage.xml
   - coverage report -m
   coverage: '/^TOTAL.*\s+(\d+\%)/'

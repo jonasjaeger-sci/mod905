@@ -1,0 +1,11 @@
+Analysis settings
+-----------------
+maxordermsd = -1
+ngrid = 1001
+report = ['latex', 'rst', 'html']
+maxblock = 1000
+txt-output = 'txt.gz'
+blockskip = 1
+plot = {'output': 'png', 'plotter': 'mpl', 'style': 'pyretis'}
+bins = 100
+skipcross = 1000

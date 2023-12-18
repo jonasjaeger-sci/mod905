@@ -18,6 +18,7 @@ cp2k = cp2k
 input_path = cp2k_input
 timestep = 0.5
 subcycles = 1
+cp2k_format = xyz
 extra_files = ['BASIS_SET', 'GTH_POTENTIALS']
 
 TIS settings

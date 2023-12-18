@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Test the OpenMMEngine class."""
 import unittest
@@ -7,43 +7,19 @@ import os
 import numpy as np
 import pyretis
 from pyretis.engines import OpenMMEngine
-from pyretis.engines.openmm import HAS_OPENMM
-from pyretis.core import System, Particles
-from pyretis.core.box import box_matrix_to_list, create_box
+from pyretis.engines.openmm import HAS_OPENMM, make_pyretis_system
 from pyretis.core.path import Path
 from pyretis.orderparameter import Distance
 from pyretis.core.random_gen import RandomGenerator
+from pyretis.setup.createsystem import create_system
 from .test_engines import (prepare_test_system,
                            MockRandomGenerator)
 
 
 if HAS_OPENMM:
     from .test_helpers.test_helpers import (create_openmm_simulation,
-                                            write_test_pdb, FakeOp)
-    from .test_helpers.test_helpers import unit as u
-
-
-def make_pyretis_system(simulation):
-    """Makes pyretis system from OpenMM Simulation."""
-    state = simulation.context.getState(getPositions=True, getVelocities=True)
-    box = state.getPeriodicBoxVectors(asNumpy=True).T
-    box = create_box(cell=box_matrix_to_list(box),
-                     periodic=[True, True, True])
-    system = System(units='gromacs', box=box,
-                    temperature=simulation.integrator.getTemperature())
-
-    system.particles = Particles(system.get_dim())
-    pos = state.getPositions(asNumpy=True)
-    vel = state.getVelocities(asNumpy=True)
-    for i, atom in enumerate(simulation.topology.atoms()):
-        mass = simulation.system.getParticleMass(i)
-        mass = mass.value_in_unit(u.grams/u.mole)
-        name = atom.name
-        system.particles.add_particle(pos=pos[i], vel=vel[i],
-                                      force=[None, None, None],
-                                      mass=mass, name=name)
-
-    return system
+                                            write_test_pdb, FakeOp,
+                                            write_openmm_simulation)
 
 
 @unittest.skipIf(HAS_OPENMM is False, "OpenMM is not installed")
@@ -51,6 +27,9 @@ class TestOpenMMEngine(unittest.TestCase):
     """Test the OpenMMEngine."""
     pdb = 'test_openmm_pyretis'
     f_name = pdb+'.pdb'
+
+    openmm_simulation = 'simulation'
+    openmm_module = 'openmm_module.py'
 
     @classmethod
     def setUpClass(cls):
@@ -60,43 +39,66 @@ class TestOpenMMEngine(unittest.TestCase):
                 i += 1
             cls.f_name = cls.pdb + str(i) + '.pdb'
         write_test_pdb(cls.f_name)
+        write_openmm_simulation(cls.openmm_module, cls.f_name)
 
     @classmethod
     def tearDownClass(cls):
-        if os.path.isfile(cls.f_name):
-            os.remove(cls.f_name)
+        files = [cls.f_name, cls.openmm_module]
+        for f in files:
+            if os.path.isfile(f):
+                os.remove(f)
 
     def setUp(self):
         self.sim = create_openmm_simulation(self.f_name)
-        self.system = make_pyretis_system(self.sim)
         # Distance between the two water oxygens periodic= false, because
         # triclininc boxes are hard:
         self.order_parameter = Distance((0, 3), periodic=False)
+        self.settings = {'engine': {
+            'openmm_module': self.openmm_module,
+            'openmm_simulation': self.openmm_simulation}
+                         }
+
+        self.system = make_pyretis_system(self.settings)
 
     def test_init(self):
         """Test initiation of the OpenMMEngine."""
-        eng = OpenMMEngine(simulation=self.sim, subcycles=4)
+        eng = OpenMMEngine(openmm_simulation=self.sim, subcycles=4)
         assert eng.simulation is self.sim
         assert eng.subcycles == 4
+
+    def test_init_module(self):
+        eng = OpenMMEngine(openmm_simulation=self.openmm_simulation,
+                           openmm_module=self.openmm_module)
+        # Test if it runs
+        eng.integration_step(self.system)
+
+    def test_init_string_but_no_module(self):
+        with self.assertRaises(RuntimeError):
+            OpenMMEngine(openmm_simulation=self.openmm_simulation)
 
     def test_installation_error(self):
         """Test failure when the OpenMMEngine is missing."""
         with self.assertRaises(RuntimeError):
             pyretis.engines.openmm.HAS_OPENMM = False
-            _ = OpenMMEngine(simulation=self.sim)
+            _ = OpenMMEngine(openmm_simulation=self.sim)
         # Reset change:
         pyretis.engines.openmm.HAS_OPENMM = True
 
+    def test_create_system(self):
+        settings = self.settings.copy()
+        settings['engine']['type'] = 'OpenMM'
+        create_system(settings)
+
     def test_integration_step(self):
         """Test the integration step of the OpenMMEngine."""
-        eng = OpenMMEngine(simulation=self.sim)
+        eng = OpenMMEngine(openmm_simulation=self.sim)
         eng.integration_step(self.system)
         # Test if resetting works:
         eng.integration_step(self.system)
 
     def test_integration_step_no_box(self):
         """Test the integration step of the OpenMMEngine with no box."""
-        eng = OpenMMEngine(simulation=self.sim)
+        eng = OpenMMEngine(openmm_simulation=self.sim)
         self.system.box = None
         eng.integration_step(self.system)
         # Test if resetting works:
@@ -105,16 +107,18 @@ class TestOpenMMEngine(unittest.TestCase):
 
     def test_calculate_order(self):
         """Test order parameter calculation with the OpenMMEngine."""
-        eng = OpenMMEngine(simulation=self.sim)
-        answer = eng.calculate_order(self.order_parameter, self.system)
+        eng = OpenMMEngine(openmm_simulation=self.sim)
+        answer = eng.calculate_order({'order_function': self.order_parameter,
+                                      'system': self.system})
         assert self.order_parameter.calculate(self.system) == answer
 
     def test_calculate_order_xyz(self):
         """Test order parameter calculation with the OpenMMEngine."""
-        eng = OpenMMEngine(simulation=self.sim)
+        eng = OpenMMEngine(openmm_simulation=self.sim)
         xyz = np.array([[1, 0, 0], [0, 0, 0], [0, 0, 0],
                         [-1, 0, 0], [0, 0, 0], [0, 0, 0]])
-        answer = eng.calculate_order(self.order_parameter, self.system,
+        answer = eng.calculate_order({'order_function': self.order_parameter,
+                                      'system': self.system},
                                      xyz=xyz,
                                      vel=self.system.particles.vel,
                                      box=self.system.box.length)
@@ -122,27 +126,29 @@ class TestOpenMMEngine(unittest.TestCase):
 
     def test_pass_functions(self):
         """Test "empty" OpenMMEngine methods."""
-        eng = OpenMMEngine(simulation=self.sim)
+        eng = OpenMMEngine(openmm_simulation=self.sim)
         eng.clean_up()
         eng.dump_phasepoint(1)
 
     def test_kick_across_middle_from_smaller(self):
         """Test the intialisation method with the OpenMMEngine."""
-        eng = OpenMMEngine(simulation=self.sim)
+        eng = OpenMMEngine(openmm_simulation=self.sim)
         tis_settings = {'zero_momentum': True,
                         'rescale_energy': False}
-        out = eng.kick_across_middle(system=self.system,
-                                     order_function=self.order_parameter,
-                                     rgen=RandomGenerator(),
+        out = eng.kick_across_middle({'system': self.system,
+                                      'order_function': self.order_parameter,
+                                      'rgen': RandomGenerator()},
                                      middle=3.6,
                                      tis_settings=tis_settings)
         xyz0 = out[0].particles.get_pos()
         xyz1 = out[1].particles.get_pos()
-        answer0 = eng.calculate_order(self.order_parameter, self.system,
+        answer0 = eng.calculate_order({'order_function': self.order_parameter,
+                                       'system': self.system},
                                       xyz=xyz0,
                                       vel=self.system.particles.vel,
                                       box=self.system.box.length)[0]
-        answer1 = eng.calculate_order(self.order_parameter, self.system,
+        answer1 = eng.calculate_order({'order_function': self.order_parameter,
+                                       'system': self.system},
                                       xyz=xyz1,
                                       vel=self.system.particles.vel,
                                       box=self.system.box.length)[0]
@@ -152,21 +158,23 @@ class TestOpenMMEngine(unittest.TestCase):
 
     def test_kick_across_middle_from_bigger(self):
         """Test the intialisation method with the OpenMMEngine."""
-        eng = OpenMMEngine(simulation=self.sim)
+        eng = OpenMMEngine(openmm_simulation=self.sim)
         tis_settings = {'zero_momentum': True,
                         'rescale_energy': False}
-        out = eng.kick_across_middle(system=self.system,
-                                     order_function=self.order_parameter,
-                                     rgen=RandomGenerator(),
+        out = eng.kick_across_middle({'system': self.system,
+                                      'order_function': self.order_parameter,
+                                      'rgen': RandomGenerator()},
                                      middle=3.55,
                                      tis_settings=tis_settings)
         xyz0 = out[0].particles.get_pos()
         xyz1 = out[1].particles.get_pos()
-        answer0 = eng.calculate_order(self.order_parameter, self.system,
+        answer0 = eng.calculate_order({'order_function': self.order_parameter,
+                                       'system': self.system},
                                       xyz=xyz0,
                                       vel=self.system.particles.vel,
                                       box=self.system.box.length)[0]
-        answer1 = eng.calculate_order(self.order_parameter, self.system,
+        answer1 = eng.calculate_order({'order_function': self.order_parameter,
+                                       'system': self.system},
                                       xyz=xyz1,
                                       vel=self.system.particles.vel,
                                       box=self.system.box.length)[0]
@@ -176,28 +184,31 @@ class TestOpenMMEngine(unittest.TestCase):
 
     def test_kick_across_middle_if_on_interface(self):
         """Test the intialisation method with the OpenMMEngine."""
-        eng = OpenMMEngine(simulation=self.sim)
+        eng = OpenMMEngine(openmm_simulation=self.sim)
         tis_settings = {'zero_momentum': True,
                         'rescale_energy': False}
 
         # Init frame is ON the interface:
-        middle = eng.calculate_order(self.order_parameter, self.system,
+        middle = eng.calculate_order({'order_function': self.order_parameter,
+                                      'system': self.system},
                                      xyz=self.system.particles.pos,
                                      vel=self.system.particles.vel,
                                      box=self.system.box.length)[0]
 
-        out = eng.kick_across_middle(system=self.system,
-                                     order_function=self.order_parameter,
-                                     rgen=RandomGenerator(),
+        out = eng.kick_across_middle({'system': self.system,
+                                      'order_function': self.order_parameter,
+                                      'rgen': RandomGenerator()},
                                      middle=middle,
                                      tis_settings=tis_settings)
         xyz0 = out[0].particles.get_pos()
         xyz1 = out[1].particles.get_pos()
-        answer0 = eng.calculate_order(self.order_parameter, self.system,
+        answer0 = eng.calculate_order({'order_function': self.order_parameter,
+                                       'system': self.system},
                                       xyz=xyz0,
                                       vel=self.system.particles.vel,
                                       box=self.system.box.length)[0]
-        answer1 = eng.calculate_order(self.order_parameter, self.system,
+        answer1 = eng.calculate_order({'order_function': self.order_parameter,
+                                       'system': self.system},
                                       xyz=xyz1,
                                       vel=self.system.particles.vel,
                                       box=self.system.box.length)[0]
@@ -211,15 +222,15 @@ class TestOpenMMEngine(unittest.TestCase):
 
     def test_kick_across_middle_if_first_away(self):
         """Test the intialisation method with the OpenMMEngine."""
-        eng = OpenMMEngine(simulation=self.sim)
+        eng = OpenMMEngine(openmm_simulation=self.sim)
         tis_settings = {'zero_momentum': True,
                         'rescale_energy': False}
 
         # 2 op calculations per frame force OP to run away from:
         order_parameter = FakeOp([1, 1, 2, 2, -1, -1])
-        _ = eng.kick_across_middle(system=self.system,
-                                   order_function=order_parameter,
-                                   rgen=RandomGenerator(),
+        _ = eng.kick_across_middle({'system': self.system,
+                                    'order_function': order_parameter,
+                                    'rgen': RandomGenerator()},
                                    middle=0,
                                    tis_settings=tis_settings)
         # Should have done 5 calls:
@@ -233,28 +244,33 @@ class TestOpenMMEngine(unittest.TestCase):
         system = prepare_test_system()
         eng = OpenMMEngine(1)
         rgen = MockRandomGenerator(seed=1)
-        eng.modify_velocities(system, rgen, sigma_v=None, aimless=True,
-                              momentum=False, rescale=None)
+        eng.modify_velocities({'system': system, 'rgen': rgen},
+                              {'sigma_v': None, 'aimless': True,
+                               'momentum': False, 'rescale': None})
         self.assertAlmostEqual(system.particles.vel[0][0], rgen.rgen[1])
         deltav = np.ones_like(system.particles.vel)
-        eng.modify_velocities(system, rgen, sigma_v=deltav, aimless=False,
-                              momentum=False, rescale=None)
+        eng.modify_velocities({'system': system, 'rgen': rgen},
+                              {'sigma_v': deltav, 'aimless': False,
+                               'momentum': False, 'rescale': None})
         self.assertAlmostEqual(system.particles.vel[0][0],
                                rgen.rgen[1] + rgen.rgen[2])
-        eng.modify_velocities(system, rgen, sigma_v=None, aimless=True,
-                              momentum=True, rescale=None)
+        eng.modify_velocities({'system': system, 'rgen': rgen},
+                              {'sigma_v': None, 'aimless': True,
+                               'momentum': True, 'rescale': None})
         self.assertAlmostEqual(system.particles.vel[0][0], 0.0)
 
         system.particles.pos = np.ones_like(system.particles.pos)
         system.particles.vpot = system.potential()
-        dek, kin_new = eng.modify_velocities(system, rgen, sigma_v=None,
-                                             aimless=True, momentum=False,
-                                             rescale=6)
+        dek, kin_new = eng.modify_velocities({'system': system, 'rgen': rgen},
+                                             {'sigma_v': None, 'aimless': True,
+                                              'momentum': False, 'rescale': 6})
         self.assertAlmostEqual(6, kin_new + system.particles.vpot)
         kin_old = kin_new
-        dek, kin_new2 = eng.modify_velocities(system, rgen, sigma_v=None,
-                                              aimless=True, momentum=False,
-                                              rescale=-1)
+        dek, kin_new2 = eng.modify_velocities({'system': system, 'rgen': rgen},
+                                              {'sigma_v': None,
+                                               'aimless': True,
+                                               'momentum': False,
+                                               'rescale': -1})
         self.assertAlmostEqual(kin_old, kin_new2)
         self.assertAlmostEqual(dek, 0.0)
 
@@ -263,10 +279,13 @@ class TestOpenMMEngine(unittest.TestCase):
         path = Path(None, maxlen=10)
         ifaces = [1, 2, 3]
         order_parameter = FakeOp([1, 2, 2.5, 3, 4])
-        eng = OpenMMEngine(simulation=self.sim)
-        eng.propagate(path=path, initial_system=self.system,
-                      order_function=order_parameter,
-                      interfaces=ifaces, reverse=reverse)
+        eng = OpenMMEngine(openmm_simulation=self.sim)
+        ensemble = {'system': self.system,
+                    'order_function': order_parameter,
+                    'interfaces': ifaces}
+
+        eng.propagate(path=path, ensemble=ensemble, reverse=reverse)
+
         assert order_parameter.n == 5
 
     def test_propagate_forward(self):

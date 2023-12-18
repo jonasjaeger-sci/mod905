@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Animation of umbrella sampling."""
 from matplotlib import pyplot as plt
@@ -8,10 +8,8 @@ import numpy as np
 import colorama
 from tqdm import tqdm, trange
 from pyretis.inout import print_to_screen
-from pyretis.core import System, RandomGenerator, create_box, Particles
-from pyretis.simulation import UmbrellaWindowSimulation
-from pyretis.forcefield import ForceField
-from pyretis.forcefield.potentials import DoubleWell, RectangularWell
+from pyretis.setup import create_simulation, create_force_field
+from pyretis.core import System, Particles
 from pyretis.analysis.histogram import histogram, match_all_histograms
 
 
@@ -24,9 +22,33 @@ UMBRELLA_WINDOWS = [
     [0.3, 0.6],
     [0.5, 1.0]
 ]
-RANDSEED = 1  # Seed for random number generator.
-MINCYCLES = 10000  # Minimum number of cycles in each window.
-MAXDX = 0.1  # Maximum allowed displacement in the MC step(s).
+
+DOUBLE_WELL = {
+    'class': 'DoubleWell',
+    'parameter': {'a': 1.0, 'b': 1.0, 'c': 0.02},
+}
+
+DEFAULT_SETTINGS = {
+    'system': {
+        'dimensions': 1,
+        'units': 'metal',
+        'temperature': 500,
+    },
+    'simulation': {
+        'task': 'umbrellawindow',
+        'rgen': 1,
+        'mincycle': 10000,
+        'maxdx': 0.1,
+        'overlap': 1.0,
+        'umbrella': 1,
+    },
+    'particles': {
+        'position': {'input_file': 'position.xyz'},
+        'name': ['X'],
+        'ptype': [0],
+    },
+}
+
 BINS = 100
 HISTLIM = (-1.2, 1.2)
 FIG_FREQ = 100  # How often we should store figures.
@@ -35,58 +57,35 @@ SCALE_STEPS = 12  # Steps for animating the scaling.
 XLIM_POT = (-1.2, 1.2)
 YLIM_POT = (-0.3, 0.05)
 BAR_FMT = {
-    'window': ('Plotting window {n_fmt} of '
-               '{total_fmt}|{bar}| [{elapsed}<{remaining}, {rate_fmt}]'),
-    'scale': ('Scale step {n_fmt}/{total_fmt}|{bar}| '
-              '[{elapsed}<{remaining}, {rate_fmt}]'),
-    'pos': ('Step no. {n_fmt}/{total_fmt}|{bar}| '
-            '[{elapsed}<{remaining}, {rate_fmt}]'),
-    'window-scale': ('Re-scaling window {n_fmt} of {total_fmt}|{bar}| '
-                     '[{elapsed}<{remaining}, {rate_fmt}]'),
+    'window': (
+        'Plotting window {n_fmt} of '
+        '{total_fmt}|{bar}| [{elapsed}<{remaining}, {rate_fmt}]'
+    ),
+    'scale': (
+        'Scale step {n_fmt}/{total_fmt}|{bar}| '
+        '[{elapsed}<{remaining}, {rate_fmt}]'
+    ),
+    'pos': (
+        'Step no. {n_fmt}/{total_fmt}|{bar}| '
+        '[{elapsed}<{remaining}, {rate_fmt}]'
+    ),
+    'window-scale': (
+        'Re-scaling window {n_fmt} of {total_fmt}|{bar}| '
+        '[{elapsed}<{remaining}, {rate_fmt}]'
+    ),
 }
 
 
-def create_system():
-    """Set up the system."""
-    # Define system with a temperature in K:
-    system = System(temperature=500, units='eV/K',
-                    box=create_box(periodic=[False]))
-    system.particles = Particles(dim=system.get_dim())
-    # We will only have one particle in the system:
-    system.add_particle(name='X', pos=np.array([-0.7]))
-    # In this particular example, we are going to use
-    # a simple double well potential:
-    potential_dw = DoubleWell(a=1, b=1, c=0.02)
-    # And a rectangular well potential:
-    potential_rw = RectangularWell()
-    # Set up the unbiased force field:
-    forcefield = ForceField(
-        'Double well',
-        potential=[potential_dw],
-        params=[{'a': 1.0, 'b': 1.0, 'c': 0.02}],
-    )
-    # Set up the biased potential:
-    forcefield_bias = ForceField(
-        'Double well with rectangular bias',
-        potential=[potential_dw, potential_rw],
-        params=[{'a': 1.0, 'b': 1.0, 'c': 0.02}, None]
-    )
-    # Attach biased force field to the system:
-    system.forcefield = forcefield_bias
-    return system, forcefield, forcefield_bias
-
-
-def run_umbrella_simulation(system, settings, rgen):
+def run_umbrella_simulation(window, overlap):
     """Run a single umbrella simulation.
 
     Paramters
     ---------
-    system : object like :class:`.System`
-        The system we are running the simulation for.
-    simulation_settings : dict
-        A dictionary with settings for the simulation.
-    rgen : object like :class:`.RandomGenerator`
-        A random number generator we make use of in the simulation.
+    window : list of floats
+        The (left, right) positions defining the umbrella window.
+    overlap : float
+        The position that must be crossed for the umbrella simulation
+        to end.
 
     Returns
     -------
@@ -101,59 +100,46 @@ def run_umbrella_simulation(system, settings, rgen):
 
     """
     # Move the bias according to the umbrella:
-    params = {
-        'left': settings['umbrella'][0],
-        'right': settings['umbrella'][1]
-    }
-    system.forcefield.update_potential_parameters(
-        system.forcefield.potential[1],  # This is the rectangular well.
-        params
-    )
-    system.potential()  # Recalculate potential energy.
-    simulation = UmbrellaWindowSimulation(
-        system,
-        settings['umbrella'],
-        settings['over'],
-        settings['maxdx'],
-        rgen=rgen,
-        mincycle=settings['mincycle'],
-    )
+    settings = DEFAULT_SETTINGS.copy()
+    settings['simulation']['overlap'] = overlap
+    settings['potential'] = [
+        DOUBLE_WELL,
+        {
+            'class': 'RectangularWell',
+            'parameter': {'left': window[0], 'right': window[1]},
+        }
+    ]
+    # Create the umbrella simulation:
+    simulation = create_simulation(settings)
+    simulation.system.particles.pos = np.array([window[0]])
+    simulation.system.potential()  # Recalculate potential energy.
     pos, trial, ener = [], [], []
     success = []
     for result in tqdm(simulation.run()):
-        pos.append(system.particles.pos)
+        pos.append(simulation.system.particles.pos)
         trial.append(result['displace_step'][2])
         success.append(result['displace_step'][3])
-        ener.append(system.particles.vpot)
-    nstep = simulation.cycle['step'] - simulation.cycle['start']
+        ener.append(simulation.system.particles.vpot)
+    nstep = simulation.cycle['step'] - simulation.cycle['startcycle']
     print_to_screen('Done. Cycles: {}'.format(nstep), level='success')
     return np.array(pos), np.array(trial), success, np.array(ener)
 
 
-def run_simulation(system):
+def run_simulation():
     """Run the simulation (all umbrellas)."""
     numb = len(UMBRELLA_WINDOWS)
-    rgen = RandomGenerator(seed=RANDSEED)
     trajectory, energy = [], []  # To store all trajectories & energies.
     msg = '\nRunning umbrella no: {} of {}. Location: {}'
-    # we run all the umbrella simulations by looping over
+    # We run all the umbrella simulations by looping over
     # the different umbrellas we defined:
     print_to_screen('Starting simulations:', level='info')
     for i, window in enumerate(UMBRELLA_WINDOWS):
         print_to_screen(msg.format(i + 1, numb, window))
         # Get position that must be crossed:
         over = UMBRELLA_WINDOWS[min(i + 1, numb - 1)][0]
-        # Collect settings:
-        settings = {
-            'umbrella': window,
-            'over': over,
-            'maxdx': MAXDX,
-            'mincycle': MINCYCLES,
-        }
         pos, trial, success, ener = run_umbrella_simulation(
-            system,
-            settings,
-            rgen
+            window,
+            over,
         )
         trajectory.append([pos, trial, success])
         energy.append(ener)
@@ -422,8 +408,21 @@ def plot_scalings(fig, axes, plot_obj, system, forcefield, all_histograms):
 
 def main():
     """Run the simulation and do the plotting'."""
-    system, forcefield, _ = create_system()
-    trajectory, energy = run_simulation(system)
+    trajectory, energy = run_simulation()
+    # Create force field and system for helping with plotting:
+    unbiased = {
+        'forcefield': {
+            'description': 'Double well',
+        },
+        'potential': [DOUBLE_WELL]
+    }
+    forcefield = create_force_field(unbiased)
+    # Create a fake system for calculating the potential:
+    system = System(
+        units=DEFAULT_SETTINGS['system']['units'],
+        temperature=DEFAULT_SETTINGS['system']['temperature'],
+    )
+    system.particles = Particles()
     make_plots(system, forcefield, trajectory, energy)
 
 

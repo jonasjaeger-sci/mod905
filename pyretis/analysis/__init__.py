@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """This package defines analysis tools for the PyRETIS program.
 
@@ -79,8 +79,9 @@ from .energy_analysis import analyse_energies
 from .flux_analysis import analyse_flux
 from .histogram import histogram, match_all_histograms
 from .order_analysis import analyse_orderp
-from .path_analysis import (analyse_path_ensemble, match_probabilities,
-                            retis_flux, retis_rate)
+from .path_analysis import (analyse_path_ensemble, analyse_repptis_ensemble,
+                            match_probabilities, retis_flux, retis_rate,
+                            perm_calculations)
 
 
 def analyse_md_flux(crossdata, energydata, orderdata, settings):

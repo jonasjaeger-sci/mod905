@@ -43,6 +43,8 @@ into sub-packages:
 * :ref:`pyretis.orderparameter <api-orderparameter>` for defining
   order parameters.
 
+* :ref:`pyretis.setup <api-setup>` for creating the main objects.
+
 * :ref:`pyretis.simulation <api-simulation>` for running predefined
   simulations.
 
@@ -52,7 +54,7 @@ into sub-packages:
 * :ref:`pyretis.tools <api-tools>` for performing some simple
   tasks useful for setting up simulations.
 
-* :ref:`pyretis.visualization <api-visualization>` for visualizing and
+* :ref:`pyretis.pyvisa <api-analysis>` for visualizing and
   analysing the simulation outputs. 
 
 
@@ -85,10 +87,11 @@ Contents: The |pyretis| sub-packages
     pyretis.inout
     pyretis.initiation
     pyretis.orderparameter
+    pyretis.setup
     pyretis.simulation
     pyretis.testing
     pyretis.tools
-    pyretis.visualization
+    pyretis.pyvisa
 
 In addition |pyretis| has the following submodules:
 

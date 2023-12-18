@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Simple script to compare the outcome of two simulations.
-
 Here we compare a TIS simulation of 50 steps to known results.
 """
-import filecmp
 import tempfile
 import fileinput
 import os
@@ -14,22 +12,30 @@ import colorama
 from pyretis.inout import print_to_screen
 from pyretis.inout.settings import parse_settings_file
 from pyretis.core.pathensemble import generate_ensemble_name
-from pyretis.inout.setup.createsimulation import create_path_ensembles
+from pyretis.setup.createsimulation import create_ensembles
 
 
 RESULTS = 'results'
 
 
-def compare_files(file1, file2):
+def compare_files(fpath1, fpath2):
     """Compare two files."""
-    print_to_screen('Comparing: {} {}'.format(file1, file2))
-    similar = filecmp.cmp(file1, file2)
-    with open(file1, 'r') as input1, open(file2, 'r') as input2:
-        for line1, line2 in zip(input1, input2):
-            if line1 != line2:
+    print_to_screen('Comparing: {} {}'.format(fpath1, fpath2))
+    similar = True
+    with open(fpath1, 'r') as file1, open(fpath2, 'r') as file2:
+        for i, (linef1, linef2) in enumerate(zip(file1, file2)):
+            linef1 = linef1.rstrip('\r\n')
+            linef2 = linef2.rstrip('\r\n')
+            if linef1 != linef2:
                 print('----------------------')
-                print(line1.strip())
-                print(line2.strip())
+                print(f'Line number: {i} ')
+                print(linef1.strip())
+                print(linef2.strip())
+                similar = False
+
+        if similar:
+            similar = next(file1, None) is None and next(file2, None) is None
+
     if similar:
         print_to_screen('\t-> Files are equal!', level='success')
     else:
@@ -121,12 +127,8 @@ def check_path_file(ens):
 
 def run_check_path_file(settings):
     """Check paths using given simulation settings."""
-    include_zero = settings['simulation']['task'] == 'retis'
-    ensembles, _ = create_path_ensembles(
-        settings['simulation']['interfaces'],
-        'internal',
-        include_zero=include_zero)
-    retval = [check_path_file(ens) for ens in ensembles]
+    ensembles = create_ensembles(settings)
+    retval = [check_path_file(ens['path_ensemble']) for ens in ensembles]
     return sum(retval)
 
 
@@ -150,10 +152,14 @@ def compare_rst_files(settings):
     for i in range(1, len(inter)):
         fil1 = os.path.join(('tis-00{}.rst').format(i))
         for line in fileinput.input(fil1, inplace=1):
-            if 'exe-path' in line.split():
+            if 'exe_path' in line.split():
                 line = ''
             sys.stdout.write(line)
         fil2 = os.path.join(RESULTS, ('tis-00{}.rst').format(i))
+        for line in fileinput.input(fil2, inplace=1):
+            if 'exe_path' in line.split():
+                line = ''
+            sys.stdout.write(line)
         ret = compare_files(fil1, fil2)
         retval += ret
     return retval
@@ -165,9 +171,9 @@ def compare_prob_files():
              'tis-multiple_report.rst',
              'tis-multiple_report.tex']
     # Skip the lines that contain the time when the command was called
-    skips = [lambda i: i in [5, 11, 16, 702],
-             lambda i: i in [5],
-             lambda i: i in [25]]
+    skips = [lambda i: i in [701, 702],
+             lambda i: i in [4, 5],
+             lambda i: i in [24, 25]]
     retval = 0
     for name, skip in zip(names, skips):
         fil1 = os.path.join('report', name)
@@ -176,7 +182,7 @@ def compare_prob_files():
         basename += '_'
         with tempfile.NamedTemporaryFile(prefix=basename, suffix=ext) as tmp:
             with open(tmp.name, 'wb') as outfile:
-                with open(fil1, 'rb') as infile:
+                with open(fil1, 'rb') as infile:  # This one fail?
                     for i, line in enumerate(infile):
                         if not skip(i):
                             outfile.write(line)
@@ -188,6 +194,9 @@ def compare_prob_files():
 def main():
     """Run the full comparison."""
     sets = parse_settings_file('tis-multiple.rst')
+    print_to_screen('\nCheck crossing probabilities', level='message')
+    print_to_screen('============================', level='message')
+    ret4 = compare_prob_files()
     print_to_screen('\nComparing tis.rst files', level='message')
     print_to_screen('=======================', level='message')
     ret1 = compare_rst_files(sets)
@@ -197,9 +206,6 @@ def main():
     print_to_screen('\nCheck accepted paths', level='message')
     print_to_screen('====================', level='message')
     ret3 = run_check_path_file(sets)
-    print_to_screen('\nCheck crossing probabilities', level='message')
-    print_to_screen('============================', level='message')
-    ret4 = compare_prob_files()
     return ret1 + ret2 + ret3 + ret4
 
 
