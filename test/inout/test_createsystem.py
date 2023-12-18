@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
-"""Test the methods in pyretis.inout.setup.createsystem"""
+"""Test the methods in pyretis.setup.createsystem"""
 import os
 import logging
 import unittest
@@ -10,9 +10,8 @@ from pyretis.core.units import create_conversion_factors
 from pyretis.core.box import RectangularBox, TriclinicBox
 from pyretis.core.system import System
 from pyretis.core.particles import Particles, ParticlesExt
-from pyretis.engines.internal import MDEngine
 from pyretis.engines.external import ExternalMDEngine
-from pyretis.inout.setup.createsystem import (
+from pyretis.setup.createsystem import (
     list_get,
     guess_particle_mass,
     initial_positions_lattice,
@@ -20,8 +19,6 @@ from pyretis.inout.setup.createsystem import (
     create_initial_positions,
     set_up_box,
     create_velocities,
-    create_system_from_restart,
-    create_system_from_settings,
     create_system,
 )
 logging.disable(logging.CRITICAL)
@@ -33,7 +30,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 def create_test_system():
     """Create a system we can use for testing."""
     settings = {
-        'system': {'dimensions': 3, 'units': 'lj'},
+        'system': {'dimensions': 3, 'units': 'lj', 'type': 'internal'},
         'particles': {
             'position': {
                 'generate': 'fcc',
@@ -64,26 +61,23 @@ class DummyExternal(ExternalMDEngine):
         }
 
     def step(self, system, name):
-        pass
+        """Initialise the dummy engine."""
 
     def _read_configuration(self, filename):
-        pass
+        """Initialise the dummy engine."""
 
     def _reverse_velocities(self, filename, outfile):
-        pass
+        """Initialise the dummy engine."""
 
     def _extract_frame(self, traj_file, idx, out_file):
-        pass
+        """Initialise the dummy engine."""
 
-    def _propagate_from(self, name, path, system, order_function, interfaces,
+    def _propagate_from(self, name, path, ensemble,
                         msg_file, reverse=False):
-        # pylint: disable=too-many-arguments
-        pass
+        """Initialise the dummy engine."""
 
-    def modify_velocities(self, system, rgen, sigma_v=None, aimless=True,
-                          momentum=False, rescale=None):
-        # pylint: disable=too-many-arguments
-        pass
+    def modify_velocities(self, ensemble, vel_settings):
+        """Initialise the dummy engine."""
 
 
 class TestMethods(unittest.TestCase):
@@ -116,7 +110,7 @@ class TestMethods(unittest.TestCase):
         }
         settings['particles']['mass'] = {'X': 1.23}
         settings['particles']['name'] = ['X']
-        settings['particles']['type'] = [42]
+        settings['particles']['ptype'] = [42]
         particles, box = initial_positions_lattice(settings)
         for i in particles.ptype:
             self.assertEqual(i, 42)
@@ -133,7 +127,7 @@ class TestMethods(unittest.TestCase):
         """Test that we can get initial positions from a file."""
         gro = os.path.join(HERE, 'config.gro')
         settings = {
-            'particles': {'position': {'file': gro}},
+            'particles': {'position': {'input_file': gro}},
             'system': {'dimensions': 3, 'units': 'reduced'}
         }
         create_conversion_factors(settings['system']['units'])
@@ -158,22 +152,22 @@ class TestMethods(unittest.TestCase):
         with self.assertRaises(ValueError):
             initial_positions_file(settings)
         # Test unknown format:
-        settings['particles']['position'] = {'file': 'file.fancy_format'}
+        settings['particles']['position'] = {'input_file': 'file.fancy_format'}
         with self.assertRaises(ValueError):
             initial_positions_file(settings)
         # Test .txt format and multiple snapshots:
         settings['particles']['position'] = {
-            'file': os.path.join(HERE, 'config.txt')
+            'input_file': os.path.join(HERE, 'config.txt')
         }
         logging.disable(logging.INFO)
-        with self.assertLogs('pyretis.inout.setup.createsystem',
+        with self.assertLogs('pyretis.setup.createsystem',
                              level='WARNING'):
             initial_positions_file(settings)
-        logging.disable(logging.CRITICAL)
         # Test empty config:
         settings['particles']['position'] = {
-            'file': os.path.join(HERE, 'config_empty.txt')
+            'input_file': os.path.join(HERE, 'config_empty.txt')
         }
+        logging.disable(logging.CRITICAL)
         with self.assertRaises(ValueError):
             initial_positions_file(settings)
 
@@ -193,7 +187,7 @@ class TestMethods(unittest.TestCase):
         create_initial_positions(settings)
         # From a file:
         settings['particles'] = {
-            'position': {'file': os.path.join(HERE, 'config.gro')},
+            'position': {'input_file': os.path.join(HERE, 'config.gro')},
         }
         create_initial_positions(settings)
         # And that we fail for other/missing settings:
@@ -253,45 +247,64 @@ class TestMethods(unittest.TestCase):
     def test_create_system_from_restart(self):
         """Test that we can create from restart settings."""
         system, _ = create_test_system()
-        restart = {}
-        restart['system'] = system.restart_info()
-        system2 = create_system_from_restart(restart)
+        restart = {'simulation': {'restart': 'Let me alone'}}
+        restart['restart'] = {'system': system.restart_info()}
+        system2 = create_system(restart)
         self.assertEqual(system.units, system2.units)
+        self.assertTrue(system == system2)
 
     def test_create_system_settings(self):
         """Test creation of system from settings."""
+        # Internal engine:
         # On a lattice:
         settings = {
-            'particles': {},
-            'system': {'dimensions': 3, 'units': 'reduced', 'temperature': 1.0}
+            'particles': {
+                'position': {
+                    'generate': 'fcc',
+                    'repeat': [1, 2, 3],
+                    'density': 0.9,
+                },
+            },
+            'system': {
+                'dimensions': 3,
+                'units': 'reduced',
+                'temperature': 1.0
+            }
         }
         create_conversion_factors(settings['system']['units'])
-        settings['particles']['position'] = {
-            'generate': 'fcc',
-            'repeat': [1, 2, 3],
-            'density': 0.9,
-        }
-        engine = MDEngine(1.0, 'Just for testing')
-        system = create_system_from_settings(settings, engine)
+        system = create_system(settings)
         self.assertIsInstance(system.particles, Particles)
-        engine = DummyExternal('test', 1.0, 10)
-        system = create_system_from_settings(settings, engine)
+        system = create_system(settings)
+        settings['engine'] = {'type': 'external',
+                              'input_files': {}}
+        system = create_system(settings)
         self.assertIsInstance(system.particles, ParticlesExt)
-        # Test that missing 'particles' in settings combined with
-        # an internal engine gives an KeyError:
-        del settings['particles']
-        engine = MDEngine(1.0, 'Just for testing')
-        self.assertRaises(KeyError, lambda: create_system_from_settings(
-            settings, engine))
+        # Test that missing 'particles' in settings and internal engine gives
+        # an KeyError
+        settings['simulation'] = 'restart'
+        del settings['system']
+        with self.assertRaises(KeyError):
+            create_system(settings)
 
     def test_create_system(self):
         """Test that we can use the create_system method."""
         # With restart:
-        system, _ = create_test_system()
-        restart = {}
-        restart['system'] = system.restart_info()
-        system2 = create_system(None, None, restart=restart)
-        self.assertEqual(system.units, system2.units)
+        system, settings = create_test_system()
+        restart = {'simulation': {'restart': 'Let me alone'}}
+        restart['restart'] = {'system': system.restart_info()}
+        restart['restart']['particles'] = system.particles.restart_info()
+
+        system2, settings = create_test_system()
+        system2.load_restart_info(restart)
+        system4 = create_system(restart)
+
+        self.assertIsInstance(system, System)
+        self.assertIsInstance(system2, System)
+        self.assertIsInstance(system4, System)
+
+        # todo wish-list to make restarts always possible
+        # self.assertTrue(system2 == system4)
+
         # From settings:
         settings = {
             'particles': {},
@@ -303,9 +316,9 @@ class TestMethods(unittest.TestCase):
             'repeat': [1, 2, 3],
             'density': 0.9,
         }
-        engine = MDEngine(1.0, 'Just for testing')
-        system3 = create_system(settings, engine)
+        system3 = create_system(settings)
         self.assertIsInstance(system3.particles, Particles)
+        self.assertIsInstance(system3, System)
 
 
 if __name__ == '__main__':

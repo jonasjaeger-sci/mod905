@@ -115,7 +115,7 @@ are in fact **case-sensitive**:
 
       Particles settings
       ------------------
-      position = {'file': 'myfile.gro'}
+      position = {'input_file': 'myfile.gro'}
 
   Here, we are referring to a file named ``myfile.gro``,
   and |pyretis| will expect this file to be present with exactly

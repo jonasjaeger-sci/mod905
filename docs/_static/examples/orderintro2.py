@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Example of interaction with a Composite order parameter."""
 import numpy as np
@@ -41,7 +41,7 @@ position_cos.calculate = collective_cos
 order_parameter.add_orderparameter(position_cos)
 
 # Create a system for testing the new order parameter:
-system = System()
-system.particles = Particles(dim=3)
-system.add_particle([1.0, 2.0, 3.0], mass=1.0, name='Ar', ptype=0)
-print('Order =', order_parameter.calculate(system))
+i_sys = System()
+i_sys.particles = Particles(dim=3)
+i_sys.add_particle([1.0, 2.0, 3.0], mass=1.0, name='Ar', ptype=0)
+print('Order =', order_parameter.calculate(i_sys))

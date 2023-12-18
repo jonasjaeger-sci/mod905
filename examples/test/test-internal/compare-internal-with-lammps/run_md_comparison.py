@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """
 Compare a PyRETIS simulation to LAMMPS.
@@ -15,12 +15,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib import gridspec
 from pyretis.core.units import units_from_settings
-from pyretis.inout.setup import (
-    create_system,
-    create_force_field,
-    create_simulation,
-    create_engine,
-)
+from pyretis.setup import create_simulation
 from pyretis.inout import print_to_screen
 from pyretis.inout.settings import parse_settings_file
 
@@ -33,15 +28,11 @@ TOL_PRESS = 2.0
 
 def set_up(settings_file):
     """Set up the simulation from a settings file."""
-    print_to_screen('Loading settings: {}'.format(settings_file),
+    print_to_screen(f'Loading settings: {settings_file}',
                     level='info')
     settings = parse_settings_file(settings_file)
     units_from_settings(settings)
-    engine = create_engine(settings)
-    system = create_system(settings, engine=engine)
-    system.forcefield = create_force_field(settings)
-    keyargs = {'system': system, 'engine': engine}
-    simulation = create_simulation(settings, keyargs)
+    simulation = create_simulation(settings)
     return simulation
 
 
@@ -58,7 +49,7 @@ def format_thermo(result):
 
 def run_simulation(simulation, outputfile):
     """Run the simulation and write output to screen/file."""
-    print_to_screen('Running simulation: {}'.format(simulation))
+    print_to_screen(f'Running simulation: {simulation}')
     with open(outputfile, 'w') as output:
         output.write('{}\n'.format(LAMMPS_HEAD))
         print(LAMMPS_HEAD)
@@ -66,7 +57,7 @@ def run_simulation(simulation, outputfile):
             for step in simulation.run():
                 txt = format_thermo(step)
                 print(txt)
-                output.write('{}\n'.format(txt))
+                output.write(f'{txt}\n')
         except KeyboardInterrupt:
             print_to_screen('Aborting simulation!')
             return 1
@@ -217,7 +208,7 @@ def plot_comparison(lammps_file, pyretis_file):
         print_to_screen('LAMMPS and PyRETIS data have different shape!',
                         level='warning')
 
-    plt.style.use('seaborn-poster')
+    plt.style.use('seaborn-v0_8-poster')
     ret1 = plot_energy(lammps, pyret)
     if ret1 == 0:
         print_to_screen('RMSD comparison for thermodynamic properties is OK!',

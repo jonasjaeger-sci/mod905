@@ -4,14 +4,17 @@ Retis 1D example
 Simulation
 ----------
 task = retis
-steps = 25
-interfaces = [-0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, 1.0]
+steps = 16
+interfaces = [-0.9, -0.7, -0.5, -0.3, 1.0]
+rgen = 'rgen-borg'
+seed = 0
 
 System
 ------
 units = reduced
 dimensions = 1
-temperature = 0.07
+temperature = 0.7
+rgen = 'rgen-borg'
 
 Box
 ---
@@ -20,11 +23,11 @@ periodic = [False]
 Engine
 ------
 class = Langevin
-timestep = 0.002
+timestep = 0.02
 gamma = 0.3
 high_friction = False
+rgen = 'rgen-borg'
 seed = 0
-rgen = test
 
 TIS settings
 ------------
@@ -35,8 +38,8 @@ allowmaxlength = False
 zero_momentum = False
 rescale_energy = False
 sigma_v = -1
+rgen = 'rgen-borg'
 seed = 0
-rgen = test
 
 RETIS settings
 --------------
@@ -52,10 +55,10 @@ kick-from = initial
 
 Particles
 ---------
-position = {'file': 'initial.xyz'}
+position = {'input_file': 'initial.xyz'}
 mass = {'Ar': 1.0}
 name = ['Ar']
-type = [0]
+ptype = [0]
 
 Forcefield settings
 -------------------
@@ -79,5 +82,5 @@ Output
 ------
 backup = overwrite
 order-file = 1
-trajectory-file = -1
+trajectory-file = 1
 energy-file = -1

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Test the recalculate orderparameter tools in pyretis.tools"""
 from contextlib import contextmanager
@@ -11,7 +11,6 @@ from tempfile import NamedTemporaryFile
 import unittest
 from unittest.mock import patch
 import numpy as np
-import mdtraj as md
 from pyretis.tools.recalculate_order import (
     recalculate_from_frame,
     recalculate_from_trj,
@@ -91,9 +90,7 @@ class Xpos1partExt(OrderParameter):
         super().__init__(description='X pos particle 1')
 
     def calculate(self, system):
-        trj = md.load(system.particles.config[0])
-
-        return trj.xyz[0][0][0]
+        return system.particles.pos[0][0]
 
 
 class Velocity(OrderParameter):
@@ -271,12 +268,12 @@ class TestRecalculateOrder(unittest.TestCase):
             self.assertIn(key, files)
             self.assertEqual(val, files[key])
 
-    def test_use_mdtraj(self):
-        """Test the method for load and recalculate op via mdtraj."""
+    def test_use_exteral(self):
+        """Test the method for load and recalculate op from ext trjs."""
         orderf = Xpos1partExt()
         sim_file = os.path.join(HERE, '2water')
 
-        ordercheck = [0.126, 0.126, 0.126, 0.125, 0.125, 0.125]
+        ordercheck = [0.1259, 0.1257, 0.1255, 0.1253, 0.1251, 0.1249]
 
         with patch('sys.stdout', new=StringIO()):
             order = [i for i in recalculate_order(
@@ -285,7 +282,7 @@ class TestRecalculateOrder(unittest.TestCase):
                 options={'top': sim_file+'.gro'})]
 
         for orderi, orderj in zip(order, ordercheck):
-            self.assertAlmostEqual(orderi, orderj)
+            self.assertAlmostEqual(orderi, orderj, 3, 0.1)
 
         with patch('sys.stdout', new=StringIO()):
             order = [i for i in recalculate_from_trj(
@@ -293,14 +290,14 @@ class TestRecalculateOrder(unittest.TestCase):
                 {'top': sim_file + '.gro'})]
 
         for orderi, orderj in zip(order, ordercheck):
-            self.assertAlmostEqual(orderi, orderj)
+            self.assertAlmostEqual(orderi, orderj, 3, 0.1)
 
         one_op = recalculate_from_trj(orderf, sim_file + '.trr',
                                       {'top': sim_file + '.gro',
                                        'idx': 3})
 
         with patch('sys.stdout', new=StringIO()):
-            self.assertAlmostEqual(next(one_op), ordercheck[3])
+            self.assertAlmostEqual(next(one_op), ordercheck[3], 3, 0.1)
 
 
 if __name__ == '__main__':

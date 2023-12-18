@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """This is a simple RETIS example animating the algorithm.
 
@@ -15,11 +15,12 @@ import matplotlib as mpl
 from matplotlib import pylab as plt
 from matplotlib import animation
 from matplotlib import gridspec
-from pyretis.core import System, create_box, Particles
 from pyretis.initiation import initiate_path_simulation
 from pyretis.core.properties import Property
-from pyretis.inout.setup import (create_force_field, create_engine,
-                                 create_orderparameter, create_simulation)
+from pyretis.inout.settings import (fill_up_tis_and_retis_settings,
+                                    _add_default_settings,
+                                    _add_specific_default_settings)
+from pyretis.setup import create_simulation
 from pyretis.analysis.path_analysis import _pcross_lambda_cumulative
 from pyretis.inout import print_to_screen
 
@@ -32,11 +33,16 @@ SETTINGS = {}
 # Basic settings for the simulation:
 SETTINGS['simulation'] = {
     'task': 'retis',
-    'steps': 15000,
+    'steps': 150,
     'interfaces': INTERFACES
 }
+# Basic settings for the simulation box:
+SETTINGS['box'] = {'cell': [3]}
+
 # Basic settings for the system:
-SETTINGS['system'] = {'units': 'reduced', 'temperature': 0.07}
+SETTINGS['system'] = {'units': 'reduced',
+                      'temperature': 0.09,
+                      'dimensions': 1}
 # Basic settings for the Langevin integrator:
 SETTINGS['engine'] = {
     'class': 'Langevin',
@@ -45,6 +51,12 @@ SETTINGS['engine'] = {
     'seed': 0,
     'timestep': 0.002,
 }
+# Particles:
+SETTINGS['particles'] = {'mass': {'Ar': 1.0},
+                         'name': ['Ar'],
+                         'ptype': [0],
+                         'position': {'generate': '1d'}}
+
 # Potential parameters:
 # The potential is: `V_\text{pot} = a x^4 - b (x - c)^2`
 SETTINGS['potential'] = [
@@ -81,6 +93,10 @@ SETTINGS['retis'] = {
 TIMESTEP = SETTINGS['engine']['timestep']
 ANALYSIS = {'ngrid': 100, 'nblock': 5}
 
+_add_default_settings(SETTINGS)
+_add_specific_default_settings(SETTINGS)
+fill_up_tis_and_retis_settings(SETTINGS)
+
 # Set up for plotting:
 mpl.rc('font', size=14, family='serif')
 mpl.rc('lines', color='#262626')
@@ -96,30 +112,6 @@ TXTCOLOR = {
     'IN': '#808080',
 }
 FTOT = 0
-
-
-def set_up_system(settings):
-    """Set up the system.
-
-    Parameters
-    ----------
-    settings : dict
-        The settings required to set up the system.
-
-    Returns
-    -------
-    syst : object like :py:class:`.System`
-        A system object we can use in a simulation.
-
-    """
-    box = create_box(periodic=[False])
-    syst = System(temperature=settings['system']['temperature'],
-                  units=settings['system']['units'], box=box)
-    syst.forcefield = create_force_field(settings)
-    syst.order_function = create_orderparameter(settings)
-    syst.particles = Particles(dim=1)
-    syst.add_particle(np.array([-1.0]), mass=1, name='Ar', ptype=0)
-    return syst
 
 
 def get_path(path):
@@ -165,10 +157,11 @@ def step_txt(ensembles, retis_result, prun):
 
     Parameters
     ----------
-    ensembles : list of objects like :py:class:`.PathEnsemble`
-        The different path ensembles we are simulating.
+    ensembles : list of dicts, it contains:
+       *  path_ensemble: objects like :py:class:`.PathEnsemble`
+               The different path ensembles we are simulating.
     retis_result : list of lists
-        The results of a RETIS simulation step.
+        The results from a RETIS simulation step.
     prun : list of floats
         The running average for the ensemble crossing probabilities.
 
@@ -187,24 +180,25 @@ def step_txt(ensembles, retis_result, prun):
     # i.e. the initial force evaluation since this can be stored in memory,
     # along the path -> i.e. we can avoid it.
     for ensemble in ensembles:
-        name = ensemble.ensemble_name
-        idx = ensemble.ensemble_number
+        path_ensemble = ensemble['path_ensemble']
+        name = path_ensemble.ensemble_name
+        idx = path_ensemble.ensemble_number
         name_of_move = retis_result['move-{}'.format(idx)]
         accepted = retis_result['accept-{}'.format(idx)]
         line = []
         if name_of_move == 'swap':
             idx2 = retis_result['all-{}'.format(idx)]['swap-with']
-            name2 = ensembles[idx2].ensemble_name
+            name2 = ensembles[idx2]['path_ensemble'].ensemble_name
             move = '{} {},'.format(name_of_move, name2)
             if idx == 0 or (idx == 1 and idx2 == 0):
-                # Evaluate forces when swapping [0^-] <-> [0^+]
-                force += ensemble.paths[-1]['length'] - 2
+                # Evaluate forces when swapping [0^-] <-> [0^+]:
+                force += path_ensemble.paths[-1]['length'] - 2
         elif name_of_move == 'tis':
             trial_path = retis_result['path-{}'.format(idx)]
             tis_move = trial_path.generated[0]
             move = '{} ({}),'.format(name_of_move, tis_move)
             if tis_move == 'sh':
-                force += ensemble.paths[-1]['length'] - 1
+                force += path_ensemble.paths[-1]['length'] - 1
         else:
             move = '{},'.format(name_of_move)
         line.append('{}: {:11s}'.format(name, move))
@@ -215,12 +209,12 @@ def step_txt(ensembles, retis_result, prun):
     return txt, force
 
 
-def probability_path_ensemble(ensemble, step, prun, orderp):
+def probability_path_ensemble(path_ensemble, step, prun, orderp):
     """Update running estimates of probabilities for an ensemble.
 
     Parameters
     ----------
-    ensemble : object like :py:class:`.PathEnsemble`
+    path_ensemble : objects like :py:class:`.PathEnsemble`
         The ensemble to analyse.
     step : int
         The current simulation step.
@@ -244,8 +238,8 @@ def probability_path_ensemble(ensemble, step, prun, orderp):
         parameter.
 
     """
-    ordermax = ensemble.last_path.ordermax[0]
-    success = 1 if ordermax > ensemble.detect else 0
+    ordermax = path_ensemble.last_path.ordermax[0]
+    success = 1 if ordermax > path_ensemble.detect else 0
     if prun is None:
         prun = success
     else:
@@ -255,8 +249,8 @@ def probability_path_ensemble(ensemble, step, prun, orderp):
         ordernew = np.array([ordermax])
     else:
         ordernew = np.append(orderp, ordermax)
-    ordermax = min(max(ordernew), max(ensemble.interfaces))
-    ordermin = ensemble.interfaces[1]
+    ordermax = min(max(ordernew), max(path_ensemble.interfaces))
+    ordermin = path_ensemble.interfaces[1]
     pcross, lamb = _pcross_lambda_cumulative(ordernew, ordermin, ordermax,
                                              ANALYSIS['ngrid'])
     return prun, ordernew, lamb, pcross
@@ -289,9 +283,10 @@ def analyse_path_ensembles(ensembles, step, variables):
 
     Parameters
     ----------
-    ensembles : a list of objects like :py:class:`.PathEnsemble`
-        These objects contain information about accepted paths for the
-        different path ensembles.
+    ensembles : a list of dicts. They contain:
+      *  objects like :py:class:`.PathEnsemble`
+             These objects contain information about accepted paths for the
+             different path ensembles.
     step : integer
         The current step number.
     variables : dict of objects
@@ -310,8 +305,8 @@ def analyse_path_ensembles(ensembles, step, variables):
             'kab': 0, 'kabe': float('inf')}
     length0 = variables['length0']
     length1 = variables['length1']
-    length0.add(ensembles[0].last_path.length)
-    length1.add(ensembles[1].last_path.length)
+    length0.add(ensembles[0]['path_ensemble'].last_path.length)
+    length1.add(ensembles[1]['path_ensemble'].last_path.length)
     flux = 1.0 / ((length0.mean + length1.mean - 4.0) * TIMESTEP)
     calc['flux'] = flux
     variables['flux'].append(flux)
@@ -325,15 +320,13 @@ def analyse_path_ensembles(ensembles, step, variables):
             continue
         prun = variables['prun'][i]
         orderp = variables['orderp'][i]
-        prun, ordernew, lamb, pcross = probability_path_ensemble(ensemble,
-                                                                 step,
-                                                                 prun,
-                                                                 orderp)
+        prun, ordernew, lamb, pcross = probability_path_ensemble(
+            ensemble['path_ensemble'], step, prun, orderp)
         variables['orderp'][i] = ordernew
         variables['prun'][i] = prun
         variables['pcross'][i] = pcross
         variables['lamb'][i] = lamb
-        idx = np.where(lamb <= ensemble.detect)[0]
+        idx = np.where(lamb <= ensemble['path_ensemble'].detect)[0]
         matched_lamb.extend(lamb[idx])
         matched_prob.extend(pcross[idx] * accprob)
         variables['pcross2'][i] = pcross*accprob
@@ -365,8 +358,6 @@ def matplotlib_setup():
     ax1 = new_fig.add_subplot(grid[:, :2])
     ax2 = new_fig.add_subplot(grid[0, 2:])
     ax3 = new_fig.add_subplot(grid[1:, 2:])
-    if not PCROSS_LOG:
-        axp = ax3.twinx()
     axes = (ax1, ax2, ax3)
     plot_patches = {'paths': [],
                     'prob': [],
@@ -425,6 +416,7 @@ def matplotlib_setup():
         ax3.set_xlim(-1, 1.05)
         ax3.set_ylim(1e-7, 1)
     else:
+        axp = ax3.twinx()
         axp.set_yscale('log')
         plot_patches['matched'] = axp.plot([], [], lw=6, ls='-',
                                            color='#262626',
@@ -513,7 +505,7 @@ def update(frame, simulation, plot_patches, variables, axes):
     if not simulation.is_finished():
         result = simulation.step()
         step = result['cycle']['step']
-        ensembles = simulation.path_ensembles
+        ensembles = simulation.ensembles
         print_to_screen('# Current cycle: {}'.format(step), level='info')
         anr = analyse_path_ensembles(ensembles, step, variables)
         retis_txt, force = step_txt(ensembles, result, variables['prun'])
@@ -529,7 +521,7 @@ def update(frame, simulation, plot_patches, variables, axes):
         print_to_screen('')
 
         for i, ensemble in enumerate(ensembles):
-            _, pos, vel = get_path(ensemble.last_path)
+            _, pos, vel = get_path(ensemble['path_ensemble'].last_path)
             plot_patches['paths'][i].set_data(pos, vel)
             patches.append(plot_patches['paths'][i])
             plot_patches['start'][i].set_offsets((pos[0][0], vel[0][0]))
@@ -566,7 +558,7 @@ def update(frame, simulation, plot_patches, variables, axes):
         patches.append(plot_patches['txtcycle'])
 
         # match probabilities:
-        for i, ensemble in enumerate(simulation.path_ensembles):
+        for i, ensemble in enumerate(simulation.ensembles):
             if i == 0:
                 continue
             if PCROSS_LOG:
@@ -592,23 +584,21 @@ def main():
     """Run the simulation."""
     colorama.init(autoreset=True)
     print_to_screen('# CREATING SYSTEM', level='info')
-    system = set_up_system(SETTINGS)
-    print_to_screen('# CREATING SIMULATION:', level='info')
-    sim_args = {'system': system, 'engine': create_engine(SETTINGS)}
-    simulation = create_simulation(SETTINGS, sim_args)
+    simulation = create_simulation(SETTINGS)
     print_to_screen(simulation)
     print_to_screen('# GENERATING INITIAL PATHS', level='info')
 
     for i, _ in enumerate(initiate_path_simulation(simulation, SETTINGS)):
-        ensemble = simulation.path_ensembles[i]
-        name = ensemble.ensemble_name
+        path_ensemble = simulation.ensembles[i]['path_ensemble']
+        name = path_ensemble.ensemble_name
         print_to_screen('Info about ensemble {}:'.format(name),
                         level='success')
-        print_to_screen(ensemble)
+        print_to_screen(path_ensemble)
         print_to_screen('Info about the initial path:', level='success')
-        print_to_screen(ensemble.last_path)
+        print_to_screen(path_ensemble.last_path)
         print_to_screen('')
-
+    # We make a dictionary of these variable for easier access:
+    # Set up some variables for storing results:
     fig, plot_patches, axes = matplotlib_setup()
     variables = {'length0': Property('Path length in [0^-]'),
                  'length1': Property('Path length in [0^+]'),

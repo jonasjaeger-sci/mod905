@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Definitions of simulation objects for path sampling simulations.
 
@@ -12,28 +12,35 @@ Important classes defined here
 PathSimulation (:py:class:`.PathSimulation`)
     The base class for path simulations.
 
-SimulationSingleTIS (:py:class:`.SimulationSingleTIS`)
+SimulationTIS (:py:class:`.SimulationSingleTIS`)
     Definition of a TIS simulation for a single path ensemble.
 
 SimulationRETIS (:py:class:`.SimulationRETIS`)
     Definition of a RETIS simulation.
 
+SimulationPPRETIS (:py:class:`.SimulationPPRETIS`)
+    Definition of a PPRETIS simulation.
+
 """
 import logging
+import os
 import numpy as np
-from pyretis.simulation.simulation import Simulation
-from pyretis.core.tis import make_tis_step_ensemble
+from pyretis.core.common import soft_partial_exit, priority_checker
+from pyretis.core.random_gen import create_random_generator
 from pyretis.core.retis import make_retis_step
+from pyretis.core.tis import make_tis
 from pyretis.initiation import initiate_path_simulation
-from pyretis.inout.simulationio import task_from_settings
-from pyretis.inout.screen import print_to_screen
 from pyretis.inout.common import make_dirs
-from pyretis.inout.restart import write_path_ensemble_restart
+from pyretis.inout.restart import write_ensemble_restart
+from pyretis.inout.screen import print_to_screen
+from pyretis.inout.simulationio import task_from_settings
+from pyretis.simulation.simulation import Simulation
+
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 
-__all__ = ['PathSimulation', 'SimulationSingleTIS', 'SimulationRETIS']
+__all__ = ['PathSimulation', 'SimulationTIS', 'SimulationRETIS']
 
 
 class PathSimulation(Simulation):
@@ -41,16 +48,18 @@ class PathSimulation(Simulation):
 
     Attributes
     ----------
-    engine : object like :py:class:`.EngineBase`
-        This is the integrator that is used to propagate the system
-        in time.
-    path_ensembles : list of objects like :py:class:`.PathEnsemble`
-        This is used for storing results for the different path
-        ensembles.
-    rgen : object like :py:class:`.RandomGenerator`
-        This is a random generator used for the generation of paths.
-    system : object like :py:class:`.System`
-        This is the system the simulation will act on.
+    ensembles : list of dictionaries of objects
+        Each contains:
+
+        * `path_ensemble`: objects like :py:class:`.PathEnsemble`
+          This is used for storing results for the different path ensembles.
+        * `engine`: object like :py:class:`.EngineBase`
+          This is the integrator that is used to propagate the system in time.
+        * `rgen`: object like :py:class:`.RandomGenerator`
+          This is a random generator used for the generation of paths.
+        * `system`: object like :py:class:`.System`
+          This is the system the simulation will act on.
+
     settings : dict
         A dictionary with TIS and RETIS settings. We expect that
         we can find ``settings['tis']`` and possibly
@@ -71,98 +80,105 @@ class PathSimulation(Simulation):
 
         * `swapfreq`: The frequency for swapping moves.
         * `relative_shoots`: If we should do relative shooting for
-          the ensembles.
+          the path ensembles.
         * `nullmoves`: Should we perform null moves.
-        * `swapsimul`: Should we just swap a single pair or several
-          pairs.
+        * `swapsimul`: Should we just swap a single pair or several pairs.
+
+      required_settings : tuple of strings
+        This is just a list of the settings that the simulation
+        requires. Here it is used as a check to see that we have
+        all we need to set up the simulation.
 
     """
 
-    required_settings = ('tis',)
-    """tuple of strings : This is a list of the settings that the
-    simulation requires. Here it is used as a check to see that we
-    have all that we need to set up the simulation."""
+    required_settings = ('tis', 'retis')
     name = 'Generic path simulation'
     simulation_type = 'generic-path'
     simulation_output = [
         {
             'type': 'pathensemble',
-            'name': 'path-ensemble',
+            'name': 'path_ensemble',
             'result': ('pathensemble-{}',),
         },
         {
             'type': 'path-order',
-            'name': 'path-ensemble-order',
+            'name': 'path_ensemble-order',
             'result': ('path-{}', 'status-{}'),
         },
         {
             'type': 'path-traj-{}',
-            'name': 'path-ensemble-traj',
+            'name': 'path_ensemble-traj',
             'result': ('path-{}', 'status-{}', 'pathensemble-{}'),
         },
         {
             'type': 'path-energy',
-            'name': 'path-ensemble-energy',
+            'name': 'path_ensemble-energy',
             'result': ('path-{}', 'status-{}'),
         },
     ]
 
-    def __init__(self, system, order_function, engine, path_ensembles,
-                 settings, rgen=None, steps=0, startcycle=0):
+    def __init__(self, ensembles, settings, controls):
         """Initialise the path simulation object.
 
         Parameters
         ----------
-        system : object like :py:class:`.System`
-            This is the system we are investigating.
-        order_function : object like :py:class:`.OrderParameter`
-            The object used for calculating the order parameter.
-        engine : object like :py:class:`.EngineBase`
-            This is the integrator that is used to propagate the system
-            in time.
-        path_ensembles : list of objects like :py:class:`.PathEnsemble`
-            This is used for storing results for the different path
-            ensembles.
-        rgen : object like :py:class:`.RandomGenerator`
-            This object is the random generator to use in the simulation.
-        settings : dict of dicts
-            A dictionary with TIS and RETIS settings.
-        steps : int, optional
-            The number of simulation steps to perform.
-        startcycle : int, optional
-            The cycle we start the simulation on.
+        ensembles : list of dicts
+            Each contains:
+
+            * `path_ensemble`: object like :py:class:`.PathEnsemble`
+              This is used for storing results for the simulation. It
+              is also used for defining the interfaces for this simulation.
+            * `system`: object like :py:class:`.System`
+              This is the system we are investigating.
+            * `order_function`: object like :py:class:`.OrderParameter`
+              The object used for calculating the order parameter.
+            * `engine`: object like :py:class:`.EngineBase`
+              This is the integrator that is used to propagate the
+              system in time.
+            * `rgen`: object like :py:class:`.RandomGenerator`
+              This is the random generator to use in the ensemble.
+
+        settings : dict
+            This dictionary contains the settings for the simulation.
+        controls: dict of parameters to set up and control the simulations
+            It contains:
+
+            * `steps`: int, optional
+              The number of simulation steps to perform.
+            * `startcycle`: int, optional
+              The cycle we start the simulation on, useful for restarts.
+            * `rgen`: object like :py:class:`.RandomGenerator`
+              This object is the random generator to use in the simulation.
 
         """
-        super().__init__(steps=steps, startcycle=startcycle)
-        self.system = system
-        self.system.potential_and_force()  # Check that we can get forces.
-        self.order_function = order_function
-        self.engine = engine
-        self.path_ensembles = path_ensembles
-        self.settings = {}
+        super().__init__(settings, controls)
+        self.ensembles = ensembles
+        self.settings = settings
+        self.rgen = controls.get('rgen', create_random_generator())
+
         for key in self.required_settings:
-            if key not in settings:
+            if key not in self.settings:
                 logtxt = 'Missing required setting "{}" for simulation "{}"'
                 logtxt = logtxt.format(key, self.name)
                 logger.error(logtxt)
                 raise ValueError(logtxt)
             self.settings[key] = settings[key]
-        if rgen is None:
-            self.rgen = np.random.default_rng()
-        else:
-            self.rgen = rgen
+
         # Additional setup for shooting:
-        if self.settings['tis']['sigma_v'] < 0.0:
-            self.settings['tis']['aimless'] = True
-            logger.debug('%s: aimless is True', self.name)
-        else:
-            logger.debug('Path simulation: Creating sigma_v.')
-            sigv = (self.settings['tis']['sigma_v'] *
-                    np.sqrt(system.particles.imass))
-            logger.debug('Path simulation: sigma_v created and set.')
-            self.settings['tis']['sigma_v'] = sigv
-            self.settings['tis']['aimless'] = False
-            logger.info('Path simulation: aimless is False')
+        for i, ensemble in enumerate(ensembles):
+            ensemble['system'].potential_and_force()
+
+            if self.settings['ensemble'][i]['tis']['sigma_v'] < 0.0:
+                self.settings['ensemble'][i]['tis']['aimless'] = True
+                logger.debug('%s: aimless is True', self.name)
+            else:
+                logger.debug('Path simulation: Creating sigma_v.')
+                sigv = (self.settings['ensemble'][i]['tis']['sigma_v'] *
+                        np.sqrt(ensemble['system'].particles.imass))
+                logger.debug('Path simulation: sigma_v created and set.')
+                self.settings['ensemble'][i]['tis']['sigma_v'] = sigv
+                self.settings['ensemble'][i]['tis']['aimless'] = False
+                logger.debug('Path simulation: aimless is False')
 
     def restart_info(self):
         """Return restart info.
@@ -170,16 +186,43 @@ class PathSimulation(Simulation):
         The restart info for the path simulation includes the state of
         the random number generator(s).
 
+        Returns
+        -------
+        info : dict,
+            Contains all the updated simulation settings and counters.
+
         """
-        info = {'cycle': self.cycle,
-                'rgen': self.rgen.get_state(),
-                'type': self.simulation_type}
-        try:
-            rgen = self.engine.rgen
-            info['engine'] = {'rgen': rgen.get_state()}
-        except AttributeError:
-            pass
+        info = super().restart_info()
+        info['simulation']['rgen'] = self.rgen.get_state()
+
+        # Here we store only the necessary info to initialize the
+        # ensemble objects constructed in `pyretis.setup.createsimulation`
+        # Note: these info are going to be stored in restart.pyretis
+        if hasattr(self, 'ensembles'):
+            info['ensemble'] = []
+            for ens in self.ensembles:
+                info['ensemble'].append(
+                    {'restart': os.path.join(
+                        ens['path_ensemble'].ensemble_name_simple,
+                        'ensemble.restart')})
+
         return info
+
+    def load_restart_info(self, info):
+        """Load restart information.
+
+        Note: This method load the info for the main simulation, the actual
+              ensemble restart is done in initiate_restart.
+
+        Parameters
+        ----------
+        info : dict
+            The dictionary with the restart information, should be
+            similar to the dict produced by :py:func:`.restart_info`.
+
+        """
+        super().load_restart_info(info)
+        self.rgen = create_random_generator(info['simulation']['rgen'])
 
     def create_output_tasks(self, settings, progress=False):
         """Create output tasks for the simulation.
@@ -198,22 +241,22 @@ class PathSimulation(Simulation):
         """
         logging.debug('Clearing output tasks & adding pre-defined ones')
         self.output_tasks = []
-        for ensemble in self.path_ensembles:
-            directory = ensemble.directory['path-ensemble']
-            idx = ensemble.ensemble_number
-            logger.info('Creating output directories for ensemble %s',
-                        ensemble.ensemble_name)
-            for dir_name in ensemble.directories():
+        for ensemble in self.ensembles:
+            path_ensemble = ensemble['path_ensemble']
+            directory = path_ensemble.directory['path_ensemble']
+            idx = path_ensemble.ensemble_number
+            logger.info('Creating output directories for path_ensemble %s',
+                        path_ensemble.ensemble_name)
+            for dir_name in path_ensemble.directories():
                 msg_dir = make_dirs(dir_name)
                 logger.info('%s', msg_dir)
             for task_dict in self.simulation_output:
                 task_dict_ens = task_dict.copy()
                 if 'result' in task_dict_ens:
-                    task_dict_ens['result'] = [
-                        key.format(idx) for key in task_dict_ens['result']
-                    ]
+                    task_dict_ens['result'] = \
+                        [key.format(idx) for key in task_dict_ens['result']]
                 task = task_from_settings(task_dict_ens, settings, directory,
-                                          self.engine, progress)
+                                          ensemble['engine'], progress)
                 if task is not None:
                     logger.debug('Created output task:\n%s', task)
                     self.output_tasks.append(task)
@@ -231,8 +274,8 @@ class PathSimulation(Simulation):
         super().write_restart(now=now)
         if now or (self.restart_freq is not None and
                    self.cycle['stepno'] % self.restart_freq == 0):
-            for ensemble in self.path_ensembles:
-                write_path_ensemble_restart(ensemble)
+            for ens, e_set in zip(self.ensembles, self.settings['ensemble']):
+                write_ensemble_restart(ens, e_set)
 
     def initiate(self, settings):
         """Initialise the path simulation.
@@ -245,19 +288,20 @@ class PathSimulation(Simulation):
         """
         init = initiate_path_simulation(self, settings)
         print_to_screen('')
-        for accept, path, status, ensemble in init:
+        for i_ens, (accept, path, status, path_ensemble) in enumerate(init):
             print_to_screen(
-                f'Found initial path for {ensemble.ensemble_name}:',
+                f'Found initial path for {path_ensemble.ensemble_name}:',
                 level='success' if accept else 'warning',
             )
             for line in str(path).split('\n'):
                 print_to_screen(f'- {line}')
-            logger.info('Found initial path for %s', ensemble.ensemble_name)
+            logger.info('Found initial path for %s',
+                        path_ensemble.ensemble_name)
             logger.info('%s', path)
             print_to_screen('')
-            idx = ensemble.ensemble_number
-            ensemble_result = {
-                f'pathensemble-{idx}': ensemble,
+            idx = path_ensemble.ensemble_number
+            path_ensemble_result = {
+                f'pathensemble-{idx}': path_ensemble,
                 f'path-{idx}': path,
                 f'status-{idx}': status,
                 'cycle': self.cycle,
@@ -269,117 +313,130 @@ class PathSimulation(Simulation):
             # we restart from):
             if settings['initial-path']['method'] != 'restart':
                 for task in self.output_tasks:
-                    task.output(ensemble_result)
-                write_path_ensemble_restart(ensemble)
+                    task.output(path_ensemble_result)
+                write_ensemble_restart({'path_ensemble': path_ensemble},
+                                       settings['ensemble'][i_ens])
             if self.soft_exit():
                 return False
         return True
 
-
-class SimulationSingleTIS(PathSimulation):
-    """A single TIS simulation.
-
-    This class is used to define a TIS simulation where the goal is
-    to calculate crossing probabilities for a single path ensemble.
-
-    Attributes
-    ----------
-    path_ensemble : object like :py:class:`.PathEnsemble`
-        This is used for storing results for the simulation.
-        Note that we also have the :py:attr:`.path_ensembles`
-        attribute defined by the parent class. The attribute
-        :py:attr:`.path_ensemble` used here, is meant to reflect
-        that this class is intended for simulating a single ensemble
-        only.
-
-    """
-
-    required_settings = ('tis',)
-    name = 'Single TIS simulation'
-    simulation_type = 'tis'
-    simulation_output = PathSimulation.simulation_output + [
-        {
-            'type': 'pathensemble-screen',
-            'name': 'path-ensemble-screen',
-            'result': ('pathensemble-{}',),
-        },
-    ]
-
-    def __init__(self, system, order_function, engine, path_ensemble,
-                 settings, rgen=None, steps=0, startcycle=0):
-        """Initialise the TIS simulation object.
-
-        Parameters
-        ----------
-        system : object like :py:class:`.System`
-            This is the system we are investigating.
-        order_function : object like :py:class:`.OrderParameter`
-            The object used for calculating the order parameter.
-        engine : object like :py:class:`.EngineBase`
-            This is the integrator that is used to propagate the system
-            in time.
-        path_ensemble : object like :py:class:`.PathEnsemble`
-            This is used for storing results for the simulation. It
-            is also used for defining the interfaces for this
-            simulation.
-        rgen : object like :py:class:`.RandomGenerator`
-            This is the random generator to use in the simulation.
-        settings : dict
-            This dict contains settings for the simulation.
-        steps : int, optional
-            The number of simulation steps to perform.
-        startcycle : int, optional
-            The cycle we start the simulation on.
-
-        """
-        super().__init__(
-            system,
-            order_function,
-            engine,
-            (path_ensemble,),
-            settings,
-            rgen=rgen,
-            steps=steps,
-            startcycle=startcycle)
-        self.path_ensemble = path_ensemble
-
     def step(self):
-        """Perform a TIS simulation step.
+        """Perform a TIS/RETIS/PPRETIS simulation step.
 
         Returns
         -------
         out : dict
-            This list contains the results of the TIS step.
+            This list contains the results of the defined tasks.
 
         """
+        sim_type = self.settings['simulation']['task'].lower()
+        sim_map = {'explore': make_tis,
+                   'tis': make_tis,
+                   'pptis': make_tis,
+                   'retis': make_retis_step,
+                   'repptis': make_retis_step,
+                   }
+
+        prio_skip = priority_checker(self.ensembles, self.settings)
+        if True not in prio_skip:
+            self.cycle['step'] += 1
+            self.cycle['stepno'] += 1
+        msgtxt = f' {sim_type} step. Cycle {self.cycle["stepno"]}'
+        logger.info(msgtxt)
+        prepare = sim_map[sim_type]
+        runner = prepare(self.ensembles, self.rgen,
+                         self.settings, self.cycle['step'])
         results = {}
-        self.cycle['step'] += 1
-        self.cycle['stepno'] += 1
-        for ensemble in self.path_ensembles:
-            idx = ensemble.ensemble_number
-            accept, trial, status = make_tis_step_ensemble(
-                self.path_ensemble,
-                self.order_function,
-                self.engine,
-                self.rgen,
-                self.settings['tis'],
-                self.cycle['step'],
-            )
-            results['cycle'] = self.cycle
-            results[f'accept-{idx}'] = accept
-            results[f'path-{idx}'] = trial
-            results[f'status-{idx}'] = status
-            results[f'pathensemble-{idx}'] = ensemble
+        for i_ens, res in enumerate(runner):
+            if prio_skip[i_ens]:
+                continue
+            idx = res['ensemble_number']
+            result = {'cycle': self.cycle}
+            result[f'move-{idx}'] = res['mc-move']
+            result[f'status-{idx}'] = res['status']
+            result[f'path-{idx}'] = res['trial']
+            result[f'accept-{idx}'] = res['accept']
+            result[f'all-{idx}'] = res
+            # This is to fix swaps needs
+            idx_ens = i_ens if sim_type in {'pptis', 'tis', 'explore'} else idx
+            result[f'pathensemble-{idx}'] = \
+                self.ensembles[idx_ens]['path_ensemble']
+            for task in self.output_tasks:
+                task.output(result)
+            results.update(result)
+            if self.settings['ensemble'][idx_ens]['simulation'].get(
+                    'remove_generate', True):
+                logger.debug("Removing generate/ files:")
+                logger.debug("self.ensembles[i_ens]['path_ensemble'] = %s",
+                             self.ensembles[i_ens]['path_ensemble'])
+                self.ensembles[i_ens]['path_ensemble'].clear_generate()
+            if soft_partial_exit(self.settings['simulation']['exe_path']):
+                self.cycle['endcycle'] = self.cycle['step']
+                break
         return results
+
+    def run(self):
+        """Run a path simulation.
+
+        The intended usage is for simulations where all tasks have
+        been defined in :py:attr:`self.tasks`.
+
+        Note
+        ----
+        This function will just run the tasks via executing
+        :py:meth:`.step` In general, this is probably too generic for
+        the simulation you want, if you are creating a custom simulation.
+        Please consider customizing the :py:meth:`.run` (or the
+        :py:meth:`.step`) method of your simulation class.
+
+        Yields
+        ------
+        out : dict
+            This dictionary contains the results from the simulation.
+
+        """
+        while not self.is_finished():
+            result = self.step()
+            self.write_restart()
+            if self.soft_exit():
+                yield result
+                break
+            yield result
+
+
+class SimulationTIS(PathSimulation):
+    """A TIS simulation.
+
+    This class is used to define a TIS simulation where the goal is
+    to calculate crossing probabilities for a single path ensemble.
+
+    """
+
+    required_settings = ('tis',)
+    name = 'TIS simulation'
+    simulation_type = 'tis'
+    simulation_output = PathSimulation.simulation_output + [
+        {
+            'type': 'pathensemble-screen',
+            'name': 'path_ensemble-screen',
+            'result': ('pathensemble-{}',),
+        },
+    ]
 
     def __str__(self):
         """Just a small function to return some info about the simulation."""
         msg = ['TIS simulation']
-        msg += [f'Path ensemble: {self.path_ensemble.ensemble_number}']
-        msg += [f'Interfaces: {self.path_ensemble.interfaces}']
-        nstep = self.cycle['end'] - self.cycle['start']
+        msg += ['Ensembles:']
+        for ensemble in self.ensembles:
+            path_ensemble = ensemble['path_ensemble']
+            msg += [f'Path ensemble: {path_ensemble.ensemble_number}']
+            msg += [(f'{path_ensemble.ensemble_name}: '
+                     f'Interfaces: {path_ensemble.interfaces}')
+                    ]
+            msg += [f'Engine: {ensemble["engine"]}']
+
+        nstep = self.cycle['endcycle'] - self.cycle['startcycle']
         msg += [f'Number of steps to do: {nstep}']
-        msg += [f'Engine: {self.engine}']
         return '\n'.join(msg)
 
 
@@ -393,96 +450,26 @@ class SimulationRETIS(PathSimulation):
     :py:class:`.PathSimulation`.
     """
 
-    required_settings = ('tis', 'retis')
+    required_settings = ('retis',)
     name = 'RETIS simulation'
     simulation_type = 'retis'
     simulation_output = PathSimulation.simulation_output + [
         {
             'type': 'pathensemble-retis-screen',
-            'name': 'path-ensemble-retis-screen',
+            'name': 'path_ensemble-retis-screen',
             'result': ('pathensemble-{}',),
         },
     ]
 
-    def __init__(self, system, order_function, engine, path_ensembles,
-                 settings, rgen=None, steps=0, startcycle=0):
-        """Initialise the RETIS simulation object.
-
-        Parameters
-        ----------
-        system : object like :py:class:`.System`
-            This is the system we are investigating.
-        order_function : object like :py:class:`.OrderParameter`
-            The object used for calculating the order parameter.
-        engine : object like :py:class:`.EngineBase`
-            This is the integrator that is used to propagate the system
-            in time.
-        path_ensembles : list of objects like :py:class:`.PathEnsemble`
-            This is used for storing results for the different path
-            ensembles.
-        rgen : object like :py:class:`.RandomGenerator`
-            This object is the random generator to use in the simulation.
-        settings : dict
-            A dictionary with settings for TIS and RETIS.
-        steps : int, optional
-            The number of simulation steps to perform.
-        startcycle : int, optional
-            The cycle we start the simulation on.
-
-        """
-        super().__init__(
-            system,
-            order_function,
-            engine,
-            path_ensembles,
-            settings,
-            rgen=rgen,
-            steps=steps,
-            startcycle=startcycle
-        )
-
-    def step(self):
-        """Perform a RETIS simulation step.
-
-        Returns
-        -------
-        out : dict
-            This list contains the results of the defined tasks.
-
-        """
-        results = {}
-        self.cycle['step'] += 1
-        self.cycle['stepno'] += 1
-        msgtxt = f'RETIS step. Cycle {self.cycle["stepno"]}'
-        logger.info(msgtxt)
-        retis_step = make_retis_step(
-            self.path_ensembles,
-            self.order_function,
-            self.engine,
-            self.rgen,
-            self.settings,
-            self.cycle['step'],
-        )
-        for res in retis_step:
-            idx = res['ensemble']
-            results[f'move-{idx}'] = res['retis-move']
-            results[f'status-{idx}'] = res['status']
-            results[f'path-{idx}'] = res['trial']
-            results[f'accept-{idx}'] = res['accept']
-            results[f'all-{idx}'] = res
-            results[f'pathensemble-{idx}'] = self.path_ensembles[idx]
-        results['system'] = self.system  # TODO: IS THIS REALLY NEEDED HERE?
-        results['cycle'] = self.cycle
-        return results
-
     def __str__(self):
         """Just a small function to return some info about the simulation."""
         msg = ['RETIS simulation']
-        msg += ['Path ensembles:']
-        for ensemble in self.path_ensembles:
-            msgtxt = (f'{ensemble.ensemble_name}: '
-                      f'Interfaces: {ensemble.interfaces}')
+        msg += ['Ensembles:']
+        for ensemble in self.ensembles:
+            path_ensemble = ensemble['path_ensemble']
+            msgtxt = (f'{path_ensemble.ensemble_name}: '
+                      f'Interfaces: {path_ensemble.interfaces}')
             msg += [msgtxt]
-        nstep = self.cycle['end'] - self.cycle['start']
+        nstep = self.cycle['endcycle'] - self.cycle['startcycle']
         msg += [f'Number of steps to do: {nstep}']
         return '\n'.join(msg)

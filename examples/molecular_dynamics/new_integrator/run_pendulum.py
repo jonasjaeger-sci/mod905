@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Double pendulum example."""
 # pylint: disable=invalid-name
@@ -9,8 +9,8 @@ from matplotlib import pyplot as plt
 from matplotlib import animation
 from matplotlib import gridspec
 from pyretis.core.units import create_conversion_factors
-from pyretis.inout.setup import (create_system, create_engine,
-                                 create_force_field, create_simulation)
+from pyretis.setup import (create_system, create_engine,
+                           create_force_field, create_simulation)
 
 # Define potential parameters:
 L1 = 1.5
@@ -29,7 +29,7 @@ settings = {}
 settings['simulation'] = {
     'task': 'md-nve',
     'steps': 100000,
-    'exe-path': None
+    'exe_path': None
 }
 settings['system'] = {
     'units': 'gromacs',
@@ -54,7 +54,7 @@ settings['potential'] = [
 ]
 settings['particles'] = {
     'position': {'generate': 'sq', 'repeat': [2, 1], 'lcon': 1},
-    'type': [0, 0],
+    'ptype': [0, 0],
     'name': ['A', 'B'],
     'mass': {'A': M1, 'B': M2}
 }
@@ -68,8 +68,8 @@ system.particles.pos[0][0] = THETA1
 system.particles.pos[1][0] = THETA2
 system.particles.vel[0][0] = DTHETA1
 system.particles.vel[1][0] = DTHETA2
-kwargs = {'system': system, 'engine': create_engine(settings)}
-simulation = create_simulation(settings, kwargs)
+settings['system']['obj'] = system
+simulation = create_simulation(settings)
 mpl.rc('axes', labelsize='large')
 mpl.rc('font', family='serif')
 fig = plt.figure(figsize=(12, 6))
@@ -195,9 +195,9 @@ def update(frame, sys, sim):
         linetot.set_xdata(np.append(linetot.get_xdata(), frame))
         linetot.set_ydata(np.append(linetot.get_ydata(), etot))
         patches.append(linetot)
-        ax2.set_xlim(0, frame)
-        ax3.set_xlim(0, frame)
-        ax4.set_xlim(0, frame)
+        ax2.set_xlim(0, frame + 1)
+        ax3.set_xlim(0, frame + 1)
+        ax4.set_xlim(0, frame + 1)
         time_text.set_text('Step: {}'.format(result['cycle']['step']))
         patches.append(time_text)
         return patches

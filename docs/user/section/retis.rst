@@ -3,9 +3,9 @@
 The RETIS section
 =================
 
-The ``RETIS`` section specifies settings for RETIS simulations. Note that
-the section for :ref:`TIS <user-section-tis>` also needs
-to be defined for a RETIS simulation.
+The ``RETIS`` section specifies settings for RE(PP)TIS simulations. Note 
+that the section for :ref:`TIS <user-section-tis>` also needs
+to be defined for a RE(PP)TIS simulation.
 
 .. pyretis-input-example:: RETIS
 
@@ -29,6 +29,8 @@ The following keywords can be set for the RETIS section:
 
 .. |retis_relatives| replace:: :ref:`relative_shoots <user-section-retis-relatives>`
 
+.. |retis_priority| replace:: :ref:`priority_shooting <user-section-retis-priority>`
+
 .. |retis_rgen| replace:: :ref:`rgen <user-section-retis-rgen>`
 
 .. |retis_seed| replace:: :ref:`seed <user-section-retis-seed>`
@@ -48,6 +50,8 @@ The following keywords can be set for the RETIS section:
    | |retis_nullmoves| | Determines if we do null moves or not.               |
    +-------------------+------------------------------------------------------+
    | |retis_relatives| | Selects and defines relative shooting.               |
+   +-------------------+------------------------------------------------------+
+   | |retis_priority|  | Prioritize the ensembles with less cycles.           |
    +-------------------+------------------------------------------------------+
    | |retis_rgen|      | Determines the rgen to use in retis function.        |
    +-------------------+------------------------------------------------------+
@@ -98,6 +102,23 @@ Keyword relative_shoots
    Default
        No default, this setting **must** be specified.
 
+.. _user-section-retis-priority:
+
+Keyword priority_shooting
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. pyretis-keyword:: Priority_shooting boolean
+
+   This keyword automatically and dynamically internally select the
+   relative shooting such that ensembles with a lower cycle number,
+   will be prioritized until they reach a cyclen number equal to the others.
+   This setting simplify the use of |pyretis| in cluster environments
+   in which walltime is rather short. Each ensemble can be, therefore,
+   investigated also if launching several runs.
+
+   Default
+       The default value is ``priority_shooting = False``.
+
 .. _user-section-retis-rgen:
 
 Keyword rgen
@@ -107,8 +128,8 @@ Keyword rgen
 
    Select the function to use to generate the random number used in the
    retis function. That is, (1) the selection of the swap move vs shooting
-   or time reversal, (2) detail balance for swap when Stone Skipping with 
-   high acceptance is used.
+   or time reversal, (2) detail balance for swap when Stone Skipping or
+   Wire Fencing with high acceptance is used.
 
    Default
        The default value is ``rgen = None``.

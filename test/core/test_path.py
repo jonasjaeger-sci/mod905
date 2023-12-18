@@ -1,56 +1,16 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
-"""Test functionality for the path classes from pyretis.core.path"""
+"""Test functionality for the path classes from pyretis.core.path."""
 import logging
-import unittest
 import numpy as np
-from pyretis.core.system import System
-from pyretis.core.particles import Particles, ParticlesExt
-from pyretis.core.path import (
-    Path,
-    paste_paths,
-    check_crossing,
-)
+import unittest
+from pyretis.core.path import (Path, paste_paths, check_crossing)
 from pyretis.core.random_gen import RandomGenerator
-from .help import NegativeOrder, SameOrder
+from .help import (NegativeOrder, SameOrder, set_up_system,
+                   PATHTEST0, PATHTEST1, PATHTEST2)
+
 logging.disable(logging.CRITICAL)
-
-
-def set_up_system(order, pos, vel, vpot, ekin, internal=True):
-    """Create a system for testing."""
-    system = System()
-    if internal:
-        system.particles = Particles(dim=3)
-    else:
-        system.particles = ParticlesExt(dim=3)
-    system.add_particle(pos, vel=vel)
-    system.order = order
-    system.particles.vpot = vpot
-    system.particles.ekin = ekin
-    return system
-
-
-RGEN0 = RandomGenerator(seed=0)
-PATHTEST0 = Path(RGEN0)
-for _ in range(4):
-    for k in range(16):
-        PATHTEST0.append(
-            set_up_system([k, k], np.zeros(3), np.zeros(3), 0.0, 0.0)
-        )
-
-PATHTEST1 = Path(RGEN0)
-for k in [4, 5, 6]:
-    PATHTEST1.append(
-        set_up_system([k, k], np.zeros(3), np.zeros(3), 0.0, 0.0)
-    )
-
-PATHTEST2 = Path(RGEN0)
-for _ in range(4):
-    for k in [4, 5, 6]:
-        PATHTEST2.append(
-            set_up_system([k, k], np.zeros(3), np.zeros(3), 0.0, 0.0)
-        )
 
 
 def fill_forward_backward(pathf, pathb, npoints=20):
@@ -107,6 +67,29 @@ class TestPaste(unittest.TestCase):
         self.assertEqual(path.length, 10)
         for i, phasepoint in enumerate(path.phasepoints):
             self.assertAlmostEqual(phasepoint.order[0], i - 19.)
+
+    def test_paste_paths3(self):
+        """Test that the backwards phasepoint survive paste-pathing."""
+        rgen = RandomGenerator(seed=0)
+        pathf = Path(rgen, maxlen=1000)
+        pathb = Path(rgen, maxlen=1000)
+        fill_forward_backward(pathf, pathb, npoints=20)
+        pathb.phasepoints[0].order[0] = -11.11
+        pathb.phasepoints[-1].order[0] = -22.22
+        pathf.phasepoints[0].order[0] = 11.11
+        pathf.phasepoints[-1].order[0] = 22.22
+        path = paste_paths(pathb, pathf, overlap=True, maxlen=None)
+        # The bacwkards path is the one that survives, while the
+        # forwards path loses a phasepoint. Note that the backwards
+        # path is being flipped in time.
+        self.assertEqual(path.phasepoints[0].order[0],
+                         pathb.phasepoints[-1].order[0])
+        self.assertEqual(path.phasepoints[19].order[0],
+                         pathb.phasepoints[0].order[0])
+        self.assertEqual(path.phasepoints[20].order[0],
+                         pathf.phasepoints[1].order[0])
+        self.assertEqual(path.phasepoints[-1].order[0],
+                         pathf.phasepoints[-1].order[0])
 
 
 class TestCheckCrossing(unittest.TestCase):
@@ -182,7 +165,9 @@ class TestPath(unittest.TestCase):
                 set_up_system([rgen.rand()[0]], np.ones(3),
                               np.ones(1), 0.0, 0.0)
             )
-        path_rev = path.reverse(SameOrder())
+        path_rev = path.reverse(order_function=None)
+        path_rev2 = path.reverse(order_function=SameOrder())
+        self.assertTrue(path_rev == path_rev2)
         for original, rev in zip(reversed(path.phasepoints),
                                  path_rev.phasepoints):
             self.assertAlmostEqual(
@@ -197,8 +182,6 @@ class TestPath(unittest.TestCase):
                 np.allclose(original.particles.get_pos(),
                             rev.particles.get_pos())
             )
-        # Test that we do nothing if the order parameter is None:
-        self.assertEqual(path.reverse(None), path_rev)
         # Test for cases when the order parameter depends on the
         # velocity:
         path_rev = path.reverse(NegativeOrder())
@@ -294,6 +277,8 @@ class TestPath(unittest.TestCase):
             path.append(
                 set_up_system([i * -1.0], np.zeros(3), np.zeros(3), 0.0, 0.0)
             )
+        end = path.get_start_point(0)
+        self.assertEqual(end, 'L')
         end = path.get_end_point(1)
         self.assertEqual(end, 'L')
         end = path.get_end_point(0, 1)
@@ -306,7 +291,7 @@ class TestPath(unittest.TestCase):
         self.assertEqual(start, 'L')
         start = path.get_start_point(0, 1)
         self.assertEqual(start, 'L')
-        start = path.get_start_point(-2, -3)
+        start = path.get_start_point(-4, -3)
         self.assertEqual(start, 'R')
         start = path.get_start_point(-2, 1)
         self.assertTrue(start is None)
@@ -444,10 +429,12 @@ class TestPath(unittest.TestCase):
         path.sorting('vpot', reverse=True)
         sort = [i.particles.vpot for i in path.phasepoints]
         self.assertEqual(sort[::-1], correct_vpot)
-        for key in ('gigio', 'vel'):
+        for _ in ('gigio', 'vel'):
             with self.assertRaises(AttributeError):
-                for _ in path.sorting(key):
-                    pass
+                path.sorting('barbara')
+
+        with self.assertRaises(AttributeError):
+            path.sorting('gigio')
 
 
 class TestExternalPaths(unittest.TestCase):
@@ -482,6 +469,50 @@ class TestExternalPaths(unittest.TestCase):
                 point2.particles.get_pos()
             )
             self.assertEqual(point1.order[0], point2.order[0])
+
+    def test_restart(self):
+        """Tests the restart feature for external paths."""
+        path = Path(None)
+        path.append(
+            set_up_system([0.0, None], ('initial.g96', None),
+                          False, None, None, internal=False)
+        )
+        for i in range(5):
+            path.append(
+                set_up_system([(i + 1) * 10, None], ('trajB.trr', i),
+                              True, None, None, internal=False)
+            )
+        for i in range(5):
+            path.append(
+                set_up_system([(i + 1) * 20, None], ('trajF.trr', i),
+                              False, None, None, internal=False)
+            )
+        dic = {
+            'generated': ('fake', 0, 0, 0),
+            'status': 'ACC',
+            'weight': 5,
+        }
+        for attr, value in dic.items():
+            setattr(path, attr, value)
+        info = path.restart_info()
+        path2 = path.empty_path()
+        path2.load_restart_info(info)
+
+        for i, j in enumerate(path.rgen.get_state()['state']):
+            if type(j) is np.ndarray:
+                path2_l = path2.rgen.get_state()['state'][i].tolist()
+                self.assertListEqual(j.tolist(), path2_l)
+            else:
+                self.assertEqual(j, path2.rgen.get_state()['state'][i])
+        self.assertEqual(path.rgen.get_state()['seed'],
+                         path2.rgen.get_state()['seed'])
+        self.assertEqual(path.generated, path2.generated)
+        self.assertEqual(path.maxlen, path2.maxlen)
+        self.assertEqual(path.time_origin, path2.time_origin)
+        self.assertEqual(path.status, path2.status)
+        self.assertEqual(path.weight, path2.weight)
+        for i, j in enumerate(path.phasepoints):
+            self.assertEqual(j.order[0], path2.phasepoints[i].order[0])
 
 
 if __name__ == '__main__':

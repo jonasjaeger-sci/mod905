@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Definition of the OpenMM engine.
 
@@ -14,24 +14,56 @@ OpenMMEngine (:py:class:`.OpenMMEngine`)
 """
 
 import logging
+from pyretis.core import System, Particles
 from pyretis.core.particlefunctions import (calculate_kinetic_energy,
                                             reset_momentum)
 from pyretis.engines.engine import EngineBase
-from pyretis.core.box import box_matrix_to_list
+from pyretis.core.box import create_box, box_matrix_to_list
+from pyretis.core.common import import_from
 try:
     import openmm
+    import openmm.unit as u
     HAS_OPENMM = True
 except ImportError:
-    try:  # Support openmm < 7.6
+    try:
         from simtk import openmm
-        HAS_OPENMM = True
-    except ImportError:
-        HAS_OPENMM = False
+        import simtk.unit as u  # pragma: no cover
+        HAS_OPENMM = True  # pragma: no cover
+    except ImportError:  # pragma: no cover
+        HAS_OPENMM = False  # pragma: no cover
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 __all__ = ['OpenMMEngine']
+
+
+def make_pyretis_system(settings):
+    """Make a PyRETIS system from OpenMM Simulation.
+
+    First this looks for setting->engine->openmm_module and openmm_simulation.
+    It then imports that openmm_simulation object and creates a internal
+    pyretis system representation
+    """
+    simulation = import_from(settings['engine']['openmm_module'],
+                             settings['engine']['openmm_simulation'])
+    state = simulation.context.getState(getPositions=True, getVelocities=True)
+    box = state.getPeriodicBoxVectors(asNumpy=True).T
+    box = create_box(cell=box_matrix_to_list(box),
+                     periodic=[True, True, True])
+    system = System(units='gromacs', box=box,
+                    temperature=simulation.integrator.getTemperature())
+    system.particles = Particles(system.get_dim())
+    pos = state.getPositions(asNumpy=True)
+    vel = state.getVelocities(asNumpy=True)
+    for i, atom in enumerate(simulation.topology.atoms()):
+        mass = simulation.system.getParticleMass(i)
+        mass = mass.value_in_unit(u.grams/u.mole)
+        name = atom.name
+        system.particles.add_particle(pos=pos[i], vel=vel[i],
+                                      force=[None, None, None],
+                                      mass=mass, name=name)
+    return system
 
 
 class OpenMMEngine(EngineBase):
@@ -52,28 +84,38 @@ class OpenMMEngine(EngineBase):
 
     engine_type = 'openmm'
 
-    def __init__(self, simulation, subcycles=1):
+    def __init__(self, openmm_simulation, subcycles=1, openmm_module=None):
         """Set up the OpenMM Engine.
 
         Parameters
         ----------
-        simulation : OpenMM.simulation
-            The OpenMM simulation object.
+        openmm_simulation : OpenMM.simulation, or string
+            The OpenMM simulation object or the variable name if `module` is
+            not None.
 
         subcycles: int
             Number of OpenMM integration steps per PyRETIS step.
+
+        openmm_module: string, optional
+            If defined and simulation is a string, try loading `simulation`
+            from `module`.
 
         """
         # Check if openmm is installed.
         if HAS_OPENMM is False:
             raise RuntimeError("OpenMM is not installed")
         super(OpenMMEngine, self).__init__(description='OpenMM')
+        if isinstance(openmm_simulation, str) and openmm_module is not None:
+            openmm_simulation = import_from(openmm_module, openmm_simulation)
+        if isinstance(openmm_simulation, str):
+            msg = "simulation is a string but could not be loaded from module"
+            msg += f" '{openmm_module}'"
+            raise RuntimeError(msg)
 
-        self.simulation = simulation
+        self.simulation = openmm_simulation
         self.subcycles = subcycles
 
-    def calculate_order(self, order_function, system,
-                        xyz=None, vel=None, box=None):
+    def calculate_order(self, ensemble, xyz=None, vel=None, box=None):
         """Return the order parameter.
 
         This method is just to help to calculate the order parameter
@@ -81,10 +123,14 @@ class OpenMMEngine(EngineBase):
 
         Parameters
         ----------
-        order_function : object like :py:class:`.OrderParameter`
-            The object used for calculating the order parameter(s).
-        system : object like :py:class:`.System`
-            The system containing the current positions and velocities.
+        ensemble : dict
+            It contains:
+
+            * `system` : object like :py:class:`.System`
+              This is the system that contains the particles we are
+              investigating
+            * `order_function` : object like :py:class:`.OrderParameter`
+              The class used for calculating the order parameter.
         xyz : numpy.array, optional
             The positions to use. Typically for internal engines, this
             is not needed. It is included here as it can be used for
@@ -101,6 +147,8 @@ class OpenMMEngine(EngineBase):
             The calculated order parameter(s).
 
         """
+        system = ensemble['system']
+        order_function = ensemble['order_function']
         if any((xyz is None, vel is None, box is None)):
             return order_function.calculate(system)
         system.particles.pos = xyz
@@ -166,8 +214,7 @@ class OpenMMEngine(EngineBase):
                 box_matrix_to_list(state.getPeriodicBoxVectors(asNumpy=True).T)
             )
 
-    def kick_across_middle(self, system, order_function, rgen, middle,
-                           tis_settings):
+    def kick_across_middle(self, ensemble, middle, tis_settings):
         """Force a phase point across the middle interface.
 
         This is accomplished by repeatedly kicking the phase point so
@@ -175,13 +222,16 @@ class OpenMMEngine(EngineBase):
 
         Parameters
         ----------
-        system : object like :py:class:`.System`
-            This is the system that contains the particles we are
-            investigating.
-        order_function : object like :py:class:`.OrderParameter`
-            The object used for calculating the order parameter.
-        rgen : object like :py:class:`.RandomGenerator`
-            This is the random generator that will be used.
+        ensemble : dict
+            It contains:
+
+            * `system` : object like :py:class:`.System`
+              This is the system that contains the particles we are
+              investigating
+            * `order_function` : object like :py:class:`.OrderParameter`
+              The object used for calculating the order parameter.
+            * `rgen` : object like :py:class:`.RandomGenerator`
+              This is the random generator that will be used.
         middle : float
             This is the value for the middle interface.
         tis_settings : dict
@@ -206,22 +256,21 @@ class OpenMMEngine(EngineBase):
         # Taken from MDEngine in internal.py
         # We search for crossing with the middle interface and do this
         # by sequentially kicking the initial phase point:
+        system = ensemble['system']
         previous = None
-        curr = self.calculate_order(order_function, system)[0]
-        while True:
+        curr = self.calculate_order(ensemble)[0]
+        while True:  # pragma: no cover
             # Save current state:
             previous = system.copy()
             # Save previous box matrix:
             prev_box = system.box.box_matrix
             # Modify velocities:
-            self.modify_velocities(system,
-                                   rgen,
-                                   sigma_v=None,
-                                   aimless=True,
-                                   momentum=tis_settings['zero_momentum'],
-                                   rescale=tis_settings['rescale_energy'])
+            vel_settings = {'sigma_v': None, 'aimless': True,
+                            'momentum': tis_settings['zero_momentum'],
+                            'rescale': tis_settings['rescale_energy']}
+            self.modify_velocities(ensemble, vel_settings)
             # Update order parameter in case it is velocity dependent:
-            curr = self.calculate_order(order_function, system)[0]
+            curr = self.calculate_order(ensemble)[0]
             previous.order = curr
             # Store modified velocities:
             previous.particles.set_vel(system.particles.get_vel())
@@ -229,12 +278,12 @@ class OpenMMEngine(EngineBase):
             self.integration_step(system)
             # Compare previous order parameter and the new one:
             prev = curr
-            curr = self.calculate_order(order_function, system)[0]
+            curr = self.calculate_order(ensemble)[0]
             if (prev < middle < curr) or (curr < middle < prev):
                 # Middle interface was crossed, just stop the loop.
                 logger.info('Crossing found: %9.6f %9.6f ', prev, curr)
                 break
-            elif (prev <= curr <= middle) or (middle <= curr <= prev):
+            if (prev <= curr <= middle) or (middle <= curr <= prev):
                 # We are getting closer, keep the new point.
                 pass
             elif prev == middle:
@@ -246,8 +295,7 @@ class OpenMMEngine(EngineBase):
                 curr = previous.order
         return previous, system
 
-    def modify_velocities(self, system, rgen, sigma_v=None, aimless=True,
-                          momentum=False, rescale=None):
+    def modify_velocities(self, ensemble, vel_settings):
         """Modify the velocities of the current state.
 
         This method will modify the velocities of a time slice.
@@ -256,23 +304,31 @@ class OpenMMEngine(EngineBase):
 
         Parameters
         ----------
-        system : object like :py:class:`.System`
-            The system is used here since we need access to the particle
-            list.
-        rgen : object like :py:class:`.RandomGenerator`
-            This is the random generator that will be used.
-        sigma_v : numpy.array, optional
-            These values can be used to set a standard deviation (one
-            for each particle) for the generated velocities.
-        aimless : boolean, optional
-            Determines if we should do aimless shooting or not.
-        momentum : boolean, optional
-            If True, we reset the linear momentum to zero after generating.
-        rescale : float, optional
-            In some NVE simulations, we may wish to re-scale the energy to
-            a fixed value. If `rescale` is a float > 0, we will re-scale
-            the energy (after modification of the velocities) to match the
-            given float.
+        ensemble : dict
+            It contains:
+
+            * `system` : object like :py:class:`.System`
+              This is the system that contains the particles we are
+              investigating
+            * `rgen` : object like :py:class:`.RandomGenerator`
+              This is the random generator that will be used.
+
+        vel_settings: dict.
+            It contains info about velocity settings:
+
+            * `sigma_v` : numpy.array, optional
+              These values can be used to set a standard deviation (one
+              for each particle) for the generated velocities.
+            * `aimless` : boolean, optional
+              Determines if we should do aimless shooting or not.
+            * `momentum` : boolean, optional
+              If True, we reset the linear momentum to zero after
+              generating.
+            * `rescale` : float, optional
+              In some NVE simulations, we may wish to re-scale the
+              energy to a fixed value. If `rescale` is a float > 0,
+              we will re-scale the energy (after modification of
+              the velocities) to match the given float.
 
         Returns
         -------
@@ -282,7 +338,10 @@ class OpenMMEngine(EngineBase):
             The new kinetic energy.
 
         """
+        system = ensemble['system']
+        rescale = vel_settings.get('rescale')
         particles = system.particles
+        rgen = ensemble['rgen']
         if rescale is not None and rescale is not False:
             if rescale > 0:
                 kin_old = rescale - particles.vpot
@@ -293,14 +352,15 @@ class OpenMMEngine(EngineBase):
         else:
             kin_old = calculate_kinetic_energy(particles)[0]
             do_rescale = False
-        if aimless:
+        if vel_settings.get('aimless', False):
             vel, _ = rgen.draw_maxwellian_velocities(system=system)
             particles.vel = vel
         else:  # Soft velocity change, from a Gaussian distribution:
-            dvel, _ = rgen.draw_maxwellian_velocities(system=system,
-                                                      sigma_v=sigma_v)
+            dvel, _ = rgen.draw_maxwellian_velocities(
+                system=system,
+                sigma_v=vel_settings['sigma_v'])
             particles.vel = particles.vel + dvel
-        if momentum:
+        if vel_settings.get('momentum', False):
             reset_momentum(particles)
         if do_rescale:
             system.rescale_velocities(rescale)
@@ -308,8 +368,7 @@ class OpenMMEngine(EngineBase):
         dek = kin_new - kin_old
         return dek, kin_new
 
-    def propagate(self, path, initial_system, order_function, interfaces,
-                  reverse=False):
+    def propagate(self, path, ensemble, reverse=False):
         """Generate a path by integrating until a criterion is met.
 
         This function will generate a path by calling the function
@@ -327,14 +386,18 @@ class OpenMMEngine(EngineBase):
             We are here not returning a new path - this since we want
             to delegate the creation of the path (type) to the method
             that is running `propagate`.
-        initial_system : object like :py:class:`.System`
-            The system object gives the initial state for the
-            integration. The initial state is stored and the system is
-            reset to the initial state when the integration is done.
-        order_function : object like :py:class:`.OrderParameter`
-            The object used for calculating the order parameter.
-        interfaces : list of floats
-            These interfaces define the stopping criterion.
+        ensemble: dict
+            it contains:
+
+            * `system` : object like :py:class:`.System`
+              The system object gives the initial state for the
+              integration. The initial state is stored and the system is
+              reset to the initial state when the integration is done.
+            * `order_function` : object like :py:class:`.OrderParameter`
+              The object used for calculating the order parameter.
+            * `interfaces` : list of floats
+              These interfaces define the stopping criterion.
+
         reverse : boolean, optional
             If True, the system will be propagated backward in time.
 
@@ -346,13 +409,13 @@ class OpenMMEngine(EngineBase):
             A text description of the current status of the propagation.
 
         """
+        system = ensemble['system']
         status = 'Propagate w/OpenMM engine'
         logger.debug(status)
         success = False
-        system = initial_system.copy()
-        left, _, right = interfaces
+        left, _, right = ensemble['interfaces']
         for i in range(path.maxlen):
-            order = self.calculate_order(order_function, system)
+            order = self.calculate_order(ensemble)
             kin = calculate_kinetic_energy(system.particles)[0]
             snapshot = {'order': order,
                         'pos': system.particles.pos,

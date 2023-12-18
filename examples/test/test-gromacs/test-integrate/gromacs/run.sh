@@ -3,11 +3,11 @@
 set -e
 make clean
 gmx=${1:-gmx_d}
-echo Using gmx=$gmx
-replace='s/GMXCOMMAND/'$gmx'/g'
+echo "Using gmx=$gmx"
+replace="s/GMXCOMMAND/$gmx/g"
 sed -e $replace gromacs.rst > gromacs-run.rst
 
-pyretisrun -i gromacs-run.rst -p
+pyretisrun -i gromacs-run.rst # -p
 
 $gmx energy -f pyretis-gmx.edr -o gmx-energy.xvg <<EOF
 Potential
@@ -21,7 +21,7 @@ python ../compare_energies.py energy.txt gmx-energy.xvg plot
 cp ../../gmx/make_mdp.py .
 python make_mdp.py gromacs-run.rst mdout.mdp gromacs-run.mdp
 rm make_mdp.py
-$gmx grompp -f gromacs-run.mdp -p gromacs_input/topol.top -c gromacs_input/conf.g96 -o gromacs-run.tpr
+$gmx grompp -f gromacs-run.mdp -p ../../gmx/gromacs_input/topol.top -c ../../gmx/gromacs_input/conf.g96 -o gromacs-run.tpr
 $gmx mdrun -s gromacs-run.tpr -deffnm gromacs-run
 
 $gmx energy -f gromacs-run.edr -o gmx-gromacs-run.xvg <<EOF
@@ -32,3 +32,4 @@ Temperature
 EOF
 
 python ../compare_energies.py energy.txt gmx-gromacs-run.xvg plot
+make clean

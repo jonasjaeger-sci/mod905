@@ -66,8 +66,9 @@ The Verlet engine
 -----------------
 
 The Verlet engine integrates the equations of motion
-according to the Verlet scheme. The engine is selected by specifying the
-class ``Verlet`` and the time step:
+according to the Verlet scheme.
+NB: Only MD is allowed for this scheme. The engine is selected by
+specifying the class ``Verlet`` and the time step:
 
 
 .. pyretis-input-example:: Engine
@@ -415,6 +416,8 @@ For the GROMACS engine, the following keywords can be set:
 
 .. |gmx_gmx_format| replace:: :ref:`gmx_format <user-section-engine-gromacs-gmx_format>`
 
+.. |gmx_domain_dec| replace:: :ref:`domain_decomp <user-section-engine-gromacs-domain_decomp>`
+
 .. _table-gromacs-keywords:
 
 .. table:: Keywords for the GROMACS engine.
@@ -450,6 +453,9 @@ For the GROMACS engine, the following keywords can be set:
    +-------------------+------------------------------------------------------+
    | |gmx_gmx_format|  | Can be used to select the format used for GROMACS    |
    |                   | configurations.                                      |
+   +-------------------+------------------------------------------------------+
+   | |gmx_domain_dec|  | Can be toggled on if domain decomposition is used    |
+   |                   | in GROMACS.                                          |
    +-------------------+------------------------------------------------------+
 
 
@@ -602,6 +608,21 @@ Keyword gmx_format
 
    Default:
        The default value is ``gmx_format = gro``.
+
+.. _user-section-engine-gromacs-domain_decomp:
+
+Keyword domain_decomp
+.....................
+
+.. pyretis-keyword:: domain_decomp boolean
+
+   The ``domain_decomp`` keyword will execute ``gmx trjconv -pbc whole ...`` 
+   to a frame from which the system is propagated. This was implemented as 
+   some GROMACS versions did not handle bonds over periodic boundaries correctly.
+
+   Default:
+       The default value is ``domain_decomp = False``.
+
 
 .. _user-section-engine-cp2k:
 

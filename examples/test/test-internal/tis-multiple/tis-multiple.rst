@@ -3,7 +3,7 @@ TIS 1D example
 
 Simulation
 ----------
-task = tis-multiple
+task = make-tis-files
 steps = 50
 interfaces = [-0.9, -0.6, -0.3,  1.0]
 zero_ensemble = True
@@ -48,7 +48,7 @@ method = kick
 
 Particles
 ---------
-position = {'file': 'initial.xyz'}
+position = {'input_file': 'initial.xyz'}
 velocity = {'generate': 'maxwell',
             'momentum': False,
             'seed': 0, 'rgen': 'rgen'}

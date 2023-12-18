@@ -183,7 +183,12 @@ Keyword load_and_kick
 .. pyretis-keyword:: load_and_kick boolean
 
    The use of ``load_and_kick`` initialization method 
-   if the keyword is set to True.
+   if the keyword is set to True. The method will select the loaded
+   frame closest to the interface to be crossed and feeds it as
+   starting point for the kicking initialization procedure.
+   Once the kicking procedure will be completed,
+   a new trajectory will be generated with 2 way shooting,
+   fully replacing the loaded frames/trajectory.
 
 .. _user-section-initial-load-load-folder:
 
@@ -200,13 +205,28 @@ Keyword load_folder
    When only a trajectory or/and some frames are available, they can be copied
    in the ``load folder``. The load function
    will copy all the trajectories and frames files from such a folder into
-   the respective folders for each ensemble (e.g. 000 001 etc).
-   Thereafter, the order parameter and the
-   energy will be computed and stored in the files ``order.txt`` and
-   ``energy.txt``, respectively. A third file, ``traj.txt`` containing the
+   the respective ones for each ensemble (e.g. 000 001 etc).
+   Thereafter, the order parameter will be computed and stored in the file
+   ``order.txt``. A second file, ``traj.txt`` containing the
    list of the frames to be used by PyRETIS, will be then also generated.
    Only the frames and the parts of the trajectories relevant for each ensemble
    will be considered by the load function.
+   The unstructured load checks if the loaded frames compose a trajectory that
+   satisfies the relative ensemble definition. If not, the frames are sorted
+   according to their order parameter and the ensemble definition is checked
+   again.
+   If the new sorted sequence still do not compose a formally valid
+   trajectory, but some frames are present such that the ensemble definition
+   could be satisfied, the path is mirrored in order to obtain
+   a L to L or R to R path. This is a bookkeeping procedure to generate
+   a formally valid path for a given ensemble.
+   At the end of the procedure, all the frames that are not useful for the
+   sampling are removed. The procedure will keep the two closest frames,
+   before and after the first interface, and all the frames between the
+   interface defining the ensemble and the last interface. In the case
+   that this last group has no entries, the frames with the highest order
+   parameter is kept in order to allow the load_and_kick procedure.  
+   
    In the case that different trajectories are to be used to initialize
    different ensembles, the relevant files can be stored in the respective
    ensemble subfolders (e.g. '000', '001', etc) contained in the
@@ -221,7 +241,7 @@ Keyword load_folder
    -- FORMATTED/RESUME OPTION --
    Previous output can be copy and pasted in the
    load folder, or the here described files generated with the proper
-   formatting. This option is usefull when simulations need to be restarted
+   formatting. This option is useful when simulations need to be restarted
    but some settings need to be changed, or when the restart files
    are corrupted.
 
@@ -253,8 +273,6 @@ Keyword load_folder
      4. A ``energy.txt`` file containing the energies. If this file is not
         given, the energies along the path will be ignored.
 
-
-
    Default:
        The default value is ``load_folder = load``.
 
@@ -274,16 +292,21 @@ For the restart method, the following keywords can be set:
 
 .. |restart_method| replace:: :ref:`method <user-section-initial-restart-method>`
 
+.. |flexible_restart| replace:: :ref:`flexible-restart <user-section-initial-flexible-restart>`
+
 .. _table-keyword-restart:
 
 .. table:: Keywords for the restart method.
    :class: table-striped table-hover
 
-   +------------------+-------------------------------------------------------+
-   | Keyword          | Description                                           |
-   +==================+=======================================================+
-   | |restart_method| | Selects the restart method.                           |
-   +------------------+-------------------------------------------------------+
+   +--------------------+----------------------------------------------------+
+   | Keyword            | Description                                        |
+   +====================+====================================================+
+   | |restart_method|   | Selects the restart method.                        |
+   +--------------------+----------------------------------------------------+
+   | |flexible_restart| | Allow the modification of input before restarts.   |
+   +--------------------+----------------------------------------------------+
+
 
 .. _user-section-initial-restart-method:
 
@@ -293,9 +316,37 @@ Keyword method
 .. pyretis-keyword:: method restart
    :specific: yes
 
-   The ``method`` keyword selects the restart initialization. Here, we
-   load path and ensemble data from the restart files for each ensemble.
-   These restart files are named ``ensemble.restart`` and there is one
-   such file for each path ensemble, e.g. ``001/ensemble.restart``. Note that
-   when doing a restart, the ``ensemble.restart`` files will be overwritten
-   with new data from the continued simulation.
+   The ``method`` keyword selects the restart initialization.
+   The general simulation information is stored in the file
+   ``pyretis.restart``. The restart file can be specified in the ``simulation``
+   section with the keyword ``restart`` in the simulation input file.
+   Thereafter, path and ensemble data from restart files for each ensemble
+   are loaded. These restart files are named ``ensemble.restart`` and there is
+   one of such file for each path ensemble, e.g. ``001/ensemble.restart``.
+   Note that when doing a restart, the ``ensemble.restart`` files will be
+   overwritten with new data from the continued simulation.
+   Note: if an ensemble has a lower number of cycles, it is possible to
+   temporaneously prioritize it until it gets the same number of cycles by
+   adding the keyword ``priority_shooting = True`` in the ``retis`` section.
+
+.. _user-section-initial-flexible-restart:
+
+Keyword method
+..............
+
+.. pyretis-keyword:: flexible_restart boolean
+
+   If ``True``, the settings included in the input file will be read and used
+   (e.g. change the number of interfaces, their position, etc).
+   Note 1) If the settings are changed in a restart, the new options
+   must be consistent in respect to the detail balance. If not,
+   the pathensemble.txt files should be discarded.
+   Note 2) If some interfaces are removed, the ensemble folders have to be
+   relabeled by the user. |pyretis| expects a series of subfolders with
+   a continuous numbering scheme that contains the relative ensembles.
+   Note 3) If some ensemble have to be added, the ``priority_shooting`` option
+   in the ``retis`` section might be considered to focus the sampling in the
+   new ensembles.
+
+   Default:
+       The default value is ``flexible_restart = False``.

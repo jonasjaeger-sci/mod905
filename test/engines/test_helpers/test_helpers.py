@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Some common methods for the engine tests."""
 import os
@@ -7,13 +7,14 @@ from pyretis.core.system import System
 from pyretis.core.particles import ParticlesExt
 from pyretis.engines.openmm import HAS_OPENMM
 if HAS_OPENMM:
-    from pyretis.engines.openmm import openmm as mm
     try:
-        from openmm import unit
+        import openmm as mm
         from openmm import app
-    except ImportError:  # openmm < 7.6
-        from simtk import unit
+        from openmm import unit
+    except ImportError:  # Openmm < 7.6
         from simtk.openmm import app
+        import simtk.openmm as mm
+        from simtk import unit
 
 PDB_STRING = (
     """CRYST1   68.478   68.478   68.472  60.00  60.00  90.00 P 1           1
@@ -68,6 +69,32 @@ def create_openmm_simulation(pdb='test_openmm_pyretis.pdb'):
     return simulation
 
 
+def write_openmm_simulation(name, pdb='test_openmm_pyretis.pdb'):
+    CODE = (
+        f"""
+from openmm import app
+import openmm as mm
+from openmm import unit
+
+pdb = app.PDBFile("{pdb}")
+forcefield = app.ForceField('amber99sbildn.xml', 'tip3p.xml')
+
+system = forcefield.createSystem(pdb.topology, nonbondedMethod=app.PME,
+                                 nonbondedCutoff=1.0*unit.nanometers,
+                                 constraints=app.HBonds, rigidWater=True,
+                                 ewaldErrorTolerance=0.0005)
+integrator = mm.LangevinIntegrator(300*unit.kelvin,
+                                   1.0/unit.picoseconds,
+                                   2.0*unit.femtoseconds)
+integrator.setConstraintTolerance(0.00001)
+
+simulation = app.Simulation(pdb.topology, system, integrator)
+simulation.context.setPositions(pdb.positions)
+""")
+    with open(name, 'w', encoding='utf-8') as output:
+        output.write(CODE)
+
+
 def write_test_pdb(name):
     """
     This writes test.pdb with 2 waters into the current running directory.
@@ -82,7 +109,7 @@ class FakeOp:
         self.values = values
         self.n = 0
 
-    def calculate(self, system):
+    def calculate(self, _):
         """Calculate the fake order parameter."""
         value = self.values[self.n]
         self.n += 1

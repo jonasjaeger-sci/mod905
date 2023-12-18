@@ -29,7 +29,7 @@ velocity = {'generate': 'maxwell',
 
 mass = {'Ar': 1.0}
 name = ['Ar']
-type = [0]
+ptype = [0]
 
 Forcefield settings
 -------------------

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Functions for generating plots using matplotlib.
 
@@ -19,7 +19,6 @@ mpl_set_style (:py:func:`.mpl_set_style`)
     Method for setting the style for the plots, typically used here to
     load the *PyRETIS style*.
 """
-# TODO: See if the plotting functions mpl_* can be moved into the object.
 import os
 import logging
 import numpy as np
@@ -27,7 +26,6 @@ import matplotlib
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.collections import LineCollection
-from matplotlib.cm import get_cmap
 import matplotlib.style
 from pyretis.inout.plotting.plotting import Plotter
 from pyretis.inout.common import create_backup, name_file
@@ -91,13 +89,12 @@ class MplPlotter(Plotter):
         canvas = FigureCanvas(fig)
         supported = canvas.get_supported_filetypes()
         if out_fmt not in supported:
-            msg = ['Output format "{}" is not supported.'.format(out_fmt),
+            msg = [f'Output format "{out_fmt}" is not supported.',
                    'Please try:']
             for key in supported:
                 msg.append(key)
             raise ValueError(' '.join(msg))
-        else:
-            self.out_fmt = out_fmt
+        self.out_fmt = out_fmt
         del fig
         del canvas
 
@@ -129,9 +126,9 @@ class MplPlotter(Plotter):
         return outputfiles
 
     def output_flux(self, results):
-        """Plot flux results using :py:func:`.mpl_plot_flux`.
+        """Plot flux results using py:func:`.mpl_plot_flux`.
 
-        The parameters for this method are described in
+        The parameters for this method is described in
         :py:func:`.mpl_plot_flux`.
 
         Returns
@@ -204,7 +201,44 @@ class MplPlotter(Plotter):
         canvas = mpl_plot_path(results, path_ensemble)
         return self._print_figures_to_file(canvas)
 
-    def output_matched_probability(self, path_ensembles, detect, matched):
+    def output_pppath(self, results, path_ensemble):
+        """Plot repptis path results using :py:func:`.mpl_plot_pppath`.
+
+        The parameters for this method is described in
+        :py:func:`.mpl_plot_pppath`.
+
+        Returns
+        -------
+        out : dict
+            This dict contains the files created by the plotting.
+
+        """
+        canvas = mpl_plot_pppath(results, path_ensemble)
+        return self._print_figures_to_file(canvas)
+
+    def output_pp_global_cross(self, pp):
+        """Plot repptis global cross prob using :py:func:`.mpl_plot_path`.
+
+        The parameters for this method is described in
+        :py:func:`.mpl_plot_path`.
+
+        Returns
+        -------
+        out : dict
+            This dict contains the files created by the plotting.
+
+        """
+        series = [{'type': 'xy',
+                   'x': list(range(len(pp))),
+                   'y': pp}]
+        figset = {'xlabel': r'$\lambda_i$',
+                  'ylabel': r'$P_A^{(\lambda_i|\lambda_A)}$',
+                  'title': 'Global crossing probability', 'yscale': 'log'}
+        canvas = mpl_simple_plot(series, fig_settings=figset)
+        return self._print_figures_to_file({'pp_Pc': canvas})
+
+    def output_matched_probability(self, path_ensembles, detect,
+                                   matched, reptis=False):
         """Plot matched probabilities using :py:func:`.mpl_plot_matched`.
 
         The parameters for this method is described in
@@ -216,8 +250,68 @@ class MplPlotter(Plotter):
             This dict contains the files created by the plotting.
 
         """
-        canvas = mpl_plot_matched(path_ensembles, detect, matched)
+        canvas = mpl_plot_matched(path_ensembles, detect, matched, reptis)
         return self._print_figures_to_file(canvas)
+
+    def output_xi(self, xi, xierror):
+        """Plot Xi and Xi error using :py:func:`.mpl_plot_xi`.
+
+        The parameters for this method is described in
+        :py:func:`.mpl_plot_xi`.
+
+        Returns
+        -------
+        out : dict
+            This dict contains the files created by the plotting.
+
+        """
+        canvas_run, canvas_err = mpl_plot_xi(xi, xierror)
+        local_run = name_file(canvas_run[0]['name'], self.out_fmt, path=None)
+        full_run_path = name_file(canvas_run[0]['name'],
+                                  self.out_fmt,
+                                  self.out_dir)
+        mpl_savefig(canvas_run[0]['canvas'], full_run_path, self.backup)
+
+        local_err = name_file(canvas_err[0]['name'], self.out_fmt, path=None)
+        full_err_path = name_file(canvas_err[0]['name'],
+                                  self.out_fmt,
+                                  self.out_dir)
+        mpl_savefig(canvas_err[0]['canvas'], full_err_path, self.backup)
+
+        return {"xirun": local_run, "xierror": local_err}
+
+    def output_tau(self, tau, tauerror, bins, tau_ref, tau_ref_bins):
+        """Plot Tau, Tau error, and tau reference histogram.
+
+        The parameters for this method is described in
+        :py:func:`.mpl_plot_tau` and :py:func:`.mpl_plot_tau_ref`.
+
+        Returns
+        -------
+        out : dict
+            This dict contains the files created by the plotting.
+
+        """
+        canvas_run, canvas_err = mpl_plot_tau(tau, tauerror)
+        canvas_ref = mpl_plot_tau_ref(tau_ref, tau_ref_bins, bins)
+        local_run = name_file(canvas_run[0]['name'], self.out_fmt, path=None)
+        full_run_path = name_file(canvas_run[0]['name'],
+                                  self.out_fmt,
+                                  self.out_dir)
+        mpl_savefig(canvas_run[0]['canvas'], full_run_path, self.backup)
+
+        local_err = name_file(canvas_err[0]['name'], self.out_fmt, path=None)
+        full_err_path = name_file(canvas_err[0]['name'],
+                                  self.out_fmt,
+                                  self.out_dir)
+        mpl_savefig(canvas_err[0]['canvas'], full_err_path, self.backup)
+        local_ref = name_file(canvas_ref['name'], self.out_fmt, path=None)
+        full_ref_path = name_file(canvas_ref['name'],
+                                  self.out_fmt,
+                                  self.out_dir)
+        mpl_savefig(canvas_ref['canvas'], full_ref_path, self.backup)
+        return {"taurun": local_run, "tauerror": local_err,
+                "tauref": local_ref}
 
 
 def _mpl_read_style_file(filename):
@@ -237,7 +331,7 @@ def _mpl_read_style_file(filename):
         Returns None, but modifies `matplotlib.rcParams`.
 
     """
-    with open(filename, 'r') as fileh:
+    with open(filename, 'r', encoding="utf8") as fileh:
         for lines in fileh:
             linesc = lines.strip().split('#')[0]
             loc = linesc.find(':')
@@ -245,7 +339,7 @@ def _mpl_read_style_file(filename):
                 key = linesc[:loc].strip()
                 value = linesc[loc+1:].strip()
                 if key.find('color') != -1:
-                    value = '#{}'.format(value)
+                    value = f'#{value}'
                 try:
                     matplotlib.rcParams[key] = value
                 except KeyError:
@@ -270,8 +364,6 @@ def mpl_set_style(style='pyretis'):
         string with the style name.
 
     """
-    if style is None:
-        return
     if style == 'pyretis':
         style = _MPL_STYLE_FILE
     if style in matplotlib.style.available:
@@ -377,11 +469,8 @@ def _mpl_plot_xy_chunk(axs, series, low=0, high=None, color=None):
               'linewidth': series.get('lw', 2.0)}
     if color is not None:
         kwargs['color'] = color
-    else:
-        try:  # try to set color if it's specified
-            kwargs['color'] = series['color']
-        except KeyError:
-            pass
+    elif 'color' in series:
+        kwargs['color'] = series['color']
 
     if high is None:
         high = min(len(series['x']), len(series['y']))
@@ -422,6 +511,8 @@ def mpl_simple_plot(series, fig_settings=None):
         handle = None
         if seri['type'] == 'xy':
             handle = mpl_plot_in_chunks(axs, seri)
+        elif seri['type'] == 'bar':
+            handle = mpl_plot_bar(axs, seri)
         elif seri['type'] == 'vline':
             handle = axs.axvline(x=seri['x'], ls=seri.get('ls', '-'),
                                  alpha=seri.get('alpha', 1.0),
@@ -647,44 +738,35 @@ def mpl_error_plot(series, fig_settings):
     return canvas
 
 
-def _mpl_shoots_histogram(histograms, scale, ensemble):
+def _mpl_shoots_histogram(histograms, ensemble):
     """Plot the histograms from the shoots analysis.
 
     Parameters
     ----------
     histograms : dict
         These are the histograms obtained in the shoots analysis.
-    scale : dict
-        These are the scale factors for normalising the histograms
-        obtained in the shoots analysis.
     ensemble : string
         This is the ensemble identifier, e.g. 001, 002, etc.
 
     Returns
     -------
-    out[0] : object like :class:`matplotlib.backend_bases.FigureCanvasBase`
+    out : object like :class:`matplotlib.backend_bases.FigureCanvasBase`
         This is the unscaled histogram.
-    out[1] : object like :class:`matplotlib.backend_bases.FigureCanvasBase`
-        This is the scaled histogram.
 
     """
     series = []
-    series_scale = []
-    for key in ['ACC', 'REJ', 'BWI', 'ALL']:
+    for key in ['ACC']:
         try:
             mid = histograms[key][2]
             hist = histograms[key][0]
             series.append({'type': 'xy', 'x': mid, 'y': hist,
-                           'label': '{}'.format(key), 'alpha': 0.8})
-            series_scale.append({'type': 'xy', 'x': mid, 'y': hist*scale[key],
-                                 'label': '{}'.format(key), 'alpha': 0.8})
+                           'alpha': 0.8})
         except KeyError:
             continue
-    figset = {'xlabel': 'Order parameter', 'ylabel': 'Frequency',
-              'title': r'Ensemble ${0}$'.format(ensemble)}
+    figset = {'xlabel': 'Order parameter', 'ylabel': 'Probability density',
+              'title': f'Ensemble ${ensemble}$'}
     canvas = mpl_simple_plot(series, fig_settings=figset)
-    canvas_scale = mpl_simple_plot(series_scale, fig_settings=figset)
-    return canvas, canvas_scale
+    return canvas
 
 
 def mpl_plot_path(results, path_ensemble):
@@ -706,11 +788,11 @@ def mpl_plot_path(results, path_ensemble):
     """
     ens = path_ensemble.ensemble_name
     ens_simplified = path_ensemble.ensemble_name_simple
-    detect = path_ensemble.detect
+    detect = results['detect']
     canvas = {}
     out = {}
-    for key in PATHFILES:
-        out[key] = PATHFILES[key].format(ens_simplified)
+    for key, item in PATHFILES.items():
+        out[key] = item.format(ens_simplified)
     if 'pcross' in results:
         # First plot `pcross` vs `lambda` with the `detect` surface:
         series = [
@@ -723,8 +805,8 @@ def mpl_plot_path(results, path_ensemble):
              'alpha': 0.8},
         ]
         figset = {'xlabel': r'Order parameter ($\lambda$)',
-                  'ylabel': 'Probability',
-                  'title': r'Ensemble ${0}$'.format(ens)}
+                  'ylabel': 'Crossing probability',
+                  'title': f'Ensemble ${ens}$'}
         canvas[out['pcross']] = mpl_simple_plot(series, fig_settings=figset)
     if 'prun' in results:
         # Next plot running ` pcross`:
@@ -738,8 +820,8 @@ def mpl_plot_path(results, path_ensemble):
              'alpha': 0.8},
         ]
         figset = {'xlabel': 'Cycle number',
-                  'ylabel': 'Probability (running avg.)',
-                  'title': r'Ensemble ${0}$'.format(ens)}
+                  'ylabel': 'Running estimate',
+                  'title': f'Ensemble ${ens}$'}
         canvas[out['prun']] = mpl_simple_plot(series, fig_settings=figset)
     if 'blockerror' in results:
         # Plot results of block-error analysis:
@@ -776,27 +858,189 @@ def mpl_plot_path(results, path_ensemble):
                                                      fig_settings=figset)
 
     # Plot length-histogram:
-    labfmt = r'{0}: {1:6.2f} st.dev. {2:6.2f}'
+    labfmt = r'Avg. {0:6.2f} st.dev. {1:6.2f}'
     series = [
         {'type': 'xy',
          'x': results['pathlength'][0][1],
          'y': results['pathlength'][0][0],
-         'label': labfmt.format('Accepted', results['pathlength'][0][2][0],
+         'label': labfmt.format(results['pathlength'][0][2][0],
                                 results['pathlength'][0][2][1])},
-        {'type': 'xy',
-         'x': results['pathlength'][1][1],
-         'y': results['pathlength'][1][0],
-         'label': labfmt.format('All', results['pathlength'][1][2][0],
-                                results['pathlength'][1][2][1])},
     ]
-    figset = {'xlabel': 'No. of PyRETIS engine steps', 'ylabel': 'Frequency',
-              'title': r'Ensemble ${0}$'.format(ens)}
+    figset = {'xlabel': 'No. of PyRETIS engine steps', 'ylabel': 'Probability',
+              'title': f'Ensemble ${ens}$'}
     canvas[out['pathlength']] = mpl_simple_plot(series, fig_settings=figset)
     # Plot shoots-histogram
-    can_tmp = _mpl_shoots_histogram(results['shoots'][0],
-                                    results['shoots'][1], ens)
-    canvas[out['shoots']] = can_tmp[0]
-    canvas[out['shoots_scaled']] = can_tmp[1]
+    can_tmp = _mpl_shoots_histogram(results['shoots'][0], ens)
+    canvas[out['shoots']] = can_tmp
+    return canvas
+
+
+def mpl_plot_pppath(results, path_ensemble):
+    """Plot all figures from the repptis path analysis.
+
+    Parameters
+    ----------
+    results : dict
+        This dict contains the result from the analysis.
+    path_ensemble : object like :py:class:`.PathEnsemble`
+        This is the path ensemble we have analyzed.
+
+    Returns
+    -------
+    canvas : dict
+        This dictionary contains the different canvases we have
+        created.
+
+    """
+    ens = path_ensemble.ensemble_name
+    ens_simplified = path_ensemble.ensemble_name_simple
+    canvas = {}
+    out = {}
+    colors = get_color_map(10)
+    for key, item in PATHFILES.items():
+        out[key] = item.format(ens_simplified)
+    if 'pp_Pc' in results:
+        # First plot `pcross` vs `lambda` with the `detect` surface:
+        series = [
+            {'type': 'xy',
+             'x': list(range(len(results['pp_Pc']))),
+             'y': results['pp_Pc']},
+        ]
+        figset = {'xlabel': r'intf',
+                  'ylabel': r'$P_a(\lambda_i/\lambda_A)$',
+                  'title': r''}
+        canvas[out['pp_Pc']] = mpl_simple_plot(series, fig_settings=figset)
+    if 'pcross' in results:
+        L, M, R, lmlpercs, lmllambs, rmrpercs, rmrlambs = results['repptis']
+        # First plot `pcross` vs `lambda` with the `detect` surface:
+        series = [
+            {'type': 'xy',
+             'x': lmllambs,
+             'y': lmlpercs,
+             'color': colors[0]},
+            {'type': 'xy',
+             'x': rmrlambs,
+             'y': rmrpercs,
+             'color': colors[1]},
+            {'type': 'vline',
+             'x': L,
+             'ls': '--',
+             'alpha': 0.8},
+            {'type': 'vline',
+             'x': M,
+             'ls': '--',
+             'alpha': 0.8},
+            {'type': 'vline',
+             'x': R,
+             'ls': '--',
+             'alpha': 0.8},
+        ]
+        figset = {'xlabel': r'Order parameter ($\lambda$)',
+                  'ylabel': 'Crossing probability',
+                  'title': f'Ensemble ${ens}$'
+                           + f', L = {L}, M = {M}, R = {R}'}
+        canvas[out['pcross']] = mpl_simple_plot(series, fig_settings=figset)
+    if 'prun_sl' in results:
+        # Next plot running ` pcross`:
+        series = [
+            {'type': 'xy',
+             'x': results['cycle'],
+             'y': results['prun_sl'],
+             'color': colors[0]},
+            {'type': 'hline',
+             'y': results['prun_sl'][-1],
+             'ls': '--',
+             'alpha': 0.8},
+        ]
+        figset = {'xlabel': 'Cycle number',
+                  'ylabel': 'Running estimate',
+                  'title': f'Ensemble ${ens}$'
+                           + f", {results['prun_sl'][-1]}"}
+        canvas[out['prun_sl']] = mpl_simple_plot(series, fig_settings=figset)
+    if 'prun_sr' in results:
+        # Next plot running ` pcross`:
+        series = [
+            {'type': 'xy',
+             'x': results['cycle'],
+             'y': results['prun_sr'],
+             'color': colors[1]},
+            {'type': 'hline',
+             'y': results['prun_sr'][-1],
+             'ls': '--',
+             'alpha': 0.8},
+        ]
+        figset = {'xlabel': 'Cycle number',
+                  'ylabel': 'Running estimate',
+                  'title': f'Ensemble ${ens}$'
+                           + f", {results['prun_sr'][-1]}"}
+        canvas[out['prun_sr']] = mpl_simple_plot(series, fig_settings=figset)
+    if 'blockerror_sl' in results:
+        # Plot results of block-error analysis:
+        series = [
+            {'type': 'xy',
+             'x': results['blockerror_sl'][0],
+             'y': results['blockerror_sl'][3],
+             'color': colors[0]},
+            {'type': 'hline',
+             'y': results['blockerror_sl'][4],
+             'ls': '--',
+             'alpha': 0.8},
+        ]
+        title = r'Ensemble ${0}$: Rel. err.: {1:9.6e}, Ncor: {2:9.6f}'
+        figset = {'xlabel': 'Block length', 'ylabel': 'Estimated error',
+                  'title': title.format(ens, results['blockerror_sl'][4],
+                                        results['blockerror_sl'][6])}
+        canvas[out['perror_sl']] = mpl_simple_plot(series, fig_settings=figset)
+    if 'blockerror_sr' in results:
+        # Plot results of block-error analysis:
+        series = [
+            {'type': 'xy',
+             'x': results['blockerror_sr'][0],
+             'y': results['blockerror_sr'][3],
+             'color': colors[1]},
+            {'type': 'hline',
+             'y': results['blockerror_sr'][4],
+             'ls': '--',
+             'alpha': 0.8},
+        ]
+        title = r'Ensemble ${0}$: Rel. err.: {1:9.6e}, Ncor: {2:9.6f}'
+        figset = {'xlabel': 'Block length', 'ylabel': 'Estimated error',
+                  'title': title.format(ens, results['blockerror_sr'][4],
+                                        results['blockerror_sr'][6])}
+        canvas[out['perror_sr']] = mpl_simple_plot(series, fig_settings=figset)
+    if 'lengtherror' in results:
+        # Plot results of length-error analysis:
+        series = [
+            {'type': 'xy',
+             'x': results['lengtherror'][0],
+             'y': results['lengtherror'][3]},
+            {'type': 'hline',
+             'y': results['lengtherror'][4],
+             'ls': '--',
+             'alpha': 0.8},
+        ]
+        title = r'Ensemble ${0}$: Rel. err.: {1:9.6e}, Ncor: {2:9.6f}'
+        figset = {'xlabel': 'Block length', 'ylabel': 'Estimated error',
+                  'title': title.format(ens, results['lengtherror'][4],
+                                        results['lengtherror'][6])}
+        canvas[out['lengtherror']] = mpl_simple_plot(series,
+                                                     fig_settings=figset)
+
+    # Plot length-histogram:
+    labfmt = r'Avg8 {0:6.2f} st.dev. {1:6.2f}'
+    series = [
+        {'type': 'xy',
+         'x': results['pathlength'][0][1],
+         'y': results['pathlength'][0][0],
+         'label': labfmt.format(results['pathlength'][0][2][0],
+                                results['pathlength'][0][2][1])},
+    ]
+    figset = {'xlabel': 'No. of PyRETIS engine steps',
+              'ylabel': 'Crossing probability', 'title': f'Ensemble ${ens}$'}
+    canvas[out['pathlength']] = mpl_simple_plot(series, fig_settings=figset)
+    # Plot shoots-histogram
+    can_tmp = _mpl_shoots_histogram(results['shoots'][0], ens)
+    canvas[out['shoots']] = can_tmp
     return canvas
 
 
@@ -988,7 +1232,7 @@ def mpl_plot_flux(results):
         runflux = results['runflux'][i]
         series = [{'type': 'xy', 'x': flux[:, 0], 'y': runflux,
                    'label': 'Running average'}]
-        title = 'Flux for interface no. {}'.format(i + 1)
+        title = f'Flux for interface no. {i + 1}'
         figset = {'xlabel': 'Time',
                   'ylabel': 'Flux / internal units',
                   'title': title}
@@ -1010,6 +1254,154 @@ def mpl_plot_flux(results):
     return canvas_run, canvas_err
 
 
+def mpl_plot_xi(xi, xierror):
+    """Plot the output from the Xi analysis using matplotlib.
+
+    Parameters
+    ----------
+    xi: array-like
+        The running average of xi
+    xierror: tuple
+        The results from the blockerror analysis of xi
+
+    Returns
+    -------
+    out[0] : list of dicts
+        The output figures created by this function for running
+        averages. `out[0][i]['name']` is the name of the figure and
+        `out[0][i]['canvas']` is the corresponding canvas object.
+    out[1] : list of dicts
+        The output figures created by this function for block errors.
+        `out[0][i]['name']` is the name of the figure and
+        `out[0][i]['canvas']` is the corresponding canvas object.
+
+    """
+    canvas_run = []
+    canvas_err = []
+    series = [{'type': 'xy', 'x': range(len(xi)), 'y': xi,
+               'label': 'Running average'},
+              {'type': 'hline', 'y': xi[-1], 'ls': '--', 'alpha': 0.8}]
+    title = r'$\xi={}$:'
+    figset = {'xlabel': 'cycles',
+              'ylabel': r'$\xi$',
+              'title': title.format(xi[-1])}
+    canvas = mpl_simple_plot(series, fig_settings=figset)
+    canvas_run.append({'name': "xirun",
+                       'canvas': canvas})
+    # Plot error results:
+    title = r"relative $\xi$ error: Rel. err.: {0:9.6e}, Ncor: {1:9.6f}"
+    series = [{'type': 'xy', 'x': xierror[0], 'y': xierror[3]},
+              {'type': 'hline', 'y': xierror[4], 'ls': '--',
+               'alpha': 0.8}]
+    figset = {'xlabel': 'Block length',
+              'ylabel': 'Estimated error',
+              'title': title.format(xierror[4], xierror[6])}
+    canvas = mpl_simple_plot(series, fig_settings=figset)
+    canvas_err.append({'name': "xierr",
+                       'canvas': canvas})
+
+    return canvas_run, canvas_err
+
+
+def mpl_plot_tau(tau, tauerror):
+    """Plot the output from the Tau analysis using matplotlib.
+
+    Parameters
+    ----------
+    tau: array-like
+        The running average of tau.
+    tauerror: tuple
+        The results from the blockerror analysis of tau.
+
+    Returns
+    -------
+    out[0] : list of dicts
+        The output figures created by this function for running
+        averages. `out[0][i]['name']` is the name of the figure and
+        `out[0][i]['canvas']` is the corresponding canvas object.
+    out[1] : list of dicts
+        The output figures created by this function for block errors.
+        `out[0][i]['name']` is the name of the figure and
+        `out[0][i]['canvas']` is the corresponding canvas object.
+
+    """
+    canvas_run = []
+    canvas_err = []
+    if not tau.any():
+        str_in = "no"
+    else:
+        str_in = "in"
+    series = [{'type': 'xy', 'x': range(len(tau)), 'y': tau,
+               'label': 'Running average'},
+              {'type': 'hline', 'y': tau[-1], 'ls': '--', 'alpha': 0.8}]
+    title = (r'$\frac{\tau}{dz}$ '
+             f"({str_in} "
+             r'selected $\tau$ region)$= $')
+    figset = {'xlabel': 'cycles',
+              'ylabel': r'$\frac{\tau}{dz}$',
+              'title': title+f"${tau[-1]}$"}
+    canvas = mpl_simple_plot(series, fig_settings=figset)
+    canvas_run.append({'name': "taurun",
+                       'canvas': canvas})
+    # Plot error results:
+    title = (r"relative error $\frac{\tau}{dz}$ "
+             f"({str_in} "
+             r"selected $\tau$ region):")
+    title2 = r"Rel. err.: {0:9.6e}, Ncor: {1:9.6f}"
+    series = [{'type': 'xy', 'x': tauerror[0], 'y': tauerror[3]},
+              {'type': 'hline', 'y': tauerror[4], 'ls': '--',
+               'alpha': 0.8,
+               'label': title2.format(tauerror[4], tauerror[6])}]
+    figset = {'xlabel': 'Block length',
+              'ylabel': 'Estimated error',
+              'title': title}
+    canvas = mpl_simple_plot(series, fig_settings=figset)
+    canvas_err.append({'name': "tauerr",
+                       'canvas': canvas})
+
+    return canvas_run, canvas_err
+
+
+def mpl_plot_tau_ref(tau_ref, tau_ref_bins, bins):
+    """Plot a histogram of the Tau reference bins using matplotlib.
+
+    Parameters
+    ----------
+    tau_ref: array-like
+        The final running average of all tau ref bins.
+    tau_ref_bins: list of tuple
+        The (L,R) bin edges of the reference bins.
+    bins: tuple
+        The (L,R) bin edges of the region used to calculate tau.
+
+    Returns
+    -------
+    out : dict
+        The output figure created by this function for histograming the
+        tau reference bins. dict['name']` is the name of the figure and
+        `dict['canvas']` is the corresponding canvas object.
+
+    """
+    x = [i[0] for i in tau_ref_bins]
+    width = x[1]-x[0]
+    series = [{'type': 'bar', 'x': x, 'height': tau_ref,
+               'width': width, 'align': 'edge'}]
+    if len(bins) == 2:
+        series.append(
+              {'type': 'vline', 'x': bins[0], 'ls': '--', 'alpha': 0.8,
+               'label': r'selected $\tau$ region'}
+        )
+        series.append(
+              {'type': 'vline', 'x': bins[1], 'ls': '--', 'alpha': 0.8}
+        )
+    title = r'$\frac{\tau}{dz}$ reference bins'
+    figset = {'xlabel': 'Orderparameter',
+              'ylabel': r'$\frac{\tau}{dz}$ count',
+              'title': title}
+    canvas = mpl_simple_plot(series, fig_settings=figset)
+    return {"name": "tauref", "canvas": canvas}
+
+
 def get_color_map(ncolors):
     """Return a color map with at least n colors."""
     if ncolors <= 10:
@@ -1022,11 +1414,11 @@ def get_color_map(ncolors):
         logger.info('Using default color map.')
     else:
         logger.info('Using color map %s', name)
-    cmap = get_cmap(name=name)
+    cmap = matplotlib.colormaps[name]
     return cmap(np.linspace(0, 1, ncolors))
 
 
-def mpl_plot_matched(path_ensembles, detect, matched):
+def mpl_plot_matched(path_ensembles, detect, matched, reptis=False):
     """Plot matched probabilities using matplotlib.
 
     This function will plot the matched probabilities for the different
@@ -1053,6 +1445,72 @@ def mpl_plot_matched(path_ensembles, detect, matched):
 
     """
     canvas = {}
+    # Also make a plot with the overall matched probability:
+    series = []
+    for idetect in detect:
+        series.append({'type': 'vline', 'x': idetect,
+                       'ls': '--', 'alpha': 0.8, 'lw': 1})
+    if reptis:
+        matched['overall-prob'] = np.array([detect,
+                                            matched['pcross']]).T
+    series.append({'type': 'xy',
+                   'x': matched['overall-prob'][:, 0],
+                   'y': matched['overall-prob'][:, 1],
+                   'lw': 3})
+    figset = {'xlabel': r'Order parameter ($\lambda$)',
+              'ylabel': 'Crossing probability',
+              'title': 'Matched probability',
+              'yscale': 'log'}
+    canvas[PATH_MATCH['match']] = mpl_simple_plot(series,
+                                                  fig_settings=figset)
+    # Also make a plot with the TIME evolution of the overall
+    # probability or rate:
+    if 'overall-rrun' in matched:
+        title = 'Time evolution of the overall Rate'
+        ylabel = 'Rate (running estimate)'
+        data = matched['overall-rrun']
+        label = 'overall-rrun'
+
+    elif 'overall-prun' in matched:
+        title = 'Time evolution of the overall crossing probability'
+        ylabel = 'Crossing probability (running estimate)'
+        data = matched['overall-prun']
+        label = 'overall-prun'
+    else:
+        return canvas
+
+    series = [{'type': 'xy',
+               'x': matched['overall-cycle'],
+               'y': data},
+              {'type': 'hline',
+               'y': data[-1],
+               'ls': '--',
+               'alpha': 0.8}]
+    figset = {'xlabel': 'Cycle number',
+              'ylabel': ylabel,
+              'title': title}
+    canvas[label] = mpl_simple_plot(series, fig_settings=figset)
+    # and finish with the block error analysis.
+    series = [{'type': 'xy',
+               'x': matched['overall-error'][0],
+               'y': matched['overall-error'][3]},
+              {'type': 'hline',
+               'y': matched['overall-error'][4],
+               'ls': '--',
+               'alpha': 0.8}]
+    if reptis:
+        title = 'Relative error of the running crossing probability'
+    else:
+        title = r'Overall: Rate Rel. err.: {0:9.6e}, Ncor: {1:9.6e}'
+        title.format(matched['overall-error'][4], matched['overall-error'][6])
+    figset = {'xlabel': 'Block length', 'ylabel': 'Estimated error',
+              'title': title}
+    canvas[PATH_MATCH['error']] = mpl_simple_plot(series,
+                                                  fig_settings=figset)
+    if reptis:
+        # reptis does not deal with ..
+        return canvas
+
     # First plot the matched probabilities for each ensemble:
     series = []
     for idetect in detect:
@@ -1081,7 +1539,7 @@ def mpl_plot_matched(path_ensembles, detect, matched):
     for i, (prob, path_e) in enumerate(zip(matched['matched-prob'],
                                            path_ensembles)):
         new_series = {'type': 'xy', 'x': prob[:, 0], 'y': prob[:, 1], 'lw': 3,
-                      'label': '${}$'.format(path_e)}
+                      'label': f'${path_e}$'}
         if colors is not None:
             new_series['color'] = colors[i]
         series.append(new_series)
@@ -1092,61 +1550,9 @@ def mpl_plot_matched(path_ensembles, detect, matched):
               'yscale': 'log'}
     canvas[PATH_MATCH['total']] = mpl_simple_plot(series,
                                                   fig_settings=figset)
-    # Also make a plot with the overall matched probability:
-    series = []
-    for idetect in detect:
-        series.append({'type': 'vline', 'x': idetect,
-                       'ls': '--', 'alpha': 0.8, 'lw': 1})
-    series.append({'type': 'xy',
-                   'x': matched['overall-prob'][:, 0],
-                   'y': matched['overall-prob'][:, 1],
-                   'lw': 3})
-    figset = {'xlabel': r'Order parameter ($\lambda$)',
-              'ylabel': 'Probability',
-              'title': 'Matched probability',
-              'yscale': 'log'}
-    canvas[PATH_MATCH['match']] = mpl_simple_plot(series,
-                                                  fig_settings=figset)
-    # Also make a plot with the TIME evolution of the overall
-    # probability or rate:
-    if 'overall-rrun' in matched:
-        title = 'Time evolution of the overall Rate'
-        ylabel = 'Rate (running avg.)'
-        data = matched['overall-rrun']
-        label = 'overall-rrun'
-
-    elif 'overall-prun' in matched:
-        title = 'Time evolution of the Overall Crossing Probability'
-        ylabel = 'Crossing Probability (running avg.)'
-        data = matched['overall-prun']
-        label = 'overall-prun'
-    else:
-        return canvas
-
-    series = [{'type': 'xy',
-               'x': matched['overall-cycle'],
-               'y': data},
-              {'type': 'hline',
-               'y': data[-1],
-               'ls': '--',
-               'alpha': 0.8}]
-    figset = {'xlabel': 'Cycle number',
-              'ylabel': ylabel,
-              'title': title}
-    canvas[label] = mpl_simple_plot(series, fig_settings=figset)
-    # and finish with the block error analysis.
-    series = [{'type': 'xy',
-               'x': matched['overall-error'][0],
-               'y': matched['overall-error'][3]},
-              {'type': 'hline',
-               'y': matched['overall-error'][4],
-               'ls': '--',
-               'alpha': 0.8}]
-    title = r'Overall: Rate Rel. err.: {0:9.6e}, Ncor: {1:9.6e}'
-
-    figset = {'xlabel': 'Block length', 'ylabel': 'Estimated error',
-              'title': title.format(matched['overall-error'][4],
-                                    matched['overall-error'][6])}
-    canvas[PATH_MATCH['error']] = mpl_simple_plot(series,
-                                                  fig_settings=figset)
     return canvas
+
+
+def mpl_plot_bar(axs, seri):
+    del seri['type']
+    return axs.bar(**seri)

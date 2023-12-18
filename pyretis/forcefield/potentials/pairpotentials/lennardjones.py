@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Module defining Lennard-Jones pair potentials.
 
@@ -43,7 +43,7 @@ class PairLennardJonesCut(PotentialFunction):
 
     where :math:`x = \sigma/r` and :math:`\varepsilon`
     and :math:`\sigma` are the potential parameters. The parameters are
-    stored as attributes of the potential and we store one set for each
+    stored as attributes of the potential, we store one set for each
     kind of pair interaction. Parameters can be generated with a
     specific mixing rule by the force field.
 
@@ -56,22 +56,13 @@ class PairLennardJonesCut(PotentialFunction):
     params : dict
         The parameters for the potential. This dict is assumed to
         contain parameters for pairs, i.e. for interactions.
-    _lj1 : dict
+    _lj : dict of dict
         Lennard-Jones parameters used for calculation of the force.
         Keys are the pairs (particle types) that may interact.
-        Calculated as: ``48.0 * epsilon * sigma**12``
-    _lj2 : dict
-        Lennard-Jones parameters used for calculation of the force.
-        Keys are the pairs (particle types) that may interact.
-        Calculated as: ``24.0 * epsilon * sigma**6``
-    _lj3 : dict
-        Lennard-Jones parameters used for calculation of the potential.
-        Keys are the pairs (particle types) that may interact.
-        Calculated as: ``4.0 * epsilon * sigma**12``
-    _lj4 : dict
-        Lennard-Jones parameters used for calculation of the potential.
-        Keys are the pairs (particle types) that may interact.
-        Calculated as: ``4.0 * epsilon * sigma**6``
+          [1] Calculated as: ``48.0 * epsilon * sigma**12``
+          [2] Calculated as: ``24.0 * epsilon * sigma**6``
+          [3] Calculated as: ``4.0 * epsilon * sigma**12``
+          [4] Calculated as: ``4.0 * epsilon * sigma**6``
     _offset : dict
         Potential values for shifting the potential if requested.
         This is the potential evaluated at the cut-off.
@@ -99,10 +90,7 @@ class PairLennardJonesCut(PotentialFunction):
         """
         super().__init__(dim=dim, desc=desc)
         self.shift = shift
-        self._lj1 = {}
-        self._lj2 = {}
-        self._lj3 = {}
-        self._lj4 = {}
+        self._lj = {1: {}, 2: {}, 3: {}, 4: {}}
         self._rcut2 = {}
         self._offset = {}
         self.params = {}
@@ -122,14 +110,14 @@ class PairLennardJonesCut(PotentialFunction):
         """
         self.params = {}
         pair_param = generate_pair_interactions(parameters, self.mixing)
-        for pair in pair_param:
-            eps_ij = pair_param[pair]['epsilon']
-            sig_ij = pair_param[pair]['sigma']
-            rcut = pair_param[pair]['rcut']
-            self._lj1[pair] = 48.0 * eps_ij * sig_ij**12
-            self._lj2[pair] = 24.0 * eps_ij * sig_ij**6
-            self._lj3[pair] = 4.0 * eps_ij * sig_ij**12
-            self._lj4[pair] = 4.0 * eps_ij * sig_ij**6
+        for pair, item in pair_param.items():
+            eps_ij = item['epsilon']
+            sig_ij = item['sigma']
+            rcut = item['rcut']
+            self._lj[1][pair] = 48.0 * eps_ij * sig_ij**12
+            self._lj[2][pair] = 24.0 * eps_ij * sig_ij**6
+            self._lj[3][pair] = 4.0 * eps_ij * sig_ij**12
+            self._lj[4][pair] = 4.0 * eps_ij * sig_ij**6
             self._rcut2[pair] = rcut**2
             vcut = 0.0
             if self.shift:
@@ -139,7 +127,7 @@ class PairLennardJonesCut(PotentialFunction):
                 except ZeroDivisionError:
                     vcut = 0.0
             self._offset[pair] = vcut
-            self.params[pair] = pair_param[pair]
+            self.params[pair] = item
 
     def __str__(self):
         """Generate a string with the potential parameters.
@@ -155,7 +143,7 @@ class PairLennardJonesCut(PotentialFunction):
         strparam = [self.desc]
         strparam += ['Potential parameters, Lennard-Jones:']
         useshift = 'yes' if self.shift else 'no'
-        strparam.append('Shift potential: {}'.format(useshift))
+        strparam.append(f'Shift potential: {useshift}')
         atmformat = '{0:12s} {1:>9s} {2:>9s} {3:>9s}'
         atmformat2 = '{0:12s} {1:>9.4f} {2:>9.4f} {3:>9.4f}'
         strparam.append('Pair parameters:')
@@ -165,7 +153,7 @@ class PairLennardJonesCut(PotentialFunction):
             eps_ij = self.params[pair]['epsilon']
             sig_ij = self.params[pair]['sigma']
             rcut = np.sqrt(self._rcut2[pair])
-            stri = '{}-{}'.format(*pair)
+            stri = f'{pair[0]}-{pair[1]}'
             strparam.append(atmformat2.format(stri, eps_ij, sig_ij, rcut))
         return '\n'.join(strparam)
 
@@ -193,8 +181,8 @@ class PairLennardJonesCut(PotentialFunction):
             if rsq < self._rcut2[itype, jtype]:
                 r2inv = 1.0/rsq
                 r6inv = r2inv**3
-                v_pot += (r6inv * (self._lj3[itype, jtype] * r6inv -
-                                   self._lj4[itype, jtype]) -
+                v_pot += (r6inv * (self._lj[3][itype, jtype] * r6inv -
+                                   self._lj[4][itype, jtype]) -
                           self._offset[itype, jtype])
         return v_pot
 
@@ -227,8 +215,8 @@ class PairLennardJonesCut(PotentialFunction):
             if np.dot(delta, delta) < self._rcut2[itype, jtype]:
                 r2inv = 1.0 / np.dot(delta, delta)
                 r6inv = r2inv**3
-                forcelj = r2inv * r6inv * (self._lj1[itype, jtype] * r6inv -
-                                           self._lj2[itype, jtype])
+                forcelj = r2inv * r6inv * (self._lj[1][itype, jtype] * r6inv -
+                                           self._lj[2][itype, jtype])
                 forceij = forcelj * delta
                 forces[i] += forceij
                 forces[j] -= forceij
@@ -265,25 +253,23 @@ class PairLennardJonesCut(PotentialFunction):
             (dim, dim) where dim is given by the box/system dimensions.
 
         """
-        particles = system.particles
-        box = system.box
         v_pot = 0.0
-        forces = np.zeros(particles.pos.shape)
-        virial = np.zeros((box.dim, box.dim))
-        for pair in particles.pairs():
+        forces = np.zeros(system.particles.pos.shape)
+        virial = np.zeros((system.box.dim, system.box.dim))
+        for pair in system.particles.pairs():
             i, j, itype, jtype = pair
-            delta = box.pbc_dist_coordinate(particles.pos[i] -
-                                            particles.pos[j])
+            delta = system.box.pbc_dist_coordinate(system.particles.pos[i] -
+                                                   system.particles.pos[j])
             rsq = np.dot(delta, delta)
             if rsq < self._rcut2[itype, jtype]:
                 r2inv = 1.0 / rsq
                 r6inv = r2inv**3
-                v_pot += (r6inv * (self._lj3[itype, jtype] * r6inv -
-                                   self._lj4[itype, jtype]) -
+                v_pot += (r6inv * (self._lj[3][itype, jtype] * r6inv -
+                                   self._lj[4][itype, jtype]) -
                           self._offset[itype, jtype])
-                forcelj = r2inv * r6inv * (self._lj1[itype, jtype] * r6inv -
-                                           self._lj2[itype, jtype])
-                forceij = forcelj * delta
+                forceij = (delta * r2inv * r6inv *
+                           (self._lj[1][itype, jtype] * r6inv -
+                            self._lj[2][itype, jtype]))
                 forces[i] += forceij
                 forces[j] -= forceij
                 virial += np.outer(forceij, delta)
@@ -348,7 +334,7 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
                                        itype))[0]
             if len(k) > 0:  # pylint: disable=len-as-condition
                 r6inv = 1.0 / rsq[k]**3
-                pot += np.sum(_pot_term(self._lj3, self._lj4, self._offset,
+                pot += np.sum(_pot_term(self._lj, self._offset,
                                         r6inv, particles.ptype[k+i+1], itype))
         return pot
 
@@ -392,7 +378,7 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
             if len(k) > 0:  # pylint: disable=len-as-condition
                 r2inv = 1.0 / rsq[k]
                 r6inv = r2inv**3
-                forcelj = _force_term(self._lj1, self._lj2, r2inv, r6inv,
+                forcelj = _force_term(self._lj, r2inv, r6inv,
                                       particles.ptype[k+i+1], itype)
                 forceij = np.einsum('i,ij->ij', forcelj, delta[k])
                 forces[i] += np.sum(forceij, axis=0)
@@ -431,26 +417,25 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
 
         """
         particles = system.particles
-        box = system.box
         pot = 0.0
         forces = np.zeros(particles.pos.shape)
-        virial = np.zeros((box.dim, box.dim))
+        virial = np.zeros((system.box.dim, system.box.dim))
         for i, particle_i in enumerate(particles.pos[:-1]):
-            itype = particles.ptype[i]
             delta = particle_i - particles.pos[i+1:]
-            delta = box.pbc_dist_matrix(delta)
+            delta = system.box.pbc_dist_matrix(delta)
             rsq = np.einsum('ij, ij->i', delta, delta)
             k = np.where(_check_cutoff(self._rcut2, rsq,
                                        particles.ptype[i+1:],
-                                       itype))[0]
+                                       particles.ptype[i]))[0]
             if len(k) > 0:  # pylint: disable=len-as-condition
-                jtype = particles.ptype[k+i+1]
                 r2inv = 1.0 / rsq[k]
                 r6inv = r2inv**3
-                pot += np.sum(_pot_term(self._lj3, self._lj4, self._offset,
-                                        r6inv, jtype, itype))
-                forcelj = _force_term(self._lj1, self._lj2, r2inv, r6inv,
-                                      jtype, itype)
+                pot += np.sum(_pot_term(self._lj, self._offset,
+                                        r6inv, particles.ptype[k+i+1],
+                                        particles.ptype[i]))
+                forcelj = _force_term(self._lj, r2inv, r6inv,
+                                      particles.ptype[k+i+1],
+                                      particles.ptype[i])
                 forceij = np.einsum('i,ij->ij', forcelj, delta[k])
                 forces[i] += np.sum(forceij, axis=0)
                 forces[k+i+1] -= forceij
@@ -459,20 +444,20 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
 
 
 @np.vectorize
-def _pot_term(lj3, lj4, offset, r6inv, jtype, itype):
+def _pot_term(llj, offset, r6inv, itype, jtype):
     """Lennard Jones potential term."""
-    return (r6inv * (lj3[itype, jtype] * r6inv - lj4[itype, jtype]) -
-            offset[itype, jtype])
+    return (r6inv * (llj[3][itype, jtype] * r6inv - llj[4][itype, jtype])
+            - offset[itype, jtype])
 
 
 @np.vectorize
-def _force_term(lj1, lj2, r2inv, r6inv, jtype, itype):
+def _force_term(llj, r2inv, r6inv, jtype, itype):
     """Lennard Jones force term."""
-    return r2inv * r6inv * (lj1[itype, jtype] * r6inv -
-                            lj2[itype, jtype])
+    return r2inv * r6inv * (llj[1][itype, jtype] * r6inv -
+                            llj[2][itype, jtype])
 
 
 @np.vectorize
 def _check_cutoff(rcut2, rsq, jtype, itype):
-    """Check if we are close than the cut-off."""
+    """Check if we are closer than the cut-off."""
     return rsq < rcut2[itype, jtype]

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """A test of the pairpotential module."""
 import logging
@@ -21,8 +21,9 @@ class TestMixingParameters(unittest.TestCase):
         epsilon_i, epsilon_j = 2.0, 3.0
         sigma_i, sigma_j = 5.0, 6.0
         rcut_i, rcut_j = 10.0, 11.0
-        mixed = mixing_parameters(epsilon_i, sigma_i, rcut_i,
-                                  epsilon_j, sigma_j, rcut_j,
+        mixed = mixing_parameters([epsilon_i, epsilon_j],
+                                  [sigma_i, sigma_j],
+                                  [rcut_i, rcut_j],
                                   mixing='geometric')
         for i, j in zip(mixed, ((epsilon_i * epsilon_j),
                                 (sigma_i * sigma_j),
@@ -37,8 +38,9 @@ class TestMixingParameters(unittest.TestCase):
         correct = (np.sqrt(epsilon_i * epsilon_j),
                    0.5 * (sigma_i + sigma_j),
                    0.5 * (rcut_i + rcut_j))
-        mixed = mixing_parameters(epsilon_i, sigma_i, rcut_i,
-                                  epsilon_j, sigma_j, rcut_j,
+        mixed = mixing_parameters([epsilon_i, epsilon_j],
+                                  [sigma_i, sigma_j],
+                                  [rcut_i, rcut_j],
                                   mixing='arithmetic')
         for i, j in zip(mixed, correct):
             self.assertEqual(i, j)
@@ -53,8 +55,9 @@ class TestMixingParameters(unittest.TestCase):
         sj3 = sigma_j**3
         sj6 = sj3**2
         avgs6 = 0.5 * (si6 + sj6)
-        mixed = mixing_parameters(epsilon_i, sigma_i, rcut_i,
-                                  epsilon_j, sigma_j, rcut_j,
+        mixed = mixing_parameters([epsilon_i, epsilon_j],
+                                  [sigma_i, sigma_j],
+                                  [rcut_i, rcut_j],
                                   mixing='sixthpower')
         correct = (np.sqrt(epsilon_i * epsilon_j) * si3 * sj3 / avgs6,
                    avgs6**(1.0 / 6.0),
@@ -67,7 +70,7 @@ class TestMixingParameters(unittest.TestCase):
         logging.disable(logging.INFO)
         mod = 'pyretis.forcefield.potentials.pairpotentials.pairpotential'
         with self.assertLogs(mod, level='WARNING'):
-            mixed = mixing_parameters(11., 12., 13., 14., 15., 16.,
+            mixed = mixing_parameters([11., 14], [12., 15], [13., 16.],
                                       mixing='Life On Mars?')
         logging.disable(logging.CRITICAL)
         for i in mixed:

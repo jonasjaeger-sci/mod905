@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Test some methods for the internal engine."""
 import unittest
@@ -53,11 +53,12 @@ class TestKick(unittest.TestCase):
             'allowmaxlength': False,
         }
         interface = -1.123456789
-        prev, curr = engine.kick_across_middle(system,
-                                               order_function,
-                                               rgen, interface,
+        ensemble = {'system': system,
+                    'order_function': order_function,
+                    'rgen': rgen}
+        prev, curr = engine.kick_across_middle(ensemble, interface,
                                                tis_settings)
-        order_curr1 = engine.calculate_order(order_function, system)[0]
+        order_curr1 = engine.calculate_order(ensemble)[0]
         order_curr2 = curr.particles.get_pos()[0][0]
         self.assertEqual(order_curr1, order_curr2)
         order_prev1 = prev.order
@@ -69,11 +70,11 @@ class TestKick(unittest.TestCase):
         interface = -0.54321
         engine = Langevin(0.002, 0.3, rgen='mock', seed=1,
                           high_friction=False)
-        prev, curr = engine.kick_across_middle(system,
-                                               order_function,
-                                               rgen, interface,
+        ensemble['engine'] = engine
+        prev, curr = engine.kick_across_middle(ensemble,
+                                               interface,
                                                tis_settings)
-        order_curr1 = engine.calculate_order(order_function, system)[0]
+        order_curr1 = engine.calculate_order(ensemble)[0]
         order_curr2 = curr.particles.get_pos()[0][0]
         self.assertEqual(order_curr1, order_curr2)
         order_prev1 = prev.order
@@ -84,9 +85,12 @@ class TestKick(unittest.TestCase):
         # Test with a Mock Engine:
         interface = 3
         engine = MockEngine(interface)
-        prev, curr = engine.kick_across_middle(system,
-                                               order_function,
-                                               rgen, interface,
+        ensemble = {'system': system,
+                    'order_function': order_function,
+                    'engine': engine,
+                    'rgen': rgen}
+        prev, curr = engine.kick_across_middle(ensemble,
+                                               interface,
                                                tis_settings)
         self.assertEqual(prev.order, 2)
         self.assertEqual(curr.order, 4)

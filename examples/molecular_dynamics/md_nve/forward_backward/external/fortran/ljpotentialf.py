@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Example of using a Lennard-Jones potential implemented in FORTRAN."""
 import sys
-import os
+from pathlib import Path
 import logging
 import numpy as np
 from pyretis.forcefield.potentials import PairLennardJonesCut
@@ -11,7 +11,7 @@ from pyretis.forcefield.potentials.pairpotentials import (
     generate_pair_interactions
 )
 # Just to handle imports of the library:
-sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
+sys.path.insert(0, Path(__file__).parent.resolve())
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 try:
@@ -49,20 +49,17 @@ class PairLennardJonesCutF(PairLennardJonesCut):
     params : dict
         The parameters for the potential. This dict is assumed to
         contain parameters for pairs, i.e. for interactions.
-    _lj1 : numpy.array
-        Lennard-Jones parameters used for calculation of the force.
+    _lj : dict of numpy.array
+        [1] Lennard-Jones parameters used for calculation of the force.
         Keys are the pairs (particle types) that may interact.
         Calculated as: ``48.0 * epsilon * sigma**12``
-    _lj2 : numpy.array
-        Lennard-Jones parameters used for calculation of the force.
+        [2] Lennard-Jones parameters used for calculation of the force.
         Keys are the pairs (particle types) that may interact.
         Calculated as: ``24.0 * epsilon * sigma**6``
-    _lj3 : numpy.array
-        Lennard-Jones parameters used for calculation of the potential.
+        [3] Lennard-Jones parameters used for calculation of the potential.
         Keys are the pairs (particle types) that may interact.
         Calculated as: ``4.0 * epsilon * sigma**12``
-    _lj4 : numpy.array
-        Lennard-Jones parameters used for calculation of the potential.
+        [4] Lennard-Jones parameters used for calculation of the potential.
         Keys are the pairs (particle types) that may interact.
         Calculated as: ``4.0 * epsilon * sigma**6``
     _offset : numpy.array
@@ -106,20 +103,20 @@ class PairLennardJonesCutF(PairLennardJonesCut):
         self.params = {}
         pair_param = generate_pair_interactions(parameters, self.mixing)
         self.ntype = max(int(np.sqrt(len(pair_param))), 2)
-        self._lj1 = np.zeros((self.ntype, self.ntype))
-        self._lj2 = np.zeros_like(self._lj1)
-        self._lj3 = np.zeros_like(self._lj1)
-        self._lj4 = np.zeros_like(self._lj1)
-        self._rcut2 = np.zeros_like(self._lj1)
-        self._offset = np.zeros_like(self._lj1)
+        self._lj = {'1': np.zeros((self.ntype, self.ntype)),
+                    '2': np.zeros((self.ntype, self.ntype)),
+                    '3': np.zeros((self.ntype, self.ntype)),
+                    '4': np.zeros((self.ntype, self.ntype))}
+        self._rcut2 = np.zeros_like(self._lj[1])
+        self._offset = np.zeros_like(self._lj[1])
         for pair in pair_param:
             eps_ij = pair_param[pair]['epsilon']
             sig_ij = pair_param[pair]['sigma']
             rcut = pair_param[pair]['rcut']
-            self._lj1[pair] = 48.0 * eps_ij * sig_ij**12
-            self._lj2[pair] = 24.0 * eps_ij * sig_ij**6
-            self._lj3[pair] = 4.0 * eps_ij * sig_ij**12
-            self._lj4[pair] = 4.0 * eps_ij * sig_ij**6
+            self._lj[1][pair] = 48.0 * eps_ij * sig_ij**12
+            self._lj[2][pair] = 24.0 * eps_ij * sig_ij**6
+            self._lj[3][pair] = 4.0 * eps_ij * sig_ij**12
+            self._lj[4][pair] = 4.0 * eps_ij * sig_ij**6
             self._rcut2[pair] = rcut**2
             vcut = 0.0
             if self.shift:
@@ -149,7 +146,7 @@ class PairLennardJonesCutF(PairLennardJonesCut):
         box = system.box
         v_pot = ljfortran.potential(particles.pos,
                                     box.length, box.ilength,
-                                    self._lj3, self._lj4, self._offset,
+                                    self._lj, self._offset,
                                     self._rcut2, particles.ptype,
                                     particles.npart,
                                     box.dim, self.ntype)
@@ -178,7 +175,7 @@ class PairLennardJonesCutF(PairLennardJonesCut):
         box = system.box
         forces, virial = ljfortran.force(particles.pos,
                                          box.length, box.ilength,
-                                         self._lj1, self._lj2, self._rcut2,
+                                         self._lj, self._rcut2,
                                          particles.ptype,
                                          particles.npart,
                                          box.dim, self.ntype)
@@ -219,10 +216,7 @@ class PairLennardJonesCutF(PairLennardJonesCut):
         forces, virial, vpot = ljfortran.potential_and_force(particles.pos,
                                                              box.length,
                                                              box.ilength,
-                                                             self._lj1,
-                                                             self._lj2,
-                                                             self._lj3,
-                                                             self._lj4,
+                                                             self._lj,
                                                              self._offset,
                                                              self._rcut2,
                                                              particles.ptype,

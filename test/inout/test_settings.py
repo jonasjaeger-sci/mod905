@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Test parsing from a settings input file.
 
@@ -25,14 +25,17 @@ from pyretis.forcefield.potentials import (
 )
 from pyretis.inout.settings import (
     copy_settings,
+    look_for_input_files,
     parse_settings_file,
     settings_to_text,
     write_settings_file,
-    _check_for_bullshitt,
+    add_default_settings,
+    add_specific_default_settings,
     _clean_settings,
     _parse_raw_section,
     _parse_all_raw_sections,
     _parse_sections,
+    SECTIONS
 )
 from pyretis.orderparameter import (
     Angle,
@@ -45,18 +48,19 @@ from pyretis.orderparameter import (
     PositionVelocity,
     Velocity,
 )
-from pyretis.inout.setup.common import (
+from pyretis.setup.common import (
     create_engine,
     create_orderparameter
 )
-from pyretis.inout.setup.createforcefield import (
+from pyretis.setup.createforcefield import (
     create_potentials,
     create_force_field
 )
-from pyretis.inout.setup.createsystem import create_initial_positions
+from pyretis.setup.createsystem import create_initial_positions
 from unittest.mock import patch
-logging.disable(logging.CRITICAL)
+from .help import turn_on_logging
 
+logging.disable(logging.CRITICAL)
 
 LOCAL_DIR = os.path.abspath(os.path.dirname(__file__))
 
@@ -76,7 +80,7 @@ def _read_raw_settings(filename):
     """
     inputfile = os.path.join(LOCAL_DIR, filename)
     data = None
-    with open(inputfile, 'r') as indata:
+    with open(inputfile, 'r', encoding='utf-8') as indata:
         data = indata.read()
     return data
 
@@ -121,19 +125,27 @@ class KeywordParsing(unittest.TestCase):
                        'dimensions': 3,  # Added by default.
                        'temperature': 2.0},
             'simulation': {'task': 'md-nve',
-                           'steps': 100},
+                           'steps': 100,
+                           'rgen': 'rgen',
+                           'priority_shooting': False},
             'engine': {'class': 'velocityverlet',
-                       'timestep': 0.002},
-            'particles': {'position': {'file': 'initial.gro'},
+                       'timestep': 0.002,
+                       'rgen': 'rgen',
+                       'type': 'internal'},
+            'particles': {'position': {'input_file': 'initial.gro'},
                           'velocity': {'generate': 'maxwell',
                                        'temperature': 2.0,
                                        'momentum': True,
                                        'seed': 0},
-                          'mass': {'Ar': 1.0}},
+                          'mass': {'Ar': 1.0},
+                          'type': 'internal'},
             'forcefield': {'description': 'Lennard Jones test'},
             'potential': [{'class': 'PairLennardJonesCutnp',
                            'shift': True}],
         }
+        del settings['engine']['exe_path']
+        del settings['simulation']['exe_path']
+
         for key in correct:
             self.assertIn(key, settings)
             self.assertEqual(correct[key], settings[key])
@@ -236,10 +248,10 @@ class KeywordEngine(unittest.TestCase):
                               'timestep': 0.5,
                               'extra': 100}}
         settings = _test_correct_parsing(self, data, correct)
-        # Here we add the exe-path key to the settings to tell
+        # Here we add the exe_path key to the settings to tell
         # PyRETIS where we are executing from. This is to locate the
         # script we want to run.
-        settings['simulation'] = {'exe-path': LOCAL_DIR}
+        settings['simulation'] = {'exe_path': LOCAL_DIR}
         fooengine = create_engine(settings)
         self.assertEqual(fooengine.timestep,
                          correct['engine']['timestep'])
@@ -275,7 +287,7 @@ class KeywordEngine(unittest.TestCase):
 
         for data, corr in zip(test_data, correct):
             settings = _test_correct_parsing(self, data, corr)
-            settings['simulation'] = {'exe-path': LOCAL_DIR}
+            settings['simulation'] = {'exe_path': LOCAL_DIR}
             with self.assertRaises(ValueError):
                 create_engine(settings)
 
@@ -357,7 +369,7 @@ class KeywordOrderPrameter(unittest.TestCase):
         # Here we add the exe-path key to the settings to tell
         # PyRETIS where we are executing from. This is to locate the
         # script we want to run.
-        settings['simulation'] = {'exe-path': LOCAL_DIR}
+        settings['simulation'] = {'exe_path': LOCAL_DIR}
         orderp = create_orderparameter(settings)
         self.assertEqual(
             correct['orderparameter']['class'],
@@ -377,7 +389,7 @@ class KeywordOrderPrameter(unittest.TestCase):
         )
         for data, corr in zip(test_data, correct):
             settings = _test_correct_parsing(self, data, corr)
-            settings['simulation'] = {'exe-path': LOCAL_DIR}
+            settings['simulation'] = {'exe_path': LOCAL_DIR}
             with self.assertRaises(ValueError):
                 create_orderparameter(settings)
 
@@ -489,7 +501,7 @@ class KeywordParticles(unittest.TestCase):
         correct = {'particles': {'position': {'generate': 'fcc',
                                               'repeat': [3, 3, 3],
                                               'lcon': 1.0},
-                                 'type': [0, 1]},
+                                 'ptype': [0, 1]},
                    'system': {'units': 'lj'}}
         settings = _test_correct_parsing(self, data, correct)
         particles, _, _ = create_initial_positions(settings)
@@ -546,7 +558,7 @@ class KeywordParticles(unittest.TestCase):
         correct = {'particles': {'position': {'generate': 'fcc',
                                               'repeat': [3, 3, 3],
                                               'lcon': 1.},
-                                 'type': [0, 1],
+                                 'ptype': [0, 1],
                                  'name': ['Ar', 'Kr'],
                                  'mass': {'Ar': 1.0}},
                    'system': {'units': 'lj'}}
@@ -578,13 +590,13 @@ class KeywordParticles(unittest.TestCase):
     def test_file_xyz(self):
         """Test initialisation from a XYZ file."""
         data = _read_raw_settings('initial-xyz2.rst')
-        correct = {'particles': {'position': {'file': 'config.xyz'}},
+        correct = {'particles': {'position': {'input_file': 'config.xyz'}},
                    'system': {'units': 'lj'}}
         settings = _test_correct_parsing(self, data, correct)
         units = settings['system']['units']
         create_conversion_factors(units)
         # Add path to the file for this test:
-        settings['simulation'] = {'exe-path': LOCAL_DIR}
+        settings['simulation'] = {'exe_path': LOCAL_DIR}
         particles, size, vel_read = create_initial_positions(settings)
         self.assertFalse(vel_read)
         self.assertIsNone(size)
@@ -607,12 +619,12 @@ class KeywordParticles(unittest.TestCase):
     def test_file_gro(self):
         """Test initialisation from a GRO file."""
         data = _read_raw_settings('initial-gro.rst')
-        correct = {'particles': {'position': {'file': 'config.gro'}},
+        correct = {'particles': {'position': {'input_file': 'config.gro'}},
                    'system': {'units': 'gromacs'}}
         settings = _test_correct_parsing(self, data, correct)
         # Add path to the file for this test:
         create_conversion_factors(settings['system']['units'])
-        settings['simulation'] = {'exe-path': LOCAL_DIR}
+        settings['simulation'] = {'exe_path': LOCAL_DIR}
         particles, size, vel_read = create_initial_positions(settings)
         self.assertTrue(vel_read)
         self.assertTrue(np.allclose(size['cell'], [2., 2., 2.]))
@@ -636,8 +648,8 @@ class KeywordParticles(unittest.TestCase):
     def test_file_xyztab(self):
         """Test initialisation from a XYZ file with mass dict."""
         data = _read_raw_settings('initial-xyz.rst')
-        correct = {'particles': {'position': {'file': 'configtag.xyz'},
-                                 'type': [0, 0, 0, 1, 1],
+        correct = {'particles': {'position': {'input_file': 'configtag.xyz'},
+                                 'ptype': [0, 0, 0, 1, 1],
                                  'mass': {'Ar': 1., 'Kr': 2.09767698,
                                           'Kr2': 2.09767698}},
                    'system': {'units': 'lj'}}
@@ -645,7 +657,7 @@ class KeywordParticles(unittest.TestCase):
         units = settings['system']['units']
         create_conversion_factors(units)
         # Add path to the file for this test:
-        settings['simulation'] = {'exe-path': LOCAL_DIR}
+        settings['simulation'] = {'exe_path': LOCAL_DIR}
         particles, size, vel_read = create_initial_positions(settings)
         self.assertFalse(vel_read)
         self.assertIsNone(size)
@@ -753,7 +765,7 @@ class KeywordForcefield(unittest.TestCase):
         settings = _test_correct_parsing(self, data, correct)
         self.assertEqual(settings, correct)
         # Add path for testing:
-        settings['simulation'] = {'exe-path': LOCAL_DIR}
+        settings['simulation'] = {'exe_path': LOCAL_DIR}
         potentials, pot_param = create_potentials(settings)
         self.assertIsInstance(potentials[0], PotentialFunction)
         self.assertAlmostEqual(potentials[0].params['a'], 0.0)
@@ -769,7 +781,7 @@ class KeywordForcefield(unittest.TestCase):
                                   'parameter': {'a': 2.0}}]}
         settings = _test_correct_parsing(self, data, correct)
         self.assertEqual(settings, correct)
-        settings['simulation'] = {'exe-path': LOCAL_DIR}
+        settings['simulation'] = {'exe_path': LOCAL_DIR}
         args = [settings]
         self.assertRaises(ValueError, create_potentials, *args)
 
@@ -791,57 +803,12 @@ class KeywordForcefield(unittest.TestCase):
                                   'parameter': {'a': 10.0}}]}
         settings = _test_correct_parsing(self, data, correct)
         self.assertEqual(settings, correct)
-        settings['simulation'] = {'exe-path': LOCAL_DIR}
+        settings['simulation'] = {'exe_path': LOCAL_DIR}
         forcefield = create_force_field(settings)
         self.assertEqual(len(forcefield.potential), 3)
         self.assertIsInstance(forcefield.potential[0], PairLennardJonesCutnp)
         self.assertIsInstance(forcefield.potential[1], DoubleWellWCA)
         self.assertIsInstance(forcefield.potential[2], PotentialFunction)
-
-    def test_check_for_bullshitt(self):
-        """Test that _check for bullshitt finds the inconsistent settings."""
-        # Insufficient interfaces for TIS/RETIS:
-        settings = {'simulation': {'task': 'tis', 'interfaces': [1]}}
-        with patch('sys.stdout', new=StringIO()):
-            with self.assertRaises(ValueError) as err:
-                _check_for_bullshitt(settings)
-        self.assertTrue('Insufficient number of interfaces for tis' in
-                        str(err.exception))
-        # No references:
-        settings = {'simulation': {'task': 'tis', 'interfaces': [1, 2, 3]},
-                    'ensemble': [{'gino': 'strada'}, {'interface': 1},
-                                 {'interface': 3}]}
-        with patch('sys.stdout', new=StringIO()):
-            with self.assertRaises(ValueError) as err:
-                _check_for_bullshitt(settings)
-        self.assertTrue('An ensemble has been introduced without references'
-                        ' (interface in ensemble settings)' in
-                        str(err.exception))
-
-        settings = {'simulation': {'task': 'tis', 'interfaces': [1, 2, 3]},
-                    'ensemble': [{'ensemble_number': 0}, {'interface': 2},
-                                 {'interface': 3}]}
-        _check_for_bullshitt(settings)
-
-        # Not Sorted interfaces:
-        settings = {'simulation': {'task': 'tis', 'interfaces': [2, 5, 1]}}
-        with patch('sys.stdout', new=StringIO()):
-            with self.assertRaises(ValueError) as err:
-                _check_for_bullshitt(settings)
-        self.assertTrue('Interface lambda positions in the simulation entry '
-                        'are NOT sorted (small to large)' in
-                        str(err.exception))
-
-        # Wrong interfaces:
-        settings = {'simulation': {'task': 'tis', 'interfaces': [1, 2, 3]},
-                    'ensemble': [{'interface': 1}, {'interface': 2},
-                                 {'interface': 4}]}
-        with patch('sys.stdout', new=StringIO()):
-            with self.assertRaises(ValueError) as err:
-                _check_for_bullshitt(settings)
-        self.assertTrue('An ensemble with declared interface is not present '
-                        'in the simulation interface list' in
-                        str(err.exception))
 
     def test_too_many(self):
         """Test what happens when we add too many potentials."""
@@ -912,11 +879,85 @@ class KeywordForcefield(unittest.TestCase):
             # Check that we can write a file and backup:
             write_settings_file(settings, out_file, backup=True)
             out_file2 = '{}_000'.format(out_file)
-            with open(out_file, 'r') as fileh:
+            with open(out_file, 'r', encoding='utf-8') as fileh:
                 raw_sections = _parse_sections(fileh)
             settings2 = _parse_all_raw_sections(raw_sections)
             self.assertTrue(os.path.isfile(out_file2))
         self.assertTrue(big_fat_comparer(settings, settings2, hard=True))
+
+    def test_look_for_files(self):
+        """Test that we look and find the files."""
+        input_files = look_for_input_files(input_path=LOCAL_DIR,
+                                           required_files={},
+                                           extra_files=[])
+        self.assertTrue(input_files == {})
+
+        with turn_on_logging(), patch('sys.stdout', new=StringIO()):
+            # Check that ferrari.41 doesn't exist.
+            with self.assertLogs('pyretis.inout.settings',
+                                 level='INFO'):
+                look_for_input_files(input_path='.',
+                                     required_files={},
+                                     extra_files=['ferrari.f41'])
+
+        # the index key should actually have an index.ndx value, but
+        # I just use the available fake.mdp file instead...
+        input_files = look_for_input_files(input_path=LOCAL_DIR,
+                                           required_files={'mdp': 'gigi.mdp'},
+                                           extra_files={'index': 'fake.mdp'})
+        self.assertTrue('fake.mdp' in input_files['index'])
+
+        input_files = look_for_input_files(input_path=LOCAL_DIR,
+                                           required_files={'mdp': 'gigi.mdp'},
+                                           extra_files=[])
+        self.assertTrue('fake.mdp' in input_files['mdp'])
+        input_files = look_for_input_files(input_path=LOCAL_DIR,
+                                           required_files={'mdp': 'gigi.mdp'},
+                                           extra_files=['traj.trr'])
+        self.assertTrue('fake.mdp' in input_files['mdp'])
+
+        input_files = look_for_input_files(input_path=LOCAL_DIR,
+                                           required_files={'mdp': 'fake.mdp'})
+        self.assertTrue('fake.mdp' in input_files['mdp'])
+
+        input_files = look_for_input_files(input_path=LOCAL_DIR,
+                                           required_files={'mdp': 'gigi.mdp',
+                                                           'g96': 'dumped.g96',
+                                                           'trr': 'traj.trr'})
+        self.assertTrue('fake.mdp' in input_files['mdp'])
+        self.assertTrue('dumped.g96' in input_files['g96'])
+        self.assertTrue('traj.trr' in input_files['trr'])
+
+        look_for_input_files(input_path=LOCAL_DIR,
+                             required_files={'cf': 'config.gro'},
+                             extra_files=[])
+        with self.assertRaises(ValueError) as err:
+            look_for_input_files(
+                input_path=LOCAL_DIR,
+                required_files={'lol': 'config.gRo'},
+                extra_files=[])
+        self.assertEqual('Missing input file "config.gRo" and multiple files '
+                         + 'have extension ".gro"', str(err.exception))
+
+        with self.assertRaises(ValueError) as err:
+            input_files = look_for_input_files(input_path=LOCAL_DIR,
+                                               required_files={'': 'ma.gro'})
+        self.assertEqual('Missing input file "ma.gro" and multiple '
+                         + 'files have extension ".gro"', str(err.exception))
+
+        with self.assertRaises(ValueError) as err:
+            input_files = look_for_input_files(input_path='banana',
+                                               required_files={'': 'suka.gro'})
+        self.assertEqual('Input path folder banana not existing',
+                         str(err.exception))
+
+        with self.assertRaises(ValueError) as err:
+            input_files = look_for_input_files(
+                input_path=LOCAL_DIR,
+                required_files={'yyy': 'config.xxx'},
+                extra_files=[])
+        self.assertEqual('Missing input file "config.xxx" ',
+                         str(err.exception))
 
     def test_clean_settings(self):
         """Test that we can clean settings."""
@@ -929,6 +970,91 @@ class KeywordForcefield(unittest.TestCase):
         self.assertFalse('junk' in settings_c)
         self.assertFalse('junk' in settings_c['system'])
         self.assertFalse('box' in settings_c)
+
+
+class AddDefaultTest(unittest.TestCase):
+    """Test adding default values."""
+
+    def test_add_default_settings(self):
+        """Test that we can add default settings."""
+        settings_base = SECTIONS
+        add_default_settings(settings_base)
+        self.assertTrue(big_fat_comparer(settings_base, SECTIONS))
+
+    def test_add_specific_default_settings(self):
+        """Test that we can add default settings."""
+        settings = {}
+        add_default_settings(settings)
+
+        settings['simulation']['task'] = 'tis'
+        add_specific_default_settings(settings)
+        self.assertEqual(settings['system']['temperature'], 1)
+        self.assertFalse(settings['simulation']['flux'])
+        self.assertFalse(settings['simulation']['zero_ensemble'])
+
+        settings['simulation']['task'] = 'retis'
+        del settings['simulation']['flux']
+        del settings['simulation']['zero_ensemble']
+        add_specific_default_settings(settings)
+        self.assertTrue(settings['simulation']['flux'])
+        self.assertTrue(settings['simulation']['zero_ensemble'])
+
+        self.assertEqual(settings['particles']['type'], 'internal')
+        self.assertEqual(settings['engine']['type'], 'internal')
+
+        settings['engine']['class'] = 'cp2k'
+        settings['engine']['exe_path'] += '/test/inout'
+        add_specific_default_settings(settings)
+        self.assertEqual(settings['particles']['type'], 'external')
+        self.assertEqual(settings['engine']['type'], 'external')
+        input_path = settings['engine'].get('input_path', '.')
+        add_specific_default_settings(settings)
+        self.assertEqual(settings['engine']['input_files']['conf'][-11:],
+                         'initial.xyz')
+        self.assertEqual(settings['engine']['input_files']['template'][-9:],
+                         '/cp2k.inp')
+        self.assertEqual(
+            settings['engine']['input_files']['template'],
+            os.path.join(os.path.abspath('.') + '/test/inout/',
+                         input_path, 'cp2k.inp'))
+        self.assertEqual(settings['system']['temperature'], 500)
+        del settings['system']['temperature']
+        add_specific_default_settings(settings)
+        self.assertEqual(settings['system']['temperature'], 500)
+        no_temp_inp = os.path.join(os.path.abspath('.') + '/test/inout/',
+                                   input_path, 'no_temp.inp')
+        settings['engine']['template'] = no_temp_inp
+        with turn_on_logging(), patch('sys.stdout', new=StringIO()):
+            with self.assertLogs() as log:
+                del settings['system']['temperature']
+                add_specific_default_settings(settings)
+                self.assertEqual(settings['system']['temperature'], 300)
+                self.assertIn('Temperature not set in CP2K', log.output[0])
+                settings['system']['temperature'] = 500
+                add_specific_default_settings(settings)
+                self.assertEqual(settings['system']['temperature'], 300)
+                self.assertIn('And temperature in input', log.output[1])
+
+        settings = {}
+        settings['simulation'] = {'covid': 'kill_us_all'}
+        settings['initial-path'] = {'method': 'restart'}
+        add_default_settings(settings)
+        settings['engine']['class'] = 'gromacs2'
+        settings['engine']['topology'] = 'TrainToRide'
+        add_specific_default_settings(settings)
+        self.assertEqual(settings['particles']['type'], 'external')
+        self.assertEqual(settings['engine']['type'], 'external')
+        input_path = settings['engine'].get('input_path', '.')
+        self.assertEqual(settings['engine']['input_files']['topology'],
+                         'TrainToRide')
+        self.assertEqual(settings['engine']['input_files']['conf'][-8:],
+                         'conf.gro')
+        self.assertEqual(settings['engine']['input_files']['input_o'][-11:],
+                         '/grompp.mdp')
+        self.assertEqual(settings['engine']['input_files']['index'],
+                         os.path.join(os.path.abspath('.'),
+                                      input_path, 'index.ndx'))
+        self.assertEqual(settings['simulation']['restart'], 'pyretis.restart')
 
 
 class KeywordEnsemble(unittest.TestCase):

@@ -1,20 +1,18 @@
 #!/usr/bin/env bash
+set -e
 make clean
 gmx=${1:-gmx_d}
-echo Using gmx=$gmx
-replace='s/GMXCOMMAND/'$gmx'/g'
+echo "Using gmx=$gmx"
+replace="s/GMXCOMMAND/$gmx/g"
 
 gmxversion=$($gmx --version | grep -i "gromacs version")
-echo $gmxversion
+echo "$gmxversion"
 
-cd run-25
+cd run-5
 sed -e $replace retis.rst > retis-run.rst
 cp ../../../gmx/gromacs.py .
 cp ../../../gmx/orderp.py .
 pyretisrun -i retis-run.rst -p
-rm retis-run.rst
-rm gromacs.py
-rm orderp.py
 cd ..
 
 cd run-initialise
@@ -22,10 +20,7 @@ sed -e $replace retis.rst > retis-run.rst
 cp ../../../gmx/gromacs.py .
 cp ../../../gmx/orderp.py .
 pyretisrun -i retis-run.rst -p
-pyretis_gmx_rnd_state=$(realpath rnd.state)
-rm retis-run.rst
-rm gromacs.py
-rm orderp.py
+# pyretis_gmx_rnd_state=$(realpath rnd.state)
 cd ..
 
 cp ../../gmx/copy_last_path.py .
@@ -35,13 +30,15 @@ cd run-load
 sed -e $replace retis.rst > retis-run.rst
 cp ../../../gmx/gromacs.py .
 cp ../../../gmx/orderp.py .
-cp $pyretis_gmx_rnd_state pyretis_gmx_rnd.state
+# cp $pyretis_gmx_rnd_state pyretis_gmx_rnd.state
 pyretisrun -i retis-run.rst -p
-rm retis-run.rst
-rm gromacs.py
-rm orderp.py
 cd ..
 
-cp ../../gmx/compare.py .
-python compare.py run-25 run-load --path_skip 8
-rm compare.py
+# PyRETIS 3 does not support this part of the test.
+# cp ../../gmx/compare.py .
+# python compare.py run-5 run-load --path_skip 8
+# rm compare.py
+rm */retis-run.rst
+rm */gromacs.py
+rm */orderp.py 
+make clean

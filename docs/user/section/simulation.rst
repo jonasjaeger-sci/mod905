@@ -34,7 +34,18 @@ as detailed in the table below:
    +-------------+-------------------------------+----------------------------+-------------------+
    |   ``tis``   | A transition interface        | ``task``, ``steps``,       |                   |
    |             | sampling simulation.          | ``interfaces``,            | ``tis``           |
-   |             |                               | ``ensemble``, ``detect``   |                   |
+   |             |                               | ``ensemble_number``,       |                   |
+   |             |                               | ``detect``                 |                   |
+   +-------------+-------------------------------+----------------------------+-------------------+
+   | ``repptis`` | A replica exchange partial    | ``task``, ``steps``,       | ``tis``           |
+   |             | path transition interface     | ``interfaces``             |                   |
+   |             | sampling simulation.          |                            |                   |
+   +-------------+-------------------------------+----------------------------+-------------------+
+   | ``pptis``   | A partial path transition     | ``task``, ``steps``,       | ``tis``           |
+   |             | interface sampling simulation.| ``interfaces``             |                   |
+   +-------------+-------------------------------+----------------------------+-------------------+
+   | ``explore`` | A free energy surface         | ``task``, ``steps``,       |                   |
+   |             | exploration simulation.       | ``interfaces``             | ``tis``           |
    +-------------+-------------------------------+----------------------------+-------------------+
    | ``md-flux`` | A MD FLUX simulation.         | ``task``, ``steps``,       |                   |
    |             |                               | ``interfaces``             |                   |
@@ -78,6 +89,7 @@ For the ``retis`` task, the following keywords can be set:
 
 .. |simretis_steps| replace:: :ref:`steps <user-section-task-retis-steps>`
 .. |simretis_interfaces| replace:: :ref:`interfaces <user-section-task-retis-interfaces>`
+.. |simretis_priority| replace:: :ref:`priority_shooting <user-section-task-retis-priority>`
 
 .. _table-simulation-retis-keywords:
 
@@ -87,9 +99,11 @@ For the ``retis`` task, the following keywords can be set:
    +-----------------------+--------------------------------------------------+
    | Keyword               | Description                                      |
    +=======================+==================================================+
-   | |simretis_steps|      | The number of retis steps to perform.            |
+   | |simretis_steps|      | The number of total retis steps (cycles)         |
    +-----------------------+--------------------------------------------------+
    | |simretis_interfaces| | The location of the interfaces to consider.      |
+   +-----------------------+--------------------------------------------------+
+   | |simretis_priority|   | Prioritize the ensembles with less cycles.       |
    +-----------------------+--------------------------------------------------+
 
 
@@ -105,6 +119,7 @@ Keyword steps
 .. pyretis-keyword:: steps integer
 
    The ``steps`` keyword defines the number of RETIS cycles to perform.
+   Note that it indicates the goal/final number of the simulation cycles.
 
    Default
      Not any, this keyword must be specified.
@@ -122,6 +137,22 @@ Keyword interfaces
    Default
      Not any, this keyword must be specified.
 
+.. _user-section-task-retis-priority:
+
+Keyword priority_shooting
+.........................
+
+.. pyretis-keyword:: priority_shooting boolean
+
+   If ``True``, ensembles with lower cycle numbers will be prioritized
+   until their cycle numbers equals the others.
+
+   This setting simplify the use of |pyretis| in cluster environments
+   in which walltime is rather short. Each ensemble can be, therefore,
+   investigated also if launching several runs.
+
+   Default
+       The default value is ``priority_shooting = False``.
 
 .. _user-section-simulation-tis:
 
@@ -153,7 +184,7 @@ simulation.
        steps = 20000
        interfaces = [-0.9, -0.9, 1.0]
        detect = -0.8
-       ensemble = 1
+       ensemble_number = 1
 
 Keywords for the tis task
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -162,25 +193,33 @@ For the ``tis`` task, the following keywords can be set:
 
 .. |simtis_steps| replace:: :ref:`steps <user-section-task-tis-steps>`
 .. |simtis_interfaces| replace:: :ref:`interfaces <user-section-task-tis-interfaces>`
-.. |simtis_ensemble| replace:: :ref:`ensemble <user-section-task-tis-ensemble>`
+.. |simtis_priority| replace:: :ref:`priority_shooting <user-section-task-tis-priority>`
+.. |simtis_ensemble_number| replace:: :ref:`ensemble_number <user-section-task-tis-ensemble_number>`
+.. |simtis_maxlength| replace:: :ref:`maxlegth <user-section-tis-maxlength>`
 .. |simtis_detect| replace:: :ref:`detect <user-section-task-tis-detect>`
-
+ 
 .. _table-simulation-tis-keywords:
 
 .. table:: Keywords for the tis task.
    :class: table-striped table-hover
 
-   +---------------------+----------------------------------------------------+
-   | Keyword             | Description                                        |
-   +=====================+====================================================+
-   | |simtis_steps|      | The number of steps to perform.                    |
-   +---------------------+----------------------------------------------------+
-   | |simtis_interfaces| | The interfaces defining the TIS ensemble.          |
-   +---------------------+----------------------------------------------------+
-   | |simtis_ensemble|   | For defining the ensemble considered.              |
-   +---------------------+----------------------------------------------------+
-   | |simtis_detect|     | The interface used for detecting successful paths. |
-   +---------------------+----------------------------------------------------+
+   +--------------------------+-----------------------------------------------+
+   | Keyword                  | Description                                   |
+   +==========================+===============================================+
+   | |simtis_steps|           | The total number of steps to perform.         |
+   +--------------------------+-----------------------------------------------+
+   | |simtis_interfaces|      | The interfaces defining the TIS ensemble.     |
+   +--------------------------+-----------------------------------------------+
+   | |simtis_priority|        | Prioritize the ensembles with less cycles.    |
+   +--------------------------+-----------------------------------------------+
+   | |simtis_ensemble_number| | For defining the ensemble number considered.  |
+   +--------------------------+-----------------------------------------------+
+   | |simtis_detect|          | The interface used for detecting successful   |
+   |                          | paths.                                        |
+   +--------------------------+-----------------------------------------------+
+   | |simtis_maxlength|       | The maximum number of step allowed for a      |
+   |                          | paths.                                        |
+   +--------------------------+-----------------------------------------------+
 
 In addition, this task requires that the
 section :ref:`TIS <user-section-tis>` is defined.
@@ -213,16 +252,33 @@ Keyword interfaces
    Default
      Not any, this keyword must be specified.
 
-.. _user-section-task-tis-ensemble:
+.. _user-section-task-tis-priority:
 
-Keyword ensemble
-................
+Keyword priority_shooting
+.........................
 
-.. pyretis-keyword:: ensemble integer
+.. pyretis-keyword:: priority_shooting boolean
 
-   A number specifying the path ensemble we are simulating, ``ensemble = 1``
-   corresponds to ``[0^+]``, 1 to ``[1^+]`` and so on. This is only needed for
-   running a single TIS simulation.
+   If ``True``, ensembles with lower cycle numbers will be prioritized
+   until their cycle numbers equals the others.
+
+   This setting simplify the use of |pyretis| in cluster environments
+   in which walltime is rather short. Each ensemble can be, therefore,
+   investigated also if launching several runs.
+
+   Default
+       The default value is ``priority_shooting = False``.
+
+.. _user-section-task-tis-ensemble_number:
+
+Keyword ensemble_number
+.......................
+
+.. pyretis-keyword:: ensemble_number integer
+
+   A number specifying the path ensemble we are simulating,
+   ``ensemble_number = 1`` corresponds to ``[0^+]``, 2 to ``[1^+]``
+   and so on. This is only needed for running a single TIS simulation.
 
    Default
      Not any, this keyword must be specified.
@@ -239,6 +295,223 @@ Keyword detect
 
    Default
      Not any, this keyword must be specified.
+
+.. _user-section-simulation-repptis:
+
+The repptis task
+----------------
+
+The ``repptis`` task defines a replica exchange partial path
+transition interface sampling simulation. Paths between adjacent
+``pptis`` ensembles can be swapped using the replica exchange move. 
+
+.. pyretis-input-example:: Simulation
+   :class-name: task repptis
+
+   .. code-block:: rst
+
+       Simulation
+       ----------
+       task = repptis
+       steps = 20000
+       interfaces = [-0.5, -0.3, 0, 0.3, 0.5]
+
+Keywords for the repptis task
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+For the ``repptis`` task, the following keywords can be set:
+
+.. |simrepptis_steps| replace:: :ref:`steps <user-section-task-repptis-steps>`
+.. |simrepptis_interfaces| replace:: :ref:`interfaces <user-section-task-repptis-interfaces>`
+.. |simrepptis_priority| replace:: :ref:`priority_shooting <user-section-task-repptis-priority>`
+
+.. _table-simulation-repptis-keywords:
+
+.. table:: Keywords for the repptis task.
+   :class: table-striped table-hover
+
+   +-------------------------+-------------------------------------------------+
+   | Keyword                 | Description                                     |
+   +=========================+=================================================+
+   | |simrepptis_steps|      | The number of total repptis steps (cycles)      |
+   +-------------------------+-------------------------------------------------+
+   | |simrepptis_interfaces| | The location of the interfaces to consider.     |
+   +-------------------------+-------------------------------------------------+
+   | |simrepptis_priority|   | Prioritize the ensembles with less cycles.      |
+   +-------------------------+-------------------------------------------------+
+
+In addition, this task requires that the
+sections :ref:`TIS <user-section-tis>` and 
+:ref:`RETIS <user-section-retis>` are defined. 
+
+Note that (RE)PPTIS simulations make use of the TIS and RETIS sections in the
+input RST file. This is because almost all of the keywords are similar.
+Therefore, REPPTIS or PPTIS sections do not exist in the RST file, but re-use
+the TIS and RETIS sections.
+
+.. _user-section-task-repptis-steps:
+
+Keyword steps
+.............
+
+.. pyretis-keyword:: steps integer
+
+   The ``steps`` keyword defines the number of REPPTIS cycles to perform.
+   Note that it indicates the goal/final number of the simulation cycles.
+
+   Default
+     Not any, this keyword must be specified.
+
+.. _user-section-task-repptis-interfaces:
+
+Keyword interfaces
+..................
+
+.. pyretis-keyword:: interfaces list of floats
+
+   The ``interfaces`` keyword specifies the interfaces to use in the
+   path simulation.
+
+   Default
+     Not any, this keyword must be specified.
+
+.. _user-section-task-repptis-priority:
+
+Keyword priority_shooting
+.........................
+
+.. pyretis-keyword:: priority_shooting boolean
+
+   If ``True``, ensembles with lower cycle numbers will be prioritized
+   until their cycle numbers equals the others.
+
+   This setting simplify the use of |pyretis| in cluster environments
+   in which walltime is rather short. Each ensemble can be, therefore,
+   investigated also if launching several runs.
+
+   Default
+       The default value is ``priority_shooting = False``.
+
+
+.. _user-section-simulation-pptis:
+
+The pptis task
+--------------
+The ``pptis`` task defines a partial path transition interface sampling
+simulation. PPTIS ensembles are shorter than TIS ensembles, cutting the paths'
+memory requirements. While for (RE)TIS the paths of ``[i^+]``
+need to start from state ``A``, cross interface ``i``, and either commit to 
+state ``B`` or return to state ``A``, PPTIS paths of ``[i^+-]`` only need to 
+start and end at interfaces ``i-1`` or ``i+1``, having crossed interface ``i``.
+
+.. pyretis-input-example:: Simulation
+   :class-name: task pptis
+
+   .. code-block:: rst
+
+       Simulation
+       ----------
+       task = pptis
+       steps = 20000
+       interfaces = [-0.5, -0.3, 0, 0.3, 0.5]
+
+Keywords for the pptis task
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+For the ``pptis`` task, the following keywords can be set:
+
+.. |simpptis_steps| replace:: :ref:`steps <user-section-task-pptis-steps>`
+.. |simpptis_interfaces| replace:: :ref:`interfaces <user-section-task-pptis-interfaces>`
+.. |simpptis_priority| replace:: :ref:`priority_shooting <user-section-task-pptis-priority>`
+
+
+.. _table-simulation-pptis-keywords:
+
+.. table:: Keywords for the pptis task.
+   :class: table-striped table-hover
+
+   +--------------------------+-----------------------------------------------+
+   | Keyword                  | Description                                   |
+   +==========================+===============================================+
+   | |simpptis_steps|         | The total number of steps to perform.         |
+   +--------------------------+-----------------------------------------------+
+   | |simpptis_interfaces|    | The interfaces defining the PPTIS ensemble.   |
+   +--------------------------+-----------------------------------------------+
+   | |simpptis_priority|      | Prioritize the ensembles with less cycles.    |
+   +--------------------------+-----------------------------------------------+
+
+In addition, this task requires that the
+section :ref:`TIS <user-section-tis>` is defined. 
+
+Note that ``PPTIS``
+simulations use the TIS section, and not the PPTIS section (which does not exist!).
+
+.. _user-section-task-pptis-steps:
+
+Keyword steps
+.............
+
+.. pyretis-keyword:: steps integer
+
+   The ``steps`` keyword defines the number of PPTIS cycles to perform.
+
+   Default
+     Not any, this keyword must be specified.
+
+.. _user-section-task-pptis-interfaces:
+
+Keyword interfaces
+..................
+
+.. pyretis-keyword:: interfaces list of floats
+
+   The ``interfaces`` keyword specifies the interfaces to use in the
+   path simulation. If the number of interfaces given is 3 or less,
+   a single PPTIS simulation will be performed, otherwise, input files
+   for several single PPTIS simulations will be written.
+   These simulations can then be run manually.
+
+   Default
+     Not any, this keyword must be specified.
+
+.. _user-section-task-pptis-priority:
+
+Keyword priority_shooting
+.........................
+
+.. pyretis-keyword:: priority_shooting boolean
+
+   If ``True``, ensembles with lower cycle numbers will be prioritized
+   until their cycle numbers equals the others.
+
+   This setting simplify the use of |pyretis| in cluster environments
+   in which walltime is rather short. Each ensemble can be, therefore,
+   investigated also if launching several runs.
+
+   Default
+       The default value is ``priority_shooting = False``.
+
+
+
+.. _user-section-simulation-explore:
+
+The explore task
+----------------
+
+The ``explore`` task is a molecular dynamics simulation for
+exploring the free energy landscape of a transition. It uses
+the TIS path simulation approach to allow the exploration
+of different regions with different moves.
+
+The idea is to generate paths in order to explore the region delimited
+by the first and the last given interface. The generated trajectories
+will always be accepted.
+To generate more often new paths, with the keyword |simtis_maxlength|,
+present in ``tis`` input section, it is possible to limitate the length
+of the generated trajectory.
+
+This is a simple strategy to try to locate local minima when exploring
+an unknown free energy landscape.
 
 
 .. _user-section-simulation-mdflux:
@@ -340,7 +613,8 @@ The following keywords can be specified for the ``md-nve`` task:
    +------------------+-------------------------------------------------------+
    | Keyword          | Description                                           |
    +==================+=======================================================+
-   | |simmdnve_steps| | The number of steps to consider for the simulation.   |
+   | |simmdnve_steps| | The number of overall steps to consider               |
+   |                  | for the simulation.                                   |
    +------------------+-------------------------------------------------------+
 
 
@@ -368,6 +642,7 @@ The following keywords are common to all simulation tasks:
 .. |startcycle| replace:: :ref:`startcycle <user-section-simulation-startcycle>`
 .. |exepath| replace:: :ref:`exe-path <user-section-simulation-exe-path>`
 .. |restart| replace:: :ref:`restart <user-section-simulation-restart>`
+.. |remove_gen| replace:: :ref:`remove_generate <user-section-simulation-remove_gen>`
 
 .. _table-simulation-common-keywords:
 
@@ -382,11 +657,13 @@ The following keywords are common to all simulation tasks:
    | |exepath|              | Specifies the directory from where the          |
    |                        | simulation was executed.                        |
    +------------------------+-------------------------------------------------+
-   | |restart|              | Specifies the restart file to use, and          |
-   |                        | specifies that a restart should be done.        |
+   | |restart|              | Specifies the restart file to use.              |
    +------------------------+-------------------------------------------------+
    | |startcycle|           | Specifies the cycle step the simulation should  |
    |                        | start at.                                       |
+   +------------------------+-------------------------------------------------+
+   | |remove_gen|           | Specifies if the generated files should be      |
+   |                        | removed after every ensemble TIS move.          |
    +------------------------+-------------------------------------------------+
 
 
@@ -435,10 +712,12 @@ Keyword restart
 .. pyretis-keyword:: restart string
 
    The ``restart`` keyword specifies the path to the restart file to use
-   for restarting/continuing the selected simulation task.
+   for restarting/continuing the selected simulation task. To be used,
+   it requires that ``method`` keyword in the ``initial-path`` section
+   is set to ``restart``.
 
    Default
-      Not any.
+      The default value is ``pyretis.restart``.
 
 
 .. _user-section-simulation-startcycle:
@@ -455,3 +734,20 @@ Keyword startcycle
 
    Default
       The default value is ``0``.
+
+.. _user-section-simulation-remove_gen:
+
+Keyword remove_generate
+^^^^^^^^^^^^^^^^^^^^^^^
+
+.. pyretis-keyword:: remove_generate boolean
+
+   The ``remove_generate`` keyword specifies whether the generated files should 
+   be removed after every ensemble TIS move. This is useful when running TIS
+   simulations in a cluster environment, where the generated files can
+   take up a lot of space. If ``remove_generate = True``, the generated files
+   will be removed after every ensemble TIS move. If ``remove_generate = False``,
+   the generated files will only be removed after an entire cycle has finished.
+
+   Default
+      The default value is ``True``.

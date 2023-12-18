@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """A test using the LAMMPS engine."""
 import math
@@ -42,7 +42,9 @@ def modify_velocities():
     clean_dir(exe_dir)
     engine.exe_dir = exe_dir
     # Draw random velocities:
-    dek, kin_new = engine.modify_velocities(system, rgen=None)
+    ensemble = {'system': system, 'rgen': None}
+    vel_settings = {'aimless': True}
+    dek, kin_new = engine.modify_velocities(ensemble, vel_settings)
     # This system did not have a kinetic energy assigned.
     assert dek == float('inf')
     assert math.isclose(kin_new, 1.4970703)
@@ -57,7 +59,9 @@ def modify_velocities():
     filename = os.path.basename(system.particles.get_pos()[0])
     system.particles.set_pos((files[filename], 0))
     # Draw random velocities again:
-    dek, kin_new = engine.modify_velocities(system, rgen=None)
+    ensemble = {'system': system, 'rgen': None}
+    vel_settings = {'aimless': True}
+    dek, kin_new = engine.modify_velocities(ensemble, vel_settings)
     assert math.isclose(dek, 0.0)
     assert math.isclose(kin_new, 1.4970703)
     # Same seed, velocity should still be the same:
@@ -70,7 +74,9 @@ def modify_velocities():
     system.particles.set_pos((files[filename], 0))
     # Draw random velocities again, but with a different seed:
     rgen = create_random_generator({'seed': 0})
-    dek, kin_new = engine.modify_velocities(system, rgen)
+    ensemble = {'system': system, 'rgen': rgen}
+    vel_settings = {'aimless': True}
+    dek, kin_new = engine.modify_velocities(ensemble, vel_settings)
     assert math.isclose(dek, 0.0)
     assert math.isclose(kin_new, 1.4970703)
     # Different seed, velocity should have changed

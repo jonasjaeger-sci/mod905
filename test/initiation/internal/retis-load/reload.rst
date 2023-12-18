@@ -4,7 +4,7 @@ TIS 1D example
 Simulation
 ----------
 task = retis
-steps = 1000
+steps = 100
 interfaces = [-2.9, -1.8, -0.7]
 
 System
@@ -50,13 +50,13 @@ load_folder = load-sparse
 
 Particles
 ---------
-position = {'file': 'load-sparse/initial.xyz'}
+position = {'input_file': 'load-sparse/initial.xyz'}
 velocity = {'generate': 'maxwell',
             'momentum': False,
             'seed': 0}
 mass = {'Ar': 1.0}
 name = ['Ar']
-type = [0]
+ptype = [0]
 
 Forcefield
 ----------
@@ -71,7 +71,7 @@ c = 0.0
 
 Orderparameter
 --------------
-class = PositionVelocity
+class = Position
 dim = x
 index = 0
 periodic = False

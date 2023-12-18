@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """pyretisrun - An application for running PyRETIS simulations.
 
@@ -40,14 +40,8 @@ import colorama  # For coloring text
 # PyRETIS library imports:
 from pyretis import __version__ as VERSION
 from pyretis.info import PROGRAM_NAME, URL, CITE, LOGO
-from pyretis.core.units import units_from_settings
 from pyretis.core.pathensemble import generate_ensemble_name
-from pyretis.inout.setup import (
-    create_system,
-    create_force_field,
-    create_simulation,
-    create_engine
-)
+from pyretis.setup import create_simulation
 from pyretis.inout.common import (
     check_python_version,
     create_backup,
@@ -57,9 +51,6 @@ from pyretis.inout.formats.formatter import get_log_formatter
 from pyretis.inout.settings import (
     parse_settings_file,
     write_settings_file
-)
-from pyretis.inout.restart import (
-    read_restart_file,
 )
 
 
@@ -102,7 +93,7 @@ def use_tqdm(progress):
 
 
 def hello_world(infile, rundir, logfile):
-    """Print out a standard greeting for PyRETIS.
+    """Print out a politically correct greeting for PyRETIS.
 
     Parameters
     ----------
@@ -119,7 +110,8 @@ def hello_world(infile, rundir, logfile):
     print_to_screen('\n'.join([LOGO]), level='message')
     logger.info('\n'.join([LOGO]))
 
-    print_to_screen(f'{PROGRAM_NAME} version: {VERSION}', level='message')
+    print_to_screen(f'{PROGRAM_NAME} version: {VERSION}',
+                    level='message')
     logger.info('%s version: %s', PROGRAM_NAME, VERSION)
 
     print_to_screen(f'Start of execution: {timestart}', level='message')
@@ -151,7 +143,7 @@ def bye_bye_world():
     logger.info(reftxt)
     print_to_screen()
     print_to_screen(reftxt)
-    urltxt = f'{URL}'
+    urltxt = str(URL)
     logger.info(urltxt)
     print_to_screen()
     print_to_screen(urltxt, level='info')
@@ -173,13 +165,14 @@ def run_md_flux_simulation(sim, sim_settings, progress=False):
     """
     print_to_screen('Starting MD-Flux simulation', level='info')
     tqd = use_tqdm(progress)
-    nsteps = sim.cycle['end'] - sim.cycle['step']
-    sim.engine.exe_dir = sim_settings['simulation']['exe-path']
+    sim.engine.exe_dir = sim_settings['simulation']['exe_path']
     sim.set_up_output(sim_settings, progress=progress)
-    for _ in tqd(sim.run(), total=nsteps, desc='MD-flux'):
+    for _ in tqd(sim.run(), initial=sim.cycle['startcycle'],
+                 total=sim.cycle['endcycle'], desc='MD-flux'):
         pass
     # Write final restart file:
     sim.write_restart(now=True)
+    return True
 
 
 def run_md_simulation(sim, sim_settings, progress=False):
@@ -198,73 +191,17 @@ def run_md_simulation(sim, sim_settings, progress=False):
     """
     print_to_screen('Starting MD simulation', level='info')
     tqd = use_tqdm(progress)
-    nsteps = sim.cycle['end'] - sim.cycle['step']
-    sim.engine.exe_dir = sim_settings['simulation']['exe-path']
+    sim.engine.exe_dir = sim_settings['simulation']['exe_path']
     sim.set_up_output(sim_settings, progress=progress)
-    for _ in tqd(sim.run(), total=nsteps, desc='MD step'):
-        pass
-    # Write final restart file:
-    sim.write_restart(now=True)
-
-
-def run_tis_single_simulation(sim, sim_settings, progress=False):
-    """Run a single TIS simulation with PyRETIS.
-
-    Parameters
-    ----------
-    sim : object like :py:class:`.Simulation`
-        This is the simulation to run.
-    sim_settings : dict
-        The simulation settings.
-    progress : boolean, optional
-        If True, we will display a progress bar, otherwise, we print
-        results to the screen.
-
-    """
-    # Ensure that we create the output directory for the ensemble
-    # we are simulating for:
-    ensemble = sim.path_ensemble
-    ensemble_name = ensemble.ensemble_name
-
-    logtxt = f'TIS simulation, ensemble: {ensemble_name}'
-    print_to_screen(logtxt, level='info')
-    logger.info(logtxt)
-
-    sim.set_up_output(
-        sim_settings,
-        progress=progress
-    )
-
-    print_to_screen('')
-
-    logtxt = f'Starting TIS simulation: {ensemble_name}'
-    print_to_screen(logtxt)
-    logger.info(logtxt)
-
-    logtxt = 'Generating initial path'
-    print_to_screen(logtxt)
-    logger.info(logtxt)
-    if not sim.initiate(sim_settings):
-        print_to_screen('Initiation stopped, will exit now.')
-        logger.info('Initiation stopped, will exit now.')
-        return False
-    sim.write_restart(now=True)
-
-    logtxt = 'Initialisation done. Starting main TIS simulation'
-    print_to_screen(logtxt, level='info')
-    logger.info(logtxt)
-
-    tqd = use_tqdm(progress)
-    nsteps = (sim.cycle['end'] - sim.cycle['step'])
-    desc = f'TIS Ensemble {ensemble_name}'
-    for _ in tqd(sim.run(), total=nsteps, desc=desc):
+    for _ in tqd(sim.run(), initial=sim.cycle['startcycle'],
+                 total=sim.cycle['endcycle'], desc='MD step'):
         pass
     # Write final restart file:
     sim.write_restart(now=True)
     return True
 
 
-def run_retis_simulation(sim, sim_settings, progress=False):
+def explore_simulation(sim, sim_settings, progress=False):
     """Run a RETIS simulation with PyRETIS.
 
     Parameters
@@ -283,7 +220,57 @@ def run_retis_simulation(sim, sim_settings, progress=False):
         progress=progress
     )
 
-    logtxt = 'Initialising RETIS simulation'
+    logtxt = 'Load frames for free energy landscape exploration'
+    print_to_screen(f'\n{logtxt}', level='info')
+    logger.info(logtxt)
+
+    # Make sure that the settings are correct. No users don't know better.
+    for s_ens in sim_settings.get('ensemble', []):
+        s_ens['tis']['freq'] = 0
+        s_ens['tis']['allowmaxlength'] = True
+
+    # Here we do the initialisation:
+    if not sim.initiate(sim_settings):
+        print_to_screen('Initiation stopped, will exit now.')
+        logger.info('Initiation stopped, will exit now.')
+        return False
+    sim.write_restart(now=True)
+
+    logtxt = 'Initiation done. Exploring now.'
+    print_to_screen(f'\n{logtxt}', level='success')
+    logger.info(logtxt)
+
+    tqd = use_tqdm(progress)
+
+    desc = f'{sim_settings["simulation"]["task"]} Simulation'
+    for _ in tqd(sim.run(), initial=sim.cycle['startcycle'],
+                 total=sim.cycle['endcycle'], desc=desc):
+        pass
+    # Write final restart files:
+    sim.write_restart(now=True)
+    return True
+
+
+def run_path_simulation(sim, sim_settings, progress=False):
+    """Run a RETIS simulation with PyRETIS.
+
+    Parameters
+    ----------
+    sim : object like :py:class:`.Simulation`
+        This is the simulation to run.
+    sim_settings : dict
+        The simulation settings.
+    progress : boolean, optional
+        If True, we will display a progress bar, otherwise, we print
+        results to the screen.
+
+    """
+    sim.set_up_output(
+        sim_settings,
+        progress=progress
+    )
+
+    logtxt = f"Initialising {sim_settings['simulation']['task']} simulation. "
     print_to_screen(f'\n{logtxt}', level='info')
     logger.info(logtxt)
 
@@ -298,71 +285,66 @@ def run_retis_simulation(sim, sim_settings, progress=False):
         return False
     sim.write_restart(now=True)
 
-    logtxt = 'Initiation done. Starting main RETIS simulation.'
+    logtxt = "Initiation done. "
+    logtxt += f"Starting {sim_settings['simulation']['task']} simulation. "
     print_to_screen(f'\n{logtxt}', level='success')
     logger.info(logtxt)
 
     tqd = use_tqdm(progress)
-    nsteps = sim.cycle['end'] - sim.cycle['step']
-    for _ in tqd(sim.run(), total=nsteps, desc='RETIS'):
+
+    desc = f"{sim_settings['simulation']['task']} Simulation. "
+    for _ in tqd(sim.run(), initial=sim.cycle['startcycle'],
+                 total=sim.cycle['endcycle'], desc=desc):
         pass
     # Write final restart files:
     sim.write_restart(now=True)
     return True
 
 
-def run_tis_simulation(settings_sim, settings_tis, progress=False):
-    """Run TIS simulations with PyRETIS.
+def make_tis_files(_, settings, progress=False):
+    """Create TIS simulations input files PyRETIS.
 
-    Here, we have the possibility of doing 2 things:
-
-    1) Just write out input files for single TIS simulations and
+    It just writes out input files for single TIS simulations and
        exit without running a simulation.
-
-    2) Run a single TIS simulation.
 
     Parameters
     ----------
-    settings_sim : list of dicts or Simulation objects
-        The settings for the simulations or the actual simulation
-        to run.
-    settings_tis : dict
-        The simulation settings for the TIS simulation.
-    progress : boolean, optional
-        If True, we will display a progress bar, otherwise, we print
-        results to the screen.
+    settings : list of dicts or Simulation objects
+        The settings for the simulations.
 
     """
-    if settings_tis['simulation']['task'] == 'tis':
-        run_tis_single_simulation(settings_sim, settings_tis,
-                                  progress=progress)
-    else:
-        print_to_screen()
-        logtxt = 'Input settings requests: TIS for multiple path ensembles.'
+    print_to_screen()
+    logtxt = 'Input settings requests: TIS for multiple path ensembles.'
+    print_to_screen(logtxt)
+    logger.info(logtxt)
+    logtxt = 'Will create input files for the TIS simulations and exit'
+    print_to_screen(logtxt)
+    logger.info(logtxt)
+    print_to_screen()
+    i_ens = 0
+    for i, ens_settings in enumerate(settings['ensemble']):
+        i_ens += 1
+        if i == 0 and not settings['simulation']['zero_ensemble']:
+            i_ens += 1
+        ens_settings['simulation']['zero_ensemble'] = False
+        ens_settings['simulation']['task'] = 'tis'
+        ensf = generate_ensemble_name(i_ens)
+        logtxt = f'Creating input for TIS ensemble: {i_ens} '
         print_to_screen(logtxt)
         logger.info(logtxt)
-        logtxt = 'Will create input files for the TIS simulations and exit'
+        infile = f'tis-{ensf}.rst'
+        logtxt = f'Create file: "{infile}"'
+        logger.info(logtxt)
+        exe_dir_file = os.path.join(ens_settings['engine']['exe_path'], infile)
+        write_settings_file(ens_settings, exe_dir_file, backup=False)
+        logtxt = 'Command for executing:'
         print_to_screen(logtxt)
         logger.info(logtxt)
-
+        logtxt = f'pyretisrun -i {infile} -p -f {ensf}.log'
+        print_to_screen(logtxt, level='message')
+        logger.info(logtxt)
         print_to_screen()
-        for i, setting in enumerate(settings_sim):
-            ens = i + 1
-            ensf = generate_ensemble_name(ens)
-            logtxt = f'Creating input for TIS ensemble: {ens}'
-            print_to_screen(logtxt)
-            logger.info(logtxt)
-            infile = f'tis-{ensf}.rst'
-            logtxt = f'Create file: "{infile}"'
-            logger.info(logtxt)
-            write_settings_file(setting, infile, backup=False)
-            logtxt = 'Command for executing:'
-            print_to_screen(logtxt)
-            logger.info(logtxt)
-            logtxt = f'pyretisrun -i {infile} -p -f {ensf}.log'
-            print_to_screen(logtxt, level='message')
-            logger.info(logtxt)
-            print_to_screen()
+    return True
 
 
 def run_generic_simulation(sim, sim_settings, progress=False):
@@ -388,7 +370,6 @@ def run_generic_simulation(sim, sim_settings, progress=False):
     logger.info(logtxt)
 
     tqd = use_tqdm(progress)
-    sim.engine.exe_dir = sim_settings['simulation']['exe-path']
     sim.set_up_output(sim_settings, progress=progress)
     for _ in tqd(sim.run(), desc='Step'):
         pass
@@ -399,10 +380,13 @@ def run_generic_simulation(sim, sim_settings, progress=False):
 
 _RUNNERS = {'md-flux': run_md_flux_simulation,
             'md-nve': run_md_simulation,
+            'explore': explore_simulation,
             'md': run_md_simulation,
-            'tis': run_tis_simulation,
-            'tis-multiple': run_tis_simulation,
-            'retis': run_retis_simulation}
+            'make-tis-files': make_tis_files,
+            'tis': run_path_simulation,
+            'retis': run_path_simulation,
+            'pptis': run_path_simulation,
+            'repptis': run_path_simulation}
 
 
 def set_up_simulation(inputfile, runpath):
@@ -437,56 +421,24 @@ def set_up_simulation(inputfile, runpath):
     print_to_screen('\nSetting up simulation', level='success')
 
     sim_settings = parse_settings_file(inputfile)
-    sim_settings['simulation']['exe-path'] = runpath
-
-    restart = sim_settings['simulation'].get('restart', None)
-    restart_info = None
-    if restart is not None:
-        print_to_screen(f'Reading restart file: "{restart}"',
-                        level='warning')
-        logger.info('Reading restart file: "%s"', restart)
-        restart_info = read_restart_file(restart)
-        sim_settings['output']['backup'] = 'append'
-        logger.info('Setting output setting "backup" to "append"')
-
-    logtxt = units_from_settings(sim_settings)
-    print_to_screen(f'* {logtxt}')
-    logger.info(logtxt)
-
-    engine = create_engine(sim_settings)
-    if engine is not None:
-        logtxt = f'Created engine: "{engine}".'
-        print_to_screen(f'* {logtxt}')
-        logger.info(logtxt)
-    else:
-        logtxt = 'No engine created.'
-        print_to_screen(f'* {logtxt}', level='warning')
-        logger.info(logtxt)
-
-    logtxt = 'Set up and create system.'
-    print_to_screen(f'* {logtxt}')
-    logger.info(logtxt)
-    syst = create_system(sim_settings, engine=engine, restart=restart_info)
-
-    logtxt = 'Set up and create force field.'
-    print_to_screen(f'* {logtxt}')
-    logger.info(logtxt)
-    syst.forcefield = create_force_field(sim_settings)
-    syst.extra_setup()
+    # NB this is not transmitted to the ensembles
+    sim_settings['simulation']['exe_path'] = runpath
+    sim_settings['engine']['exe_path'] = runpath
+    for ens in sim_settings.get('ensemble', []):
+        ens['simulation']['exe_path'] = runpath
+        ens['engine']['exe_path'] = runpath
 
     logtxt = 'Set up and create simulation.'
     print_to_screen(f'* {logtxt}')
     logger.info(logtxt)
-    keyargs = {'system': syst, 'engine': engine}
-    sim = create_simulation(sim_settings, keyargs)
-    if restart_info is not None:
-        sim.load_restart_info(restart_info['simulation'])
+
+    sim = create_simulation(sim_settings)
 
     task = sim_settings['simulation']['task'].lower()
-    print_to_screen(f'Will run simulation "{task}".', level='success')
+    print_to_screen(f'\nWill run simulation "{task}".', level='success')
     logger.info('Setup for simulation "%s" is done.', task)
     runner = _RUNNERS.get(task, run_generic_simulation)
-    return runner, sim, syst, sim_settings
+    return runner, sim, sim_settings
 
 
 def store_simulation_settings(settings, indir, backup):
@@ -511,7 +463,7 @@ def store_simulation_settings(settings, indir, backup):
     write_settings_file(settings, out_file, backup=backup)
 
 
-def soft_exit_ignore(turn_keyboard_interruption_off=True):
+def soft_exit_ignore(turn_keyboard_interruption_off=True, exe_dir=None):
     """Manage the KeyboardInterrupt exception.
 
     Parameters
@@ -519,12 +471,15 @@ def soft_exit_ignore(turn_keyboard_interruption_off=True):
     turn_keyboard_interruption_off : boolean
         If True, instead of regular exiting from the program,
         the file 'EXIT' is created to stop the PyRETIS.
+    exe_dir : string, optional
+        The path where EXIT file is expected.
 
     """
-    def soft_exit_handler(signum, frame):  # pylint: disable=unused-argument
+    def soft_exit_handler(signum, frame):  # pragma: no cover
         """Handle with a keyboard interruption signal."""
+        # pylint: disable=unused-argument
         print_to_screen('Attempting soft exit - terminating soon...')
-        pathlib.Path("EXIT").touch(exist_ok=True)
+        pathlib.Path(os.path.join(exe_dir, 'EXIT')).touch(exist_ok=True)
     if turn_keyboard_interruption_off:
         return signal.signal(signal.SIGINT, soft_exit_handler)
     return signal.signal(signal.SIGINT, signal.default_int_handler)
@@ -548,18 +503,26 @@ def main(infile, indir, exe_dir, progress, log_level):
 
     """
     simulation = None
-    system = None
     settings = {}
 
+    exit_file = os.path.join(exe_dir, 'EXIT')
+    if os.path.isfile(exit_file):
+        logger.info('Exit file found - Remove it before to execute PyRETIS.')
+        print_to_screen(f'\n*        {exit_file} file found         *',
+                        level='error')
+        print_to_screen('Remove the file to execute PyRETIS\n', level='error')
+        bye_bye_world()
+        return
+
     try:
-        run, simulation, system, settings = set_up_simulation(infile,
-                                                              exe_dir)
+        run, simulation, settings = set_up_simulation(infile, exe_dir)
         store_simulation_settings(settings, indir, True)
         # Run the simulation:
-        soft_exit_ignore()
+        soft_exit_ignore(turn_keyboard_interruption_off=True, exe_dir=exe_dir)
         run(simulation, settings, progress=progress)
-        soft_exit_ignore(turn_keyboard_interruption_off=False)
-    except Exception as error:  # Exceptions should subclass BaseException.
+        soft_exit_ignore(turn_keyboard_interruption_off=False,
+                         exe_dir=exe_dir)
+    except Exception as error:  # Exceptions should be subclass BaseException.
         logger.error('"%s: %s".', error.__class__.__name__, error.args)
         print_to_screen('ERROR - execution stopped.', level='error')
         print_to_screen(
@@ -584,15 +547,11 @@ def main(infile, indir, exe_dir, progress, log_level):
                 logtxt = f'Execution ended at step {end}'
                 print_to_screen(logtxt)
                 logger.info(logtxt)
-        if system is not None:
-            if 'particles' not in settings:
-                settings['particles'] = {}
-            settings['particles']['npart'] = system.particles.npart
         store_simulation_settings(settings, indir, False)
         bye_bye_world()
 
 
-def entry_point():
+def entry_point():  # pragma: no cover
     """entry_point - The entry point for the pip install of pyretisrun."""
     colorama.init(autoreset=True)
     parser = argparse.ArgumentParser(description=PROGRAM_NAME)
@@ -637,5 +596,5 @@ def entry_point():
     main(input_file, input_dir, cwd_dir, args_dict['progress'], log_levl)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     entry_point()

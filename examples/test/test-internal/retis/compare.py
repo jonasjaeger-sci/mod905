@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Simple script to compare the outcome of two simulations.
 
@@ -15,7 +15,7 @@ import numpy as np
 from pyretis.inout import print_to_screen
 from pyretis.inout.settings import parse_settings_file
 from pyretis.core.pathensemble import generate_ensemble_name
-from pyretis.inout.setup.createsimulation import create_path_ensembles
+from pyretis.setup.createsimulation import create_ensembles
 from pyretis.inout.formats.order import OrderPathFile
 
 RESULTS = 'results'
@@ -116,12 +116,8 @@ def check_path_file(ens):
 
 def run_check_path_file(settings):
     """Check paths using given simulation settings."""
-    include_zero = settings['simulation']['task'] == 'retis'
-    ensembles, _ = create_path_ensembles(
-        settings['simulation']['interfaces'],
-        'internal',
-        include_zero=include_zero)
-    retval = [check_path_file(ens) for ens in ensembles]
+    ensembles = create_ensembles(settings)
+    retval = [check_path_file(ens['path_ensemble']) for ens in ensembles]
     return sum(retval)
 
 
@@ -288,19 +284,15 @@ def check_swaps(paths, accepted, ens, kind):
 
 def check_ensemble_swaps(settings):
     """Check swaps for ensembles from settings."""
-    include_zero = settings['simulation']['task'] == 'retis'
-    ensembles, _ = create_path_ensembles(
-        settings['simulation']['interfaces'],
-        'internal',
-        include_zero=include_zero)
+    ensembles = create_ensembles(settings)
     path_info = {}
     path_acc = {}
     names = []
     for i, ens in enumerate(ensembles):
-        pathi, patha = read_path_file(ens)
+        pathi, patha = read_path_file(ens['path_ensemble'])
         path_info[i] = pathi
         path_acc[i] = patha
-        names.append(ens.ensemble_name)
+        names.append(ens['path_ensemble'].ensemble_name)
     for i in range(len(ensembles)):
         if i == 0:
             get_swap_parent(path_info[i], None, i+1, None, path_acc[i+1])

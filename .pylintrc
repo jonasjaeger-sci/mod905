@@ -7,4 +7,7 @@ good-names=i,
            x,
            y,
            z,
+           ax,
            _
+
+ignored-modules=PyQt5, sklearn, pymol, graphviz, mdtraj

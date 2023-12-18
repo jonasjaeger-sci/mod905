@@ -35,35 +35,73 @@ $f_A =$ \colorbox{blue!30}{ @{{ numbers['flux'] }}@ }  $\pm$ @{{ numbers['flux-e
 
 \item The rate constant (unit: 1/@{{ text['flux-unit'] }}@):
 $k_{AB} = $ \colorbox{blue!30}{ @{{ numbers['rate'] }}@ }  $\pm$ @{{ numbers['rate-err'] }}@ $\%$
+
+@{% if (numbers['permeability'] is defined) and numbers['permeability'] %}@
+
+\item Matching factor between the two [0] ensembles:
+$\xi =$ \colorbox{blue!30}{ @{{ numbers['xi'] }}@ } $\pm$  @{{numbers['xi-err'] }}@ $\%$
+
+\item The time spent in the reference bin (unit: @{{ text['flux-unit'] }}@/
+	OP-unit):
+$\frac{\tau_{{\mathrm{ref}},[{0^-}{'}]}}{dz} =$ \colorbox{blue!30}{ @{{ numbers['tau'] }}@ }
+$\pm$ @{{ numbers['tau-err'] }}@  $\%$
+
+\item The permeability (unit: OP-unit/ @{{ text['flux-unit']  }}@):
+$P =$ \colorbox{blue!30}{ @{{ numbers['perm'] }}@ } $\pm$ @{{ numbers['perm-err'] }}@  $\%$
+
+@{% endif %}@
+
 \end{itemize}
 \noindent Detailed results are given below for the different path
 ensembles and the overall results are summarized
 in the last section.
 
-\section{Results for $[0^-]$}
-
-@{{ tables['interfaces0'] }}@
-
-@{{ tables['path0'] }}@
-
 \begin{center}
-\includegraphics[width=0.33\linewidth]{@{{ figures['path0']['lpath'] }}@}%
-\includegraphics[width=0.33\linewidth]{@{{ figures['path0']['shoots'] }}@}%
-\includegraphics[width=0.33\linewidth]{@{{ figures['path0']['shoots_scaled'] }}@}%
+@{% if (numbers['permeability'] is defined) and numbers['permeability'] %}@
+\section{Results for $[0^{-'}]$}
+@{% endif %}@
+
+@{% if (numbers['permeability'] is defined) and numbers['permeability'] %}@
+
+\includegraphics[width=0.33\linewidth]{@{{ figures['xi'] }}@}
+\includegraphics[width=0.33\linewidth]{@{{ figures['xierror'] }}@}
+\includegraphics[width=0.33\linewidth]{@{{ figures['tau'] }}@}
+\includegraphics[width=0.33\linewidth]{@{{ figures['tauerror'] }}@}
+\includegraphics[width=0.33\linewidth]{@{{ figures['tauref'] }}@}
+\clearpage
+@{% endif %}@
+
 \end{center}
 
+
+\section{Combined results}
+\label{sec:combined}
+
+The overall matched probability distributions are shown in the left figure
+while the matched probability distribution is shown in the right figure below.
+The overall crossing rate as a function of cycles
+and its relative error block analysis are reported in the two following
+plots, respectively.
+
+\begin{center}
+\includegraphics[width=0.45\linewidth]{@{{ figures['total'] }}@}%
+\includegraphics[width=0.45\linewidth]{@{{ figures['matched'] }}@}%
+\end{center}
+\begin{center}
+\includegraphics[width=0.45\linewidth]{@{{ figures['progress'] }}@}%
+\includegraphics[width=0.45\linewidth]{@{{ figures['error'] }}@}%
+\end{center}
+
+\clearpage
 
 \section{Results for path ensembles}
 The following interfaces were used in the simulation and in
 the analysis:
-
 @{{ tables['interfaces'] }}@
-
-The calculated crossing probabilities are:
-
 @{{ tables['probability'] }}@
+@{{ tables['efficiency'] }}@
+\clearpage
 
-The crossing probabilities are also displayed in the figures below
 
 \subsection{Crossing probabilities}
 @{% for figure in figures['tis'] %}@
@@ -80,46 +118,17 @@ The average path lengths in the different ensembles are given in
 the table below and some distributions for the path lengths and
 shooting moves can also be found here:
 
-@{{ tables['path'] }}@
+\begin{center}
+\includegraphics[width=0.45\linewidth]{@{{ figures['path0']['lpath'] }}@}%
+\includegraphics[width=0.45\linewidth]{@{{ figures['path0']['shoots'] }}@}%
+\end{center}
 
 @{% for figure in figures['tis'] %}@
 \begin{center}
-\includegraphics[width=0.33\linewidth]{@{{ figure['lpath'] }}@}%
-\includegraphics[width=0.33\linewidth]{@{{ figure['shoots'] }}@}%
-\includegraphics[width=0.33\linewidth]{@{{ figure['shoots_scaled'] }}@}%
+\includegraphics[width=0.45\linewidth]{@{{ figure['lpath'] }}@}%
+\includegraphics[width=0.45\linewidth]{@{{ figure['shoots'] }}@}%
 \end{center}
 @{% endfor %}@
 \clearpage
-
-\subsection{Efficiency analysis}
-
-@{{ tables['efficiency'] }}@
-
-\section{Combined results}
-\label{sec:combined}
-
-The overall matched probability distributions are shown in the left figure 
-while the matched probability distribution is shown in the right figure below.
-The overall crossing rate as a function of cycles
-and its relative error block analysis are reported in the two following 
-plots, respectively.
-
-\begin{center}
-\includegraphics[width=0.45\linewidth]{@{{ figures['total'] }}@}%
-\includegraphics[width=0.45\linewidth]{@{{ figures['matched'] }}@}%
-\end{center}
-\begin{center}
-\includegraphics[width=0.45\linewidth]{@{{ figures['progress'] }}@}%
-\includegraphics[width=0.45\linewidth]{@{{ figures['error'] }}@}%
-\end{center}
-
-@{{ tables['summary'] }}@
-
-Other statistics:
-\begin{itemize}
-\item sim.time: @{{ numbers['simt'] }}@
-\item $\tau_{\text{eff}} =$~@{{ numbers['teff'] }}@
-\item $\tau_{\text{eff}}^{\text{opt}} =$~@{{ numbers['opteff'] }}@
-\end{itemize}
 
 \end{document}

@@ -23,7 +23,7 @@ temperature = 2.0
 
 Particles
 ---------
-position = {'file': 'initial.gro'}
+position = {'input_file': 'initial.gro'}
 
 velocity = {'generate': 'maxwell',
             'temperature': 2.0,
@@ -40,3 +40,15 @@ potential
 ---------
 class  = PairLennardJonesCutnp
 shift = True
+
+Output
+------
+energy-file = 1
+order-file = 1
+cross-file = 1
+
+Analysis
+--------
+txt-output = 'txt'
+skipcross = 1
+report = ['latex', 'rst', 'html', 'txt']

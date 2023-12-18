@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """A test using the LAMMPS engine."""
 import os
@@ -36,8 +36,12 @@ def run_forward():
     engine.exe_dir = exe_dir
     pathf = Path(rgen=None, maxlen=STEPS)
     print_to_screen('-> Propagating forward....', level='info')
-    engine.propagate(path=pathf, initial_state=system, order_function=None,
-                     interfaces=[-1, 0.0, 2.0], reverse=False)
+    ensemble = {
+        'system': system,
+        'order_function': None,
+        'interfaces': [-1, 0.0, 2.0]
+    }
+    engine.propagate(path=pathf, ensemble=ensemble, reverse=False)
     # Propagate from the last point, but backward:
     print_to_screen(
         '-> Setting system to last point in the forward path.',
@@ -46,8 +50,12 @@ def run_forward():
     last = pathf.phasepoints[-1]
     pathb = Path(rgen=None, maxlen=pathf.length)
     print_to_screen('-> Propagating backward....', level='info')
-    engine.propagate(path=pathb, initial_state=last, order_function=None,
-                     interfaces=[-1, 0.0, 3.0], reverse=True)
+    ensemble = {
+        'system': last,
+        'order_function': None,
+        'interfaces': [-1, 0.0, 3.0]
+    }
+    engine.propagate(path=pathb, ensemble=ensemble, reverse=True)
     print_to_screen('-> Comparing forward & backward:', level='info')
     order_f = np.array([i.order for i in pathf.phasepoints])
     order_b = np.array([i.order for i in reversed(pathb.phasepoints)])
@@ -82,11 +90,20 @@ def run_backward():
     clean_dir(exe_dir)
     engine.exe_dir = exe_dir
     rgen = create_random_generator({'seed': 2})
-    engine.modify_velocities(system, rgen)
+    ensemble = {
+        'system': system,
+        'rgen': rgen,
+    }
+    vel_settings = {'aimless': True}
+    engine.modify_velocities(ensemble, vel_settings)
     pathb = Path(rgen=None, maxlen=STEPS)
     print_to_screen('-> Propagating backward....', level='info')
-    engine.propagate(path=pathb, initial_state=system, order_function=None,
-                     interfaces=[1.2, 5.0, 12.0], reverse=True)
+    ensemble = {
+        'system': system,
+        'order_function': None,
+        'interfaces': [1.2, 5.0, 12.0],
+    }
+    engine.propagate(path=pathb, ensemble=ensemble, reverse=True)
     # Propagate from the last point, but forward:
     print_to_screen(
         '-> Setting system to last point in the backward path.',
@@ -95,8 +112,12 @@ def run_backward():
     last = pathb.phasepoints[-1]
     pathf = Path(rgen=None, maxlen=pathb.length)
     print_to_screen('-> Propagating forward....', level='info')
-    engine.propagate(path=pathf, initial_state=last, order_function=None,
-                     interfaces=[1.0, 5.0, 12.0], reverse=False)
+    ensemble = {
+        'system': last,
+        'order_function': None,
+        'interfaces': [1.0, 5.0, 12.0],
+    }
+    engine.propagate(path=pathf, ensemble=ensemble, reverse=False)
     print_to_screen('-> Comparing backward & forward:', level='info')
     order_f = np.array([i.order for i in reversed(pathf.phasepoints)])
     order_b = np.array([i.order for i in pathb.phasepoints])

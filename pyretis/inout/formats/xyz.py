@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Module for handling the output/input of trajectory data.
 
@@ -291,7 +291,7 @@ def xyz_merge(backward, forward, merged):
     """
     reverse_xyz_file(backward, merged)
     with open(forward, 'r', encoding='utf-8') as infile, \
-         open(merged, 'a+', encoding='utf-8') as output:
+            open(merged, 'a+', encoding='utf-8') as output:
         for lines in infile:
             output.write(lines)
 
@@ -351,7 +351,7 @@ def reverse_xyz_file(filename, outputfile):
     buff_size = io.DEFAULT_BUFFER_SIZE
     left_over = None
     with open(filename, 'r', encoding='utf-8') as fileh, \
-         open(outputfile, 'w', encoding='utf-8') as outfh:
+            open(outputfile, 'w', encoding='utf-8') as outfh:
         fileh.seek(0, 2)  # Go to the end
         current_pos = fileh.tell()
         done = False

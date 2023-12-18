@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """PyRETIS.
 
 This file is part of PyRETIS - a simulation package for rare events.
 
-Copyright (c) 2022, PyRETIS Development Team
+Copyright (c) 2023, PyRETIS Development Team
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -67,15 +67,30 @@ tools (:py:mod:`pyretis.tools`)
     setting up simple systems, for example, functions for generating
     lattices.
 
+pyvisa (:py:mod:`pyretis.pyvisa`)
+    This package contains the compressor, the gui and analysis of
+    the package PyVisA. This is component nearly independent from
+    PyRETIS and has different prerequisites.
+    Note: if PyQt5 is not installed, all PyVisA functions that
+    are connected to the GUI are not usable. We thus only check here
+    if PyQt5 is present.
+
 """
 # PyRETIS imports:
 from .version import VERSION as __version__
-from . import info
+from .version import MIN_PYTHON_VERSION
+from . import analysis
 from . import core
 from . import engines
-from . import orderparameter
 from . import forcefield
-from . import tools
-from . import analysis
-from . import inout
+from . import info
 from . import initiation
+from . import inout
+from . import orderparameter
+from . import setup
+from . import testing
+from . import tools
+# PyVisA imports:
+from .pyvisa import HAS_PYVISA_REQ
+if HAS_PYVISA_REQ:
+    from . import pyvisa  # pragma: no cover

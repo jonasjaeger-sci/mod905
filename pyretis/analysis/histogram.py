@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Histogram functions for data analysis.
 
@@ -17,11 +17,13 @@ match_all_histograms (:py:func:`.match_all_histograms`)
 
 histogram_and_avg (:py:func:`.histogram_and_avg`)
     Create a histogram and return bins, midpoints and simple statistics.
+
 """
 
 import numpy as np
 
-__all__ = ['histogram', 'match_all_histograms', 'histogram_and_avg']
+__all__ = ['histogram', 'match_all_histograms',
+           'histogram_and_avg']
 
 
 def histogram(data, bins=10, limits=(-1, 1), density=False,
@@ -50,27 +52,14 @@ def histogram(data, bins=10, limits=(-1, 1), density=False,
     bin_mid : numpy.array
         The midpoint of the bins.
 
-    Examples
-    --------
-    >>> import numpy as np
-    >>> from pyretis.analysis.histogram import histogram
-    >>> data = np.random.randn(50000)
-    >>> hist, bins, bin_mid = histogram(data, bins=30, limits=(-5, 5))
-
-    For plotting the histogram:
-
-    >>> from matplotlib import pyplot as plt
-    >>> plt.plot(bin_mid, hist, '-o', lw=3, alpha=0.8, ms=9)
-    >>> plt.show()
-
     """
-    hist, bins = np.histogram(data, bins=bins,
-                              range=limits, density=density, weights=weights)
+    hist, bins = np.histogram(data, bins=bins, range=limits,
+                              density=density, weights=weights)
     bin_mid = 0.5 * (bins[1:] + bins[:-1])
     return hist, bins, bin_mid
 
 
-def histogram_and_avg(data, bins, density=True):
+def histogram_and_avg(data, bins, density=True, weights=None):
     """Create histogram an return bins, midpoints and simple statistics.
 
     The simple statistics include the mean value and the standard
@@ -79,12 +68,15 @@ def histogram_and_avg(data, bins, density=True):
 
     Parameters
     ----------
-    data : 1D numpy.array
+    data : either 1D numpy.array or 2D numpy.array
         This is the data to create the histogram from.
+        The eventual second dimension contains the weights.
     bins : int
         The number of bins to use for the histogram.
     density : boolean, optional
         If `density` is true, the histogram will be normalized.
+    weights : numpy.array, optional
+        Weighting factors for data. Not used if data contains them.
 
     Returns
     -------
@@ -96,32 +88,19 @@ def histogram_and_avg(data, bins, density=True):
         These are some simple statistics, `out[2][0]` is the average
         `out[2][1]` is the standard deviation.
 
-    See Also
-    --------
-    histogram
-
-    Examples
-    --------
-    >>> import numpy as np
-    >>> from pyretis.analysis.histogram import histogram_and_avg
-    >>> data = np.random.randn(50000)
-    >>> hist_data = histogram_and_avg(data, bins=30)
-
-    Print out the average and standard deviation:
-
-    >>> print(hist_data[2])
-
-    For plotting with matplotlib:
-
-    >>> from matplotlib import pyplot as plt
-    >>> plt.plot(hist_data[1], hist_data[0], '-o', lw=3, alpha=0.8, ms=9)
-    >>> plt.show()
-
     """
+    local_data = data if len(data.shape) == 1 else data[:, 0]
+    local_weights = weights if len(data.shape) == 1 else data[:, 1]
+
     hist, _, bin_mid = histogram(data, bins=bins,
                                  limits=(data.min(), data.max()),
-                                 density=density)
-    return hist, bin_mid, (data.mean(), data.std())
+                                 density=density,
+                                 weights=weights)
+    average = np.average(local_data, weights=local_weights)
+    st_dev = np.sqrt(np.average((local_data-average)**2,
+                                weights=local_weights))
+
+    return hist, bin_mid, (average, st_dev)
 
 
 def _match_histograms(histo1, histo2, bin_x, overlap):

@@ -13,7 +13,7 @@ clean:
 	find -name mdout.mdp -delete
 	find -name EXIT -delete
 	find -name \*.tpr -delete
-	-rm -rf run-25/0*
-	-rm -rf run-50/0*
+	-rm -rf run-5/0*
+	-rm -rf run-10/0*
 	-rm -rf gromacs_input/pyretis.mdp
     

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Some method for interacting with input/output from CP2K.
 
@@ -13,6 +13,7 @@ read_cp2k_input (:py:func:`.read_cp2k_input`)
     A method to read a CP2K input file.
 """
 import logging
+import os
 import numpy as np
 from pyretis.core.box import box_matrix_to_list, box_vector_angles
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
@@ -495,3 +496,58 @@ def read_cp2k_box(inputfile):
         box = np.array([[100., 0., 0.], [0., 100., 0.], [0., 0., 100.]])
         periodic = [True, True, True]
     return box, periodic
+
+
+def cp2k_settings(settings, input_path):
+    """Read and processes cp2k settings.
+
+    Parameters
+    ----------
+    settings : dict
+        The current input settings..
+    input_path : string
+        The CP2K input path
+
+    """
+    ext = settings['engine'].get('cp2k_format', 'xyz')
+    default_files = {'conf': f'initial.{ext}',
+                     'template': 'cp2k.inp'}
+    settings['engine']['input_files'] = {}
+    for key in ('conf', 'template'):
+        # Add input path and the input files if input is no given:
+        settings['engine']['input_files'][key] = \
+            settings['engine'].get(key,
+                                   os.path.join(input_path,
+                                                default_files[key]))
+    nodes = read_cp2k_input(
+        settings['engine']['input_files']['template'])
+    MD_data = set_parents(nodes)['MOTION->MD'].data
+
+    # Checks temperature
+    cp2k_temp_inp = False
+    for lines in MD_data:
+        if lines.startswith('TEMPERATURE'):
+            cp2k_temp_inp = True
+            cp2k_temp = float(lines.split()[1])
+            if 'temperature' not in settings['system']:
+                settings['system']['temperature'] = cp2k_temp
+            elif abs(cp2k_temp - settings['system']['temperature']) < 10e-8:
+                pass
+            else:
+                msg = 'Inequal Pyretis and CP2K input temperatures!' +\
+                        ' Temperature is set to CP2K input temperature.'
+                logger.warning(msg)
+                settings['system']['temperature'] = cp2k_temp
+            break
+    if not cp2k_temp_inp:
+        if 'temperature' not in settings['system']:
+            msg = 'Temperature not set in CP2K file!' +\
+                ' Temperature is set to CP2K default temperature.'
+            logger.warning(msg)
+        elif abs(300.0 - settings['system']['temperature']) > 10e-8:
+            msg = 'Temperature not set in CP2K file!' +\
+                ' And temperature in input rst file does not equal 300.0 K!' +\
+                ' Temperature is set to CP2K default temperature.'
+            logger.warning(msg)
+        # CP2K defaults to 300K when temperature is unspecified.
+        settings['system']['temperature'] = 300.0

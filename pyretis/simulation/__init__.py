@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """This package defines different simulations for use with PyRETIS.
 
@@ -50,4 +50,4 @@ from .simulation import Simulation
 from .simulation_task import SimulationTask
 from .mc_simulation import UmbrellaWindowSimulation
 from .md_simulation import SimulationMD, SimulationNVE, SimulationMDFlux
-from .path_simulation import SimulationSingleTIS, SimulationRETIS
+from .path_simulation import SimulationTIS, SimulationRETIS

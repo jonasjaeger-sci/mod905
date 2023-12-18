@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Test the simulationio module."""
 from io import StringIO
@@ -31,7 +31,7 @@ from pyretis.simulation import (
     SimulationMD,
     SimulationNVE,
     SimulationMDFlux,
-    SimulationSingleTIS,
+    SimulationTIS,
     SimulationRETIS,
 )
 logging.disable(logging.CRITICAL)
@@ -221,9 +221,9 @@ class TestMethods(unittest.TestCase):
         add_default_settings(settings)
         for simulation in (UmbrellaWindowSimulation,
                            SimulationMD, SimulationNVE,
-                           SimulationMDFlux, SimulationSingleTIS,
+                           SimulationMDFlux, SimulationTIS,
                            SimulationRETIS):
-            sim = Simulation()
+            sim = Simulation({}, {})
             sim.simulation_output = simulation.simulation_output
             sim.create_output_tasks(settings, progress=False)
             for task in sim.output_tasks:

@@ -14,8 +14,9 @@ clean:
 	find -name mdout.mdp -delete
 	find -name \*.tpr -delete
 	rm -rf run-initialise/0*
-	rm -rf run-25/0*
+	rm -rf run-5/0*
 	rm -rf run-restart/0*
 	rm -rf gromacs_input/pyretis.mdp
+	rm -rf gromacs_input/conf.gro
  
    

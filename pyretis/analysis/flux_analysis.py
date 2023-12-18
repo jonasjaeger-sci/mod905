@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Methods for analysis of crossings for flux data.
 
@@ -16,7 +16,7 @@ from pyretis.analysis.analysis import running_average, block_error_corr
 from pyretis.core.path import check_crossing
 
 
-__all__ = ['analyse_flux']
+__all__ = ['analyse_flux', 'find_crossings']
 
 
 def analyse_flux(fluxdata, settings):
@@ -47,7 +47,7 @@ def analyse_flux(fluxdata, settings):
     end_step = settings['simulation']['endcycle']
     time_subcycles = settings['engine'].get('subcycles', 1)
     time_step = settings['engine']['timestep']*time_subcycles
-    interfaces = [i for i in settings['simulation']['interfaces']]
+    interfaces = list(settings['simulation']['interfaces'])
     results = {'eff_cross': [],  # effective crossings times
                'ncross': None,  # number of crossings
                'neffcross': [],  # number of effective crossings
@@ -218,8 +218,7 @@ def _calculate_flux(effective_cross, time_in_state, time_window, time_step):
     ncross = np.zeros(max_windows, dtype=int)
     for crossing in effective_cross:
         idx = int(np.floor((crossing[0] - 0.0) / time_window))
-        if idx >= max_windows:
-            idx = max_windows - 1
+        idx = min(idx, max_windows - 1)
         ncross[idx] += 1
     flux = (1.0 * ncross) / (time_step * time_window)
     time = np.arange(1, max_windows+1) * time_window
@@ -250,6 +249,6 @@ def find_crossings(order, interfaces):
     for step, orderi in enumerate(order):
         leftside, ncross = check_crossing(step, orderi,
                                           interfaces, leftside_prev)
-        leftside_prev = [i for i in leftside]
+        leftside_prev = list(leftside)
         cross.extend(ncross)
     return cross

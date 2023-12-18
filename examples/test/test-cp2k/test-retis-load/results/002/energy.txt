@@ -5,63 +5,36 @@
          2            nan            nan
          3            nan            nan
          4            nan            nan
-         5            nan            nan
-         6            nan            nan
-         7            nan            nan
-         8            nan            nan
-         9            nan            nan
-        10            nan            nan
-        11            nan            nan
-        12            nan            nan
-        13            nan            nan
-        14            nan            nan
-        15            nan            nan
-        16            nan            nan
-        17            nan            nan
-        18            nan            nan
-        19            nan            nan
-        20            nan            nan
-        21            nan            nan
-        22            nan            nan
-        23            nan            nan
-        24            nan            nan
-        25            nan            nan
-        26            nan            nan
-        27            nan            nan
-        28            nan            nan
-        29            nan            nan
-        30            nan            nan
-        31            nan            nan
-        32            nan            nan
-        33            nan            nan
-        34            nan            nan
-        35            nan            nan
-        36            nan            nan
-        37            nan            nan
-        38            nan            nan
-        39            nan            nan
-        40            nan            nan
-# Cycle: 1, status: ACC, move: ('sh', 1.0151359514863023, 20, 1)
+# Cycle: 1, status: ACC, move: ('sh', 0.8992224418907704, 2, 2)
 #     Time      Potential        Kinetic
-         0      -1.132092       0.023154
-         1      -1.110956       0.002375
-         2      -1.129623       0.020903
-# Cycle: 2, status: ACC, move: ('s+', 1.0014881586332518, 37, 1)
+         0      -1.127712       0.014178
+         1      -1.127695       0.014012
+         2      -1.125468       0.011460
+         3      -1.129482       0.015776
+# Cycle: 2, status: NCR, move: ('s+', 0, 0, 0)
 #     Time      Potential        Kinetic
-         0      -1.125717       0.014894
-         1      -1.112982       0.002375
-         2      -1.128602       0.017550
-# Cycle: 3, status: ACC, move: ('s+', 1.0151359514863023, 20, 1)
+         0            nan            nan
+         1            nan            nan
+         2            nan            nan
+         3            nan            nan
+         4            nan            nan
+# Cycle: 3, status: NCR, move: ('s+', 0, 0, 0)
 #     Time      Potential        Kinetic
-         0      -1.132092       0.023154
-         1      -1.110956       0.002375
-         2      -1.129623       0.020903
-# Cycle: 4, status: ACC, move: ('sh', 1.0151359514863023, 1, 1)
+         0            nan            nan
+         1            nan            nan
+         2            nan            nan
+         3            nan            nan
+         4            nan            nan
+# Cycle: 4, status: NCR, move: ('s-', 0, 0, 0)
 #     Time      Potential        Kinetic
-         0      -1.131950       0.022966
-         1      -1.110956       0.002375
-         2      -1.128811       0.020129
-# Cycle: 5, status: BTL, move: ('sh', 1.0151359514863023, 1, 0)
+         0      -1.131973       0.012170
+         1      -1.130375       0.010530
+         2      -1.131323       0.011460
+         3      -1.131817       0.012028
+# Cycle: 5, status: NCR, move: ('s+', 0, 0, 0)
 #     Time      Potential        Kinetic
-         0      -1.110956       0.002375
-         1      -1.129865       0.021240
+         0            nan            nan
+         1            nan            nan
+         2            nan            nan
+         3            nan            nan
+         4            nan            nan

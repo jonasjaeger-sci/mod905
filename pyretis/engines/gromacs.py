@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """A GROMACS external MD integrator interface.
 
@@ -16,6 +16,7 @@ import os
 import shlex
 from pyretis.core.box import box_matrix_to_list
 from pyretis.engines.external import ExternalMDEngine
+from pyretis.inout.settings import look_for_input_files
 from pyretis.inout.formats.gromacs import (
     read_gromos96_file,
     read_gromacs_gro_file,
@@ -47,24 +48,31 @@ class GromacsEngine(ExternalMDEngine):
         simulation. This is derived from the ``mdrun`` command.
     input_path : string
         The directory where the input files are stored.
-    input_files : dict of strings
-        The names of the input files. We expect to find the keys
-        ``'conf'``, ``'input'`` ``'topology'``.
-    ext_time : float
-        The time to extend simulations by. It is equal to
-        ``timestep * subcycles``.
+    subcycles : int,
+        The number of simulation steps of the external engine for each
+        PyRETIS step (e.g. interaction between the softwares frequency)
+    exe_path : string, optional
+        The absolute path at which the main PyRETIS simulation will be run.
     maxwarn : integer
         Setting for the GROMACS ``grompp -maxwarn`` option.
-    ext : string
+    gmx_format : string
         This string selects the output format for GROMACS.
-    energy_terms : string (binary)
-        This lists the energy terms we are to extract from GROMACS.
-
+    write_vel : boolean, optional
+        True if we want to output the velocities.
+    write_force : boolean, optional
+        True if we want to output the forces.
+    domain_decomp: boolean, optional
+        Whether gromacs uses domain decomposition (DD) or not. This
+        does not set domain decomposition. The user should know whether
+        DD is executed or not.
     """
 
     def __init__(self, gmx, mdrun, input_path, timestep, subcycles,
-                 maxwarn=0, gmx_format='gro', write_vel=True,
-                 write_force=False):
+                 exe_path=os.path.abspath('.'),
+                 maxwarn=0, gmx_format='gro',
+                 write_vel=True,
+                 write_force=False,
+                 domain_decomp=False):
         """Set up the GROMACS engine.
 
         Parameters
@@ -79,6 +87,8 @@ class GromacsEngine(ExternalMDEngine):
             The time step used in the GROMACS MD simulation.
         subcycles : integer
             The number of steps each GROMACS MD run is composed of.
+        exe_path : string, optional
+            The absolute path at which the main PyRETIS simulation will be run.
         maxwarn : integer, optional
             Setting for the GROMACS ``grompp -maxwarn`` option.
         gmx_format : string, optional
@@ -87,7 +97,9 @@ class GromacsEngine(ExternalMDEngine):
             Determines if GROMACS should write velocities or not.
         write_force : boolean, optional
             Determines if GROMACS should write forces or not.
-
+        domain_decomp: boolean, optional
+            Whether domain decomposition (DD) is executed by GROMACS or not.
+            User should know if this happens or not.
         """
         super().__init__('GROMACS engine', timestep, subcycles)
         self.ext = gmx_format
@@ -101,22 +113,21 @@ class GromacsEngine(ExternalMDEngine):
         self.mdrun = mdrun + ' -s {} -deffnm {} -c {}'
         # This is for continuation of a GROMACS simulation:
         self.mdrun_c = mdrun + ' -s {} -cpi {} -append -deffnm {} -c {}'
+        # Whether DD is used or not:
+        self.domain_decomp = domain_decomp
         self.ext_time = self.timestep * self.subcycles
         self.maxwarn = maxwarn
         # Define the energy terms, these are hard-coded, but
         # here we open up for changing that:
         self.energy_terms = self.select_energy_terms('path')
-        # Add input path and the input files:
-        self.input_path = os.path.abspath(input_path)
-
-        input_files = {
+        self.input_path = os.path.join(exe_path, input_path)
+        # Set the defaults input files:
+        default_files = {
             'conf': f'conf.{self.ext}',
             'input_o': 'grompp.mdp',  # "o" = original input file.
-            'topology': 'topol.top',
-            'top': 'conf.gro'}
+            'topology': 'topol.top'}
         extra_files = {
             'index': 'index.ndx',
-            'top': 'conf.gro'
         }
 
         # An user doesn't need to have problems with g96 and mdtraj.
@@ -135,9 +146,10 @@ class GromacsEngine(ExternalMDEngine):
 
         # Check the presence of the defaults input files or, if absent,
         # try to find them by their expected extension.
-        self.input_files = self._look_for_input_files(self.input_path,
-                                                      input_files,
-                                                      extra_files)
+        self.input_files = look_for_input_files(self.input_path,
+                                                default_files,
+                                                extra_files)
+        logger.debug('Input files: %s', self.input_files)
         # Check the input file and create a PyRETIS version with
         # consistent settings:
         settings = {
@@ -212,27 +224,6 @@ class GromacsEngine(ExternalMDEngine):
             name = energy_map.get(key, key)
             energy[name] = val[0]
         return energy
-
-    def _name_output(self, basename):
-        """
-        Create a file name for the output file.
-
-        This method is used when we dump a configuration to add
-        the correct extension for GROMACS (either gro or g96).
-
-        Parameters
-        ----------
-        basename : string
-            The base name to give to the file.
-
-        Returns
-        -------
-        out : string
-            A file name with an extension.
-
-        """
-        out_file = f'{basename}.{self.ext}'
-        return os.path.join(self.exe_dir, out_file)
 
     def _execute_grompp(self, mdp_file, config, deffnm):
         """Execute the GROMACS preprocessor.
@@ -350,7 +341,7 @@ class GromacsEngine(ExternalMDEngine):
             continue the simulation.
 
         """
-        confout = f'{deffnm}.{self.ext}'
+        confout = f'{deffnm}.{self.ext}'.format(deffnm, self.ext)
         self._removefile(confout)
         cmd = shlex.split(self.mdrun_c.format(tprfile, cptfile,
                                               deffnm, confout))
@@ -478,6 +469,22 @@ class GromacsEngine(ExternalMDEngine):
 
             self.execute_command(cmd, inputs=b'0', cwd=None)
 
+        # If domain decomposition is used, the molecules must be made
+        # whole. This is a bug in GROMACS, where DD only works auto-
+        # matically for initial/ending .gro files of a simulation
+        # trajectory. I.e. only for the latter .gro 'frames', the bonds
+        # are correctly represented over the periodic boundaries.
+        # This is version specific and *could* happen only for >16cpus
+        # Therefore, we don't test this in coverage...
+        if self.domain_decomp:  # pragma: no cover
+            cmd = [self.gmx, 'trjconv',
+                   '-f', out_file,
+                   '-s', self.input_files['tpr'],
+                   '-pbc', 'whole',
+                   '-o', out_file]
+            logger.info(("We are making the molecules whole"))
+            self.execute_command(cmd, inputs=b'0', cwd=None)
+
     def get_energies(self, energy_file, begin=None, end=None):
         """Return energies from a GROMACS run.
 
@@ -509,8 +516,7 @@ class GromacsEngine(ExternalMDEngine):
         self._removefile(xvg_file)
         return energy
 
-    def _propagate_from(self, name, path, system, order_function, interfaces,
-                        msg_file, reverse=False):
+    def _propagate_from(self, name, path, ensemble, msg_file, reverse=False):
         """
         Propagate with GROMACS from the current system configuration.
 
@@ -523,14 +529,20 @@ class GromacsEngine(ExternalMDEngine):
         ----------
         name : string
             A name to use for the trajectory we are generating.
-        path : object like :py:class:`.PathBase`
+        path : object like :py:class:`pyretis.core.path.PathBase`
             This is the path we use to fill in phase-space points.
-        system : object like :py:class:`.System`
-            The system object gives the initial state.
-        order_function : object like :py:class:`.OrderParameter`
-            The object used for calculating the order parameter.
-        interfaces : list of floats
-            These interfaces define the stopping criterion.
+        ensemble: dict
+            It contains:
+
+            * `system`: object like :py:class:`.System`
+              The system object gives the initial state for the
+              integration. The initial state is stored and the system is
+              reset to the initial state when the integration is done.
+            * `order_function`: object like :py:class:`.OrderParameter`
+              The object used for calculating the order parameter.
+            * `interfaces`: list of floats
+              These interfaces define the stopping criterion.
+
         msg_file : object like :py:class:`.FileIO`
             An object we use for writing out messages that are useful
             for inspecting the status of the current propagation.
@@ -548,12 +560,13 @@ class GromacsEngine(ExternalMDEngine):
         status = f'propagating with GROMACS (reverse = {reverse})'
         logger.debug(status)
         success = False
+        interfaces = ensemble['interfaces']
         left, _, right = interfaces
         # Dumping of the initial config were done by the parent, here
         # we will just use it:
-        initial_conf = system.particles.get_pos()[0]
+        initial_conf = ensemble['system'].particles.get_pos()[0]
         # Get the current order parameter:
-        order = self.calculate_order(order_function, system)
+        order = self.calculate_order(ensemble)
         msg_file.write(
             f'# Initial order parameter: {" ".join([str(i) for i in order])}'
         )
@@ -582,7 +595,8 @@ class GromacsEngine(ExternalMDEngine):
             snapshot = {'order': order,
                         'config': (traj_file, i),
                         'vel_rev': reverse}
-            phase_point = self.snapshot_to_system(system, snapshot)
+            phase_point = self.snapshot_to_system(ensemble['system'],
+                                                  snapshot)
             status, success, stop, _ = self.add_to_path(path, phase_point,
                                                         left, right)
             if stop:
@@ -597,9 +611,9 @@ class GromacsEngine(ExternalMDEngine):
                                                            name)
                 out_files.update(out_extnd)
             # Calculate the order parameter using the current system:
-            system.particles.set_vel(reverse)
-            system.particles.set_pos((conf_abs, None))
-            order = self.calculate_order(order_function, system)
+            ensemble['system'].particles.set_vel(reverse)
+            ensemble['system'].particles.set_pos((conf_abs, None))
+            order = self.calculate_order(ensemble)
             # We now have the order parameter, for GROMACS just remove the
             # config file to avoid the GROMACS #conf_abs# backup clutter:
             self._removefile(conf_abs)
@@ -609,10 +623,10 @@ class GromacsEngine(ExternalMDEngine):
         msg_file.write(f'# Reading energies from: {out_files["edr"]}')
         msg_file.flush()
         energy = self.get_energies(out_files['edr'])
-        path.update_energies(energy['kinetic en.'],
-                             energy['potential'])
+        path.update_energies(energy['kinetic en.'], energy['potential'])
         logger.debug('Removing GROMACS output after propagate.')
-        remove = [val for key, val in out_files.items() if key not in ('trr',)]
+        remove = [val for key, val in out_files.items()
+                  if key not in ('trr', 'gro', 'g96')]
         self._remove_files(self.exe_dir, remove)
         self._remove_gromacs_backup_files(self.exe_dir)
         return success, status
@@ -641,8 +655,7 @@ class GromacsEngine(ExternalMDEngine):
         out_grompp = self._execute_grompp(self.input_files['input'],
                                           initial_conf,
                                           name)
-        out_mdrun = self._execute_mdrun(out_grompp['tpr'],
-                                        name)
+        out_mdrun = self._execute_mdrun(out_grompp['tpr'], name)
         conf_abs = os.path.join(self.exe_dir, out_mdrun['conf'])
         logger.debug('Obtaining GROMACS energies after single step.')
         energy = self.get_energies(out_mdrun['edr'])
@@ -751,31 +764,36 @@ class GromacsEngine(ExternalMDEngine):
             logger.error(msg, self.ext)
             raise ValueError(msg % self.ext)
 
-    def modify_velocities(self, system, rgen, sigma_v=None, aimless=True,
-                          momentum=False, rescale=None):
+    def modify_velocities(self, ensemble, vel_settings):
         """Modify the velocities of the current state.
 
         This method will modify the velocities of a time slice.
 
         Parameters
         ----------
-        system : object like :py:class:`.System`
-            The system is used here since we need access to the particle
-            list.
-        rgen : object like :py:class:`.RandomGenerator`
-            This is the random generator that will be used.
-        sigma_v : numpy.array, optional
-            These values can be used to set a standard deviation (one
-            for each particle) for the generated velocities.
-        aimless : boolean, optional
-            Determines if we should do aimless shooting or not.
-        momentum : boolean, optional
-            If True, we reset the linear momentum to zero after generating.
-        rescale : float, optional
-            In some NVE simulations, we may wish to re-scale the energy
-            to a fixed value. If `rescale` is a float > 0, we will
-            re-scale the energy (after modification of the velocities)
-            to match the given float.
+        ensemble : dict
+            It contains:
+
+            * `system`: object like :py:class:`.System`
+              This is the system that contains the particles we are
+              investigating.
+
+        vel_settings: dict
+            It contains:
+
+            * `sigma_v`: numpy.array, optional
+              These values can be used to set a standard deviation (one
+              for each particle) for the generated velocities.
+            * `aimless`: boolean, optional
+              Determines if we should do aimless shooting or not.
+            * `momentum`: boolean, optional
+              If True, we reset the linear momentum to zero after
+              generating.
+            * `rescale or rescale_energy`: float, optional
+              In some NVE simulations, we may wish to re-scale the
+              energy to a fixed value. If `rescale` is a float > 0,
+              we will re-scale the energy (after modification of
+              the velocities) to match the given float.
 
         Returns
         -------
@@ -788,12 +806,15 @@ class GromacsEngine(ExternalMDEngine):
         dek = None
         kin_old = None
         kin_new = None
+        system = ensemble['system']
+        rescale = vel_settings.get('rescale_energy',
+                                   vel_settings.get('rescale'))
         if rescale is not None and rescale is not False and rescale > 0:
             msgtxt = 'GROMACS engine does not support energy re-scale.'
             logger.error(msgtxt)
             raise NotImplementedError(msgtxt)
         kin_old = system.particles.ekin
-        if aimless:
+        if vel_settings.get('aimless', False):
             pos = self.dump_frame(system)
             posvel, energy = self._prepare_shooting_point(pos)
             kin_new = energy['kinetic en.'][-1]
@@ -805,18 +826,18 @@ class GromacsEngine(ExternalMDEngine):
             msgtxt = 'GROMACS engine only support aimless shooting!'
             logger.error(msgtxt)
             raise NotImplementedError(msgtxt)
-        if momentum:
+        if vel_settings.get('momentum', False):
             pass
         if kin_old is None or kin_new is None:
             dek = float('inf')
-            logger.warning(('Kinetic energy not found for previous point.'
-                            '\n(This happens when the initial configuration '
-                            'does not contain energies.)'))
+            logger.debug(('Kinetic energy not found for previous point.'
+                          '\n(This happens when the initial configuration '
+                          'does not contain energies.)'))
         else:
             dek = kin_new - kin_old
         return dek, kin_new
 
-    def integrate(self, system, steps, order_function=None, thermo='full'):
+    def integrate(self, ensemble, steps, thermo='full'):
         """
         Perform several integration steps.
 
@@ -826,16 +847,21 @@ class GromacsEngine(ExternalMDEngine):
 
         Parameters
         ----------
-        system : object like :py:class:`.System`
-            The system we are integrating.
+        ensemble: dict
+            It contains:
+
+            * `system`: object like :py:class:`.System`
+              The system object gives the initial state for the
+              integration. The initial state is stored and the system is
+              reset to the initial state when the integration is done.
+            * `order_function`: object like :py:class:`.OrderParameter`
+              The object used for calculating the order parameter.
+
         steps : integer
             The number of steps we are going to perform. Note that we
             do not integrate on the first step (e.g. step 0) but we do
             obtain the other properties. This is to output the starting
             configuration.
-        order_function : object like :py:class:`.OrderParameter`, optional
-            An order function can be specified if we want to
-            calculate the order parameter along with the simulation.
         thermo : string, optional
             Select the thermodynamic properties we are to calculate.
 
@@ -848,13 +874,15 @@ class GromacsEngine(ExternalMDEngine):
         """
         logger.debug('Integrating with GROMACS')
         # Dump the initial config:
+        system = ensemble['system']
+        order_function = ensemble.get('order_function')
         initial_file = self.dump_frame(system)
         out_files = {}
         conf_abs = None
         self.energy_terms = self.select_energy_terms(thermo)
         # For step zero, obtain the order parameter:
         if order_function:
-            order = self.calculate_order(order_function, system)
+            order = self.calculate_order(ensemble)
         else:
             order = None
 
@@ -881,7 +909,7 @@ class GromacsEngine(ExternalMDEngine):
             # Update for order parameter:
             if order_function:
                 system.particles.set_pos((conf_abs, None, None))
-                order = self.calculate_order(order_function, system)
+                order = self.calculate_order(ensemble)
             # Obtain latest energies:
             time1 = i * self.timestep * self.subcycles
             time2 = (i + 1) * self.timestep * self.subcycles

@@ -3,6 +3,8 @@
 .. role:: python(code)
     :language: python
 
+|
+
 Creating custom order parameters
 ================================
 
@@ -30,6 +32,8 @@ in order to create a new order parameter is:
 
 4. Setting up the input file to use the new order parameter.
 
+|
+
 Example: Creating a new order parameter
 ---------------------------------------
 
@@ -37,6 +41,8 @@ Let us see how this can be done in practice. To be concrete,
 we will consider an order parameter defined as follows:
 The distance between a particular particle and a plane
 positioned somewhere along the x-axis.
+
+|
 
 Step 1 and 2: Sub-classing OrderParameter
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -72,6 +78,8 @@ defined by :py:class:`.OrderParameter`.
    .. code-block:: python
 
       super().__init__(description='Description', velocity=True)
+
+|
 
 Step 3: Creating a method for calculating the order parameter
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -129,6 +137,8 @@ will correspond to one of the two following cases:
    Note that the method ``some_function_to_obtain_order`` has not been
    defined here and you will have to define his method yourself in order
    to complete the example.
+
+|
 
 Step 4: Making use of the new order parameter
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

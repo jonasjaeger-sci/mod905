@@ -1,11 +1,19 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
-"""This file defines the order parameter used for the GROMACS example."""
-import os
+"""
+This file defines the order parameter used for the GROMACS example.
+
+NOTE: This file is NOT being used, it is kept as an example on how to use
+      mdtraj.
+      To test this file, add module = orderp.py in the Orderparameter section
+      of retis-load-rc.rst file.
+      Also add the import mdtraj import to the list above.
+
+"""
 import logging
-from itertools import combinations
 import mdtraj as md
+from itertools import combinations
 from pyretis.orderparameter import OrderParameter
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
@@ -23,7 +31,7 @@ class Distance(OrderParameter):
 
     """
 
-    def __init__(self, idx1, idx2):
+    def __init__(self, index):
         """Set up the order parameter.
 
         Parameters
@@ -33,8 +41,9 @@ class Distance(OrderParameter):
 
         """
         super().__init__(description='Water molecule distance')
-        self.idx1 = idx1
-        self.idx2 = idx2
+        self.idx1 = index[0]
+        self.idx2 = index[1]
+        self.top = 'gromacs_input/conf.gro'
 
     def calculate(self, system):
         """Calculate the order parameter.
@@ -54,19 +63,8 @@ class Distance(OrderParameter):
             The order parameter.
 
         """
-        # mdtraj doesn't support .g96
         file_gro = system.particles.config[0]
-        file_top = system.particles.top
-        if file_gro[-4:] == '.g96':
-            file_g96 = system.particles.config[0]
-            file_gro = '{}.gro'.format(file_g96[:-4])
-            os.system('gmx', 'editconf', '-f', file_g96, '-o', file_gro)
-
-        if file_gro[-4:] in ['.trr', '.xtc']:
-            idx_frame = system.particles.config[1]
-            trj = md.load_frame(file_gro, idx_frame, top=file_top)
-        else:
-            trj = md.load(file_gro)
+        trj = md.load(file_gro, top=self.top)
         atom_pair = combinations([self.idx1, self.idx2], 2)
         orderp = md.compute_distances(trj, atom_pair, periodic=True)
         return orderp[0]

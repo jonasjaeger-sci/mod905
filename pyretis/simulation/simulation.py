@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Definitions of generic simulation objects.
 
@@ -14,6 +14,7 @@ Simulation (:py:class:`.Simulation`)
 
 """
 import logging
+import copy
 import os
 from pyretis.simulation.simulation_task import SimulationTask
 from pyretis.inout.screen import print_to_screen
@@ -35,14 +36,15 @@ class Simulation:
         This dictionary stores information about the number of cycles.
         The keywords are:
 
-        * `end`: Represents the cycle number where the simulation
-          should end.
-        * `step`: The current cycle number.
-        * `start`: The cycle number we started at.
-        * `stepno`: The number of cycles we have performed to arrive at
-          cycle number given by `cycle['step']`. Note that `cycle['stepno']`
-          might be different from `cycle['step']` since `cycle['start']`
-          might be != 0.
+         *  `step`: The current cycle number.
+         *  `startcycle`: The cycle number we started at.
+         *  `endcycle`: Represents the cycle number where the simulation
+            should end.
+         * `stepno`: The number of cycles we have performed to arrive at
+            cycle number given by `cycle['step']`. Note that `cycle['stepno']`
+            might be different from `cycle['step']` since `cycle['startcycle']`
+            might be != 0.
+
     exe_dir : string
         The path we are running the simulation from.
     restart_freq : integer
@@ -51,36 +53,54 @@ class Simulation:
         True if the first step has not been executed yet.
     system : object like :py:class:`.System`
         This is the system the simulation will act on.
+    simulation_output : list of dicts
+        This list defines the output tasks associated
+        with the simulation.
+    simulation_type : string
+        An identifier for the simulation.
     tasks : list of objects like :py:class:`.SimulationTask`
         This is the list of simulation tasks to execute.
 
     """
 
     simulation_type = 'generic'
-    """string : An identifier for the type of simulation."""
     simulation_output = []
-    """list of dicts : This list defines the output tasks associated
-    with the simulation."""
 
-    def __init__(self, steps=0, startcycle=0):
+    def __init__(self, settings, controls):
         """Initialise the simulation object.
 
         Parameters
         ----------
-        steps : int, optional
-            The number of simulation steps to perform.
-        startcycle : int, optional
-            The cycle we start the simulation on.
+        controls: dict of parameters to set up and control the simulations.
+            It contains:
+
+             *  `steps`: int, optional
+                The number of simulation steps to perform.
+             *  `startcycle`: int, optional
+                The cycle we start the simulation on, useful for restarts.
+             *  `endcycle`: int, optional
+                The cycle we end the simulation to, useful in restarts.
+             *  `rgen`: object like :py:class:`.RandomGenerator`
+                The random generator that will be used for the
+                paths that required random numbers.
+
+        settings : dict
+            Contains all the simulation settings.
 
         """
-        self.cycle = {'step': startcycle, 'end': startcycle + steps,
-                      'start': startcycle, 'stepno': 0, 'steps': steps}
+        steps = controls.get('steps', 0)
+        startcycle = controls.get('startcycle', 0)
+        end = controls.get('endcycle', steps)
+        self.cycle = {'step': startcycle, 'endcycle': end,
+                      'startcycle': startcycle, 'stepno': 0, 'steps': steps}
+
         self.tasks = []
         self.output_tasks = []
         self.first_step = True
         self.system = None
         self.restart_freq = None
         self.exe_dir = None
+        self.settings = settings
 
     def extend_cycles(self, steps):
         """Extend a simulation with the given number of steps.
@@ -96,8 +116,8 @@ class Simulation:
             Returns `None` but modifies `self.cycle`.
 
         """
-        self.cycle['start'] = self.cycle['stepno']
-        self.cycle['end'] = self.cycle['start'] + steps
+        self.cycle['startcycle'] = self.cycle['stepno']
+        self.cycle['endcycle'] = self.cycle['startcycle'] + steps
 
     def is_finished(self):
         """Determine if the simulation is finished.
@@ -105,7 +125,7 @@ class Simulation:
         In this object, the simulation is done if the current step
         number is larger than the end cycle. Note that the number of
         steps performed is dependent on the value of
-        `self.cycle['start']`.
+        `self.cycle['startcycle']`.
 
         Returns
         -------
@@ -113,7 +133,7 @@ class Simulation:
             True if the simulation is finished, False otherwise.
 
         """
-        return self.cycle['step'] >= self.cycle['end']
+        return self.cycle['step'] >= self.cycle['endcycle']
 
     def step(self):
         """Execute a simulation step.
@@ -152,7 +172,7 @@ class Simulation:
             The results from the different tasks (if any).
 
         """
-        results = {'cycle': self.cycle}
+        results = {'cycle': self.cycle.copy()}
         for task in self.tasks:
             if not self.first_step or task.run_first():
                 resi = task.execute(self.cycle)
@@ -165,7 +185,7 @@ class Simulation:
         """Add a new simulation task.
 
         A task can still be added manually by simply appending to
-        :py:attr:`.tasks`. This function will, however, do some
+        py:attr:`.tasks`. This function will, however, do some
         checks so that the task added can be executed.
 
         Parameters
@@ -188,6 +208,7 @@ class Simulation:
               executed on the initial step, i.e. before the
               full simulation starts.
             * `result`: String, used to label the result.
+
         position : int, optional
             Can be used to give the tasks a specific position in the
             task list.
@@ -243,9 +264,9 @@ class Simulation:
         """Just a small function to return some info about the simulation."""
         ntask = len(self.tasks)
         mtask = 'task' if ntask == 1 else 'tasks'
-        msg = ['Generic simulation with {} {}.'.format(ntask, mtask)]
+        msg = [f'Generic simulation with {ntask} {mtask}.']
         for i, task in enumerate(self.tasks):
-            msg += ['* Task no. {}'.format(i)]
+            msg += [f'* Task no. {i}']
             for j, line in enumerate(str(task).split('\n')):
                 if j > 0:
                     msg += [line]
@@ -278,7 +299,7 @@ class Simulation:
             logger.warning('Writing of restart file(s) disabled!')
         logger.debug('Setting restart frequency for simulation %s',
                      self.restart_freq)
-        self.exe_dir = settings['simulation'].get('exe-path', os.getcwd())
+        self.exe_dir = settings['simulation'].get('exe_path', os.getcwd())
 
     def create_output_tasks(self, settings, progress=False):
         """Create output tasks for the simulation.
@@ -299,10 +320,11 @@ class Simulation:
         engine = getattr(self, 'engine', None)
         order_function = getattr(self, 'order_function', None)
         self.output_tasks = []
+        directory = settings['simulation'].get('exe_path', None)
         for task_dict in self.simulation_output:
             if 'order' in task_dict['type'] and order_function is None:
                 continue
-            task = task_from_settings(task_dict, settings, None, engine,
+            task = task_from_settings(task_dict, settings, directory, engine,
                                       progress)
             if task is not None:
                 logger.debug('Created output task:\n%s', task)
@@ -337,26 +359,39 @@ class Simulation:
 
         """
         if now or (self.restart_freq is not None and
-                   self.cycle['stepno'] % self.restart_freq == 0):
+                   self.cycle['step'] % self.restart_freq == 0):
             out = 'pyretis.restart'
             if self.exe_dir:
                 out = os.path.join(self.exe_dir, out)
             write_restart_file(out, self)
 
     def restart_info(self):
-        """Return information which can be used to restart the simulation."""
-        info = {
-            'cycle': self.cycle,
-            'type': self.simulation_type
-        }
-        try:
-            info['rgen'] = self.rgen.get_state()
-        except AttributeError:
-            pass
-        try:
-            info['engine'] = {'rgen': self.engine.rgen.get_state()}
-        except AttributeError:
-            pass
+        """Return information which can be used to restart the simulation.
+
+        Returns
+        -------
+        info : dict,
+            Contains all the updated simulation settings and counters.
+
+        """
+        info = {}
+        info['settings'] = self.settings
+
+        for key in ('simulation', 'system', 'particles'):
+            if key not in info:
+                info[key] = {}
+
+        info['simulation']['restart'] = 'pyretis.restart'
+        info['simulation']['cycle'] = copy.deepcopy(self.cycle)
+        info['simulation']['type'] = self.simulation_type
+
+        if hasattr(self, 'system') and self.system is not None:
+            info['system'].update(self.system.restart_info())
+
+        if hasattr(self.system, 'particles') and \
+                self.system.particles is not None:
+            info['particles'].update(self.system.particles.restart_info())
+
         return info
 
     def load_restart_info(self, info):
@@ -371,27 +406,12 @@ class Simulation:
             The dictionary with the restart information.
 
         """
-        steps = self.cycle['steps']
-        for key, val in info['cycle'].items():
-            self.cycle[key] = val
-        self.extend_cycles(steps)
-        if 'rgen' in info:
-            try:
-                rgen = self.rgen
-                rgen.set_state(info['rgen'])
-            except AttributeError:
-                logger.warning(('Restart: Failed setting simulation '
-                                'random number generator state!'))
-        if 'engine' in info:
-            try:
-                engine = self.engine
-                if 'rgen' in info['engine']:
-                    try:
-                        engine.rgen.set_state(info['engine']['rgen'])
-                    except AttributeError:
-                        logger.warning(('Restart: Failed setting engine '
-                                        'random number generator state!'))
-            except AttributeError:
-                logger.warning(('Restart: Tried setting engine state, but '
-                                'NO engine is present in simulation %s'),
-                               self.simulation_type)
+        for key, val in info['simulation']['cycle'].items():
+            if key in {'steps', 'endcycle'}:
+                self.cycle['startcycle'] = copy.deepcopy(val)
+            else:
+                self.cycle[key] = copy.deepcopy(val)
+
+        if info.get('system') is not None and\
+                hasattr(self, 'system') and self.system is not None:
+            self.system.load_restart_info(info['system'])

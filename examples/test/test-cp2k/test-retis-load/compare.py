@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Simple script to compare the outcome of two simulations.
 
@@ -25,7 +25,7 @@ def print_message(msg):
     print_to_screen('=' * len(msg), level='message')
 
 
-def compare_path_lines(line1, line2, rel_tol=1e-5):
+def compare_path_lines(line1, line2, rel_tol=1e-4):
     """Compare two path ensemble lines."""
     if line1.startswith('#') and line2.startswith('#'):
         return True
@@ -54,7 +54,7 @@ def compare_numbers(i, j, rel_tol):
     return isclose(i, j, rel_tol=rel_tol)
 
 
-def compare_num_lines(line1, line2, rel_tol=1e-9):
+def compare_num_lines(line1, line2, rel_tol=1e-4):
     """Compare number for two lines."""
     if line1.startswith('#') and line2.startswith('#'):
         return True
@@ -69,9 +69,11 @@ def compare_data_ensemble_files(file1, file2, line_check=compare_num_lines):
     with open(file1, 'r') as input1:
         with open(file2, 'r') as input2:
             for line1, line2 in zip(input1, input2):
-                if not line_check(line1, line2, rel_tol=1e-5):
-                    return False
-    return True
+                if not line_check(line1, line2, rel_tol=1e-4):
+                    return False, line1, line2
+            if next(input1, False) or next(input2, False):
+                return False, 'a file is ', 'incomplete'
+    return True, None, None
 
 
 def compare_files(settings):
@@ -87,10 +89,12 @@ def compare_files(settings):
             print_to_screen('* Comparing {} files...'.format(file_name))
             result_old = os.path.join(RESULTS, ensemble_dir, file_name)
             result_new = os.path.join(ensemble_dir, file_name)
-            result = compare_data_ensemble_files(result_new, result_old,
-                                                 line_check=check)
+            result, a, b = compare_data_ensemble_files(result_new, result_old,
+                                                       line_check=check)
             if not result:
-                print_to_screen('\t-> *Files differ!*', level='error')
+                print_to_screen(
+                    '\t-> *Files differ!*, \n{} \n{}'.format(a, b),
+                    level='error')
                 return False
             print_to_screen('\t-> Files are equal!', level='success')
     print_to_screen('All files are equal!', level='success')

@@ -1,6 +1,6 @@
 Particles 
 ---------                                                                             
-position = {'file': 'config.xyz'} 
+position = {'input_file': 'config.xyz'} 
 System
 ------
 units = lj

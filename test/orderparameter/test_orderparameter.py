@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Test the order parameter classes from pyretis.orderparameter."""
 import logging
@@ -17,6 +17,8 @@ from pyretis.orderparameter import (
     CompositeOrderParameter,
     Angle,
     Dihedral,
+    Permeability,
+    PermeabilityMinusOffset
 )
 from pyretis.core import System, create_box, Particles
 logging.disable(logging.CRITICAL)
@@ -579,6 +581,154 @@ class CollectionTest(unittest.TestCase):
         cv4 = SimpleOrder()
         orderp.add_orderparameter(cv4)
         self.assertTrue(orderp.velocity_dependent)
+
+
+class TestPermeability(unittest.TestCase):
+    def setUp(self):
+        self.system, self.box = create_system(2, 2, periodic=True)
+        self.op = Permeability(index=0, dim='x', relative=False)
+        self.x = self.system.particles.pos[0, 0]
+
+    def test_non_relative_offset(self):
+        with self.assertRaisesRegex(ValueError, "offset"):
+            Permeability(index=0, dim='x', offset=-1.01)
+        # Test that we do pss if not relative
+        _ = Permeability(index=0, dim='x', offset=-1.01, relative=False)
+
+    def test_non_relative_mirror(self):
+        with self.assertRaisesRegex(ValueError, "mirror_pos"):
+            Permeability(index=0, dim='x', mirror_pos=1.01)
+        # Test that we do pss if not relative
+        _ = Permeability(index=0, dim='x', mirror_pos=1.01, relative=False)
+
+    def test_x_calculation(self):
+        # Test that this is just the position
+        self.assertEqual(self.op.calculate(self.system), [self.x, 0, 1])
+
+    def test_x_wrap(self):
+        # set x to a value, that +ofsett will be wrapped
+        op1 = Permeability(index=0, dim='x')
+        op2 = Permeability(index=0, dim='x', offset=0.5)
+        x = 0.8
+        self.system.particles.pos[0, 0] = x
+        self.assertEqual(op1.calculate(self.system)[0], x)
+        self.assertAlmostEqual(op2.calculate(self.system)[0], 0.3)
+
+    def test_box_min_under_0(self):
+        # set new box
+        self.system.box.length[0] = 2
+        self.system.box.low[0] = -1
+        self.assertAlmostEqual(self.op.calculate(self.system)[0], self.x)
+        op2 = Permeability(index=0, dim='x', relative=True)
+        # x should be 0.5 + x/2 (adding a box lenght to the left)
+        self.assertAlmostEqual(op2.calculate(self.system)[0], 0.5+self.x/2)
+
+    def test_broken_box(self):
+        # Break box
+        self.system.box = None
+        # Make an OP that would normally break the box
+
+        op2 = Permeability(index=0, dim='x', relative=False, offset=-12)
+        self.op.periodic = False
+        op2.periodic = False
+
+        self.assertAlmostEqual(self.op.calculate(self.system)[0], self.x)
+        self.assertAlmostEqual(op2.calculate(self.system)[0], self.x-12)
+
+    def test_mirrored_function(self):
+        self.assertFalse(self.op._mirror)
+        self.assertAlmostEqual(self.op.calculate(self.system)[0], self.x)
+        self.assertAlmostEqual(self.op.calculate(self.system)[2], 1)
+        self.op.mirror()
+        self.assertTrue(self.op._mirror)
+        self.assertAlmostEqual(self.op.calculate(self.system)[0], 1-self.x)
+        self.assertAlmostEqual(self.op.calculate(self.system)[2], -1)
+
+    def test_mirror_composite(self):
+        orderp = CompositeOrderParameter()
+        self.assertFalse(self.op._mirror)
+        orderp.add_orderparameter(self.op)
+        op2 = Permeability(index=0, dim='x', relative=True)
+        op2.mirror()
+        self.assertTrue(op2._mirror)
+        orderp.add_orderparameter(op2)
+        orderp.mirror()
+        self.assertTrue(self.op._mirror)
+        self.assertFalse(op2._mirror)
+
+    def test_mirror_composite_warning(self):
+        orderp = CompositeOrderParameter()
+        op1 = Position(index=0)
+        orderp.add_orderparameter(op1)
+        self.assertFalse(self.op._mirror)
+        orderp.add_orderparameter(self.op)
+        op2 = Permeability(index=0, dim='x', relative=True)
+        op2.mirror()
+        self.assertTrue(op2._mirror)
+        orderp.add_orderparameter(op2)
+        ln = 'pyretis.orderparameter.orderparameter'
+        logging.disable(logging.INFO)
+
+        with self.assertLogs(ln, level='INFO') as cm:
+            orderp.mirror()
+        logging.disable(logging.CRITICAL)
+        self.assertIn("Attempting a mirror move, but", cm.output[0])
+        self.assertTrue(self.op._mirror)
+        self.assertFalse(op2._mirror)
+
+    def test_index_get_set_composite(self):
+        orderp = CompositeOrderParameter()
+        op1 = Position(index=1)
+        orderp.add_orderparameter(op1)
+        orderp.add_orderparameter(self.op)
+        self.assertEqual(orderp.index, 1)
+        orderp.index = 12
+        self.assertEqual(op1.index, 12)
+        self.assertEqual(self.op.index, 0)
+
+    def test_permeabilityminusoffset(self):
+        # Tak e offset that is bigger than the box (normally be wrapped)
+        offset = 10
+        opmin = PermeabilityMinusOffset(index=0, dim='x', relative=False)
+        # Check that with an offset of 0, this is equal
+        self.assertEqual(self.op.calculate(self.system),
+                         opmin.calculate(self.system))
+        self.op.offset = offset
+        opmin.offset = offset
+        self.assertEqual(self.op.calculate(self.system)[0],
+                         opmin.calculate(self.system)[0] + offset)
+
+    def test_restart_cycle(self):
+        # See if all the info is there
+        info = self.op.restart_info()
+        self.assertEqual(info, {"index": 0, "mirror": False})
+        # See if mirror is given properly
+        self.op.mirror()
+        info = self.op.restart_info()
+        self.assertEqual(info, {"index": 0, "mirror": True})
+        # See if index is given properly
+        self.op.index = "bla"
+        info = self.op.restart_info()
+        self.assertEqual(info, {"index": 'bla', "mirror": True})
+        # See if the restart is done properly
+        info = {"index": "blub", "mirror": "Fish"}
+        self.op.load_restart_info(info)
+        self.assertEqual(self.op.index, "blub")
+        self.assertEqual(self.op._mirror, "Fish")
+
+    def test_restart_cycle_composite(self):
+        orderp = CompositeOrderParameter()
+        op1 = Position(index=1)
+        orderp.add_orderparameter(op1)
+        orderp.add_orderparameter(self.op)
+        info = orderp.restart_info()
+        ref_info = [None, {'index': 0, 'mirror': False}]
+        self.assertEqual(info, ref_info)
+        # See if we can set properly as well
+        info = [None, {'index': 42, 'mirror': 'towel'}]
+        orderp.load_restart_info(info)
+        self.assertEqual(self.op.index, 42)
+        self.assertEqual(self.op._mirror, 'towel')
 
 
 if __name__ == '__main__':

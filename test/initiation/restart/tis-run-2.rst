@@ -3,21 +3,22 @@ TIS 1D example
 
 Simulation settings
 -------------------
-interfaces = [-0.9, -0.9, 1.0]
+interfaces = [-0.9, -0.9, -0.8]
 steps = 2
 task = tis
+seed = 2
 
 System settings
 ---------------
 dimensions = 1
-temperature = 0.07
+temperature = 0.7
 units = reduced
 
 Engine settings
 ---------------
-timestep = 0.002
+timestep = 0.02
 class = Langevin
-seed = 0
+seed = 1
 gamma = 0.3
 high_friction = False
 
@@ -28,10 +29,11 @@ periodic = [False]
 Particles settings
 ------------------
 name = ['Ar']
-position = {'file': 'initial.xyz'}
+position = {'input_file': 'initial.xyz'}
 mass = {'Ar': 1.0}
 velocity = {'generate': 'maxwell', 'momentum': False, 'seed': 0}
-type = [0]
+type = 'internal'
+ptype = [0]
 
 Forcefield settings
 -------------------
@@ -65,8 +67,8 @@ restart-file = 1
 
 TIS settings
 ------------
-detect = -0.8
 ensemble_number = 1
+detect = -0.8
 rescale_energy = False
 zero_momentum = False
 maxlength = 20000
@@ -74,7 +76,7 @@ aimless = True
 freq = 0.5
 sigma_v = -1
 allowmaxlength = False
-seed = 0
+seed = 3
 
 Initial-path settings
 ---------------------

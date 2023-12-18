@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """This is an example of running an Umbrella Window simulation."""
 import numpy as np
@@ -40,9 +40,21 @@ for i, umbrella in enumerate(umbrellas):
     mysystem.forcefield.update_potential_parameters(potential_rw, params)
     mysystem.potential()  # Re-calculate potential energy.
     over = umbrellas[min(i + 1, n_umb - 1)][0]  # Position we must cross.
-    simulation = UmbrellaWindowSimulation(mysystem, umbrella, over,
-                                          MAXDX, rgen=RGEN,
-                                          mincycle=MINCYCLES)
+    simulation = UmbrellaWindowSimulation(
+        ensemble={
+            'system': mysystem,
+            'rgen': RGEN
+        },
+        settings={
+            'simulation': {
+                'task': 'umbrella',
+                'umbrella': umbrella,
+                'overlap': over,
+                'maxdx': MAXDX
+            }
+        },
+        controls={'steps': MINCYCLES}
+    )
     # Also create empy list for storing some data:
     traj, ener = [], []
     for result in simulation.run():

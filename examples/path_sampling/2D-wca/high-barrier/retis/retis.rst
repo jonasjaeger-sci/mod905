@@ -48,11 +48,11 @@ method = kick
 Particles
 ---------
 
-position = {'file': '../initial.xyz'}
+position = {'input_file': '../initial.xyz'}
 velocity = {'scale': 25.0}
 mass = {'A': 1.0, 'B': 1.0}
 name = ['B', 'B', 'A']
-type = [1, 1, 0]
+ptype = [1, 1, 0]
 
 Forcefield settings
 -------------------

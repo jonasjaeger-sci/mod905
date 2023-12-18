@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Compare energy output for CP2K."""
 import sys
@@ -9,7 +9,7 @@ import numpy as np
 from pyretis.inout import print_to_screen
 
 
-plt.style.use('seaborn-poster')
+plt.style.use('seaborn-v0_8-poster')
 
 
 def main(cp2k_file1, cp2k_file2, plot=False):

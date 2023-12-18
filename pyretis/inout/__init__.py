@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """The sub-package handles input and output for PyRETIS.
 
@@ -17,6 +17,10 @@ Modules
 __init__.py
     Imports from the other modules.
 
+checker.py (:py:mod:`pyretis.inout.checker`)
+    Functions to check the compatibility and
+    consistency of various input values.
+
 common.py (:py:mod:`pyretis.inout.common`)
     Common functions and variables for the input/output. These
     functions are mainly intended for internal use and are not imported
@@ -27,6 +31,9 @@ fileio.py (:py:mod:`pyretis.inout.fileio`)
 
 settings.py (:py:mod:`pyretis.inout.settings`)
     A module which handles the reading/writing of settings.
+
+simulationio.py (:py:mod:`pyretis.inout.simulationio`)
+    A module which handles th reading/writing of the main simulations.
 
 restart.py (:py:mod:`pyretis.inout.restart`)
     A module which handles restart reading/writing.
@@ -48,30 +55,12 @@ plotting (:py:mod:`pyretis.inout.plotting`)
 report (:py:mod:`pyretis.inout.report`)
     Generate reports with results from simulations.
 
-setup (:py:mod:`pyretis.inout.setup`)
-    Handles set-up of simulations etc. from user settings.
-
 
 Important classes defined in this package
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Important methods defined in this package
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-create_engine (:py:func:`.create_engine`)
-    Create an engine from input settings.
-
-create_force_field (:py:func:`.create_force_field`)
-    Create a force field from input settings.
-
-create_orderparameter (:py:func:`.create_orderparameter`)
-    Create an order parameter from input settings.
-
-create_simulation (:py:func:`.create_simulation`)
-    Create a simulation from input settings.
-
-create_system (:py:func:`.create_system`)
-    Create a system from input settings.
 
 generate_report (:py:func:`.generate_report`)
     A function to generate reports from analysis output(s).

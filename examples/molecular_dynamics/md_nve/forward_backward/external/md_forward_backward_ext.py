@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """
 Example of running a MD NVE simulation.
@@ -15,8 +15,7 @@ from matplotlib import pyplot as plt
 from matplotlib import gridspec
 # PyRETIS imports:
 from pyretis.core.units import create_conversion_factors
-from pyretis.inout.setup import (create_simulation, create_force_field,
-                                 create_system, create_engine)
+from pyretis.setup import create_simulation
 from pyretis.inout.fileio import FileIO
 from pyretis.inout.formats import ThermoTableFormatter
 from pyretis.inout.plotting import mpl_set_style
@@ -59,16 +58,12 @@ settings['potential'] = [
      'shift': True}
 ]
 settings['particles'] = {
-    'position': {'file': 'initial.gro'},
+    'position': {'input_file': 'initial.gro'},
     'velocity': {'generate': 'maxwell', 'momentum': True, 'seed': 0}
 }
 
 create_conversion_factors(settings['system']['units'])
-print('# Creating system from settings.')
-ljsystem = create_system(settings)
-ljsystem.forcefield = create_force_field(settings)
-kwargs = {'system': ljsystem, 'engine': create_engine(settings)}
-simulation_nve = create_simulation(settings, kwargs)
+simulation_nve = create_simulation(settings)
 
 # Set up extra output:
 thermo_file = FileIO('thermo.txt', 'w', ThermoTableFormatter(), backup=False)
@@ -83,7 +78,7 @@ for result in simulation_nve.run():
     result['thermo']['stepno'] = stepno
     store_results.append(result['thermo'])
 # Run backward:
-ljsystem.particles.vel *= -1.0
+simulation_nve.ensemble['system'].particles.vel *= -1.0
 simulation_nve.extend_cycles(settings['simulation']['steps'] - 1)
 for result in simulation_nve.run():
     stepno = result['cycle']['stepno']

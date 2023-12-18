@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """A collection of simple position dependent potentials.
 
@@ -222,4 +222,4 @@ class RectangularWell(PotentialFunction):
         largenumber = self.params['largenumber']
         v_pot = np.where(np.logical_and(pos > left, pos < right),
                          0.0, largenumber)
-        return v_pot.sum()
+        return v_pot.sum()  # pylint: disable=no-member

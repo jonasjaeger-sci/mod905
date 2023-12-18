@@ -1,33 +1,26 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Test the Simulation class."""
 from io import StringIO
 import os
 import logging
 import unittest
-from unittest.mock import patch
 import tempfile
 import pathlib
-from pyretis.engines.internal import Langevin
+import numpy as np
+from pyretis.core.particles import Particles
 from pyretis.core.random_gen import RandomGenerator
-from pyretis.simulation.simulation import Simulation
-from pyretis.inout.simulationio import OutputTask
-from pyretis.inout.screen import ScreenOutput
-from pyretis.inout.formats.formatter import OutputFormatter
-from pyretis.inout.settings import add_default_settings
-from pyretis.inout.setup.createsystem import create_system_from_settings
 from pyretis.core.units import units_from_settings
-from .test_helpers import turn_on_logging, TEST_SETTINGS
+from pyretis.engines.internal import Langevin
+from pyretis.inout.screen import ScreenOutput
+from pyretis.inout.settings import add_default_settings
+from pyretis.inout.simulationio import OutputTask
+from pyretis.setup.createsystem import create_system
+from pyretis.simulation.simulation import Simulation
+from unittest.mock import patch
+from .help import turn_on_logging, TEST_SETTINGS, TxtWriter
 logging.disable(logging.CRITICAL)
-
-
-class TxtWriter(OutputFormatter):
-    """A class used for testing output."""
-    FMT = '{:>10d} {:>20s}'
-
-    def format(self, step, data):
-        yield self.FMT.format(step, data)
 
 
 class TestSimulation(unittest.TestCase):
@@ -35,7 +28,7 @@ class TestSimulation(unittest.TestCase):
 
     def test_add_task(self):
         """Test that we can add task(s) to the simulation."""
-        simulation = Simulation()
+        simulation = Simulation({}, {})
 
         def task1():  # pylint: disable=missing-docstring
             return 'Hello there!'
@@ -57,7 +50,7 @@ class TestSimulation(unittest.TestCase):
 
     def test_run_extend(self):
         """Test that we can run and extend a simulation."""
-        simulation = Simulation(steps=10)
+        simulation = Simulation({}, {'steps': 10})
 
         def task1(simulation):
             """Dummy task for the simulation."""
@@ -100,38 +93,65 @@ class TestSimulation(unittest.TestCase):
 
     def test_restart_simple(self):
         """Test restart methods."""
-        simulation = Simulation(steps=10)
+        simulation = Simulation(settings={}, controls={'steps': 10})
         for _ in simulation.run():
             pass
         restart = simulation.restart_info()
-        simulation2 = Simulation(steps=1)
-        self.assertEqual(simulation2.cycle['stepno'], 0)
+        simulation2 = Simulation(settings={}, controls={'steps': 0})
+        self.assertEqual(simulation2.cycle['steps'], 0)
         simulation2.load_restart_info(restart)
         self.assertEqual(simulation2.cycle['stepno'], 10)
-        # Try setting for rgen when we don't expect it:
-        restart['rgen'] = 'dummy'
-        simulation2.load_restart_info(restart)
+        sr1 = simulation.restart_info()
+        sr2 = simulation2.restart_info()
+        # Steps and end are not copied
+        self.assertNotEqual(sr1['simulation']['cycle'],
+                            sr2['simulation']['cycle'])
+        self.assertEqual(sr1['simulation']['type'],
+                         sr2['simulation']['type'])
         # Add random generator and try again:
         rgen = RandomGenerator(seed=101)
-        simulation2.rgen = rgen
-        restart['rgen'] = rgen.get_state()
         simulation2.load_restart_info(restart)
-        # Try setting engine when we don't expect it:
+        # Try adding an engine when we don't expect it:
         restart['engine'] = {'rgen': rgen.get_state()}
         simulation2.load_restart_info(restart)
-        simulation2.engine = 'dummy'
-        simulation2.load_restart_info(restart)
+
+        # Try setting fail system:
+        simulation2.system = 'bumpy'
+        with self.assertRaises(AttributeError):
+            simulation2.restart_info()
+
         # Add and try again:
-        simulation2.engine = Langevin(1.0, 2.0)
+        simulation2 = Simulation(settings={}, controls={'steps': 0})
+        simulation2.engine = Langevin(1.0, 2.0, rgen=None)
         simulation2.load_restart_info(restart)
+
+    def test_other_restart_features(self):
+        """Test restart methods."""
+        settings = TEST_SETTINGS.copy()
+        add_default_settings(settings)
+        simulation = Simulation(settings, controls={'steps': 0})
+        simulation2 = Simulation(settings, controls={'steps': 0})
+        units_from_settings(settings)
+        system = create_system(settings)
+        simulation.system = system
+        simulation2.system = system
+        particle = Particles(dim=16)
+        particle.vpot = 101
+        simulation.system.particles = particle
+
+        rs1 = simulation.restart_info()
+        simulation2.load_restart_info(rs1)
+
+        self.assertTrue(np.allclose(simulation.system.particles.vpot,
+                                    simulation2.system.particles.vpot))
 
     def test_set_up_output(self):
         """Test the set_up_output things."""
-        simulation = Simulation(steps=100)
         settings = {}
         add_default_settings(settings)
+        simulation = Simulation(settings, {'steps': 100})
         with tempfile.TemporaryDirectory() as tempdir:
-            settings['simulation']['exe-path'] = tempdir
+            settings['simulation']['exe_path'] = tempdir
             simulation.set_up_output(settings)
             self.assertEqual(simulation.restart_freq,
                              settings['output']['restart-file'])
@@ -146,12 +166,12 @@ class TestSimulation(unittest.TestCase):
         """Test the soft exit method."""
         settings = TEST_SETTINGS.copy()
         with tempfile.TemporaryDirectory() as tempdir:
-            simulation = Simulation(steps=100)
+            simulation = Simulation({}, {'steps': 100})
             add_default_settings(settings)
             units_from_settings(settings)
-            system = create_system_from_settings(settings, None)
+            system = create_system(settings)
             simulation.system = system
-            settings['simulation']['exe-path'] = tempdir
+            settings['simulation']['exe_path'] = tempdir
             simulation.set_up_output(settings)
             self.assertEqual(tempdir, simulation.exe_dir)
             for i, _ in enumerate(simulation.run()):

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """This package contains functions for setting up plotters.
 
@@ -114,17 +114,11 @@ def create_plotter(plot_settings, out_dir=None):
         This is an object which can be used for plotting.
 
     """
-    if plot_settings is None:
-        return None
-    try:
-        default = SECTIONS['analysis']['plot']
-        plotter = plot_settings.get('plotter', default['plotter'])
-        out_fmt = plot_settings.get('output', default['output'])
-        style = plot_settings.get('style', default['style'])
-        backup = plot_settings.get('backup', SECTIONS['output']['backup'])
-    except AttributeError:
-        # Malformed input settings
-        return None
+    default = SECTIONS['analysis']['plot']
+    plotter = plot_settings.get('plotter', default['plotter'])
+    out_fmt = plot_settings.get('output', default['output'])
+    style = plot_settings.get('style', default['style'])
+    backup = plot_settings.get('backup', SECTIONS['output']['backup'])
     if plotter.lower() in ['mpl', 'matplotlib']:
         return MplPlotter(out_fmt, backup=backup, style=style,
                           out_dir=out_dir)

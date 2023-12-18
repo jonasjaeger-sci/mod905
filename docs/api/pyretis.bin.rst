@@ -27,3 +27,13 @@ pyretis.bin.pyretisanalyse module
     :members:
     :undoc-members:
     :show-inheritance:
+
+.. _api-bin-pyvisa:
+
+pyretis.bin.pyvisa module
+---------------------------------
+
+.. automodule:: pyretis.bin.pyvisa
+    :members:
+    :undoc-members:
+    :show-inheritance:

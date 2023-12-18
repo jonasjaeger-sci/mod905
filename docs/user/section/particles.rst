@@ -11,21 +11,22 @@ Particles are added to a simulation in the ``particles`` section:
 
        Particles
        ---------
-       position = {'file': 'initial.gro'}
+       position = {'input_file': 'initial.gro'}
        velocity = {'generate': 'maxwell',
                    'temperature': 2.0,
                    'momentum': True,
                    'seed': 0}
        mass = {'Ar': 1.0}
        name = ['Ar']
-       type = [0]
+       ptype = [0]
 
-   In this example, the particles are read from a file
+   In this example, the particles are read from an input file
    called ``'initial.gro'`` and the velocities are set according
    to a Maxwell distribution with a temperature of ``2.0`` and the
    velocities are initiate so that the total momentum is set to zero.
    Further, the mass of particles with name ``'Ar'`` is set to ``1.0``
-   and all particles are named ``'Ar'`` and assigned a particle type of ``0``.
+   and all particles are named ``'Ar'`` and assigned a particle ptype
+   of ``0``.
 
 Keywords for the Particles section
 ----------------------------------
@@ -40,7 +41,7 @@ The following keywords can be specified for the Particles section:
 
 .. |part_name| replace:: :ref:`name <user-section-particles-keyword-name>`
 
-.. |part_type| replace:: :ref:`type <user-section-particles-keyword-type>`
+.. |part_ptype| replace:: :ref:`ptype <user-section-particles-keyword-ptype>`
 
 .. |part_npart| replace:: :ref:`npart <user-section-particles-keyword-npart>`
 
@@ -60,7 +61,7 @@ The following keywords can be specified for the Particles section:
    +-----------------+--------------------------------------------------------+
    | |part_name|     | Defines names for the particles.                       |
    +-----------------+--------------------------------------------------------+
-   | |part_type|     | Defines the known particle types.                      |
+   | |part_ptype|    | Defines the known particle types.                      |
    +-----------------+--------------------------------------------------------+
    | |part_npart|    | Defines the number of particles (analysis specific).   |
    +-----------------+--------------------------------------------------------+
@@ -114,19 +115,19 @@ Keyword position
 
       .. code-block:: rst
 
-         position = {'file': 'initial.gro'}
+         position = {'input_file': 'initial.gro'}
 
-      When reading initial positions from a file, the following settings
+      When reading initial positions from a input file, the following settings
       must be provided:
 
-      * ``'file'`` which specifies the file to open.
+      * ``'input_file'`` which specifies the input file to open.
 
       If the specified file is a GROMACS GRO file, |pyretis| will also attempt to
-      read velocities from the file. These can be used rather than generating
+      read velocities from the input file. These can be used rather than generating
       velocities with ``particles-velocity``.
 
       .. NOTE::
-         The specified file name is **case-sensitive**.
+         The specified input_file name is **case-sensitive**.
 
    More examples:
 
@@ -135,10 +136,10 @@ Keyword position
       Particles
       ---------
       # Read a file from the current directory
-      position = {'file': 'initial.gro'}
+      position = {'input_file': 'initial.gro'}
 
       # Read a file from another position:
-      position = {'file': '/path/to/file/initial.gro'}
+      position = {'input_file': '/path/to/file/initial.gro'}
 
       # Generate a fcc lattice with 4 * 5**3 = 500 particles and
       # a lattice constant of 1 in reduced units:
@@ -252,42 +253,42 @@ Keyword name
    of the particles will be named ``'Kr'``.
 
 
-.. _user-section-particles-keyword-type:
+.. _user-section-particles-keyword-ptype:
 
-Keyword type
-^^^^^^^^^^^^
+Keyword ptype
+^^^^^^^^^^^^^
 
-.. pyretis-keyword:: type list of integers
+.. pyretis-keyword:: ptype list of integers
 
-   The ``type`` keyword is used to specify the particle types for the
+   The ``ptype`` keyword is used to specify the particle types for the
    different particles. The particle type is used to distinguish particles, for
    instance when calculating pair interactions.
 
    The input value is a list with the particle types in the order
    they have been generated/read from a file by the
    :ref:`position <user-section-particles-keyword-position>` keyword.
-   If the ``type`` list is too short, the **last** item in the list will be
+   If the ``ptype`` list is too short, the **last** item in the list will be
    repeated.
 
    Example 1:
 
    .. code-block:: rst
 
-       type = [0, 1]
+       ptype = [0, 1]
        name= ['Ar', 'Kr']
 
    This can be used to define a simulation where we have particles of
-   two different types with different masses.
+   two different ptypes with different masses.
 
    Example 2:
 
    .. code-block:: rst
 
-       type = [0]
+       ptype = [0]
        name= ['Ar', 'Ar2', 'Ar']
 
    This can be used to define a simulation where we have only particles
-   of the same type, however, one of the particles have a different
+   of the same ptype, however, one of the particles have a different
    name than the others and can, for instance, be assigned a different
    mass.
 

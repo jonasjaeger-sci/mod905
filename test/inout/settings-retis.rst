@@ -8,6 +8,7 @@ task = retis
 steps = 20000
 interfaces = [-0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, 1.0]
 zero_left = -99
+permeability = True
 
 System
 ------
@@ -52,13 +53,13 @@ kick-from = initial
 
 Particles
 ---------
-position = {'file': 'initial.xyz'}
+position = {'input_file': 'initial.xyz'}
 velocity = {'generate': 'maxwell',
             'momentum': False,
             'seed': 0}
 mass = {'Ar': 1.0}
 name = ['Ar']
-type = [0]
+ptype = [0]
 
 Forcefield settings
 -------------------
@@ -129,4 +130,8 @@ collective-variable1 position nonsense = 'pineapple_on_pizza'
 collective-variable02 position nonsense = 'pineapple_on_pizza'
 engine class = premium
 
-
+Analysis
+--------
+txt-output = 'txt.gz'
+plot = {'plotter': 'mpl', 'output': 'png', 'style': 'pyretis'}
+report = ['latex', 'rst', 'html', 'txt']

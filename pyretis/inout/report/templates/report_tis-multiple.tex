@@ -33,18 +33,35 @@ was \textbf{not} calculated in this analysis!
 \item The crossing probability:
 $P_{\text{cross}} =$ \colorbox{blue!30}{ @{{ numbers['pcross'] }}@ }  $\pm$ @{{ numbers['perr'] }}@ $\%$
 \end{itemize}
+
+\section{Combined results}
+
+The overall matched probability distributions are shown in the left figure 
+while the matched probability distribution is shown in the right figure below.
+The overall crossing probability as a function of cycles
+and its relative error block analysis are reported in the two following
+plots, respectively.
+
+\begin{center}
+\includegraphics[width=0.45\linewidth]{@{{ figures['total'] }}@}%
+\includegraphics[width=0.45\linewidth]{@{{ figures['matched'] }}@}%
+\end{center}
+\begin{center}
+\includegraphics[width=0.45\linewidth]{@{{ figures['progress'] }}@}%
+\includegraphics[width=0.45\linewidth]{@{{ figures['error'] }}@}%
+\end{center}
 \noindent Detailed results are given below for the different path
-ensembles and the overall results are summarized
-in the last section.
+ensembles.
+
 \section{Results for path ensembles}
 The following interfaces were used in the simulation and in
 the analysis:
 
 @{{ tables['interfaces'] }}@
 
-The calculated crossing probabilities are:
-
 @{{ tables['probability'] }}@
+
+@{{ tables['efficiency'] }}@
 
 The crossing probabilities are also displayed in the figures below
 
@@ -63,48 +80,14 @@ The average path lengths in the different ensembles are given in
 the table below and some distributions for the path lengths and
 shooting moves can also be found here:
 
-@{{ tables['path'] }}@
-
 @{% for figure in figures['tis'] %}@
 \begin{center}
-\includegraphics[width=0.33\linewidth]{@{{ figure['lpath'] }}@}%
-\includegraphics[width=0.33\linewidth]{@{{ figure['shoots'] }}@}%
-\includegraphics[width=0.33\linewidth]{@{{ figure['shoots_scaled'] }}@}%
+\includegraphics[width=0.45\linewidth]{@{{ figure['lpath'] }}@}%
+\includegraphics[width=0.45\linewidth]{@{{ figure['shoots'] }}@}%
 \end{center}
 @{% endfor %}@
 \clearpage
 
-\subsection{Efficiency analysis}
-
-@{{ tables['efficiency'] }}@
-
-\section{Combined results}
-
-The overall matched probability distributions are shown in the left figure 
-while the matched probability distribution is shown in the right figure below.
-The overall crossing probability as a function of cycles
-and its relative error block analysis are reported in the two following
-plots, respectively.
-
-\begin{center}
-\includegraphics[width=0.45\linewidth]{@{{ figures['total'] }}@}%
-\includegraphics[width=0.45\linewidth]{@{{ figures['matched'] }}@}%
-\end{center}
-\begin{center}
-\includegraphics[width=0.45\linewidth]{@{{ figures['progress'] }}@}%
-\includegraphics[width=0.45\linewidth]{@{{ figures['error'] }}@}%
-\end{center}
-
-\noindent The overall crossing probability is:
-\begin{center}
-$P_{\text{cross}} =$ \colorbox{blue!30}{ @{{ numbers['pcross'] }}@ }  $\pm$ @{{ numbers['perr'] }}@ $\%$
-\end{center}
-Other statistics:
-\begin{itemize}
-\item sim.time: @{{ numbers['simt'] }}@
-\item $\tau_{\text{eff}} =$~@{{ numbers['teff'] }}@
-\item $\tau_{\text{eff}}^{\text{opt}} =$~@{{ numbers['opteff'] }}@
-\end{itemize}
 
 \end{document}
 

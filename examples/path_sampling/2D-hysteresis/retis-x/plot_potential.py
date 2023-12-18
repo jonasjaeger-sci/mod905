@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Plot raw data from a simulation."""
 # pylint: disable=invalid-name
@@ -7,7 +7,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.cm import get_cmap
 from pyretis.core import create_box, System, Particles
-from pyretis.inout.setup import create_force_field
+from pyretis.setup import create_force_field
 from pyretis.inout.settings import parse_settings_file
 
 

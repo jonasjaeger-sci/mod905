@@ -1,32 +1,31 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Check that source modules are included in the API docs.
 
 Typical usage is: python check_api_docs.py ../../docs/api/ ../../pyretis
 
 """
-import os
+import pathlib
 import sys
 
 
-def read_api_rst(filename):
+def read_api_rst(filepath):
     """Yield modules documented in the given file."""
-    with open(filename, 'r') as infile:
+    with filepath.open('r') as infile:
         for lines in infile:
             if lines.find('automodule') != -1:
                 yield lines.strip().split()[-1]
 
 
-def read_api_rst_files(dirname):
+def read_api_rst_files(dirpath):
     """Read all .rst files in the given directory."""
     rst_files = [
-        i for i in os.scandir(dirname) if i.is_file and i.name.endswith('rst')
+        i for i in dirpath.rglob('*rst')
     ]
     modules = set([])
-    for i in rst_files:
-        file_path = os.path.join(dirname, i.name)
-        for mod in read_api_rst(file_path):
+    for filepath in rst_files:
+        for mod in read_api_rst(filepath):
             modules.add(mod)
     return modules
 
@@ -34,22 +33,25 @@ def read_api_rst_files(dirname):
 def find_source_modules(source_dir):
     """Return source modules in the given directory."""
     source_files = set([])
-    source_abs = os.path.abspath(source_dir)
-    for root, _, filenames in os.walk(source_dir):
-        for filename in filenames:
-            if filename.endswith('.py'):
-                filename_e = filename.split(os.extsep)[0]
-                if filename_e == '__init__':
-                    continue
-                filepath_abs = os.path.abspath(os.path.join(root, filename_e))
-                split = filepath_abs.split(source_abs)[-1]
-                mod = 'pyretis{}'.format('.'.join(split.split(os.sep)))
-                source_files.add(mod)
+    filenames = source_dir.rglob('*.py')
+    for filename in filenames:
+        # Figure out the file placement relative to the source
+        filename = filename.relative_to(source_dir)
+        # Get the stem filename
+        filename_e = filename.stem
+        if filename_e == '__init__':
+            continue
+        # Remove the .py suffix by replacing it with an empty string
+        filename = filename.with_suffix("")
+        mod = 'pyretis.{}'.format('.'.join(filename.parts))
+        source_files.add(mod)
     return source_files
 
 
 def main(docdir, source_dir):
     """Run the check."""
+    docdir = pathlib.Path(docdir)
+    source_dir = pathlib.Path(source_dir)
     modules = read_api_rst_files(docdir)
     source = find_source_modules(source_dir)
     missing = [i for i in source if i not in modules]

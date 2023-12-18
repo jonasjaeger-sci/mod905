@@ -6,6 +6,7 @@ Simulation
 task = retis
 steps = 5
 interfaces = [-0.305, -0.285, -0.280, -0.270]
+zero_left = -0.32
 
 System
 ------
@@ -16,7 +17,7 @@ Engine settings
 class = gromacs2
 gmx = GMXCOMMAND
 mdrun = GMXCOMMAND mdrun
-input_path = gromacs_input
+input_path = ../../../gmx/gromacs_input
 timestep = 0.002
 subcycles = 5
 gmx_format = gro

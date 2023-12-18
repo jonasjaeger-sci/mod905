@@ -4,7 +4,7 @@ MD flux simulation
 Simulation settings
 -------------------
 task = md-flux
-steps = 4838
+steps = 483
 interfaces = [-0.9, -0.85, -0.80]
 
 System settings
@@ -23,13 +23,13 @@ seed = 0
 
 Particles
 ---------
-position = {'file': '../initial.xyz'}
+position = {'input_file': '../initial.xyz'}
 velocity = {'generate': 'maxwell',
             'momentum': False,
             'seed': 0}
 mass = {'Ar': 1.0}
 name = ['Ar']
-type = [0]
+ptype = [0]
 
 ForceField settings
 -------------------

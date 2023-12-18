@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Example of running a MD NVE simulation."""
 # pylint: disable=invalid-name
@@ -12,8 +12,8 @@ from matplotlib import gridspec
 from pyretis.core import System, create_box, Particles
 from pyretis.core.units import CONVERT, create_conversion_factors
 from pyretis.inout.plotting import COLORS, COLOR_SCHEME
-from pyretis.inout.setup import (create_system, create_engine,
-                                 create_force_field, create_simulation)
+from pyretis.setup import (create_system, create_engine,
+                           create_force_field, create_simulation)
 
 
 PCOLOR = {'A': 'blue', 'B': 'magenta'}  # Colors for drawing
@@ -69,7 +69,7 @@ SETTINGS = {
     'particles': {
         'position': {'generate': 'sq', 'repeat': [3, 3], 'lcon': 1.0},
         'velocity': {'generate': 'maxwell', 'momentum': True, 'seed': 0},
-        'type': [0, 1, 1, 0],
+        'ptype': [0, 1, 1, 0],
         'name': ['A', 'B', 'B', 'A'],
         'mass': {'A': 1.0, 'B': 1.0},
     },
@@ -83,8 +83,9 @@ system.forcefield = create_force_field(settings)
 system.particles.pos -= (np.average(system.particles.pos, axis=0) -
                          0.5 * system.box.length)  # center in box
 print('# Creating simulation from settings.')
-kwargs = {'system': system, 'engine': create_engine(settings)}
-simulation = create_simulation(settings, kwargs)
+
+settings['system']['obj'] = system
+simulation = create_simulation(settings)
 print('# Creating output tasks from settings.')
 simulation.set_up_output(settings, progress=False)
 size = system.box.bounds()

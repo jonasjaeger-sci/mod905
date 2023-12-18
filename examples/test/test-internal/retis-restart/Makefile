@@ -8,8 +8,8 @@ clean:
 	find -name \*.txt -delete
 	find -name \out.rst* -delete
 	find -name \*.restart -delete
-	find -name \*.log -delete
-	-rm -rf retis-100/0*
-	-rm -rf retis-100-200/0*
-	-rm -rf retis-100-200/restart
+	find -name \*.log* -delete
+	-rm -rf retis-10/0*
+	-rm -rf retis-10-20/0*
+	-rm -rf retis-10-20/restart
 	-rm -rf retis-full/0*

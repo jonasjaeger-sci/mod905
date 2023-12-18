@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Some common functions for generating simple tables and numbers.
 
@@ -19,14 +19,10 @@ generate_latex_table (:py:func:`.generate_latex_table`)
 latexify_number (:py:func:`.latexify_number`)
     Change exponential notation into something nicer for latex.
 
-mathexify_number (:py:func:`.mathexify_number`)
-    Change exponential notation into something nicer for
-    reStructuredText.
 """
 
 
-__all__ = ['generate_rst_table', 'generate_latex_table', 'latexify_number',
-           'mathexify_number']
+__all__ = ['generate_rst_table', 'generate_latex_table', 'latexify_number']
 
 
 def generate_rst_table(table, title, headings):
@@ -111,12 +107,11 @@ def generate_latex_table(table, title, headings, fixnum=None):
         r' & '.join(headings) + r'\\ \hline',
     ]
     for row in table:
+        rowl = row
         if fixnum:
             rowl = [latexify_number(col) if i in fixnum else col for i, col
                     in enumerate(row)]
-            str_table.append(' & '.join(rowl) + r'\\')
-        else:
-            str_table.append(' & '.join(row) + r'\\')
+        str_table.append(' & '.join(rowl) + r'\\')
     str_table.append(r'\hline')
     str_table.append(r'\end{longtable}')
     return str_table
@@ -144,23 +139,3 @@ def latexify_number(str_float):
         base, exp = str_float.split('e')
         return fr'${base} \times 10^{{{int(exp)}}}$'
     return fr'${str_float}$'
-
-
-def mathexify_number(str_float):
-    r"""Change exponential notation into something nicer for reStructuredText.
-
-    This will just call :py:func:`.latexify_number` and put it into a
-    math directive for reStructuredText.
-
-    Parameters
-    ----------
-    str_float : string
-        This is the string representation of a float.
-
-    Returns
-    -------
-    out : string
-        A math directive for reStructuredText.
-
-    """
-    return f':math:`{latexify_number(str_float)}`'

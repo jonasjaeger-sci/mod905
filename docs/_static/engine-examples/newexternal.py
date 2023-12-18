@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """A template for a new external MD engine."""
 import logging
@@ -10,9 +10,33 @@ from pyretis.engines.external import ExternalMDEngine
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
+INPUT_CONF = []
+OUTPUT_FILES = []
+REQUIRED_FILES = []
+
+
+def get_energy():
+    """Fictional function to read energy."""
+    return 42, 42
+
+
+def kinetic_energy_output_from_velocity_generation(_, __):
+    """Fictional function to read kin eng."""
+    return 42
+
+
+def method_to_read_config_file(_):
+    """Fictional function to read config file."""
+    return 42, 42
+
+
+def method_to_write_config_file(_, __, ___):
+    """Fictional function to write a config file."""
+    return
+
 
 class NewEngine(ExternalMDEngine):
-    """A new external engine class
+    """A new external engine class.
 
     Attributes
     ----------
@@ -40,7 +64,7 @@ class NewEngine(ExternalMDEngine):
         subcycles : integer
             The number of steps each external step is composed of.
         """
-        super().__init__('New external engine', timestep, subcycles, '')
+        super().__init__('New external engine', timestep, subcycles)
         # Store variables for the engine:
         self.exe = exe
         # store input path:
@@ -96,10 +120,9 @@ class NewEngine(ExternalMDEngine):
         out_file : string
             The file to dump to.
         """
-        pass
+        return
 
-    def _propagate_from(self, name, path, system, order_function, interfaces,
-                        reverse=False):
+    def _propagate_from(self, name, path, ensemble, reverse=False):
         """Propagate from the current system configuration.
 
         Here, we assume that this method is called after the propagate()
@@ -116,14 +139,16 @@ class NewEngine(ExternalMDEngine):
             We are here not returning a new path - this since we want
             to delegate the creation of the path to the method
             that is running `propagate`.
-        system : object like :py:class:`.System`
-            The system object gives the initial state for the
-            integration. The initial state is stored and the system is
-            reset to the initial state when the integration is done.
-        order_function : object like :py:class:`.OrderParameter`
-            The object used for calculating the order parameter.
-        interfaces : list of floats
-            These interfaces define the stopping criterion.
+        ensemble: dict
+            it contains:
+            * `system` : object like :py:class:`.System`
+              The system object gives the initial state for the
+              integration. The initial state is stored and the system is
+              reset to the initial state when the integration is done.
+            * `order_function` : object like :py:class:`.OrderParameter`
+              The object used for calculating the order parameter.
+            * `interfaces` : list of floats
+              These interfaces define the stopping criterion.
         reverse : boolean
             If True, the system will be propagated backwards in time.
 
@@ -136,24 +161,24 @@ class NewEngine(ExternalMDEngine):
         """
         # Dumping of the initial config were done by the parent, here
         # we will just the dumped file:
-        initial_conf = system.particles.get_pos()[0]
+        initial_conf = ensemble['system'].particles.get_pos()[0]
         # Copy this file, in case the external program requires
         # specific names for the input configurations:
-        INPUT_CONF = os.path.join(self.exe_dir, 'INPUT_NAME')
-        self._copyfile(initial_conf, poscar)
+        input_conf = os.path.join(self.exe_dir, 'input_conf')
+        output_conf = os.path.join(self.exe_dir, 'output_conf')
+        self._copyfile(initial_conf, output_conf)
         # Set the positions to be just the file we copied:
-        system.particles.set_pos((INPUT_CONF, None))
+        ensemble['system'].particles.set_pos((input_conf, None))
         # Create the output trajectory file:
         traj_file = os.path.join(self.exe_dir, name)
         # Add other files here as well, input settings, force field etc...
         success = False
-        left, _, right = interfaces
-        phase_point = system.particles.get_particle_state()
+        left, _, right = ensemble['interfaces']
+        phase_point = ensemble['system'].particles.get_particle_state()
         # Just to be keep the same order as in the loop
         vpot = phase_point['vpot']
         ekin = phase_point['ekin']
-        order = self.calculate_order(order_function, system)
-        out_files = {}
+        order = self.calculate_order(ensemble)
         for i in range(path.maxlen):
             # We first add the current phase point, and then we propagate.
             phase_point = {
@@ -172,16 +197,17 @@ class NewEngine(ExternalMDEngine):
             # Here execute the external program
             # for instance by using self.step() or self._run_program()
             # get energies after execution:
-            ekin, vpot = get_energy
+            ekin, vpot = get_energy()
             # Recalculate order parameter
             # If the output file is named different, update the
             # system object so that it points to this file, e.g.:
             # system.particles.set_pos((NAME_OF_FILE, None)), or
             # if the energies are needed as well, use
             # system.particles.set_particle_state(...)
-            order = self.calculate_order(order_function, system)
+            order = self.calculate_order(ensemble)
         # We are done with the execution:
         # clean up and remove files:
+        list_of_files_to_remove = []
         self._remove_files(self.exe_dir, list_of_files_to_remove)
         return success, status
 
@@ -208,8 +234,9 @@ class NewEngine(ExternalMDEngine):
         # Store the frame after the step, make use of the name variable:
         config = os.path.join(self.exe_dir, 'OUTPUT.{}'.format(name))
         # Get energies
-        ekin, vpot = get_energy(oszicar)
+        ekin, vpot = get_energy()
         # remove files that we dont need after the step:
+        files_to_remove = []
         self._remove_files(self.exe_dir, files_to_remove)
         # Update the state of the system to match the current config
         phase_point = {'pos': (config, None),
@@ -253,8 +280,7 @@ class NewEngine(ExternalMDEngine):
         xyz, vel = method_to_read_config_file(filename)
         method_to_write_config_file(outfile, xyz, -vel)
 
-    def modify_velocities(self, system, rgen, sigma_v=None, aimless=True,
-                          momentum=False, rescale=None):
+    def modify_velocities(self, system, rgen, vel_settings):
         """Modify the velocities of the current state.
 
         This method will modify the velocities of a time slice.
@@ -266,18 +292,22 @@ class NewEngine(ExternalMDEngine):
             list.
         rgen : object like :py:class:`.RandomGenerator`
             This is the random generator that will be used.
-        sigma_v : numpy.array, optional
-            These values can be used to set a standard deviation (one
-            for each particle) for the generated velocities.
-        aimless : boolean, optional
-            Determines if we should do aimless shooting or not.
-        momentum : boolean, optional
-            If True, we reset the linear momentum to zero after generating.
-        rescale : float, optional
-            In some NVE simulations, we may wish to rescale the energy to
-            a fixed value. If `rescale` is a float > 0, we will rescale
-            the energy (after modification of the velocities) to match the
-            given float.
+        vel_settings: dict
+            It contains all the info for the velocity:
+
+            * `sigma_v` : numpy.array, optional
+              These values can be used to set a standard deviation (one
+              for each particle) for the generated velocities.
+            * `aimless` : boolean, optional
+              Determines if we should do aimless shooting or not.
+            * `momentum` : boolean, optional
+              If True, we reset the linear momentum to zero after
+              generating.
+            * `rescale` : float, optional
+              In some NVE simulations, we may wish to re-scale the
+              energy to a fixed value. If `rescale` is a float > 0,
+              we will re-scale the energy (after modification of
+              the velocities) to match the given float.
 
         Returns
         -------
@@ -289,6 +319,8 @@ class NewEngine(ExternalMDEngine):
         dek = None
         kin_old = None
         kin_new = None
+        rescale = vel_settings.get('rescale')
+
         if rescale is not None and rescale is not False and rescale > 0:
             # Code to support energy rescale, or just ignore this as
             # set:
@@ -297,14 +329,15 @@ class NewEngine(ExternalMDEngine):
             raise NotImplementedError(msgtxt)
         else:
             kin_old = system.particles.ekin
-        if aimless:
-            pos = self.dump_frame(system)
+        if vel_settings.get('aimless', False):
+            # pos = self.dump_frame(system)
             phase_point = system.particles.get_particle_state()
             # Generate new velocities, either by hand or by asking the
             # external program.
             genvel = os.path.join(self.exe_dir, 'g_POSCAR')
             # Also get the new kinetic energy
-            kin_new = kinetic_energy_output_from_velocity_generation()
+            kin_new = kinetic_energy_output_from_velocity_generation(genvel,
+                                                                     rgen)
             # Update the phase point (note we keep the potential energy):
             phase_point['pos'] = (genvel, None)
             phase_point['vel'] = False

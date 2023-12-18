@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Example of interaction with a Simulation."""
 from pyretis.core import System
@@ -11,7 +11,7 @@ def function(sys):
     return sys.temperature
 
 
-simulation = Simulation(steps=10)
+simulation = Simulation(settings={}, controls={'steps': 10})
 system = System(temperature=300)
 
 my_task = {'func': function,

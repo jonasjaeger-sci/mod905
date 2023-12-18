@@ -517,7 +517,7 @@ The following parameters can be set for the DoubleWellWCA potential:
    act on. If this is not set, it will turn on the interaction for all
    particles. For example, if ``types = [(1,2)]`` the interaction will be
    turned on between particles of type ``1`` and type ``2`` only. (See
-   the :ref:`particle section <user-section-particles-keyword-type>` for a
+   the :ref:`particle section <user-section-particles-keyword-ptype>` for a
    description about the particle type.) Note that several types can be
    specified at the same time: ``types = [(1, 2), (0, 1), (0, 2)]``.
 

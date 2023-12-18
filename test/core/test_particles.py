@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Test the classes and methods from pyretis.core.particles"""
 import logging
-import unittest
 import numpy as np
-from scipy.special import comb
+import unittest
 from pyretis.core.particles import (
     Particles,
     ParticlesExt,
     get_particle_type,
     particles_from_restart,
 )
+from scipy.special import comb
 logging.disable(logging.CRITICAL)
 
 
@@ -132,7 +132,7 @@ class ParticleTest(unittest.TestCase):
         particles.vpot = 101
         particles.ekin = 102
         restart = particles.restart_info()
-        self.assertEqual(restart['class'], 'internal')
+        self.assertEqual(restart['type'], 'internal')
         particles2 = Particles(dim=3)
         particles2.load_restart_info(restart)
         self.assertTrue(np.allclose(particles.pos, particles2.pos))

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Simple script to compare the outcome of two simulations.
 
@@ -16,10 +16,6 @@ from pyretis.core.pathensemble import generate_ensemble_name
 
 RESULTS = 'results'
 RESULTS_TGZ = {
-    '2016.4': 'results-2016.4.tgz',
-    '2016.3': 'results-2016.3.tgz',
-    '2016.2': 'results-2016.2.tgz',
-    '2016.1': 'results-2016.1.tgz',
     '5.1.4': 'results-5.1.4.tgz',
 }
 
@@ -153,7 +149,17 @@ def main(args):
         gmx_version = '5.1.4'
     print_to_screen('GROMACS version family: {}'.format(gmx_version),
                     level='info')
-    correct = RESULTS_TGZ[gmx_version]
+    correct = RESULTS_TGZ.get(gmx_version, None)
+    if correct is None:
+        print_to_screen(
+            'GROMACS version {} is not supported for '
+            'result comparison.'.format(gmx_version)
+        )
+        print_to_screen('The supported GROMACS versions are:')
+        for key in RESULTS_TGZ:
+            print_to_screen('- {}'.format(key))
+        sys.exit(0)
+
     print_to_screen('Using results from: {}'.format(correct), level='info')
 
     for dirname in ('gromacs1', 'gromacs2'):

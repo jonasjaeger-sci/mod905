@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """A class for writing text data for the analysis.
 
@@ -149,7 +149,7 @@ class TxtPlotter(Plotter):
                                     self.out_fmt, path=self.out_dir)
                 outfiles.append(outfile)
                 _txt_histogram(outfile,
-                               r'Histogram for {}'.format(ENERTITLE[key]),
+                               f'Histogram for {ENERTITLE[key]}',
                                [results[key]['distribution']],
                                backup=self.backup)
         return outfiles
@@ -232,7 +232,7 @@ class TxtPlotter(Plotter):
         """
         ens = path_ensemble.ensemble_name  # identify the ensemble
         ens_simplified = path_ensemble.ensemble_name_simple
-        detect = path_ensemble.detect
+        detect = results['detect']
         outfiles = []
         if 'pcross' in results:
             # 1) Output pcross vs lambda:
@@ -240,7 +240,7 @@ class TxtPlotter(Plotter):
                                 self.out_fmt, path=self.out_dir)
             outfiles.append(outfile)
             txt_save_columns(outfile,
-                             'Ensemble: {}, detect: {}'.format(ens, detect),
+                             f'Ensemble: {ens}, detect: {detect}',
                              [results['pcross'][0], results['pcross'][1]],
                              backup=self.backup)
         if 'prun' in results:
@@ -248,14 +248,14 @@ class TxtPlotter(Plotter):
             outfile = name_file(PATHFILES['prun'].format(ens_simplified),
                                 self.out_fmt, path=self.out_dir)
             outfiles.append(outfile)
-            txt_save_columns(outfile, 'Ensemble: {}'.format(ens),
+            txt_save_columns(outfile, f'Ensemble: {ens}',
                              [results['prun']], backup=self.backup)
         if 'blockerror' in results:
             # 3) Block error results:
             outfile = name_file(PATHFILES['perror'].format(ens_simplified),
                                 self.out_fmt, path=self.out_dir)
             outfiles.append(outfile)
-            _txt_block_error(outfile, 'Ensemble: {0}'.format(ens),
+            _txt_block_error(outfile, f'Ensemble: {ens}',
                              results['blockerror'], backup=self.backup)
         # 3) Length histograms
         outfile = name_file(PATHFILES['pathlength'].format(ens_simplified),
@@ -272,7 +272,80 @@ class TxtPlotter(Plotter):
                               results['shoots'][1], ens, backup=self.backup)
         return outfiles
 
-    def output_matched_probability(self, path_ensembles, detect, matched):
+    def output_pppath(self, results, path_ensemble):
+        """Output all the results obtained by the repptis path analysis.
+
+        Parameters
+        ----------
+        results : dict
+            This dict contains the result from the analysis.
+        path_ensemble : object like :py:class:`.PathEnsemble`
+            This is the path ensemble we have analysed.
+
+        Returns
+        -------
+        outfiles : list
+            The output files created by this function.
+
+        """
+        ens = path_ensemble.ensemble_name  # identify the ensemble
+        ens_simplified = path_ensemble.ensemble_name_simple
+        detect = results['detect']
+        outfiles = []
+        if 'pcross' in results:
+            # 1) Output pcross vs lambda:
+            outfile = name_file(PATHFILES['pcross'].format(ens_simplified),
+                                self.out_fmt, path=self.out_dir)
+            outfiles.append(outfile)
+            txt_save_columns(outfile,
+                             f'Ensemble: {ens}, detect: {detect}',
+                             [results['pcross'][0], results['pcross'][1]],
+                             backup=self.backup)
+        if 'prun_sl' in results:
+            # 2) Output the running average of p:
+            outfile = name_file(PATHFILES['prun_sl'].format(ens_simplified),
+                                self.out_fmt, path=self.out_dir)
+            outfiles.append(outfile)
+            txt_save_columns(outfile, f'Ensemble: {ens}',
+                             [results['prun_sl']], backup=self.backup)
+        if 'prun_sr' in results:
+            # 2) Output the running average of p:
+            outfile = name_file(PATHFILES['prun_sr'].format(ens_simplified),
+                                self.out_fmt, path=self.out_dir)
+            outfiles.append(outfile)
+            txt_save_columns(outfile, f'Ensemble: {ens}',
+                             [results['prun_sr']], backup=self.backup)
+        if 'blockerror_sl' in results:
+            # 3) Block error results:
+            outfile = name_file(PATHFILES['perror_sl'].format(ens_simplified),
+                                self.out_fmt, path=self.out_dir)
+            outfiles.append(outfile)
+            _txt_block_error(outfile, f'Ensemble: {ens}',
+                             results['blockerror_sl'], backup=self.backup)
+        if 'blockerror_sr' in results:
+            # 3) Block error results:
+            outfile = name_file(PATHFILES['perror_sr'].format(ens_simplified),
+                                self.out_fmt, path=self.out_dir)
+            outfiles.append(outfile)
+            _txt_block_error(outfile, f'Ensemble: {ens}',
+                             results['blockerror_sr'], backup=self.backup)
+        # 3) Length histograms
+        outfile = name_file(PATHFILES['pathlength'].format(ens_simplified),
+                            self.out_fmt, path=self.out_dir)
+        outfiles.append(outfile)
+        _txt_histogram(outfile, 'Histograms for acc and all',
+                       [results['pathlength'][0], results['pathlength'][1]],
+                       backup=self.backup)
+        # 4) Shoot histograms
+        outfile = name_file(PATHFILES['shoots'].format(ens_simplified),
+                            self.out_fmt, path=self.out_dir)
+        outfiles.append(outfile)
+        _txt_shoots_histogram(outfile, results['shoots'][0],
+                              results['shoots'][1], ens, backup=self.backup)
+        return outfiles
+
+    def output_matched_probability(self, path_ensembles, detect, matched,
+                                   reptis=False):
         """Output the matched probabilities to a text file.
 
         This function will output the matched probabilities for the
@@ -300,28 +373,28 @@ class TxtPlotter(Plotter):
         outfiles = []
         # start by creating the matched file, here we use a custom
         # file writer:
-        outfile = name_file(PATH_MATCH['match'], self.out_fmt,
-                            path=self.out_dir)
-        if outfile.endswith('.gz'):
-            use_gzip = True
-            outfile = outfile[:-3]
-        else:
-            use_gzip = False
-        with open(outfile, 'wb') as fhandle:
-            for prob, ens, idet in zip(matched['matched-prob'],
-                                       path_ensembles, detect):
-                header = 'Ensemble: {}, idetect: {}'.format(ens, idet)
-                np.savetxt(fhandle, prob, header=header)
-        if use_gzip:
-            outfilegz = '{}.gz'.format(outfile)
-            with open(outfile, 'rb') as fhandle:
-                with gzip.open(outfilegz, 'wb') as fhandle_out:
-                    shutil.copyfileobj(fhandle, fhandle_out)
-            os.remove(outfile)
-            outfiles.append(outfilegz)
-        else:
+        if not reptis:
+            outfile = name_file(PATH_MATCH['match'], self.out_fmt,
+                                path=self.out_dir)
+            use_gzip = outfile.endswith('.gz')
+            if use_gzip:
+                outfile = outfile[:-3]
+            with open(outfile, 'wb') as fhandle:
+                for prob, ens, idet in zip(matched['matched-prob'],
+                                           path_ensembles, detect):
+                    header = f'Ensemble: {ens}, idetect: {idet}'
+                    np.savetxt(fhandle, prob, header=header)
+            if use_gzip:
+                with open(outfile, 'rb') as fhandle:
+                    with gzip.open(f'{outfile}.gz', 'wb') as fhandle_out:
+                        shutil.copyfileobj(fhandle, fhandle_out)
+                os.remove(outfile)
+                outfile = f'{outfile}.gz'
             outfiles.append(outfile)
         # output the over-all matched probability:
+        if reptis:
+            matched['overall-prob'] = np.array([detect,
+                                                matched['pcross']]).T
         outfile = name_file(PATH_MATCH['total'], self.out_fmt,
                             path=self.out_dir)
         interf = ' , '.join([str(idet) for idet in detect])
@@ -394,10 +467,9 @@ def _txt_histogram(outputfile, title, histograms, backup=False):
 
     """
     data = []
-    header = [r'{}'.format(title)]
+    header = [f'{title}']
     for hist in histograms:
-        header.append(r'avg: {0:6.2f}, std: {1:6.2f}'.format(hist[2][0],
-                                                             hist[2][1]))
+        header.append(f'avg: {hist[2][0]:6.2f}, std: {hist[2][1]:6.2f}')
         data.append(hist[1])
         data.append(hist[0])
     headertxt = ', '.join(header)
@@ -424,7 +496,7 @@ def _txt_shoots_histogram(outputfile, histograms, scale, ensemble,
 
     """
     data = []
-    header = ['Ensemble: {0}'.format(ensemble)]
+    header = [f'Ensemble: {ensemble}']
     for key in ['ACC', 'REJ', 'BWI', 'ALL']:
         try:
             mid = histograms[key][2]
@@ -433,7 +505,7 @@ def _txt_shoots_histogram(outputfile, histograms, scale, ensemble,
             data.append(mid)
             data.append(hist)
             data.append(hist_scale)
-            header.append('{} (mid, hist, hist*scale)'.format(key))
+            header.append(f'{key} (mid, hist, hist*scale)')
         except KeyError:
             continue
     headertxt = ', '.join(header)

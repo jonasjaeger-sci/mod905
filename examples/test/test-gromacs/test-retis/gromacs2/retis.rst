@@ -17,7 +17,7 @@ class = GromacsEngine2R
 module = gromacs.py
 gmx = GMXCOMMAND
 mdrun = GMXCOMMAND mdrun
-input_path = ../gromacs_input
+input_path = ../../gmx/gromacs_input
 timestep = 0.002
 subcycles = 5
 gmx_format = g96
@@ -36,6 +36,7 @@ seed = 0
 Initial-path
 ------------
 method = kick
+kick-from = previous
 
 RETIS settings
 --------------

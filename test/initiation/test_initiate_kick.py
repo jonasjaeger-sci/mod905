@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Test the initiate kick family of methods."""
 import collections
@@ -96,13 +96,10 @@ def _get_kick_initial(log):
 
 def _run_generate_initial(simulation):
     """Run the generate_initial_path_kick method for a given simulation."""
-    for attempt in generate_initial_path_kick(simulation.system,
-                                              simulation.order_function,
-                                              simulation.path_ensemble,
-                                              simulation.engine,
-                                              simulation.rgen,
-                                              simulation.settings['tis']):
-        yield attempt
+    for ens, sett in zip(simulation.ensembles,
+                         simulation.settings['ensemble']):
+        for attempt in generate_initial_path_kick(ens, sett['tis']):
+            yield attempt
 
 
 class TestInitiateKick(unittest.TestCase):
@@ -122,15 +119,15 @@ class TestInitiateKick(unittest.TestCase):
             settings = {
                 'initial-path': {'kick-from': key}
             }
-            init = initiate_kick(None, 0, settings)
-            gen = method(None, 0)
+            init = initiate_kick(None, settings, cycle=0)
+            gen = method(None, settings, cycle=0)
             self._compare_generator_functions(init, gen)
         # Test for unknown method:
         settings = {
             'initial-path': {'kick-from': 'Ekki-Ekki-Ekki-Ekki-Ptang'}
         }
         with self.assertRaises(ValueError):
-            initiate_kick(None, 0, settings)
+            initiate_kick(None, settings, cycle=0)
 
     def _help_with_initiation(self, simulation, method, correct_kick):
         """Run initiation and return points for kicking."""
@@ -139,7 +136,9 @@ class TestInitiateKick(unittest.TestCase):
         with turn_on_logging():
             with patch('sys.stdout', new=StringIO()):
                 with self.assertLogs() as log:
-                    for result in method(simulation, 0):
+                    for result in method(simulation,
+                                         simulation.settings,
+                                         cycle=0):
                         results.append(result)
                     kick = _get_kick_initial(log)
         self.assertEqual(len(kick), len(correct_kick))
@@ -150,7 +149,7 @@ class TestInitiateKick(unittest.TestCase):
     def test_initiate_kick_max(self):
         """Test the initiate_kick_max method."""
         simulation = create_test_retis_simulation()
-        correct_kick = [-1.0, -0.9016, -0.8893]
+        correct_kick = [-1.0, -0.9016, -0.7663]
         results = self._help_with_initiation(simulation, initiate_kick_max,
                                              correct_kick)
         kick_re = [correct_kick[0]]
@@ -170,8 +169,8 @@ class TestInitiateKick(unittest.TestCase):
         for i, j in zip(correct_kick, kick_re):
             self.assertAlmostEqual(i, j)
         # Check that is gets the right interface for ensemble 0
-        simulation.path_ensembles[0].ensemble_number = 0
-        correct_kick = [-0.8893, -0.9016, -0.508]
+        simulation.ensembles[0]['path_ensemble'].ensemble_number = 0
+        correct_kick = [-0.8893, -0.9016, -0.5203]
         self._help_with_initiation(simulation, initiate_kick_max,
                                    correct_kick)
 
@@ -179,10 +178,66 @@ class TestInitiateKick(unittest.TestCase):
         """Test the initiate_kicki method."""
         simulation = create_test_retis_simulation()
         correct_kick = [-1.0, -1.0, -1.0]
+        # Calculate path weight when under the WF HA ensemble:
+        for i in range(len(simulation.settings['ensemble'])):
+            simulation.settings['ensemble'][i]['tis']['high_accept'] = True
+            simulation.settings['ensemble'][i]['tis']['shooting_move'] = 'wf'
         results = self._help_with_initiation(simulation, initiate_kicki,
                                              correct_kick)
-        for result in results:
+        path_weights = [0.0, 5.0, 88.0]
+        for i, result in enumerate(results):
             self.assertTrue(result[0])
+            self.assertEqual(result[1].weight, path_weights[i])
+
+    def test_no_0L_kicking(self):
+        simulation = create_test_tis_simulation()
+        ens = simulation.ensembles[0]
+        # Initial system is -1 so set interfaces around that
+        ens['path_ensemble'].interfaces = (-1.5, -0.5, -0.5)
+        # Set start condition to LR
+        ens['path_ensemble'].start_condition = ("R", "L")
+
+        # Break kick_across_middle to make sure it is not called
+        def f(*args):
+            raise RuntimeError("THIS SHOULD NOT BE CALLED")
+        ens['engine'].kick_across_middle = f
+        path = next(
+            generate_initial_path_kick(ens, simulation.settings['tis'])
+        )
+
+        self.assertTrue(path[0])
+
+    def test_0L_kicking(self):
+        simulation = create_test_tis_simulation()
+        ens = simulation.ensembles[0]
+        # Initial system is -1 so set all interfaces right of that
+        ens['path_ensemble'].interfaces = (-0.5, 0, 0.5)
+        # Set start condition to LR
+        ens['path_ensemble'].start_condition = ("R", "L")
+
+        # Break kick_across_middle to make sure it is not called
+        def f(ensemble, middle, tis_settings):
+            raise RuntimeError(middle)
+        ens['engine'].kick_across_middle = f
+        # Test if we see the right middle being called
+        with self.assertRaisesRegex(RuntimeError, "-0.5"):
+            next(generate_initial_path_kick(ens, simulation.settings['tis']))
+
+    def test_0R_kicking(self):
+        simulation = create_test_tis_simulation()
+        ens = simulation.ensembles[0]
+        # Initial system is -1 so set all interfaces left of that
+        ens['path_ensemble'].interfaces = (-2.5, -2, -1.5)
+        # Set start condition to LR
+        ens['path_ensemble'].start_condition = ("R", "L")
+
+        # Break kick_across_middle to make sure it is not called
+        def f(ensemble, middle, tis_settings):
+            raise RuntimeError(middle)
+        ens['engine'].kick_across_middle = f
+        # Test if we see the right middle being called
+        with self.assertRaisesRegex(RuntimeError, "-1.5"):
+            next(generate_initial_path_kick(ens, simulation.settings['tis']))
 
     def test_fix_path(self):
         """Test fix_path_by_tis."""
@@ -196,9 +251,7 @@ class TestInitiateKick(unittest.TestCase):
         # try to improve it:
         new_path = fix_path_by_tis(
             initial_path,
-            simulation.order_function,
-            simulation.path_ensemble,
-            simulation.engine,
+            simulation.ensembles[0],
             simulation.settings['tis'],
         )
         # This should trigger the "did not improve" branch,
@@ -206,7 +259,7 @@ class TestInitiateKick(unittest.TestCase):
         # the path we gave in:
         self.assertIs(initial_path, new_path)
         # Make the path start end at wrong interface:
-        interfaces = simulation.path_ensemble.interfaces
+        interfaces = simulation.ensembles[0]['path_ensemble'].interfaces
         initial_path.phasepoints[0].order = [interfaces[-1] + 0.2, 0.0]
         initial_path.phasepoints[-1].order = [interfaces[-1] + 0.2, 0.0]
         check = initial_path.check_interfaces(interfaces)
@@ -217,21 +270,17 @@ class TestInitiateKick(unittest.TestCase):
         # Try to improve this path:
         new_path = fix_path_by_tis(
             initial_path,
-            simulation.order_function,
-            simulation.path_ensemble,
-            simulation.engine,
+            simulation.ensembles[0],
             simulation.settings['tis'],
-            rgen=simulation.rgen,
         )
-        # The new path starts at L, ends at R and crosses M:
+        # The new path starts at L, ends at L and crosses M:
         self.assertIsNot(initial_path, new_path)
         check = new_path.check_interfaces(interfaces)
         self.assertEqual(check[0], 'L')
-        self.assertEqual(check[1], 'R')
+        self.assertEqual(check[1], 'L')
         self.assertEqual(check[2], 'M')
-        # Check that we crossed the left interface, the middle one,
-        # and the final interface.
-        self.assertEqual(check[3], [True, True, True])
+        # Check that we crossed the left interface, the middle one and back.
+        self.assertEqual(check[3], [True, True, False])
         # Check that the path is accepted:
         self.assertEqual(new_path.status, 'ACC')
 
@@ -250,11 +299,17 @@ class TestInitiateKick(unittest.TestCase):
             self.assertIsNone(attempt[-1])
             self.assertTrue(attempt[1].startswith('Forward path failed:'))
             simulation.rgen.set_state(state)
-            simulation.engine.reset()
+            simulation.ensembles[0]['engine'].reset()
             if i >= 1:
                 # Just do two iterations so that we catch the continue
                 # statement after the yield.
                 break
+
+        # Test exp initialization
+        simulation.settings['ensemble'][0]['tis']['shooting_move'] = 'exp'
+        for i, attempt in enumerate(_run_generate_initial(simulation)):
+            self.assertTrue(attempt[0])
+            break
 
     def test_generate_initial_fail_backward(self):
         """Test backward failure of the generate_initial_path_kick method.
@@ -294,7 +349,7 @@ class TestInitiateKick(unittest.TestCase):
             self.assertIsNone(attempt[-1])
             self.assertEqual(attempt[1], 'Initial path was too long.')
             simulation.rgen.set_state(state)
-            simulation.engine.reset()
+            simulation.ensembles[0]['engine'].reset()
             if i >= 1:
                 # Just do two iterations so that we catch the continue
                 # statement after the yield.
@@ -310,7 +365,7 @@ class TestInitiateKick(unittest.TestCase):
         """
         # Make forward fail, by limiting to a short path:
         simulation = create_test_tis_simulation(maxlength=100)
-        simulation.path_ensemble.start_condition = 'tiktok'
+        simulation.ensembles[0]['path_ensemble'].start_condition = 'tiktok'
         state = simulation.rgen.get_state()
         for i, attempt in enumerate(_run_generate_initial(simulation)):
             self.assertFalse(attempt[0])
@@ -320,7 +375,7 @@ class TestInitiateKick(unittest.TestCase):
             )
             # Reset rgen and the engine that we just do the same again:
             simulation.rgen.set_state(state)
-            simulation.engine.reset()
+            simulation.ensembles[0]['engine'].reset()
             if i >= 1:
                 # Just do two iterations so that we catch the continue
                 # statement after the yield.
@@ -346,7 +401,8 @@ class TestInitiateKick(unittest.TestCase):
                 self.assertEqual(attempt[1], 'Trying to fix path by TIS moves')
                 # For this to actually work, we need to allow the engine
                 # to go backwards as well:
-                simulation.engine.timestep = -simulation.engine.timestep
+                simulation.ensembles[0]['engine'].timestep =\
+                    -simulation.ensembles[0]['engine'].timestep
             elif i == 1:
                 self.assertTrue(attempt[0])
                 self.assertIsNotNone(attempt[-1])

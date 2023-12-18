@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """This script will help to copy files for restarting.
 
@@ -39,12 +39,13 @@ def main(source_dir, target_dir):
         with open(restart, 'rb') as infile:
             info = pickle.load(infile)
         newpos = []
-        for phasepoint in info['last_path']['phasepoints']:
+        for phasepoint in info['path_ensemble']['last_path']['phasepoints']:
             filename, idx = phasepoint['particles']['config']
             name = os.path.basename(filename)
             abs_path = os.path.abspath(os.path.join(target, 'accepted', name))
             newpos.append((abs_path, idx))
-        for phasepoint, pos in zip(info['last_path']['phasepoints'], newpos):
+        for phasepoint, pos in zip(
+                info['path_ensemble']['last_path']['phasepoints'], newpos):
             phasepoint['particles']['config'] = pos
         with open(restart, 'wb') as outfile:
             pickle.dump(info, outfile)

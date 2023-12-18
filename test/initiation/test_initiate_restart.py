@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Test the initiate restart method."""
 import logging
@@ -8,18 +8,13 @@ import unittest
 from unittest.mock import patch
 import os
 import tempfile
+from pyretis.inout.settings import (settings_from_restart,
+                                    fill_up_tis_and_retis_settings)
 import shutil
 from math import isnan, isinf, isclose
-from pyretis.core.units import units_from_settings
 from pyretis.inout.common import make_dirs
-from pyretis.inout.restart import read_restart_file
-from pyretis.inout.setup import (
-    create_simulation,
-    create_force_field,
-    create_system,
-    create_engine,
-)
-from pyretis.inout.settings import parse_settings_file
+from pyretis.setup.createsimulation import create_simulation
+from pyretis.inout.settings import (parse_settings_file, copy_settings)
 
 logging.disable(logging.CRITICAL)
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -67,41 +62,40 @@ def compare_num_lines(line1, line2, rel_tol=1e-9):
 
 def compare_data_ensemble_files(file1, file2, line_check=compare_num_lines):
     """Compare the contents of two result files, line-by-line."""
-    with open(file1, 'r') as input1:
-        with open(file2, 'r') as input2:
+    with open(file1, 'r', encoding='utf-8') as input1:
+        with open(file2, 'r', encoding='utf-8') as input2:
             for line1, line2 in zip(input1, input2):
                 if not line_check(line1, line2, rel_tol=1e-5):
                     return False
+            if next(input1, False) or next(input2, False):
+                return False
     return True
 
 
 def setup_for_restart(settings, target_dir, files_to_copy, restart=False):
     """Copy some simulation files to the given directory."""
-    settings['simulation']['exe-path'] = target_dir
+    if restart:
+        settings_from_restart(settings)
+    settings['simulation']['exe_path'] = target_dir
+    settings['engine']['exe_path'] = target_dir
+    fill_up_tis_and_retis_settings(settings)
+    for s_e in settings['ensemble']:
+        s_e['engine']['exe_path'] = target_dir
+        s_e['simulation']['exe_path'] = target_dir
+
     for i in files_to_copy:
         file_name = os.path.basename(i)
         target = os.path.join(target_dir, file_name)
         shutil.copyfile(i, target)
-    units_from_settings(settings)
-    restart_info = None
-    if restart:
-        restart_file = os.path.join(
-            target_dir, settings['simulation']['restart']
-        )
-        restart_info = read_restart_file(restart_file)
-    engine = create_engine(settings)
-    system = create_system(settings, engine=engine, restart=restart_info)
-    system.forcefield = create_force_field(settings)
-    keyargs = {'system': system, 'engine': engine}
-    simulation = create_simulation(settings, keyargs)
-    if restart_info is not None:
-        simulation.load_restart_info(restart_info['simulation'])
+
+    with patch('sys.stdout', new=StringIO()):
+        simulation = create_simulation(settings)
     simulation.set_up_output(settings)
     return simulation
 
 
 class TestInitiateRestart(unittest.TestCase):
-    """Run the tests for the intiate restart method."""
+    """Run the tests for the initiate restart method."""
 
     def _run_simulation(self, settings, simulation):
         """Just run a simulation."""
@@ -128,48 +122,128 @@ class TestInitiateRestart(unittest.TestCase):
         """Test the initiate restart method."""
         startdir = os.getcwd()
         settings1 = parse_settings_file(
-            os.path.join(RESTART, 'tis-run-full.rst')
-        )
-        settings2 = parse_settings_file(os.path.join(RESTART, 'tis-run-2.rst'))
+            os.path.join(RESTART, 'tis-run-full.rst'))
+        settings2 = parse_settings_file(
+            os.path.join(RESTART, 'tis-run-2.rst'))
         settings3 = parse_settings_file(
-            os.path.join(RESTART, 'tis-run-2-4.rst')
-        )
+            os.path.join(RESTART, 'tis-run-2-4.rst'))
+
         with tempfile.TemporaryDirectory() as tempdir:
+
+            files_to_copy = [os.path.join(RESTART, 'initial.xyz')]
+
             # First, run a full simulation which we will compare with:
             target_dir1 = os.path.join(tempdir, 'run-full')
             make_dirs(target_dir1)
-            files_to_copy = [
-                os.path.join(RESTART, 'initial.xyz'),
-            ]
             simulation1 = setup_for_restart(settings1, target_dir1,
-                                            files_to_copy)
+                                            files_to_copy, restart=False)
             self._run_simulation(settings1, simulation1)
             del simulation1
+
             # Next, run a shorter simulation we will restart from.
             target_dir2 = os.path.join(tempdir, 'run-2')
             make_dirs(target_dir2)
             simulation2 = setup_for_restart(settings2, target_dir2,
-                                            files_to_copy)
+                                            files_to_copy, restart=False)
             self._run_simulation(settings2, simulation2)
             del simulation2
+
             # Restart from simulation 2:
+            settings3['simulation']['restart'] = \
+                os.path.join(tempdir, 'run-2', 'pyretis.restart')
+
             target_dir3 = os.path.join(tempdir, 'run-2-4')
+            make_dirs(target_dir3)
             shutil.copytree(
                 os.path.join(target_dir2, '001'),
                 os.path.join(target_dir3, '001'),
             )
-            simulation3 = setup_for_restart(settings3, target_dir3, [],
+            simulation3 = setup_for_restart(settings3, target_dir3,
+                                            files_to_copy=[],
                                             restart=True)
+
             os.chdir(target_dir3)
+
             self._run_simulation(settings3, simulation3)
             os.chdir(startdir)
             del simulation3
             # So far, so good. Compare outputs from simulation1 and
             # simulation3:
             self._compare_simulation_results(
-                os.path.join(tempdir, 'run-full', '001'),
-                os.path.join(tempdir, 'run-2-4', '001'),
+               os.path.join(tempdir, 'run-full', '001'),
+               os.path.join(tempdir, 'run-2-4', '001'),
             )
+
+    def test_initiate_flexible_restart(self):
+        """Test the initiate flexible restart method."""
+        startdir = os.getcwd()
+        settings1 = parse_settings_file(
+            os.path.join(RESTART, 'tis-run-full.rst'))
+        settings2 = parse_settings_file(
+            os.path.join(RESTART, 'tis-run-2.rst'))
+        settings3 = parse_settings_file(
+            os.path.join(RESTART, 'tis-run-2-4.rst'))
+
+        # Convert them in a RETIS simulation
+        for sets in [settings1, settings2, settings3]:
+            sets['simulation']['task'] = 'retis'
+            sets['simulation']['flux'] = True
+            sets['simulation']['zero_ensemble'] = True
+            sets['simulation']['interfaces'].append(-0.7)
+            sets['simulation']['interfaces'].append(-0.6)
+            sets['retis'] = {'swapfreq': 0,
+                             'nullmoves': True,
+                             'swapsimul': False}
+            del sets['tis']['ensemble_number']
+
+        # This is the key of the test.
+        del settings3['simulation']['interfaces'][-1]
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            files_to_copy = [os.path.join(RESTART, 'initial.xyz')]
+            # First, run a full simulation which we will compare with:
+            target_dir1 = os.path.join(tempdir, 'run-full')
+            make_dirs(target_dir1)
+            simulation1 = setup_for_restart(settings1, target_dir1,
+                                            files_to_copy, restart=False)
+            self._run_simulation(settings1, simulation1)
+            del simulation1
+
+            # Next, run a shorter simulation we will restart from.
+            target_dir2 = os.path.join(tempdir, 'run-2')
+            make_dirs(target_dir2)
+            simulation2 = setup_for_restart(settings2, target_dir2,
+                                            files_to_copy, restart=False)
+            self._run_simulation(settings2, simulation2)
+            self.assertEqual(len(simulation2.ensembles), 5)
+            del simulation2
+
+            # Restart from simulation 2:
+            settings3['simulation']['restart'] = \
+                os.path.join(tempdir, 'run-2', 'pyretis.restart')
+            settings3['initial-path']['flexible_restart'] = True
+
+            # But now, one less ensemble, just because
+            settings3['particles'] = settings1['particles']
+
+            target_dir3 = os.path.join(tempdir, 'run-2-4')
+            make_dirs(target_dir3)
+            for ens in {'000', '001', '002', '003'}:
+                shutil.copytree(
+                    os.path.join(target_dir2, ens),
+                    os.path.join(target_dir3, ens))
+            files_to_copy = [os.path.join(RESTART, 'initial.xyz')]
+            simulation3 = setup_for_restart(settings3, target_dir3,
+                                            files_to_copy=files_to_copy,
+                                            restart=True)
+            os.chdir(target_dir3)
+
+            self._run_simulation(settings3, simulation3)
+            os.chdir(startdir)
+            # Check that new paths have been made.
+            self.assertEqual(
+                simulation3.ensembles[0]['path_ensemble'].nstats['npath'], 10)
+            self.assertEqual(len(simulation3.ensembles), 4)
 
 
 if __name__ == '__main__':

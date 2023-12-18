@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """This module handles random number generation.
 
@@ -36,7 +36,8 @@ __all__ = [
     'RandomGeneratorBase',
     'RandomGenerator',
     'ReservoirSampler',
-    'MockRandomGenerator'
+    'MockRandomGenerator',
+    'create_random_generator'
 ]
 
 
@@ -228,7 +229,7 @@ class RandomGeneratorBase(metaclass=ABCMeta):
 
         """
         if not sigma_v or sigma_v < 0.0:
-            kbt = (1.0/system.temperature['beta'])
+            kbt = 1.0/system.temperature['beta']
             # sigma_v is (n, 1) matrix
             sigma_v = np.sqrt(kbt*system.particles.imass)
         npart, dim = system.particles.vel.shape
@@ -272,6 +273,29 @@ class RandomGenerator(RandomGeneratorBase):
         super().__init__(seed=seed)
         self.rgen = RandomState(seed=seed)
 
+    def choice(self, a, size=None, replace=True, p=None):
+        """Chooses random samples.
+
+        Parameters
+        ----------
+        a : iterable, int
+            The group to choose from, an int is converted to range(a).
+        size : int, optional
+            The number of samples to choose.
+        replace : bool, optional
+            If to replace samples between draws, default True.
+        p : iterable, optional
+            The probabilities for every option in a,
+            default is an uniform dirstribution.
+
+        Returns
+        -------
+        choice : array-like
+            The picked choices.
+
+        """
+        return self.rgen.choice(a, size, replace, p)
+
     def rand(self, shape=1):
         """Draw random numbers in [0, 1).
 
@@ -295,11 +319,14 @@ class RandomGenerator(RandomGeneratorBase):
 
     def get_state(self):
         """Return current state."""
-        return self.rgen.get_state()
+        state = {'seed': self.seed,
+                 'state': self.rgen.get_state(),
+                 'rgen': 'rgen'}
+        return state
 
     def set_state(self, state):
         """Set state for random generator."""
-        return self.rgen.set_state(state)
+        return self.rgen.set_state(state['state'])
 
     def random_integers(self, low, high):
         """Draw random integers in [low, high].
@@ -545,11 +572,14 @@ class MockRandomGenerator(RandomGeneratorBase):
 
     def get_state(self):
         """Return current state."""
-        return self.seed
+        state = {'seed': self.seed,
+                 'state': self.seed,
+                 'rgen': 'mock'}
+        return state
 
     def set_state(self, state):
         """Set current state."""
-        self.seed = state
+        self.seed = state['state']
 
     def random_integers(self, low, high):
         """Return random integers in [low, high].
@@ -567,7 +597,7 @@ class MockRandomGenerator(RandomGeneratorBase):
             This is a pseudo-random integer in [low, high].
 
         """
-        idx = self.rand()*(high-low+1)
+        idx = self.rand()[0]*(high-low+1)
         return int(idx) + low
 
     def normal(self, loc=0.0, scale=1.0, size=None):
@@ -642,6 +672,51 @@ class MockRandomGenerator(RandomGeneratorBase):
         meanm = np.array([mean, ] * size)
         return 0.01*(meanm + norm)
 
+    def choice(self, a, size=None, replace=True, p=None):
+        """Choose random samples.
+
+        Parameters
+        ----------
+        a : iterable
+            The group to choose from.
+        size : int, optional
+            The number of samples to choose.
+        replace : bool, optional
+            If to replace samples between draws, default True.
+        p : iterable, optional
+            The probabilities for every option in a,
+            default is an uniform dirstribution.
+
+        Returns
+        -------
+        choice : array-like
+            The picked choices.
+
+        """
+        if isinstance(a, int):
+            a = list(range(a))
+        if p is None:
+            p = [1/len(a) for i in a]
+        if size is None:
+            size = 1
+        out = []
+        for _ in range(size):
+            rand = self.rand()
+            prob0 = 0
+            # Make sure p sums to 1 even after popping
+            p_sum = sum(p)
+            p = [i/p_sum for i in p]
+            for i, probi in zip(a, p):
+                prob0 += probi
+                if rand < prob0:
+                    out.append(i)
+                    if not replace:
+                        idx = a.index(i)
+                        _ = a.pop(idx)
+                        _ = p.pop(idx)
+                    break
+        return out
+
 
 class Borg:
     """A class for sharing states of objects."""
@@ -693,12 +768,12 @@ class MockRandomGeneratorBorg(Borg, MockRandomGenerator):
     """A class for sharing the state between MockRandomGenerator objects."""
 
 
-def create_random_generator(settings):
+def create_random_generator(settings=None):
     """Create a random generator from given settings.
 
     Parameters
     ----------
-    settings : dict
+    settings : dict, optional
         This is the dict used for creating the random generator.
         Currently, we will actually just look for a seed value.
 
@@ -708,18 +783,26 @@ def create_random_generator(settings):
         The random generator created.
 
     """
-    if 'seed' not in settings:
-        seed = 0
-        msg = 'No seed given, setting it to "0"'
-        logger.info(msg)
-    else:
-        seed = settings['seed']
-        logger.debug('Seed for random generator: %d', seed)
-    rgen = settings.get('rgen', None)
+    if settings is None:
+        settings = {}
+
+    rgen = settings.get('rgen', 'rgen')
+    seed = settings.get('seed', 0)
+    logger.debug('Seed for random generator: %s %d', rgen, seed)
+
     class_map = {
+        'rgen': RandomGenerator,
+        'rgen-borg': RandomGeneratorBorg,
         'mock': MockRandomGenerator,
-        'mock-borg': MockRandomGeneratorBorg,
-        'test': RandomGeneratorBorg,
+        'mock-borg': MockRandomGeneratorBorg
     }
     rgen_class = class_map.get(rgen, RandomGenerator)
-    return rgen_class(seed=seed)
+    rgen = rgen_class(seed=seed)
+
+    if 'state' in settings:
+        rgen.set_state(settings)
+        rgen.status = 'restarted'
+    else:
+        rgen.status = 'new rgen'
+
+    return rgen

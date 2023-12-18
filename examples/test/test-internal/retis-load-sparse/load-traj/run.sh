@@ -2,3 +2,4 @@
 set -e
 make clean
 pyretisrun -i retis.rst -p
+make clean

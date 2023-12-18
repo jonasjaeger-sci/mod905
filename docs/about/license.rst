@@ -3,7 +3,7 @@
 |pyretis| License (GNU Lesser General Public License v2.1+)
 ===========================================================
 
-Copyright (c) 2022 The |pyretis| team
+Copyright (c) 2023 The |pyretis| team
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by

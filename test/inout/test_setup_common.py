@@ -1,49 +1,16 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Test setup functions."""
 import os
 import logging
 import unittest
-import sys
-import inspect
-from pyretis.inout.setup.common import (import_from,
-                                        check_settings,
-                                        create_external)
+from pyretis.setup.common import (check_settings,
+                                  create_external)
 
 
 logging.disable(logging.CRITICAL)
 LOCAL_DIR = os.path.abspath(os.path.dirname(__file__))
-
-
-class TestImportFrom(unittest.TestCase):
-    """Test that we can import from other modules."""
-
-    def test_import(self):
-        """Test that we can import."""
-        module = os.path.join(LOCAL_DIR, 'fooengine.py')
-        klass = 'FooEngine'
-        imp = import_from(module, klass)
-        sys.path.insert(0, LOCAL_DIR)
-        from fooengine import FooEngine
-        del sys.path[0]
-        self.assertEqual(
-            inspect.getsource(imp),
-            inspect.getsource(FooEngine)
-        )
-
-    def test_import_importerror(self):
-        """Test that we can import."""
-        module = os.path.join(LOCAL_DIR, 'fooengine.py')
-        klass = 'DoesNotExist'
-        with self.assertRaises(ValueError):
-            import_from(module, klass)
-        module = 'path-that-should-not-be'
-        with self.assertRaises(ValueError):
-            import_from(module, klass)
-        module = os.path.join(LOCAL_DIR, 'isnothere.py')
-        with self.assertRaises(ValueError):
-            import_from(module, klass)
 
 
 class TestCheckSettings(unittest.TestCase):

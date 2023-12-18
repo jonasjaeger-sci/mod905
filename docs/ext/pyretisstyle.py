@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """PyRETIS style for use with pygments.
 
 This style is based on `Xcode` from the Pygments.
 For the original style:
 
-    :copyright: Copyright 2006-2019 by the Pygments team, see AUTHORS.
+    :pyretis_copyright: Copyright 2006-2029 by the Pygments team, see AUTHORS.
     :license: BSD, see LICENSE for details.
 
 See: http://pygments.org/

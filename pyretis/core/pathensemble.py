@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Classes and functions for path ensembles.
 
@@ -20,13 +20,17 @@ import collections
 import logging
 import os
 import shutil
-from pyretis.core.common import counter
+from pyretis.core.path import Path
+from pyretis.core.common import big_fat_comparer
+from pyretis.core.random_gen import create_random_generator
+
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 
-__all__ = ['PathEnsemble', 'PathEnsembleExt']
+__all__ = ['PathEnsemble', 'PathEnsembleExt', 'get_path_ensemble_class',
+           'generate_ensemble_name']
 
 
 def generate_ensemble_name(ensemble_number, zero_pad=3):
@@ -51,7 +55,8 @@ def generate_ensemble_name(ensemble_number, zero_pad=3):
     if zero_pad < 3:
         logger.warning('zero_pad must be >= 3. Setting it to 3.')
         zero_pad = 3
-    return f"{ensemble_number:0{zero_pad}d}"
+    fmt = f'{{:0{zero_pad}d}}'
+    return fmt.format(ensemble_number)
 
 
 def _generate_file_names(path, target_dir, prefix=None):
@@ -118,8 +123,6 @@ class PathEnsemble:
     interfaces : list of floats
         Interfaces, specified with the values for the
         order parameters: `[left, middle, right]`.
-    detect : float
-        Interface to use for analysis.
     paths : list
         This list contains the stored information for the paths. Here
         we only store the data returned by calling the `get_path_data()`
@@ -138,20 +141,20 @@ class PathEnsemble:
 
     """
 
-    def __init__(self, ensemble_number, interfaces, detect=None, maxpath=10000,
-                 exe_dir=None):
+    def __init__(self, ensemble_number, interfaces,
+                 rgen=None, maxpath=10000, exe_dir=None):
         """Initialise the PathEnsemble object.
 
         Parameters
         ----------
-        ensemble : integer
+        ensemble_number : integer
             An integer used to identify the ensemble.
         interfaces : list of floats
             These are the interfaces specified with the values
             for the order parameters: ``[left, middle, right]``.
-        detect : float, optional
-            The interface used for detecting a successful path in the
-            analysis.
+        rgen : object like :py:class:`.RandomGenerator`, optional
+            The random generator that will be used for the
+            paths that required random numbers.
         maxpath : integer, optional
             The maximum number of paths to store information for in memory.
             Note, that this will not influence the analysis as long as
@@ -162,9 +165,11 @@ class PathEnsemble:
             ensemble.
 
         """
+        if rgen is None:
+            rgen = create_random_generator()
+        self.rgen = rgen
         self.ensemble_number = ensemble_number
         self.interfaces = tuple(interfaces)  # Should not change interfaces.
-        self.detect = detect
         self.last_path = None
         self.nstats = {'npath': 0, 'nshoot': 0, 'ACC': 0}
         self.paths = []
@@ -173,19 +178,72 @@ class PathEnsemble:
             self.ensemble_name = '[0^-]'
             self.start_condition = 'R'
         else:
-            self.ensemble_name = f'[{self.ensemble_number-1}^+]'
+            ensemble_number = self.ensemble_number - 1
+            self.ensemble_name = f'[{ensemble_number}^+]'
             self.start_condition = 'L'
         self.ensemble_name_simple = generate_ensemble_name(
             self.ensemble_number
         )
         self.directory = collections.OrderedDict()
-        self.directory['path-ensemble'] = None
+        self.directory['path_ensemble'] = None
         self.directory['accepted'] = None
         self.directory['generate'] = None
         self.directory['traj'] = None
         if exe_dir is not None:
             path_dir = os.path.join(exe_dir, self.ensemble_name_simple)
             self.update_directories(path_dir)
+
+    def __eq__(self, other):
+        """Check if two path_ensemble are equal."""
+        equal = True
+        if self.__class__ != other.__class__:
+            logger.debug('%s and %s.__class__ differ', self, other)
+            return False
+
+        if set(self.__dict__) != set(other.__dict__):
+            logger.debug('%s and %s.__dict__ differ', self, other)
+            equal = False
+
+        for i in ['directory', 'interfaces', 'nstats', 'paths']:
+            if hasattr(self, i):
+                for j, k in zip(getattr(self, i), getattr(other, i)):
+                    if j != k:
+                        logger.debug('%s for %s and %s attributes are %s and '
+                                     '%s', i, self, other, j, k)
+                        equal = False
+
+        for i in ['ensemble_name',
+                  'ensemble_name_simple', 'ensemble_number',
+                  'maxpath', 'start_condition']:
+            if hasattr(self, i):
+                if getattr(self, i) != getattr(other, i):
+                    logger.debug('%s for %s and %s, attributes are %s and %s',
+                                 i, self, other,
+                                 getattr(self, i), getattr(other, i))
+                    equal = False
+
+        if hasattr(self, 'last_path'):
+            if self.last_path != other.last_path:
+                logger.debug('last paths differs')
+                equal = False
+
+        if hasattr(self, 'rgen'):
+            if self.rgen.__class__ != other.rgen.__class__:
+                logger.debug('self.rgen.__class__ differs')
+                return False
+            if self.rgen.__dict__['seed'] != other.rgen.__dict__['seed']:
+                logger.debug('rgen seed differs')
+                equal = False
+            if not big_fat_comparer(self.rgen.__dict__['rgen'].get_state(),
+                                    other.rgen.__dict__['rgen'].get_state()):
+                logger.debug('rgen differs')
+                equal = False
+
+        return equal
+
+    def __ne__(self, other):
+        """Check if two paths are not equal."""
+        return not self == other
 
     def directories(self):
         """Yield the directories PyRETIS should make."""
@@ -205,7 +263,7 @@ class PathEnsemble:
 
         """
         for key, val in self.directory.items():
-            if key == 'path-ensemble':
+            if key == 'path_ensemble':
                 self.directory[key] = path
             else:
                 self.directory[key] = os.path.join(path, key)
@@ -285,20 +343,18 @@ class PathEnsemble:
                          'weight': 1.}
         else:
             path_data = path.get_path_data(status, self.interfaces)
-            if path_data['status'] == 'ACC':  # Store the path:
+            if 'EXP' in status:
+                path_data['status'] = 'EXP'
+            if path_data['status'] in {'ACC', 'EXP'}:  # Store the path:
                 self.store_path(path)
-                if path_data['generated'][0] == 'sh':
+                if path_data['generated'][0] in {'sh', 'ss', 'wt', 'wf'}:
                     self.nstats['nshoot'] += 1
         path_data['cycle'] = cycle  # Also store cycle number.
         self.paths.append(path_data)  # Store the new data.
         # Update some statistics:
-        try:
-            self.nstats[status] += 1
-        except KeyError:  # This is the first occurrence of the status:
-            self.nstats[status] = 1
+        # This is to count also for the first occurrence of the status:
+        self.nstats[status] = self.nstats.get(status, 0) + 1
         self.nstats['npath'] += 1
-        # Reset the counter
-        counter.count = 0
 
     def get_accepted(self):
         """Yield accepted paths from the path ensemble.
@@ -341,7 +397,7 @@ class PathEnsemble:
 
         It is included here in order to have a simple compatibility
         between the :py:class:`.PathEnsemble` object and the
-        :py:class:`.PathEnsembleFile` object. This is useful for the
+        py:class:`.PathEnsembleFile` object. This is useful for the
         analysis.
 
         Yields
@@ -353,16 +409,31 @@ class PathEnsemble:
         for path in self.paths:
             yield path
 
-    def move_path_to_generated(self, path, prefix=None):
+    def move_path_to_generate(self, _path, _prefix=None):
         """Move a path for temporary storing."""
         return
+
+    def copy_path_to_generate(self, path, _prefix=None):
+        """Copy a path for temporary storing.
+
+        Parameters
+        ----------
+        path : object like :py:class:`.PathBase`
+            The path to copy.
+
+        Returns
+        -------
+        out : object like :py:class:`.PathBase`
+            The copy of the path.
+
+        """
+        path_copy = path.copy()
+        return path_copy
 
     def __str__(self):
         """Return a string with some info about the path ensemble."""
         msg = [f'Path ensemble: {self.ensemble_name}']
         msg += [f'\tInterfaces: {self.interfaces}']
-        if self.detect is not None:
-            msg += [f'\tDetect: {self.detect}']
         if self.nstats['npath'] > 0:
             npath = self.nstats['npath']
             nacc = self.nstats.get('ACC', 0)
@@ -377,20 +448,21 @@ class PathEnsemble:
         restart = {
             'nstats': self.nstats,
             'interfaces': self.interfaces,
-            'detect': self.detect,
             'ensemble_number': self.ensemble_number,
         }
+        if hasattr(self, 'rgen'):
+            restart['rgen'] = self.rgen.get_state()
+
         if self.last_path:
             restart['last_path'] = self.last_path.restart_info()
+
         return restart
 
-    def load_restart_info(self, path, info, cycle=0):
+    def load_restart_info(self, info, cycle=0):
         """Load restart information.
 
         Parameters
         ----------
-        path : object like :py:class:`.PathBase`
-            A object we can load the stored path into.
         info : dict
             A dictionary with the restart information.
         cycle : integer, optional
@@ -398,15 +470,50 @@ class PathEnsemble:
 
         """
         self.nstats = info['nstats']
-        for attr in ('interfaces', 'detect', 'ensemble_number'):
+        for attr in ('interfaces', 'ensemble_number'):
             if info[attr] != getattr(self, attr):
                 logger.warning(
                     'Inconsistent path ensemble restart info for %s', attr)
-        path.load_restart_info(info['last_path'])
-        path_data = path.get_path_data('ACC', self.interfaces)
-        path_data['cycle'] = cycle
-        self.last_path = path
-        self.paths.append(path_data)
+        for key in info:
+            if key == 'rgen':
+                self.rgen = create_random_generator(info[key])
+            elif key == 'last_path':
+                rgen = create_random_generator(info[key]['rgen'])
+                path = Path(rgen=rgen)
+                path.load_restart_info(info['last_path'])
+                path_data = path.get_path_data('ACC', self.interfaces)
+                path_data['cycle'] = cycle
+                self.last_path = path
+                self.paths.append(path_data)
+            elif hasattr(self, key):
+                setattr(self, key, info[key])
+
+    def clear_generate(self):
+        """Remove all the files in an ensemble/generate/ directory.
+
+        This is toggled on by adding 'remove_generate = True' to the retis.rst
+        input file, under the [simulation] section.
+        TODO: Combining this with the retis_swap_zero move causes problems
+              during a 'save-cycle'. As the files of 000/generate are removed,
+              it will try to copy 000/generate/second_last.gro to 001/traj/...,
+              but is already deleted. I did a quick-fix by not deleting GRO or
+              G96 files. This only works for GROMACS, and a more general fix
+              will be needed for other external engines.
+              Update: I cannot recreate the problem anymore. I'm thinking now
+              that it had to do with the fact that rejected swapping moves
+              did not return the swapped paths of the previous accepted cycle.
+              Therefore, the pointers were not updated correctly. As this has
+              been fixed during unittesting, I think this is okay now.
+        """
+        gendir = self.directory['generate']
+        logger.debug("Removing generate files from %s", gendir)
+        if gendir is not None and os.path.exists(gendir):
+            for file in os.listdir(gendir):
+                path = os.path.join(gendir, file)
+                logger.debug("Removing generate file %s", path)
+                # assert that path ends with generate/file
+                assert path.endswith(os.path.join('generate', file))
+                os.remove(path)
 
 
 class PathEnsembleExt(PathEnsemble):
@@ -425,7 +532,7 @@ class PathEnsembleExt(PathEnsemble):
         Parameters
         ----------
         path : object like :py:class:`.PathBase`
-            This is the path object we are going to store.
+            This is the path object we are going to move.
         target_dir : string
             The location where we are moving the path to.
         prefix : string, optional
@@ -455,26 +562,32 @@ class PathEnsembleExt(PathEnsemble):
         Parameters
         ----------
         path : object like :py:class:`.PathBase`
-            This is the path object we are going to store.
+            This is the path object we are going to copy.
         target_dir : string
-            The location where we are moving the path to.
+            The location where we are copying the path to.
         prefix : string, optional
             To give a prefix to the name of copied files.
 
         Returns
         -------
-        out : object like :py:class:`.PathBase`
+        out : object like py:class:`.PathBase`
             A copy of the input path.
 
         """
-        new_pos, source = _generate_file_names(path, target_dir,
-                                               prefix=prefix)
         path_copy = path.copy()
+        new_pos, source = _generate_file_names(path_copy, target_dir,
+                                               prefix=prefix)
         # Update positions:
         for pos, phasepoint in zip(new_pos, path_copy.phasepoints):
             phasepoint.particles.set_pos(pos)
         for src, dest in source.items():
-            shutil.copy(src, dest)
+            if src != dest:
+                if os.path.exists(dest):
+                    if os.path.isfile(dest):
+                        logger.debug('Removing %s as it exists', dest)
+                        os.remove(dest)
+                logger.debug('Copy %s -> %s', src, dest)
+                shutil.copy(src, dest)
         return path_copy
 
     def store_path(self, path):
@@ -505,16 +618,20 @@ class PathEnsembleExt(PathEnsemble):
             if entry.is_file() and entry.path not in last:
                 yield entry.path
 
-    def move_path_to_generated(self, path, prefix=None):
+    def move_path_to_generate(self, path, prefix=None):
         """Move a path for temporary storing."""
         self._move_path(path, self.directory['generate'], prefix=prefix)
 
-    def load_restart_info(self, path, info, cycle=0):
+    def copy_path_to_generate(self, path, pref=None):
+        """Copy a path for temporary storing."""
+        return self._copy_path(path, self.directory['generate'], prefix=pref)
+
+    def load_restart_info(self, info, cycle=0):
         """Load restart for external path."""
-        super().load_restart_info(path, info, cycle=cycle)
+        super().load_restart_info(info, cycle=cycle)
         # Update file names:
         directory = self.directory['accepted']
-        for phasepoint in path.phasepoints:
+        for phasepoint in self.last_path.phasepoints:
             filename = os.path.basename(phasepoint.particles.get_pos()[0])
             new_file_name = os.path.join(directory, filename)
             if not os.path.isfile(new_file_name):

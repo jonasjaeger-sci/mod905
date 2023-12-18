@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Example of performing particle swarm optimization."""
 # pylint: disable=invalid-name
@@ -40,7 +40,7 @@ def set_up():
 
     print('Creating simulation:')
     engine = PSOEngine(0.7, 1.5, 1.5)
-    simulation = Simulation(steps=STEPS)
+    simulation = Simulation(settings=None, controls={'steps': STEPS})
     task_integrate = {'func': engine.integration_step,
                       'args': [system],
                       'result': 'gbest', 'first': True}

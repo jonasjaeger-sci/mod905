@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Example showing a simple umbrella simulation with PyRETIS.
 
@@ -15,11 +15,9 @@ from tqdm import tqdm
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.cm import get_cmap
-from pyretis.core import System, RandomGenerator, create_box, Particles
-from pyretis.inout.setup import create_simulation
+from pyretis.core import RandomGenerator, System, Particles
+from pyretis.setup import create_simulation, create_force_field
 from pyretis.inout import print_to_screen
-from pyretis.forcefield import ForceField
-from pyretis.forcefield.potentials import DoubleWell, RectangularWell
 from pyretis.analysis import histogram, match_all_histograms
 
 
@@ -34,39 +32,40 @@ UMBRELLA_WINDOWS = [
 ]
 
 
+DOUBLE_WELL = {
+    'class': 'DoubleWell',
+    'parameter': {'a': 1.0, 'b': 1.0, 'c': 0.02},
+}
+
+DEFAULT_SETTINGS = {
+    'system': {
+        'dimensions': 1,
+        'units': 'metal',
+        'temperature': 500,
+    },
+    'simulation': {
+        'task': 'umbrellawindow',
+        'rgen': 0,
+        'mincycle': 10000,
+        'maxdx': 0.1,
+        'overlap': 1.0,
+        'umbrella': 1,
+    },
+    'particles': {
+        'position': {'input_file': 'position.xyz'},
+        'name': ['X'],
+        'ptype': [0],
+    },
+}
+
 plt.style.use('seaborn')
 
 
-def set_up_system(pos=np.array([-0.7])):
-    """Set up the initial system."""
-    # Define system with a temperature in K:
-    dummybox = create_box(periodic=[False])
-    mysystem = System(temperature=500, units='eV/K', box=dummybox)
-    mysystem.particles = Particles(dim=mysystem.get_dim())
-    # We will only have one particle in the system:
-    mysystem.add_particle(name='X', pos=pos)
-    # In this particular example, we are going to use
-    # a simple double well potential:
-    potential_dw = DoubleWell(a=1, b=1, c=0.02)
-    # And a rectangular well potential:
-    potential_rw = RectangularWell()
-    # Set up the force field:
-    forcefield_bias = ForceField(
-        'Double well with rectangular bias',
-        potential=[potential_dw, potential_rw],
-        params=[{'a': 1.0, 'b': 1.0, 'c': 0.02}, None]
-    )
-    mysystem.forcefield = forcefield_bias
-    return mysystem
-
-
-def set_up_simulation(system, umbrella, over, seed):
+def set_up_simulation(umbrella, over, seed, initial_positions=None):
     """Set up a single umbrella window simulation.
 
     Parameters
     ----------
-    system : object like :py:class:`.System`
-        The system we are investigating.
     umbrella : list of floats
         The umbrella window we are investigating.
     over : float
@@ -74,23 +73,28 @@ def set_up_simulation(system, umbrella, over, seed):
         current window.
     seed : integer
         A seed for the random number generator.
+    initial_positions : numpy.array, optional
+        The initial position(s) for the particle(s). If this
+        is not provided the default settings are used.
 
     """
-    settings = {}
-    settings['simulation'] = {
-        'task': 'umbrellawindow',
-        'rgen': RandomGenerator(seed=seed),
-        'mincycle': 10000,
-        'maxdx': 0.1,
-        'over': over,
-        'umbrella': umbrella,
-    }
-    # Update the parameters for the rectangular bias window:
-    potential_rw = system.forcefield.potential[1]
-    potential_rw.set_parameters({'left': umbrella[0], 'right': umbrella[1]})
-    system.potential()  # recalculate potential energy
+    settings = DEFAULT_SETTINGS.copy()
+    settings['simulation']['overlap'] = over
+    settings['simulation']['umbrella'] = umbrella
+    settings['simulation']['rgen'] = RandomGenerator(seed=seed)
+    settings['potential'] = [
+        DOUBLE_WELL,
+        {
+            'class': 'RectangularWell',
+            'parameter': {'left': umbrella[0], 'right': umbrella[1]},
+        }
+    ]
     # Create the umbrella simulation:
-    simulation = create_simulation(settings, {'system': system})
+    simulation = create_simulation(settings)
+    if initial_positions is not None:
+        simulation.system.particles.pos = np.copy(initial_positions)
+    # Make sure initial potential energy is set:
+    simulation.system.potential()
     return simulation
 
 
@@ -103,16 +107,23 @@ def run_umbrellas(windows):
         The umbrella windows to investigate.
 
     """
-    system = set_up_system()
     msg = '\nRunning umbrella no: {} of {}. Location: {}'
     n_umb = len(windows)
     print_to_screen('Starting simulations:', level='info')
     trajectories = []
     energies = []
+    system = None
     for i, window in enumerate(windows):
         print_to_screen(msg.format(i + 1, n_umb, window))
         over = windows[min(i + 1, n_umb - 1)][0]
-        simulation = set_up_simulation(system, window, over, 1)
+        initial_positions = None if system is None else system.particles.pos
+        simulation = set_up_simulation(
+            window,
+            over,
+            1,
+            initial_positions=initial_positions,
+        )
+        system = simulation.system
         traj, ener = [], []
         for _ in tqdm(simulation.run()):
             for pos in system.particles.pos:
@@ -120,7 +131,7 @@ def run_umbrellas(windows):
                 ener.append(system.particles.vpot)
         trajectories.append(traj)
         energies.append(ener)
-        nstep = simulation.cycle['step'] - simulation.cycle['start']
+        nstep = simulation.cycle['step'] - simulation.cycle['startcycle']
         print_to_screen('Done. Cycles: {}'.format(nstep), level='success')
     return system, trajectories, energies
 
@@ -183,13 +194,19 @@ def plot_histograms(histograms_s, hist_avg, bin_x, dbin):
     fig.tight_layout()
 
 
-def plot_unbiased_potential(system, xpos):
-    """Plot the unbiased potential for the given locations."""
+def calculate_unbiased_potential(xpos):
+    """Calculate the unbiased potential for the given locations."""
     # Set up and plot the unbiased potential:
-    forcefield = ForceField(
-        'Double well',
-        potential=[system.forcefield.potential[0]]
-    )
+    unbiased = {
+        'forcefield': {
+            'description': 'Double well',
+        },
+        'potential': [DOUBLE_WELL]
+    }
+    forcefield = create_force_field(unbiased)
+    # Create a fake system for calculating the potential:
+    system = System()
+    system.particles = Particles()
     vpot = []
     for i in xpos:
         system.particles.pos = i
@@ -217,7 +234,7 @@ def plot_free_energy(hist_avg, bin_x, system):
     axi = fig.add_subplot(111)
     xpos = np.linspace(-2, 2, 1000)
     free = -np.log(hist_avg) / system.temperature['beta']  # Free energy.
-    vpot = plot_unbiased_potential(system, xpos)
+    vpot = calculate_unbiased_potential(xpos)
     free += (vpot.min() - free.min())
 
     axi.plot(xpos, vpot, lw=3, label='Unbiased potential', alpha=0.5)

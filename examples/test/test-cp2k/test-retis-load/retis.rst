@@ -5,11 +5,12 @@ Simulation
 ----------
 task = retis
 steps = 5
-interfaces = [0.9, 0.95, 1.0, 1.3]
+interfaces = [0.8, 0.85, 0.9, 0.95]
 
 System
 ------
 units = cp2k
+temperature = 500
 
 Engine settings
 ---------------
@@ -34,6 +35,7 @@ Initial-path
 ------------
 method = load
 load_folder = pippo
+load_and_kick = True
 
 RETIS settings
 --------------
@@ -46,9 +48,16 @@ Orderparameter
 --------------
 class = Distance
 index = (0, 1)
+periodic = False
+
+Collective-variable
+-------------------
+class = Distance
+index = (0, 1)
 
 Output settings
 ---------------
+backup = overwrite
 pathensemble-file = 1
 screen = 10
 order-file = 1

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """This module defines some helper functions for pair potentials.
 
@@ -43,7 +43,7 @@ def _check_pair_parameters(parameters):
     for pair in parameters:
         for key in ('epsilon', 'sigma'):
             if key not in parameters[pair]:
-                msg = '{} for {} not given. Set to 0.0'.format(key, pair)
+                msg = f'{key} for {pair} not given. Set to 0.0'
                 logger.warning(msg)
                 parameters[pair][key] = 0.0
         if 'rcut' not in parameters[pair]:
@@ -87,7 +87,7 @@ def generate_pair_interactions(parameters, mixing):
             pair_param[atmi, atmj] = dict(parameters[atmi, atmj])
             pair_param[atmj, atmi] = pair_param[atmi, atmj]
             continue
-        elif (atmj, atmi) in parameters:
+        if (atmj, atmi) in parameters:
             pair_param[atmj, atmi] = dict(parameters[atmj, atmi])
             pair_param[atmi, atmj] = pair_param[atmj, atmi]
             continue
@@ -98,12 +98,13 @@ def generate_pair_interactions(parameters, mixing):
             pair_param[atmi, atmi] = {'epsilon': eps_ij, 'sigma': sig_ij,
                                       'rcut': rcut_ij}
         else:
-            eps_ij, sig_ij, rcut_ij = mixing_parameters(pari['epsilon'],
-                                                        pari['sigma'],
-                                                        pari['rcut'],
-                                                        parj['epsilon'],
-                                                        parj['sigma'],
-                                                        parj['rcut'], mixing)
+            eps_ij, sig_ij, rcut_ij = mixing_parameters([pari['epsilon'],
+                                                         parj['epsilon']],
+                                                        [pari['sigma'],
+                                                         parj['sigma']],
+                                                        [pari['rcut'],
+                                                         parj['rcut']],
+                                                        mixing)
             pair_param[atmi, atmj] = {'epsilon': eps_ij, 'sigma': sig_ij,
                                       'rcut': rcut_ij}
             pair_param[atmj, atmi] = pair_param[atmi, atmj]
@@ -112,8 +113,7 @@ def generate_pair_interactions(parameters, mixing):
     return pair_param
 
 
-def mixing_parameters(epsilon_i, sigma_i, rcut_i, epsilon_j, sigma_j, rcut_j,
-                      mixing='geometric'):
+def mixing_parameters(epsilon, sigma, rcut, mixing='geometric'):
     r"""Define the so-called mixing rules.
 
     These mixing rules are used for some force fields when generating
@@ -167,18 +167,12 @@ def mixing_parameters(epsilon_i, sigma_i, rcut_i, epsilon_j, sigma_j, rcut_j,
 
     Parameters
     ----------
-    epsilon_i : float
-        Lennard-Jones epsilon parameter for a particle of type `i`.
-    sigma_i : float
-        Lennard-Jones sigma parameter for a particle of type `i`.
-    rcut_i : float
-        Lennard-Jones cut-off value for a particle of type `i`.
-    epsilon_j : float
-        Lennard-Jones epsilon parameter for a particle of type `j`.
-    sigma_j : float
-        Lennard-Jones sigma parameter for a particle of type `j`.
-    rcut_j : float
-        Lennard-Jones cut-off value for a particle of type `j`.
+    epsilon : list of float
+        Lennard-Jones epsilon parameter for a particle of type `i` and 'j'.
+    sigma : list of float
+        Lennard-Jones sigma parameter for a particle of type `i` and 'j'.
+    rcut : list of float
+        Lennard-Jones cut-off value for a particle of type `i` and 'j'.
     mixing :  string, optional
         Represents what kind of mixing that should be done.
 
@@ -193,22 +187,22 @@ def mixing_parameters(epsilon_i, sigma_i, rcut_i, epsilon_j, sigma_j, rcut_j,
 
     """
     if mixing == 'geometric':
-        epsilon_ij = np.sqrt(epsilon_i * epsilon_j)
-        sigma_ij = np.sqrt(sigma_i * sigma_j)
-        rcut_ij = np.sqrt(rcut_i * rcut_j)
+        epsilon_ij = np.sqrt(epsilon[0] * epsilon[1])
+        sigma_ij = np.sqrt(sigma[0] * sigma[1])
+        rcut_ij = np.sqrt(rcut[0] * rcut[1])
     elif mixing == 'arithmetic':
-        epsilon_ij = np.sqrt(epsilon_i * epsilon_j)
-        sigma_ij = 0.5 * (sigma_i + sigma_j)
-        rcut_ij = 0.5 * (rcut_i + rcut_j)
+        epsilon_ij = np.sqrt(epsilon[0] * epsilon[1])
+        sigma_ij = 0.5 * (sigma[0] + sigma[1])
+        rcut_ij = 0.5 * (rcut[0] + rcut[1])
     elif mixing == 'sixthpower':
-        si3 = sigma_i**3
+        si3 = sigma[0]**3
         si6 = si3**2
-        sj3 = sigma_j**3
+        sj3 = sigma[1]**3
         sj6 = sj3**2
         avgs6 = 0.5 * (si6 + sj6)
-        epsilon_ij = np.sqrt(epsilon_i * epsilon_j) * si3 * sj3 / avgs6
+        epsilon_ij = np.sqrt(epsilon[0] * epsilon[1]) * si3 * sj3 / avgs6
         sigma_ij = avgs6**(1.0 / 6.0)
-        rcut_ij = (0.5 * (rcut_i**6 + rcut_j**6))**(1.0 / 6.0)
+        rcut_ij = (0.5 * (rcut[0]**6 + rcut[1]**6))**(1.0 / 6.0)
     else:
         epsilon_ij = 0.0
         sigma_ij = 0.0

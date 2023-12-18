@@ -110,7 +110,7 @@ References
 ----------
 
 .. [1]  Rowley et al., J. Comput. Phys., vol. 17, pp. 401-414, 1975,
-   doi: http://dx.doi.org/10.1016/0021-9991
+   doi: https://doi.org/10.1016/0021-9991(75)90042-X
 
 .. [2]  The LAMMPS manual, http://lammps.sandia.gov/doc/units.html
 

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Test the classes and methods from pyretis.core.box"""
 import logging
@@ -12,6 +12,7 @@ from pyretis.core.box import (
     box_matrix_to_list,
     box_vector_angles,
     angles_from_box_matrix,
+    box_from_restart
 )
 logging.disable(logging.CRITICAL)
 
@@ -157,8 +158,8 @@ class RectBoxTest(unittest.TestCase):
             correct = ' '.join([fmt.format(j) for j in i])
             self.assertEqual(correct, box.print_length(fmt=fmt))
 
-    def test_restart_info(self):
-        """Test that we create required restart info for a box."""
+    def test_restart(self):
+        """Test that we create and read restart info for a box."""
         box_settings = [
             {'low': [10, -1, 101], 'high': [12, 5, 102],
              'periodic': [True, True, False], 'cell': [2., 6., 1.]},
@@ -179,6 +180,13 @@ class RectBoxTest(unittest.TestCase):
                     self.assertEqual(val, setting[key])
                 else:
                     self.assertTrue(np.allclose(val, setting[key]))
+            info = {'box': restart}
+            box2 = box_from_restart(info)
+            # todo The line under or above should be removed once the restart
+            # strategy is unified.
+            box2.load_restart_info(restart)
+            self.assertTrue(box == box2)
+            self.assertFalse(box != box2)
 
     def test_pbc_coordinate_dim(self):
         """Test pbc for a specific dimension."""

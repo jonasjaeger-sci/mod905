@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """This module defines how we write and read restart files.
 
@@ -12,21 +12,20 @@ read_restart_file (:py:func:`.read_restart_file`)
 write_restart_file (:py:func:`.write_restart_file`)
     A method for writing the restart file.
 
-write_path_ensemble_restart (:py:func:`.write_path_ensemble_restart`)
+write_ensemble_restart (:py:func:`.write_ensemble_restart`)
     A method for writing restart files for path ensembles.
 """
 import logging
+import copy
 import os
 import pickle
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 
-__all__ = [
-    'read_restart_file',
-    'write_restart_file',
-    'write_path_ensemble_restart'
-]
+__all__ = ['read_restart_file',
+           'write_restart_file',
+           'write_ensemble_restart']
 
 
 def write_restart_file(filename, simulation):
@@ -40,35 +39,52 @@ def write_restart_file(filename, simulation):
         A simulation object we will get information from.
 
     """
-    info = {
-        'simulation': simulation.restart_info(),
-        'system': simulation.system.restart_info(),
-    }
+    info = simulation.restart_info()
+
     with open(filename, 'wb') as outfile:
         pickle.dump(info, outfile)
 
 
-def write_path_ensemble_restart(path_ensemble):
+def write_ensemble_restart(ensemble, settings_ens):
     """Write a restart file for a path ensemble.
 
     Parameters
     ----------
-    path_ensemble : object like :py:class:`.PathEnsemble`
-        The path ensemble we are writing restart info for.
+    ensemble : dict
+        it contains:
+
+        * `path_ensemble` : object like :py:class:`.PathEnsemble`
+          The path ensemble we are writing restart info for.
+        * ` system` : object like :py:class:`.System`
+          System is used here since we need access to the temperature
+          and to the particle list.
+        * `order_function` : object like :py:class:`.OrderParameter`
+          The class used for calculating the order parameter(s).
+        * `engine` : object like :py:class:`.EngineBase`
+          The engine to use for propagating a path.
+
+    settings_ens : dict
+        A dictionary with the ensemble settings.
 
     """
-    if path_ensemble.directory['path-ensemble'] is None:
-        filename = os.path.join(
-            path_ensemble.ensemble_name_simple,
-            'ensemble.restart'
-        )
-    else:
-        filename = os.path.join(
-            path_ensemble.directory['path-ensemble'],
-            'ensemble.restart'
-        )
+    info = copy.deepcopy(settings_ens)
+    if ensemble.get('path_ensemble') is not None:
+        info['path_ensemble'] = ensemble['path_ensemble'].restart_info()
+    if ensemble.get('system') is not None:
+        info['system'] = ensemble['system'].restart_info()
+    if ensemble.get('engine') is not None:
+        info['engine'] = ensemble['engine'].restart_info()
+    if ensemble.get('rgen') is not None:
+        info['rgen'] = ensemble['rgen'].get_state()
+    if ensemble.get('order_function') is not None:
+        info['order_function'] = ensemble['order_function'].restart_info()
+
+    filename = os.path.join(
+        settings_ens['simulation']['exe_path'],
+        ensemble['path_ensemble'].ensemble_name_simple,
+        'ensemble.restart')
     with open(filename, 'wb') as outfile:
-        pickle.dump(path_ensemble.restart_info(), outfile)
+        pickle.dump(info, outfile)
 
 
 def read_restart_file(filename):

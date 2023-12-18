@@ -5,8 +5,6 @@ Numerical TIS results
 
 @{{ tables['probability'] }}@
 
-@{{ tables['path'] }}@
-
 @{{ tables['efficiency'] }}@
 
 

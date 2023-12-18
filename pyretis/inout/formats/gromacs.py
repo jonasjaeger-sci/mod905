@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Module for handling GROMACS input/output.
 
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+read_gromacs_generic (:py:func:`.read_gromacs_generic`)
+    A method for reading snapshots from any GROMACS file.
 
 read_gromacs_file (:py:func:`.read_gromacs_file`)
     A method for reading snapshots from a GROMACS GRO file.
@@ -44,6 +47,7 @@ write_trr_frame (:py:func:`.write_trr_frame`)
     A simple method to write to a TRR file.
 """
 import logging
+import os
 import struct
 import io
 import numpy as np
@@ -53,6 +57,7 @@ logger.addHandler(logging.NullHandler())
 
 
 __all__ = [
+    'read_gromacs_generic',
     'read_gromacs_file',
     'read_gromacs_gro_file',
     'write_gromacs_gro_file',
@@ -182,6 +187,33 @@ def _add_matrices_to_snapshot(snapshot):
     snapshot['xyz'] = xyz
     snapshot['vel'] = vel
     return xyz, vel
+
+
+def read_gromacs_generic(filename):
+    """Read GROMACS files.
+
+    This method will read a GROMACS file and yield the different
+    snapshots found in the file. This file is intended to be used
+    to just count the n of snapshots stored in a file.
+
+    Parameters
+    ----------
+    filename : string
+        The file to check.
+
+    Yields
+    ------
+    out : None.
+
+    """
+    if filename[-4:] == '.gro':
+        for _ in read_gromacs_file(filename):
+            yield None
+    if filename[-4:] == '.g96':
+        yield None
+    if filename[-4:] == '.trr':
+        for _ in read_trr_file(filename):
+            yield None
 
 
 def read_gromacs_file(filename):
@@ -406,7 +438,8 @@ def write_gromos96_file(filename, raw, xyz, vel, box=None):
                 if key == 'POSITION':
                     outfile.write(_G96_FMT.format(line, *xyz[i]))
                 elif key == 'VELOCITY':
-                    outfile.write(_G96_FMT.format(line, *vel[i]))
+                    if vel is not None:
+                        outfile.write(_G96_FMT.format(line, *vel[i]))
                 elif box is not None and key == 'BOX':
                     if len(box) == 3:
                         outfile.write(_G96_BOX_FMT_3.format(*box))
@@ -708,12 +741,12 @@ def read_trr_file(filename, read_data=True):
                     data = None
                 yield header, data
             except EOFError:
-                return
+                return None, None
             except struct.error:
                 logger.warning(
                     'Could not read a frame from the TRR file. Aborting!'
                 )
-                return
+                return None, None
 
 
 def read_trr_frame(filename, index):
@@ -905,3 +938,28 @@ def write_trr_header(outfile, header, floatfmt, endian=None):
     outfile.write(struct.pack(floatfmt.format(1), header['time']))
     outfile.write(struct.pack(floatfmt.format(1), header['lambda']))
     outfile.flush()
+
+
+def gromacs_settings(settings, input_path):
+    """Read and processes GROMACS settings.
+
+    Parameters
+    ----------
+    settings : dict
+        The current input settings..
+    input_path : string
+        The GROMACS input path
+
+    """
+    ext = settings['engine'].get('gmx_format', 'gro')
+    default_files = {'conf': f'conf.{ext}',
+                     'input_o': 'grompp.mdp',
+                     'topology': 'topol.top',
+                     'index': 'index.ndx'}
+    settings['engine']['input_files'] = {}
+    for key in ('conf', 'input_o', 'topology', 'index'):
+        # Add input path and the input files if input is no given:
+        settings['engine']['input_files'][key] = \
+            settings['engine'].get(key,
+                                   os.path.join(input_path,
+                                                default_files[key]))

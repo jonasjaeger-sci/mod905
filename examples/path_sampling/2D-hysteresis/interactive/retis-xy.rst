@@ -50,13 +50,13 @@ kick-from = previous
 
 Particles
 ---------
-position = {'file': '../retis-xy/initial.xyz'}
+position = {'input_file': '../retis-xy/initial.xyz'}
 velocity = {'generate': 'maxwell',
             'momentum': False,
             'seed': 0}
 mass = {'Ar': 1.0}
 name = ['Ar']
-type = [0]
+ptype = [0]
 
 Forcefield settings
 -------------------

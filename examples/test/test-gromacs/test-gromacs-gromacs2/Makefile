@@ -13,6 +13,8 @@ clean:
 	find -name mdout.mdp -delete
 	find -name EXIT -delete
 	find -name \*.tpr -delete
-	-rm -rf run-gromacs1/0*
-	-rm -rf run-gromacs2/0*
+	-rm -rf run-gromacs*/gromacs_inp*
+	-rm -rf run-gromacs*/retis-run.rst
+	-rm -rf run-gromacs*/0*
+	-rm -rf run-gromacs*/out*
 	-rm -rf gromacs_input/pyretis.mdp

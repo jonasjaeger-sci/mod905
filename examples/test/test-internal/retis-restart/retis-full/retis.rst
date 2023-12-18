@@ -4,14 +4,14 @@ Retis 1D example
 Simulation
 ----------
 task = retis
-steps = 200
-interfaces = [-0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, 1.0]
+steps = 20
+interfaces = [-0.9, -0.6, -0.3, 1.0]
 
 System
 ------
 units = reduced
 dimensions = 1
-temperature = 0.07
+temperature = 0.7
 
 Box
 ---
@@ -20,7 +20,7 @@ periodic = [False]
 Engine
 ------
 class = Langevin
-timestep = 0.002
+timestep = 0.02
 gamma = 0.3
 high_friction = False
 seed = 0
@@ -50,13 +50,13 @@ kick-from = initial
 
 Particles
 ---------
-position = {'file': '../initial.xyz'}
+position = {'input_file': '../initial.xyz'}
 velocity = {'generate': 'maxwell',
             'momentum': False,
             'seed': 0}
 mass = {'Ar': 1.0}
 name = ['Ar']
-type = [0]
+ptype = [0]
 
 Forcefield settings
 -------------------

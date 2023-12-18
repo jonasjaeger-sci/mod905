@@ -1,22 +1,25 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Some common methods for the tests."""
 from contextlib import contextmanager
+from io import StringIO
 import logging
 import numpy as np
+from unittest.mock import patch
 from pyretis.core.box import create_box
 from pyretis.core.particles import Particles
-from pyretis.core.pathensemble import PathEnsemble
 from pyretis.core.random_gen import MockRandomGeneratorBorg
 from pyretis.core.system import System
 from pyretis.engines.internal import MDEngine
 from pyretis.forcefield import ForceField, PotentialFunction
-from pyretis.inout.setup.createsimulation import create_path_ensembles
-from pyretis.orderparameter import PositionVelocity
+from pyretis.setup.createsimulation import create_ensembles
+from pyretis.inout.settings import (fill_up_tis_and_retis_settings,
+                                    add_default_settings,
+                                    add_specific_default_settings)
 from pyretis.simulation.path_simulation import (
     SimulationRETIS,
-    SimulationSingleTIS,
+    SimulationTIS,
 )
 
 
@@ -124,13 +127,20 @@ def create_system():
 
 def create_test_retis_simulation():
     """Create a simple RETIS simulation."""
-    interfaces = [-0.9, -0.5, 0.0]
     system = create_system()
     engine = MockEngine(0.0123)
-    order_function = PositionVelocity(0, dim='x', periodic=False)
-    ensembles, _ = create_path_ensembles(interfaces, 'internal',
-                                         include_zero=True)
+
     settings = {
+        'simulation': {
+            'task': 'retis',
+            'rgen': 'mock-borg',
+            'interfaces': [-0.9, -0.5, 0.0]},
+        'engine': {'obj': engine},
+        'system': {'obj': system},
+        'orderparameter': {'class': 'PositionVelocity',
+                           'index': 0,
+                           'dim': 'x',
+                           'periodic': False},
         'tis': {
             'freq': 0.5,
             'maxlength': 20000,
@@ -138,25 +148,28 @@ def create_test_retis_simulation():
             'allowmaxlength': False,
             'sigma_v': -1,
             'seed': 1,
-            'rgen': 'to-be-ignored-and-replaced-below',
+            'rgen': 'mock-borg',
             'zero_momentum': False,
             'rescale_energy': False,
         },
         'retis': {
+            'rgen': 'mock-borg',
             'nullmoves': True,
         }
     }
-    rgen_class = MockRandomGeneratorBorg.make_new_swarm()
-    simulation = SimulationRETIS(
-        system, order_function, engine, ensembles, settings,
-        rgen=rgen_class(seed=0)
-    )
+    add_default_settings(settings)
+    add_specific_default_settings(settings)
+    fill_up_tis_and_retis_settings(settings)
+
+    with patch('sys.stdout', new=StringIO()):
+        ensembles = create_ensembles(settings)
+        simulation = SimulationRETIS(ensembles, settings,
+                                     {'rgen': 'mock-borg'})
     return simulation
 
 
 def create_test_tis_simulation(engine_type='MockEngine', maxlength=20000):
     """Create a simple TIS simulation."""
-    interfaces = [-0.9, -0.5, 0.0]
     system = create_system()
     engines = {
         'MockEngine': MockEngine,
@@ -164,9 +177,16 @@ def create_test_tis_simulation(engine_type='MockEngine', maxlength=20000):
         'MockEngineVelocitySupremacist': MockEngineVelocitySupremacist,
     }
     engine = engines.get(engine_type)(0.0123)
-    order_function = PositionVelocity(0, dim='x', periodic=False)
-    ensemble = PathEnsemble(1, interfaces, 0.0)
     settings = {
+        'simulation': {
+            'task': 'tis',
+            'interfaces': [-0.9, -0.5, 0.0]},
+        'engine': {'obj': engine},
+        'system': {'obj': system},
+        'orderparameter': {'class': 'PositionVelocity',
+                           'index': 0,
+                           'dim': 'x',
+                           'periodic': False},
         'tis': {
             'freq': 0.5,
             'maxlength': maxlength,
@@ -179,9 +199,20 @@ def create_test_tis_simulation(engine_type='MockEngine', maxlength=20000):
             'rescale_energy': False,
         },
     }
+    add_default_settings(settings)
+    add_specific_default_settings(settings)
+    fill_up_tis_and_retis_settings(settings)
+
+    with patch('sys.stdout', new=StringIO()):
+        ensembles = create_ensembles(settings)
     rgen_class = MockRandomGeneratorBorg.make_new_swarm()
-    simulation = SimulationSingleTIS(
-        system, order_function, engine, ensemble, settings,
-        rgen=rgen_class(seed=0)
+    for ens in ensembles:
+        ens['rgen'] = rgen_class(seed=0)
+        ens['system'].order = ens['order_function'].calculate(ens['system'])
+
+    simulation = SimulationTIS(
+        ensembles,
+        settings,
+        {'rgen': rgen_class(seed=0)}
     )
     return simulation

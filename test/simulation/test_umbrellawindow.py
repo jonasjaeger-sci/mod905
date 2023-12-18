@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Test the UmbrellaWindowSimulation class."""
 import logging
@@ -43,29 +43,39 @@ class TestUmbrellaWindow(unittest.TestCase):
         potential_rw = system.forcefield.potential[1]
         potential_rw.set_parameters({'left': -1.0, 'right': -0.4})
         system.potential()
-        simulation = UmbrellaWindowSimulation(
-            system,
-            [-1.0, -0.4],
-            -0.5,
-            0.1,
-            rgen=rgen,
-            mincycle=10
-        )
+        ensemble = {'rgen': rgen, 'system': system}
+        settings = {'simulation': {'rgen': 'rgen',
+                                   'umbrella': [-1.0, -0.4],
+                                   'overlap': -0.5,
+                                   'maxdx': 0.1}}
+        controls = {'mincycle': 10}
+        simulation = UmbrellaWindowSimulation(ensemble, settings, controls)
         for _ in simulation.run():
             pass
         self.assertTrue(system.particles.pos[0][0] > -0.5)
+        # Test restart features:
         restart = simulation.restart_info()
         self.assertEqual(restart['type'], simulation.simulation_type)
-        self.assertTrue('rgen' in restart)
+        settings['restart'] = restart
+        settings['restart']['overlap'] = 'NonSense'
+        simulation.cycle['step'] = 999
+        simulation = UmbrellaWindowSimulation(ensemble, settings, controls)
+        self.assertEqual(simulation.overlap, 'NonSense')
+        self.assertEqual(simulation.cycle['step'], 17)
         # Test the creation when the random generator is not given:
+        ensemble = {'system': system}
         simulation = UmbrellaWindowSimulation(
-            system,
-            [-1.0, -0.4],
-            -0.5,
-            0.1,
-            mincycle=10
-        )
-        self.assertIsInstance(simulation.rgen, np.random.Generator)
+            ensemble,
+            settings={'simulation': {'umbrella': [-1.0, -0.4],
+                                     'overlap': -0.5,
+                                     'maxdx': 0.1}},
+            controls={})
+        self.assertIsInstance(simulation.rgen, type(rgen))
+
+        with self.assertRaises(TypeError):
+            simulation = UmbrellaWindowSimulation(ensemble,
+                                                  settings=None,
+                                                  controls={})
 
 
 if __name__ == '__main__':

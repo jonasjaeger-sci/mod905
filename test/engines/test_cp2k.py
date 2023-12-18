@@ -1,22 +1,27 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, PyRETIS Development Team.
+# Copyright (c) 2023, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Test the CP2KEngine class."""
 from io import StringIO
 import logging
 import os
 import unittest
+import tempfile
 from unittest.mock import patch
 import numpy as np
 from pyretis.core.common import counter
-from pyretis.core.path import Path
-from pyretis.core.particles import ParticlesExt
 from pyretis.core.system import System
+from pyretis.core.path import Path
+from pyretis.core.random_gen import MockRandomGenerator
+from pyretis.core.particles import ParticlesExt
+from pyretis.core.pathensemble import PathEnsembleExt
+from pyretis.core.particlefunctions import kinetic_energy
 from pyretis.engines import CP2KEngine
 from pyretis.inout.common import make_dirs
 from pyretis.inout.formats.xyz import (
     read_xyz_file,
     convert_snapshot,
+    write_xyz_file,
 )
 from pyretis.orderparameter.orderparameter import PositionVelocity
 from .test_helpers.test_helpers import remove_dir
@@ -40,19 +45,38 @@ class CP2KEngineTest(unittest.TestCase):
         """Test that we can initiate the engine."""
         dir_name = os.path.join(HERE, 'cp2k_input')
         extra_files = ['extra_file']
-        engine = CP2KEngine('cp2k', dir_name, 0.002, 10,
+        engine = CP2KEngine(cp2k='cp2k',
+                            input_path=dir_name,
+                            timestep=0.002,
+                            subcycles=10,
                             extra_files=extra_files)
         self.assertEqual(len(engine.extra_files), 1)
-        # Check that we get an error if we are missing files.
+        # Check that we get an error if we are missing files:
         with self.assertRaises(ValueError):
-            CP2KEngine('cp2k', '', 0.002, 10, 'not-directory-file')
+            CP2KEngine(cp2k='cp2k',
+                       input_path='',
+                       timestep=0.002,
+                       subcycles=10,
+                       extra_files=extra_files)
+        # Check that non-existing extra files are not added:
+        extra_files.append('a-non-existing-file-please')
+        engine = CP2KEngine(cp2k='cp2k',
+                            input_path=dir_name,
+                            timestep=0.002,
+                            subcycles=10,
+                            extra_files=extra_files)
+        self.assertEqual(len(engine.extra_files), 1)
 
     def test_single_step(self):
         """Test that the single step method work as we intend."""
         cmd = os.path.join(HERE, 'mockcp2k.py')
         dir_name = os.path.join(HERE, 'cp2k_input')
         extra_files = ['extra_file']
-        engine = CP2KEngine(cmd, dir_name, 0.002, 10, extra_files)
+        engine = CP2KEngine(cp2k=cmd,
+                            input_path=dir_name,
+                            timestep=0.002,
+                            subcycles=10,
+                            extra_files=extra_files)
         rundir = os.path.join(HERE, 'generate')
         # Create the directory for running:
         make_dirs(rundir)
@@ -90,41 +114,123 @@ class CP2KEngineTest(unittest.TestCase):
         cmd = os.path.join(HERE, 'mockcp2k.py')
         dir_name = os.path.join(HERE, 'cp2k_input')
         extra_files = ['extra_file']
-        engine = CP2KEngine(cmd, dir_name, 0.002, 10, extra_files)
-        rundir = os.path.join(HERE, 'generatevel')
-        # Create the directory for running:
-        make_dirs(rundir)
-        engine.exe_dir = rundir
-        # Create the system:
-        system = make_test_system((engine.input_files['conf'], 0))
-        # Modify velocities:
-        dek, kin_new = engine.modify_velocities(system, None, sigma_v=None,
-                                                aimless=True,
-                                                momentum=False, rescale=None)
-        self.assertAlmostEqual(kin_new, 0.9)
-        self.assertTrue(dek == float('inf'))
-        # Check that aiming fails:
-        with self.assertRaises(NotImplementedError):
-            engine.modify_velocities(system, None, sigma_v=None, aimless=False,
-                                     momentum=False, rescale=None)
-        # Check that rescaling fails:
-        with self.assertRaises(NotImplementedError):
-            engine.modify_velocities(system, None, sigma_v=None, aimless=False,
-                                     momentum=False, rescale=10)
-        dek, kin_new = engine.modify_velocities(system, None, sigma_v=None,
-                                                aimless=True,
-                                                momentum=False, rescale=None)
-        self.assertAlmostEqual(kin_new, 0.9)
-        self.assertAlmostEqual(dek, 0.0)
-        engine.clean_up()
-        remove_dir(rundir)
+        engine = CP2KEngine(cp2k=cmd,
+                            input_path=dir_name,
+                            timestep=0.002,
+                            subcycles=10,
+                            extra_files=extra_files)
+        with tempfile.TemporaryDirectory() as tempdir:
+            # Create the directory for running:
+            make_dirs(tempdir)
+            engine.exe_dir = tempdir
+            # Create the system:
+            system = make_test_system((engine.input_files['conf'], 0))
+            mass = np.array([[1.], [1.]])
+            system.particles.mass = mass
+            system.particles.imass = np.reciprocal(mass*1.)
+            system.temperature['beta'] = 1.
+            pos = engine.input_files['conf']
+            _, _, vel, _ = engine._read_configuration(pos)
+            kin_old = kinetic_energy(vel=vel, mass=mass)[0]
+
+            # Modify velocities:
+            ensemble = {'system': system, 'rgen': MockRandomGenerator(seed=0)}
+            vel_settings = {'aimless': True, 'momentum': False}
+            dek, kin_new = engine.modify_velocities(ensemble, vel_settings)
+            kin_new2 = kinetic_energy(vel=system.particles.vel, mass=mass)[0]
+            self.assertAlmostEqual(kin_new, kin_new2)
+            self.assertAlmostEqual(kin_new, 1.7070285604149718)
+            self.assertAlmostEqual(dek, kin_new - kin_old)
+            self.assertAlmostEqual(dek, -43.79297143958503)
+
+            # Test aim:
+            vel_settings['aimless'] = False
+            vel_settings['sigma_v'] = 1
+            system.particles.config = (engine.input_files['conf'], 0)
+            ensemble['rgen'] = MockRandomGenerator(seed=0)
+            dek, kin_new = engine.modify_velocities(ensemble, vel_settings)
+            kin_new2 = kinetic_energy(vel=system.particles.vel, mass=mass)[0]
+            self.assertAlmostEqual(kin_new, kin_new2)
+            self.assertAlmostEqual(kin_new, 62.89068569041497)
+            self.assertAlmostEqual(dek, kin_new - kin_old)
+            self.assertAlmostEqual(dek, 17.39068569041497)
+
+            # Test rescaling:
+            system.particles.vpot = 2.
+            vel_settings['rescale'] = 10
+            system.particles.config = (engine.input_files['conf'], 0)
+            dek, kin_new = engine.modify_velocities(ensemble, vel_settings)
+            self.assertAlmostEqual(kin_new, 8.)
+            self.assertAlmostEqual(dek, 0.)
+
+            # Test negative rescaling:
+            vel_settings['rescale'] = -2
+            system.particles.config = (engine.input_files['conf'], 0)
+            dek, kin_new = engine.modify_velocities(ensemble, vel_settings)
+            # Velocity unchanged, so kin_new == kin_old.
+            self.assertAlmostEqual(kin_new, kin_old)
+            self.assertAlmostEqual(dek, 0.)
+
+            # Test reset_momentum():
+            vel_settings['momentum'] = True
+            vel_settings['aimless'] = True
+            vel_settings['rescale'] = False
+            ensemble['rgen'] = MockRandomGenerator(seed=0)
+            dek, kin_new = engine.modify_velocities(ensemble, vel_settings)
+            kin_new2 = kinetic_energy(vel=system.particles.vel, mass=mass)[0]
+            self.assertEqual(kin_new, kin_new2)
+            self.assertEqual(dek, kin_new - kin_old)
+            self.assertAlmostEqual(kin_new, 0.08269801069751077)
+            self.assertAlmostEqual(dek, -45.41730198930249)
+
+            # Test when kin_old = 0.0
+            vel = np.array([[0.]*3, [0.]*3])
+            zero_vel_path = os.path.join(tempdir, 'zero_vel.xyz')
+            write_xyz_file(zero_vel_path, pos=vel, vel=vel)
+            system.particles.config = (zero_vel_path, None)
+            dek, kin_new = engine.modify_velocities(ensemble, vel_settings)
+            kin_new2 = kinetic_energy(vel=system.particles.vel, mass=mass)[0]
+            self.assertAlmostEqual(kin_new, kin_new2)
+            self.assertAlmostEqual(kin_new, 0.23911029289543265)
+            self.assertAlmostEqual(dek, float('inf'))
+
+    def test_path_ensemble_names(self):
+        """Test the path naming in path ensemble simulations."""
+        cmd = os.path.join(HERE, 'mockcp2k.py')
+        dir_name = os.path.join(HERE, 'cp2k_input')
+        extra_files = ['extra_file']
+        engine = CP2KEngine(cp2k=cmd,
+                            input_path=dir_name,
+                            timestep=0.002,
+                            subcycles=10,
+                            extra_files=extra_files)
+        with tempfile.TemporaryDirectory() as tempdir:
+            # Propagate in temp folder:
+            engine.exe_dir = tempdir
+            # Create the system:
+            system = make_test_system((engine.input_files['conf'], 0))
+            # Propagate:
+            orderp = PositionVelocity(0, dim='x', periodic=False)
+            path = Path(None, maxlen=4)
+            interfaces = [0.2, 8.0, 9.0]
+            p_ens = PathEnsembleExt(ensemble_number=666, interfaces=interfaces)
+            ensemble = {'system': system, 'order_function': orderp,
+                        'interfaces': interfaces, 'path_ensemble': p_ens}
+            with patch('sys.stdout', new=StringIO()):
+                success, _ = engine.propagate(path, ensemble, reverse=False)
+                self.assertFalse(success)
+                self.assertIn('666_', path.phasepoints[0].particles.config[0])
 
     def test_propagate_forward(self):
         """Test the propagate method forward in time."""
         cmd = os.path.join(HERE, 'mockcp2k.py')
         dir_name = os.path.join(HERE, 'cp2k_input')
         extra_files = ['extra_file']
-        engine = CP2KEngine(cmd, dir_name, 0.002, 10, extra_files)
+        engine = CP2KEngine(cp2k=cmd,
+                            input_path=dir_name,
+                            timestep=0.002,
+                            subcycles=10,
+                            extra_files=extra_files)
         rundir = os.path.join(HERE, 'generatef')
         # Create the directory for running:
         make_dirs(rundir)
@@ -134,9 +240,10 @@ class CP2KEngineTest(unittest.TestCase):
         # Propagate:
         orderp = PositionVelocity(0, dim='x', periodic=False)
         path = Path(None, maxlen=4)
+        ensemble = {'system': system, 'order_function': orderp,
+                    'interfaces': [0.2, 8.0, 9.0]}
         with patch('sys.stdout', new=StringIO()):
-            success, _ = engine.propagate(path, system, orderp,
-                                          [0.2, 8.0, 9.0], reverse=False)
+            success, _ = engine.propagate(path, ensemble, reverse=False)
             self.assertFalse(success)
         engine.clean_up()
         remove_dir(rundir)
@@ -146,7 +253,11 @@ class CP2KEngineTest(unittest.TestCase):
         cmd = os.path.join(HERE, 'mockcp2k.py')
         dir_name = os.path.join(HERE, 'cp2k_input')
         extra_files = ['extra_file']
-        engine = CP2KEngine(cmd, dir_name, 0.002, 10, extra_files)
+        engine = CP2KEngine(cmd,
+                            input_path=dir_name,
+                            timestep=0.002,
+                            subcycles=10,
+                            extra_files=extra_files)
         rundir = os.path.join(HERE, 'generateb')
         # Create the directory for running:
         make_dirs(rundir)
@@ -157,9 +268,10 @@ class CP2KEngineTest(unittest.TestCase):
         orderp = PositionVelocity(0, dim='x', periodic=False)
         path = Path(None, maxlen=4)
         counter.count = -1
+        ensemble = {'system': system, 'order_function': orderp,
+                    'interfaces': [0.2, 0.5, 0.8]}
         with patch('sys.stdout', new=StringIO()):
-            success, _ = engine.propagate(path, system, orderp,
-                                          [0.2, 0.5, 0.8], reverse=True)
+            success, _ = engine.propagate(path, ensemble, reverse=True)
             self.assertTrue(success)
         # Check that initial velocities were reversed:
         infile = os.path.join(rundir, '0_conf.xyz')
@@ -175,7 +287,11 @@ class CP2KEngineTest(unittest.TestCase):
         cmd = os.path.join(HERE, 'mockcp2k.py')
         dir_name = os.path.join(HERE, 'cp2k_input')
         extra_files = ['extra_file']
-        engine = CP2KEngine(cmd, dir_name, 0.002, 10, extra_files)
+        engine = CP2KEngine(cmd,
+                            input_path=dir_name,
+                            timestep=0.002,
+                            subcycles=10,
+                            extra_files=extra_files)
         rundir = os.path.join(HERE, 'cp2kintegrate')
         # Create the directory for running:
         make_dirs(rundir)
@@ -189,19 +305,20 @@ class CP2KEngineTest(unittest.TestCase):
             [0.9, 9.9],
             [0.9, 9.9],
         ]
-        for i, step in enumerate(engine.integrate(system, 2,
-                                                  order_function=orderp)):
+        ensemble = {'system': system, 'order_function': orderp}
+        for i, step in enumerate(engine.integrate(ensemble, 2)):
             self.assertTrue(np.allclose(step['order'], correct_order[i]))
-        # Call once more, without specifying order_function:
-        for step in engine.integrate(system, 3):
+        # Call once more without specifying order_function
+        ensemble = {'system': system}
+        for step in engine.integrate(ensemble, 3):
             self.assertFalse("order" in step)
         # Call once more, after first creating a fake backup-file:
         bfile = os.path.join(rundir, 'backup.bak-1')
-        with open(bfile, 'w') as output:
+        with open(bfile, 'w', encoding="utf8") as output:
             output.write('Just a line')
         listoffiles = [entry.name for entry in os.scandir(rundir)]
         self.assertTrue("backup.bak-1" in listoffiles)
-        for step in engine.integrate(system, 1):
+        for step in engine.integrate(ensemble, 1):
             self.assertFalse("order" in step)
         # Check that PyRETIS has removed the backup-file.
         listoffiles = [entry.name for entry in os.scandir(rundir)]
@@ -214,7 +331,11 @@ class CP2KEngineTest(unittest.TestCase):
         cmd = os.path.join(HERE, 'mockcp2k.py')
         dir_name = os.path.join(HERE, 'cp2k_input')
         extra_files = ['extra_file']
-        engine = CP2KEngine(cmd, dir_name, 0.002, 10, extra_files)
+        engine = CP2KEngine(cmd,
+                            input_path=dir_name,
+                            timestep=0.002,
+                            subcycles=10,
+                            extra_files=extra_files)
         trajdir = os.path.join(HERE, 'cp2k_fake_trajectory')
         # Create the directory for storing a fake trajectory file:
         make_dirs(trajdir)
@@ -233,7 +354,7 @@ class CP2KEngineTest(unittest.TestCase):
             "O         0.61    -0.331     0.232  1.5 2.2 3.7",
             "H         0.62    -0.366     0.133  2.2 3.3 4.7",
         ]
-        with open(trajfile, 'w') as output:
+        with open(trajfile, 'w', encoding="utf8") as output:
             output.write('\n'.join(lines))
         for i in range(3):
             config = (trajfile, i)
@@ -251,7 +372,7 @@ class CP2KEngineTest(unittest.TestCase):
                 # logger.error('CP2K could not extract index %i ....
                 break
             lines2 = None
-            with open(conffile, 'r') as infile:
+            with open(conffile, 'r', encoding="utf8") as infile:
                 lines2 = infile.readlines()
             len2 = len(lines2)
             for j in range(len2):

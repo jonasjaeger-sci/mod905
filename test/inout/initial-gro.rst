@@ -1,6 +1,6 @@
 Particles
 ---------
-position = {'file': 'config.gro'}
+position = {'input_file': 'config.gro'}
 System
 ------
 units = gromacs

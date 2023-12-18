@@ -5,7 +5,7 @@ Simulation
 ----------
 task = tis
 steps = 10
-interfaces = [-0.1, 0, 0.1]
+interfaces = [-0.1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.1]
 
 System
 ------
@@ -36,11 +36,11 @@ ensemble_number = 23
 Initial-path
 ------------
 method = load
-load_folder = load
+load_folder = loader
 
 Orderparameter
 --------------
-class = PositionVelocity
+class = Position
 dim = x
 index = 0
 periodic = False
