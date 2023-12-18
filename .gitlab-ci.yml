@@ -255,7 +255,7 @@ do_release:
      - diff -u <(python -c "import pyretis; print('v'+format(pyretis.version.VERSION))") <(echo "$CI_COMMIT_TAG")
      - if [ $? -ne 0 ]; then exit 1; fi
      - python setup.py sdist bdist_wheel
-     - twine upload --repository-url https://test.pypi.org/legacy/ dist/* -u e114f8b92336dcc9 -p $TWINE_PASSWORD 
+     - twine upload --repository-url https://test.pypi.org/legacy/ dist/* -u $TWINE_USERNAME -p $TWINE_PASSWORD 
      - pip uninstall pyretis -y 
      - pip install --index-url https://test.pypi.org/simple/ pyretis
      - twine upload dist/*
