@@ -47,32 +47,31 @@ The |pyretis| team
 
 * `Titus van Erp <https://www.ntnu.edu/employees/titus.van.erp>`__
 
-* `Enrico Riccardi <https://www.ntnu.edu/employees/enrico.riccardi>`_
-
+* `Enrico Riccardi <https://www.uis.no/nb/profile/enrico-riccardi>`_
 
 **Core Developers:**
 
-* `Anders Lervik <https://www.ntnu.edu/employees/anders.lervik>`_
-
-* `Sander Roet  <https://www.ntnu.no/ansatte/sander.roet>`_
-
-* `Daniel Tianhou Zhang <https://www.ntnu.no/ansatte/daniel.t.zhang>`_
+* `Daniel Tianhou Zhang <https://www.linkedin.com/in/daniel-tianhou-zhang-857545192>`_
 
 * `Wouter Vervust <https://www.ugent.be/ea/ibitech/en/about-us/biommeda-staff-1/ir-wouter-vervust.htm>`_
 
 **Contributors:**
 
-* `Ola Aarøen <https://www.ntnu.no/ansatte/ola.aaroen>`_
-
 * `An Ghysels <https://www.ugent.be/ea/ibitech/en/about-us/biommeda-staff-1/professor-an-ghysels.htm>`_
 
 **Former Developers:**
+
+* `Ola Aarøen <https://www.linkedin.com/in/ola-aar%C3%B8en-64023678>`_
+
+* `Sander Roet  <https://www.linkedin.com/in/sander-roet>`_
+
+* `Anders Lervik <https://www.ntnu.edu/employees/anders.lervik>`_
 
 * `Henrik Kiær <https://www.linkedin.com/in/henrikkiaer/?originalSubdomain=no>`_
 
 * `Anastasia Maslechko <https://www.linkedin.com/in/anastasia-maslechko-87207b95/?originalSubdomain=ua>`_
 
-* `Sudi Jawahery <http://www.cchem.berkeley.edu/molsim/people/current-group/sudi-jawahery.html>`_
+* `Sudi Jawahery <https://www.linkedin.com/in/sudi-jawahery-78559b37>`_
 
 * `Raffaela Cabriolu <https://www.linkedin.com/in/raffaela-cabriolu-41ba5488/?originalSubdomain=it>`_
 
@@ -85,7 +84,7 @@ The |pyretis| team
 
 * Mahmoud Moqadam
 
-* `César A. Urbina-Blanco <https://www.lct.ugent.be/people/c-sar-alejandro-urbina-blanco>`_ 
+* César A. Urbina-Blanco 
 
 * Jocelyne Vreede
 
