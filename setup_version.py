@@ -70,6 +70,8 @@ CITE = """
     doi: https://dx.doi.org/10.1002/jcc.24900
 [2] E. Riccardi, A. Lervik, S. Roet, O. Aarøen and T. S. van Erp,
     J. Comput. Chem., 2019, doi: https://dx.doi.org/10.1002/jcc.26112
+[3] W. Vervust, D. T. Zhang, A. Ghysels, S. Roet, T. S. van Erp, E. Riccardi,
+    J. Comput. Chem. 2024, 1. https://doi.org/10.1002/jcc.27319
 
 """
 LOGO = r"""{logo:s}"""

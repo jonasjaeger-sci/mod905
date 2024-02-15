@@ -16,8 +16,9 @@ with emphasis on methods based on
 :ref:`transition interface sampling <user-guide-tis-theory>`
 and :ref:`replica exchange transition interface sampling <user-guide-retis-theory>`.
 The papers describing the |pyretis| program
-can be found here: `<https://doi.org/10.1002/jcc.24900>`_ (|pyretis| 1, 2017)
-and here: `<https://doi.org/10.1002/jcc.26112>`_ (|pyretis| 2, 2019).
+can be found here: `<https://doi.org/10.1002/jcc.24900>`_ (|pyretis| 1, 2017),
+here: `<https://doi.org/10.1002/jcc.26112>`_ (|pyretis| 2, 2019).
+and here: `<https://doi.org/10.1002/jcc.27319>`_ (|pyretis| 3, 2024).
 
 The work on |pyretis| was initiated by `Titus van Erp <http://www.van-erp.org>`_ and is used in
 the research and teaching activities in the
@@ -57,11 +58,9 @@ The |pyretis| team
 
 * `Daniel Tianhou Zhang <https://www.ntnu.no/ansatte/daniel.t.zhang>`_
 
-* `https://www.ugent.be/ea/ibitech/en/about-us/biommeda-staff-1/ir-wouter-vervust.htm>`_
+* `Wouter Vervust <https://www.ugent.be/ea/ibitech/en/about-us/biommeda-staff-1/ir-wouter-vervust.htm>`_
 
 **Contributors:**
-
-* `Raffaela Cabriolu <https://www.linkedin.com/in/raffaela-cabriolu-41ba5488/?originalSubdomain=it>`_
 
 * `Ola Aarøen <https://www.ntnu.no/ansatte/ola.aaroen>`_
 
@@ -74,6 +73,8 @@ The |pyretis| team
 * `Anastasia Maslechko <https://www.linkedin.com/in/anastasia-maslechko-87207b95/?originalSubdomain=ua>`_
 
 * `Sudi Jawahery <http://www.cchem.berkeley.edu/molsim/people/current-group/sudi-jawahery.html>`_
+
+* `Raffaela Cabriolu <https://www.linkedin.com/in/raffaela-cabriolu-41ba5488/?originalSubdomain=it>`_
 
 
 **Acknowledgments:**
@@ -98,6 +99,8 @@ To cite us:
 When using |pyretis|, or one of our libraries, please cite us!
 
 **Software papers:**
+
+* `PyRETIS 3, 2024 <https://doi.org/10.1002/jcc.27319>`_
 
 * `PyRETIS 2, 2019 <https://doi.org/10.1002/jcc.26112>`_
 

@@ -18,7 +18,7 @@ can be installed directly from the source code :ref:`using git <user-guide-insta
 Prerequisites
 -------------
 
-|pyretis| requires **Python 3.7** or **Python 3.8**. Please make sure that you have
+|pyretis| requires **Python 3.9** or higher. Please make sure that you have
 an updated version of Python installed on your system. |pyretis| depends on several
 other Python packages, however, these should be installed automatically as part
 of the installation of |pyretis|. A  list of the dependencies :ref:`can be found below <user-guide-install-requirements>`.
@@ -29,13 +29,19 @@ of the installation of |pyretis|. A  list of the dependencies :ref:`can be found
 
 Installing via ``pip``
 ----------------------
-|pyretis| can be installed using `pip <https://pypi.org/project/pyretis/>`_
+The latest version of |pyretis| can be installed using `pip <https://pypi.org/project/pyretis/>`_
 with the following command:
 
 .. code-block:: pyretis
 
-    python -m pip install pyretis
+    python -m pip install git+https://gitlab.com/pyretis/pyretis.git
 
+A direct installation of PyRETIS 2:
+
+.. code-block:: pyretis
+
+    python -m pip install pyretis
+ 
 |pyretis| offers an analysis tool, named |pyvisa|. Its GUI requires
 PyQt5 to be executed. To install PyQt5 via pip:
 
@@ -69,7 +75,7 @@ with the following commands:
 
     conda create --name pyretis
     conda activate pyretis
-    conda install pyretis -c conda-forge
+    conda install pyretis -c conda-forge (working only with pyretis 2)
 
 |pyretis| offers an analysis tool, named |pyvisa|. Its GUI requires
 PyQt5 and mdtraj to be executed. To install PyQt5 and mdtraj via conda:
@@ -144,7 +150,7 @@ set up a virtual environment:
 
    .. code-block:: pyretis
 
-      python -m pip install pyretis
+      python -m pip install git+https://gitlab.com/pyretis/pyretis.git
 
 6. (Optional) |pyvisa|'s GUI requisite:
 
