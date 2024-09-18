@@ -657,7 +657,7 @@ class VisualApp(QtWidgets.QMainWindow, UI_VW):
                                  self.settings['op2'],
                                  self.settings['E'])
 
-        self.statusbar.showMessage('Writing file: {}'.format(outfile))
+        self.statusbar.showMessage(f'Writing file: {outfile}')
         with open(os.path.join(self.folder, outfile),
                   'w', encoding="utf8") as output:
             output.write(header)
@@ -1467,8 +1467,7 @@ class VisualApp(QtWidgets.QMainWindow, UI_VW):
                                              self.rst_file)
         else:
             self.display_message_box('Invalid choice..',
-                                     'Please load an rst file',
-                                     False)
+                                     'Please load an rst file')
             return
 
         if trj_name:
@@ -1501,7 +1500,7 @@ class VisualApp(QtWidgets.QMainWindow, UI_VW):
         r_trj = trj.slice(f_n)
         return r_trj
 
-    def display_message_box(self, line1, line2, yesno=False):
+    def display_message_box(self, line1, line2):
         """Display a message box with chosen text.
 
         Parameters
@@ -1510,24 +1509,14 @@ class VisualApp(QtWidgets.QMainWindow, UI_VW):
             Title of message box.
         line2: string
             Main message for the box.
-        yesno: boolean, optional
-            Option to have yes/no button on message.
 
         """
-        if yesno:
-            msg = QtWidgets.QMessageBox.question(self, line1,
-                                                 line2,
-                                                 QtWidgets.QMessageBox.No |
-                                                 QtWidgets.QMessageBox.Yes)
-            if msg == QtWidgets.QMessageBox.Yes:
-                return True
-            return False
         msg = QtWidgets.QMessageBox.question(self, line1,
                                              line2,
                                              QtWidgets.QMessageBox.Ok)
         if msg == QtWidgets.QMessageBox.Ok:
             try:
-                return None
+                return
             except AttributeError:
                 pass
 

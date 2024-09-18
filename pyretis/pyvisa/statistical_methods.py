@@ -69,7 +69,7 @@ def pyvisa_pca(n_pca, settings, data, cmap):
 
     """
     # save the original to a hdf-file
-    basename = 'PCA_data_{}_{}.hdf'.format(settings['fol'], n_pca)
+    basename = f'PCA_data_{settings["fol"]}_{n_pca}.hdf'
     data.to_hdf(basename, 'sim_data', mode='w')
 
     # Perform pca
@@ -78,8 +78,7 @@ def pyvisa_pca(n_pca, settings, data, cmap):
 
     cols = []
     for i in range(1, n_pca + 1):
-        cols.append('PC{}'.format(
-            i))
+        cols.append(f'PC{i}')
 
     # Perform PCA
     pca_model = PCA(n_components=n_pca)
@@ -179,7 +178,6 @@ def hierarchical(n_clusters, data, settings, cmap):
 
     """
     model = AgglomerativeClustering(n_clusters=n_clusters,
-                                    affinity='euclidean',
                                     linkage='average')
     labels = model.fit_predict(data)
     fig = plt.figure()

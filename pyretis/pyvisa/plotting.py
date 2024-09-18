@@ -138,9 +138,9 @@ def gen_surface(x, y, z, fig, ax, cbar_ax=None, dim=3, method='contour',
     # Methods for plotting in 3D
     if method == 'scatter':
         if dim == 3:
-            surf = ax.scatter(x, y, z, c=colors, s=res_x / 100.0, cmap=cmap)
+            surf = ax.scatter(x, y, z, c=colors, s=res_x / 100.0)
         else:
-            surf = ax.scatter(x, y, c=colors, s=res_x / 100.0, cmap=cmap)
+            surf = ax.scatter(x, y, c=colors, s=res_x / 100.0)
 
         norm = mpl.colors.Normalize(vmin=zmin, vmax=zmax)
         cbar = fig.colorbar(
@@ -188,6 +188,7 @@ def _grid_it_up(xyz, res_x=200, res_y=200, fill='max'):
     y_i = np.linspace(min(xyz[1], default=0), max(xyz[1], default=0), res_y)
     g_x, g_y = np.meshgrid(x_i, y_i)
 
+    fill_value = 0
     # Scipy griddata """ # Works
     if fill == 'max':
         fill_value = max(xyz[2], default=0)

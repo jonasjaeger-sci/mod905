@@ -125,7 +125,7 @@ def remove_nan(data):
                     break
         if nan and inan == len(data) - 1:
             nan = False
-        if nan and type(data) is pd.Series:
+        if nan and isinstance(data, pd.Series):
             data.iloc[inan] = data.iloc[inan + 1]
         elif nan:
             data[inan] = data[inan + 1]
