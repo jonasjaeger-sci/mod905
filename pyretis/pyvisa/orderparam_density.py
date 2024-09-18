@@ -32,7 +32,7 @@ pyvisa_unzip (:py:func: `.pyvisa_unzip`)
     Decompress the zip into PyVisA output.
 
 remove_nan (:py:func: `.remove_nan`)
-    Checks for the presence of NaN values and replace them with a local,
+    Checks for the presence of nan values and replace them with a local,
     if available.
 
 pyvisa_compress (:py:func: `.pyvisa_compress`)
@@ -477,7 +477,7 @@ class PathDensity:
                     odata = oline.split()
                     if not odata:
                         continue
-                    frames[odata[0]] = {self.order_parameter: np.NaN}
+                    frames[odata[0]] = {self.order_parameter: np.nan}
 
                     # Fill in OP-data to the frame
                     for label, data in zip(self.infos['op_labels'], odata[1:]):
@@ -581,8 +581,8 @@ class PathDensity:
 
                     # in case of missing lines in energy.txt
                     if len(edata) < 3:
-                        eframes[edata[0]]['potE'] = np.NaN
-                        eframes[edata[0]]['kinE'] = np.NaN
+                        eframes[edata[0]]['potE'] = np.nan
+                        eframes[edata[0]]['kinE'] = np.nan
                         continue
                     eframes[edata[0]]['potE'] = float(edata[1])
                     eframes[edata[0]]['kinE'] = float(edata[2])
