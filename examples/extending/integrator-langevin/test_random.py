@@ -60,7 +60,7 @@ def test_gssbivar(s12os11, sqrts11, sqrtsos11, numbers=10000, bins=100):
 def main():
     """Run the test."""
     size = vvintegrator.get_seed_size()
-    seeds = np.array([SEED + i for i in range(size)], dtype=np.int32)
+    seeds = np.array([SEED + i for i in range(size)], dtype='i4')
     vvintegrator.seed_random_generator(seeds)
     for sig in [1.0, 0.5, 2.0, 10.0]:
         test_rangaussian(sig, numbers=10**6)

@@ -45,11 +45,11 @@ class AreaAndVolume(OrderParameter):
         super().__init__(description="Area of ring and volume "
                                      "of starting cage")
         self.periodic = periodic
-        self.idx1 = np.array([220, 252, 412, 444, 796], dtype=np.int16)
+        self.idx1 = np.array([220, 252, 412, 444, 796], dtype='i4')
         self.idx2 = np.array([220, 252, 284, 316, 412, 444, 540, 604,
                               668, 700, 796, 828, 924, 988, 1052, 1084,
                               1180, 1212, 1308, 1340, 1372, 1404, 1436, 1468],
-                             dtype=np.int16)
+                             dtype='i4')
 
     def calculate(self, system):
         """Calculate area and volume."""

@@ -42,7 +42,7 @@ class RingDiffusion(OrderParameter):
 
         """
         super().__init__(description='Ring diffusion for hydrate')
-        self.idx1 = np.array([56, 64, 104, 112, 200, 208], dtype=np.int16)
+        self.idx1 = np.array([56, 64, 104, 112, 200, 208], dtype='i4')
         # convert to atom index:
         self.idx1 *= 4
         self.idx1 -= 3
@@ -50,7 +50,7 @@ class RingDiffusion(OrderParameter):
         self.idx1 -= 1
         self.idx2 = np.array([56, 64, 72, 80, 104, 112, 136, 152, 168, 176,
                               200, 208, 232, 248, 264, 272, 296, 304, 328,
-                              336, 344, 352, 360, 368], dtype=np.int16)
+                              336, 344, 352, 360, 368], dtype='i4')
         # convert to atom index:
         self.idx2 *= 4
         self.idx2 -= 3

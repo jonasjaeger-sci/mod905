@@ -99,7 +99,7 @@ def block_error(data, maxblock=None, blockskip=1, weights=None):
             data = (i[0] for i in indata)
             weights = (i[1] for i in indata)
     # define helper variables:
-    blocklen = np.arange(0, maxblock, blockskip, dtype=np.int_)
+    blocklen = np.arange(0, maxblock, blockskip, dtype='i4')
     # blocklen contains the lengths of the blocks
     blocklen += 1
     # +1 to make blocklen[i] = length of block no i where numbering

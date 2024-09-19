@@ -337,7 +337,7 @@ def recalculate_all(runfolder, iofile, ensemble_names=None, data=None):
                 os.system(f"cat {local_order} >> {main_order}")
 
     print_to_screen('# Data successfully recomputed!', level='success')
-    print_to_screen(f'# Time spent: {timeit.default_timer() - tic:.2f}',
+    print_to_screen(f'# Time spent: {timeit.default_timer() - tic:.2f}s',
                     level='success')
     return True
 

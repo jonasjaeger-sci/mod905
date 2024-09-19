@@ -245,7 +245,7 @@ class Particles:
         """
         if self.npart == 0:
             self.name = [name]
-            self.ptype = np.array(ptype, dtype=np.int16)
+            self.ptype = np.array(ptype, dtype='i4')
             self.pos = np.zeros((1, self.dim))
             self.pos[0] = pos
             self.vel = np.zeros((1, self.dim))
@@ -438,7 +438,7 @@ class ParticlesExt(Particles):
 
         """
         self.name = [name]
-        self.ptype = np.array(ptype, dtype=np.int16)
+        self.ptype = np.array(ptype, dtype='i4')
         self.pos = None
         self.set_pos(pos)
         self.vel = None

@@ -64,7 +64,7 @@ class LangevinF(MDEngine):
                            'sqrtsos11': None}
         self.init_params = True
         size = vvintegrator.get_seed_size()
-        seeds = np.array([seed + i for i in range(size)], dtype=np.int32)
+        seeds = np.array([seed + i for i in range(size)], dtype='i4')
         vvintegrator.seed_random_generator(seeds)
 
     def _initiate_parameters(self, system):

@@ -128,7 +128,7 @@ class LennardJonesTest(unittest.TestCase):
         self.assertGreaterEqual(maxcut, param[0]['rcut'])
 
         idx = np.array([i for i in range(system.particles.npart)],
-                       dtype=np.int32)
+                       dtype='i4')
         np.random.shuffle(idx)
         for i, idx2 in enumerate(np.array_split(idx, ncomp)):
             system.particles.ptype[idx2] = i
