@@ -93,7 +93,7 @@ def initiate_kick_max(simulation, settings, cycle):
 
     This method is similar to :py:func:`.initiate_kick`, but here we
     update the initial point for an ensemble to use that of the previous
-    path (if this exist).
+    path (if this exists).
 
     Please see documentation for :py:func:`.initiate_path_ensemble_kick`.
 
@@ -176,6 +176,7 @@ def initiate_path_ensemble_kick(ensemble, tis_settings, cycle):
     ensemble['path_ensemble'].add_path_data(initial_path, status, cycle)
     # Ask the engine to do clean up after the initialisation:
     ensemble['engine'].clean_up()
+
     return accept, initial_path, status
 
 
@@ -277,11 +278,11 @@ def generate_initial_path_kick(ensemble, tis_settings):
         if 'exp' in tis_settings.get('shooting_move', 'sh'):
             path_forw.status = 'ACC'
             path_forw.generated = ('ki', 0, 0, 0)
-            yield (True, 'Initial path generated.', path_forw)
+            yield True, 'Initial path generated.', path_forw
 
         if not success:
             logger.warning('Forward path not successful: %s', msg)
-            yield (False, f'Forward path failed: {msg}', None)
+            yield False, f'Forward path failed: {msg}', None
             continue
         # And we propagate the `leftpoint` backward:
         path_back = Path(rgen=rgen, maxlen=maxlen)
@@ -290,17 +291,17 @@ def generate_initial_path_kick(ensemble, tis_settings):
                                         reverse=True)
         if not success:
             logger.warning('Backward path not successful: %s', msg)
-            yield (False, f'Backward path failed: {msg}', None)
+            yield False, f'Backward path failed: {msg}', None
             continue
         # Merge backward and forward, here we do not set maxlen since
         # both backward and forward may have this length:
         initial_path = paste_paths(path_back, path_forw, overlap=False)
         if initial_path.length >= maxlen:
             logger.warning('Initial path too long (exceeded "MAXLEN")')
-            yield (False, 'Initial path was too long.', None)
+            yield False, 'Initial path was too long.', None
             continue
         start, end, _, _ = initial_path.check_interfaces(interfaces)
-        # OK, now its time to check the path:
+        # OK, now it is time to check the path:
         # 0) We can start at the starting condition, pass the middle
         #    and continue all the way to the end - perfect!
         # 1) We can start at the starting condition, pass the middle
@@ -325,7 +326,7 @@ def generate_initial_path_kick(ensemble, tis_settings):
                 # Case 2):
                 logger.info('Initial path starts and ends at wrong interface')
                 logger.info('Will perform TIS moves to fix it!')
-                yield (False, 'Trying to fix path by TIS moves', None)
+                yield False, 'Trying to fix path by TIS moves', None
 
                 initial_path = fix_path_by_tis(initial_path, ensemble,
                                                tis_settings)
@@ -348,7 +349,7 @@ def generate_initial_path_kick(ensemble, tis_settings):
             initial_path.weight = compute_weight(initial_path,
                                                  interfaces,
                                                  move)
-    yield (True, 'Initial path generated.', initial_path)
+    yield True, 'Initial path generated.', initial_path
 
 
 def _get_help(start_cond, interfaces):
@@ -499,6 +500,7 @@ def fix_path_by_tis(initial_path, ensemble, tis_settings):
             else:
                 logger.debug('TIS move did not improve path')
             path_ok = check_ok(initial_path)
+
     initial_path.generated = ('ki', 0, 0, 0)
     initial_path.status = 'ACC'
     return initial_path

@@ -39,7 +39,9 @@ LOG_DEBUG_FMT = ('[%(levelname)s] [%(name)s, %(funcName)s() at'
                  ' line %(lineno)d]: %(message)s')
 
 
-__all__ = ['OutputFormatter', 'PyretisLogFormatter', 'apply_format']
+__all__ = ['OutputFormatter', 'PyretisLogFormatter', 'apply_format',
+           'format_number', 'get_log_formatter',
+           'LOG_FMT', 'LOG_DEBUG_FMT']
 
 
 def _make_header(labels, width, spacing=1):

@@ -869,28 +869,29 @@ def repptis_swap_bookkeeping(input_tuple):
 
     If you reached here, then the first half of the swapping move was already
     successful. Here it is checked whether the second half of the move is
-    successful or not. Afterwards the final bookkeeping is performed.
+    successful or not. Afterward the final bookkeeping is performed.
     The input_tuple contains the parameters below, which are assigned at the
     beginning of the function.
 
     Parameters
     ----------
-    path_ensemble0 : object like :py:class:`.PathEnsemble`
-        The path ensemble of the first trial path ([i+-]).
-    path_ensemble1 : object like :py:class:`.PathEnsemble`
-        The path ensemble of the second trial path ([(i+1)+-]).
-    path0_new : object like :py:class:`.PathBase`
-        The first trial path ([i+-]).
-    path1_new : object like :py:class:`.PathBase`
-        The second trial path ([(i+1)+-]).
-    settings : dict
-        This dict contains the settings for the REPPTIS method.
-    idx : int
-        The index of the ensemble that will be swapped with the next one.
-    cycle : integer
-        The current cycle number.
-    ensembles : list of dictionaries of objects
-        This is a list of the ensembles we are using in the REPPTIS method.
+    input_tuple: tuple, it contains
+        path_ensemble0 : object like :py:class:`.PathEnsemble`
+            The path ensemble of the first trial path ([i+-]).
+        path_ensemble1 : object like :py:class:`.PathEnsemble`
+            The path ensemble of the second trial path ([(i+1)+-]).
+        path0_new : object like :py:class:`.PathBase`
+            The first trial path ([i+-]).
+        path1_new : object like :py:class:`.PathBase`
+            The second trial path ([(i+1)+-]).
+        settings : dict
+            This dict contains the settings for the REPPTIS method.
+        idx : int
+            The index of the ensemble that will be swapped with the next one.
+        cycle : integer
+            The current cycle number.
+        ensembles : list of dictionaries of objects
+            This is a list of the ensembles we are using in the REPPTIS method.
 
     Returns
     -------
@@ -1079,7 +1080,7 @@ def cut_overlap_phasepoints(path_ensemble, propdir, overlap_path, side,
     """Cut path in overlapping region of adjacent ensembles.
 
     Cuts the phasepoints in the overlapping region of two adjacent PPTIS
-    ensembles [i^+] and [(i+1)^-]. The overlapping region is [L,M] if the
+    ensembles [i^+] and [(i+1)^-]. The overlapping region is [L,M] if
     we are cutting from an [(i+1)^+-] path (denoted by side = 'right'), and
     [M,R] if we are cutting from an [i^+-] path (denoted by side = 'left).
     The propagation direction is the direction in which the cut path is to be
@@ -1111,12 +1112,14 @@ def cut_overlap_phasepoints(path_ensemble, propdir, overlap_path, side,
     # intf_M defines when to stop cutting phasepoints
     # For now, this is equivalent for all PPTIS ensembles, but might change
     # in the future.
+    assert side in ['right', 'left']
+
     intf_m = path_ensemble.interfaces[0] if path_ensemble.ensemble_number == 1\
         else path_ensemble.interfaces[1]
 
     stop_idx = 1  # to not include shootpoint in the cut path loop
 
-    # Different behavior depending on the side from wich the path originates,
+    # Different behavior depending on the side from which the path originates,
     # and the propagation direction. Note that, for the paths. Note that, if
     # the propagation direction is forwards, we reverse the order in which we
     # cut the phasepoints. We do not re-reverse this in the end, because the

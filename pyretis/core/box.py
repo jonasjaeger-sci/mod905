@@ -37,6 +37,7 @@ from pyretis.core.common import compare_objects
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
+np.set_printoptions(legacy='1.25')
 
 __all__ = ['create_box', 'check_consistency', 'box_matrix_to_list',
            'box_vector_angles', 'angles_from_box_matrix']
@@ -587,7 +588,7 @@ class BoxBase(metaclass=ABCMeta):
         Returns
         -------
         out : string
-            String with the type of box, the extent of the box and
+            Type of box, the extent of the box and
             information about the periodicity.
 
         """
@@ -792,8 +793,8 @@ def box_from_restart(restart):
         The box created from the restart settings.
 
     """
-    restart_box = restart.get('box', None)
-    if restart_box is None:
+    restart_box = restart.get('box', {})
+    if not restart_box:
         logger.info('No box created from restart settings.')
         return None
     box = create_box(

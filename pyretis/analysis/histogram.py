@@ -22,6 +22,8 @@ histogram_and_avg (:py:func:`.histogram_and_avg`)
 
 import numpy as np
 
+np.set_printoptions(legacy='1.25')
+
 __all__ = ['histogram', 'match_all_histograms',
            'histogram_and_avg']
 

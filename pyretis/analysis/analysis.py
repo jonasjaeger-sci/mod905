@@ -19,9 +19,11 @@ block_error_corr (:py:func:`.block_error_corr`)
 import numpy as np
 from pyretis.analysis.histogram import histogram_and_avg
 
-__all__ = ['running_average', 'block_error', 'block_error_corr']
-np.seterr(divide='ignore', invalid='ignore')
+__all__ = ['running_average', 'block_error', 'block_error_corr',
+           'analyse_data', 'mean_square_displacement']
 
+np.seterr(divide='ignore', invalid='ignore')
+np.set_printoptions(legacy='1.25')
 
 def running_average(data):
     """Create a running average of the given data.

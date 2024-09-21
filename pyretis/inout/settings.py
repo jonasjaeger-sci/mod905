@@ -30,7 +30,8 @@ logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 __all__ = ['parse_settings_file', 'write_settings_file', 'SECTIONS',
-           'fill_up_tis_and_retis_settings', 'add_default_settings']
+           'fill_up_tis_and_retis_settings', 'add_default_settings',
+           'add_specific_default_settings']
 
 
 SECTIONS = {}

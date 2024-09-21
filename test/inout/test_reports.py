@@ -22,7 +22,7 @@ class Reporting(unittest.TestCase):
     def test_generate_report(self):
         """Test analysisio function"""
         with self.assertRaises(ValueError) as ext:
-            generate_report(report_type='fake', analysis_results=None,
+            generate_report(report_type='fake', analysis_results={},
                             output='ext')
         self.assertIn('nkown report type fake', str(ext.exception))
         with turn_on_logging():
@@ -30,7 +30,7 @@ class Reporting(unittest.TestCase):
                                  level='WARNING'):
                 with self.assertRaises(ValueError) as ext:
                     generate_report(report_type='retis0',
-                                    analysis_results=None,
+                                    analysis_results={},
                                     output='ext')
                 self.assertIn('Could not locate template', str(ext.exception))
 
@@ -48,7 +48,7 @@ class Reporting(unittest.TestCase):
         """Test get_template."""
         # Any file would do
         ifile = os.path.join(HERE, 'initial-gro.rst')
-        nav, path = get_template(output=None, report_type=None, template=ifile)
+        nav, path = get_template(output='', report_type='', template=ifile)
 
         self.assertEqual((path, nav), (HERE, 'initial-gro.rst'))
 

@@ -493,17 +493,7 @@ class PathEnsemble:
 
         This is toggled on by adding 'remove_generate = True' to the retis.rst
         input file, under the [simulation] section.
-        TODO: Combining this with the retis_swap_zero move causes problems
-              during a 'save-cycle'. As the files of 000/generate are removed,
-              it will try to copy 000/generate/second_last.gro to 001/traj/...,
-              but is already deleted. I did a quick-fix by not deleting GRO or
-              G96 files. This only works for GROMACS, and a more general fix
-              will be needed for other external engines.
-              Update: I cannot recreate the problem anymore. I'm thinking now
-              that it had to do with the fact that rejected swapping moves
-              did not return the swapped paths of the previous accepted cycle.
-              Therefore, the pointers were not updated correctly. As this has
-              been fixed during unittesting, I think this is okay now.
+
         """
         gendir = self.directory['generate']
         logger.debug("Removing generate files from %s", gendir)

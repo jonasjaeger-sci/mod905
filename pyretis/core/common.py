@@ -74,13 +74,14 @@ from pyretis.inout import print_to_screen
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
+np.set_printoptions(legacy='1.25')
 
 __all__ = ['import_from', 'inspect_function', 'initiate_instance',
            'generic_factory', 'crossing_counter', 'crossing_finder',
            'segments_counter', 'select_and_trim_a_segment', 'counter',
            'trim_path_between_interfaces', 'big_fat_comparer',
            'soft_partial_exit', 'null_move', 'relative_shoots_select',
-           'compute_weight', 'priority_checker']
+           'compute_weight', 'priority_checker', 'compare_objects']
 
 
 def counter():
@@ -382,7 +383,7 @@ def generic_factory(settings, object_map, name='generic'):
     Returns
     -------
     out : instance of a class
-        The created object, in case we were successful. Otherwise we
+        The created object, in case we were successful. Otherwise, we
         return none.
 
     """
@@ -401,7 +402,7 @@ def generic_factory(settings, object_map, name='generic'):
 
 
 def numpy_allclose(val1, val2):
-    """Compare two values with allclose from numpy.
+    """Compare two values with all close from numpy.
 
     Here, we allow for one, or both, of the values to be None.
     Note that if val1 == val2 but are not of a type known to
@@ -644,7 +645,7 @@ def crossing_finder(path, interface, last_frame=False):
     Returns
     -------
     ph1, ph2 : snapshots
-        Snapshots to define the randomly picked crossing,
+        Define the randomly picked crossing,
         one right before and one right after the interface.
 
     """
@@ -719,7 +720,8 @@ def select_and_trim_a_segment(path, interface_l, interface_r,
 
     Returns
     -------
-    segment : a path segment composed only the snapshots for which
+    segment : object like :py:class:`.PathBase`
+        a path segment composed only the snapshots for which
         orderp is between interface_r and interface_l and the
         ones right after/before the interfaces.
 

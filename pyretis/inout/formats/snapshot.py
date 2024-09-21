@@ -33,6 +33,7 @@ from pyretis.inout.fileio import FileIO
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
+np.set_printoptions(legacy='1.25')
 
 __all__ = [
     'adjust_coordinate',

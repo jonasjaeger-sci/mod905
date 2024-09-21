@@ -133,10 +133,10 @@ class OrderParameter:
         return '\n'.join(msg)
 
     def load_restart_info(self, info):
-        """Load the orderparameter restart info."""
+        """Load the order parameter restart info."""
 
     def restart_info(self):
-        """Save any mutatable parameters for the restart."""
+        """Save any mutable parameters for the restart."""
 
 
 class Position(OrderParameter):
@@ -227,12 +227,12 @@ class Permeability(Position):
     offset : float
         The offset to apply before returning, l(x) = pos(x+offset).
         This allows for effectively moving the periodic boundary position.
-        Should be defined in the same space as this orderparameter
+        Should be defined in the same space as this order parameter
         (relative or not).
     mirror_pos : float
         The position of the mirror plane around which we mirror when the
         mirror function is called. Should be defined in the same space as this
-        orderparameter (relative or not).
+        order parameter (relative or not).
     relative : boolean
         If we should map the position to be relative to the box-vector.
         Defaults to True as that is the only correct option for NPT.
@@ -258,8 +258,8 @@ class Permeability(Position):
             The value of the position to mirror around. Allowing for the mirror
             move.
         relative : boolean
-            This determines wether the position is returned as a relative value
-            to the boxsize.
+            This determines if the position is returned as a relative value
+            to the box size.
 
         """
         description = (f"Permeability position of particle {index} "

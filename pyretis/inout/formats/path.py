@@ -34,6 +34,7 @@ from pyretis.inout.fileio import FileIO, read_some_lines
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
+np.set_printoptions(legacy='1.25')
 
 __all__ = [
     'PathExtFormatter',

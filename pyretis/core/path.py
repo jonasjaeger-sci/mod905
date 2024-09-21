@@ -33,6 +33,7 @@ from pyretis.core.system import System
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
+np.set_printoptions(legacy='1.25')
 
 __all__ = ['PathBase', 'Path', 'paste_paths', 'check_crossing']
 
@@ -180,7 +181,7 @@ def check_crossing(cycle, orderp, interfaces, leftside_prev):
     This function is useful for checking if an interface was crossed
     from the previous step till the current one. This is for instance
     used in the MD simulations for the initial flux.
-    If will use a variable to store the previous positions with respect
+    It will use a variable to store the previous positions with respect
     to the interfaces and check if interfaces were crossed here.
 
     Parameters
@@ -302,13 +303,13 @@ class PathBase:
     def ordermin(self):
         """Compute the minimum order parameter of the path."""
         idx = np.argmin([i.order[0] for i in self.phasepoints])
-        return (self.phasepoints[idx].order[0], idx)
+        return self.phasepoints[idx].order[0], idx
 
     @property
     def ordermax(self):
         """Compute the maximum order parameter of the path."""
         idx = np.argmax([i.order[0] for i in self.phasepoints])
-        return (self.phasepoints[idx].order[0], idx)
+        return self.phasepoints[idx].order[0], idx
 
     def check_interfaces(self, interfaces):
         """Check current status of the path.
@@ -434,7 +435,7 @@ class PathBase:
 
         Parameters
         ----------
-        out : object like :py:class:`.System`
+        phasepoint : object like :py:class:`.System`
             The system information we add to the path.
 
         """
@@ -555,7 +556,7 @@ class PathBase:
         """Reverse the velocities in the phase points."""
         system.particles.reverse_velocities()
 
-    def reverse(self, order_function=False, rev_v=True):
+    def reverse(self, order_function=None, rev_v=True):
         """Reverse a path and return the reverse path as a new path.
 
         This will reverse a path and return the reversed path as
@@ -773,8 +774,8 @@ class Path(PathBase):
         """Return a shooting point from the path.
 
         This will simply draw a shooting point from the path at
-        random. All points can be selected with equal probability with
-        the exception of the end points which are not considered.
+        random. All points can be selected with equal probability,
+        except the end points which are not considered.
 
         Parameters
         ----------
@@ -782,7 +783,7 @@ class Path(PathBase):
             The criteria to select the shooting point:
             'rnd': random, except the first and last point, standard sh.
             'exp': selection towards low density region.
-        list/tuple of floats, optional
+        interfaces : list/tuple of floats, optional
           These are the interface positions of the form
           ``[left, middle, right]``.
 

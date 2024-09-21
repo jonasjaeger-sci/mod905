@@ -103,7 +103,7 @@ class RetisTestSwap(unittest.TestCase):
         # Here, path2 and trial1 should be identical:
         self.assertTrue(path2 is trial1)
         self.assertTrue(path2 is ensembles[3]['path_ensemble'].last_path)
-        # Copies should be identical with the exception of the
+        # Copies should be identical except the
         # generated attribute and status.
         path1c.status = 'ACC'
         path2c.status = 'ACC'

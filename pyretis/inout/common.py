@@ -53,6 +53,9 @@ __all__ = [
     'make_dirs',
     'OutputBase',
     'simplify_ensemble_name',
+    'add_dirname',
+    'name_file',
+    'generate_file_name',
     'TRJ_FORMATS'
 ]
 
@@ -137,26 +140,6 @@ def create_backup(outputfile):
         msg = f'Backup existing file "{outputfile}" to "{filename}"'
         os.rename(outputfile, filename)
     return msg
-
-
-def _remove_extension(filename):
-    """Remove the extension of a given file name.
-
-    Parameters
-    ----------
-    filename : string
-        The file name to check.
-
-    Returns
-    -------
-    out : string
-        The filename with the extension removed.
-
-    """
-    try:
-        return os.path.splitext(filename)[0]
-    except IndexError:  # pragma: no cover
-        return filename
 
 
 def make_dirs(dirname):

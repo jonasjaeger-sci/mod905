@@ -58,6 +58,7 @@ reset_momentum (:py:func:`reset_momentum`)
 """
 import numpy as np
 
+np.set_printoptions(legacy='1.25')
 
 __all__ = [
     'atomic_kinetic_energy_tensor',
@@ -283,8 +284,8 @@ def kinetic_temperature(vel, mass, boltzmann, dof=None, kin_tensor=None):
     Returns
     -------
     out[0] : numpy.array
-        Array with the same size as the kinetic energy. It
-        contains the temperature in each spatial dimension.
+        It contains the temperature in each spatial dimension.
+        Array with the same size as the kinetic energy.
     out[1] : float
         The temperature averaged over all dimensions.
     out[2] : numpy.array

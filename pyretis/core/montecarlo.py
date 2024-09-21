@@ -18,6 +18,7 @@ max_displace_step (:py:func:`.max_displace_step`)
 """
 import numpy as np
 
+np.set_printoptions(legacy='1.25')
 
 __all__ = ['metropolis_accept_reject', 'max_displace_step']
 

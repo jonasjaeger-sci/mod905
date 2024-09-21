@@ -26,6 +26,7 @@ from pyretis.inout.fileio import FileIO, read_some_lines
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
+np.set_printoptions(legacy='1.25')
 
 __all__ = [
     'OrderFormatter',
@@ -134,9 +135,9 @@ class OrderPathFormatter(OrderFormatter):
         step : int
             The cycle number we are creating output for.
         data : tuple or list
-            Here, data[0] contains a object
+            Here, data[0] contains an object
             like :py:class:`.PathBase` which is the path we are
-            creating output for. data[1] contains the status for
+            creating output for data[1] contains the status for
             this path.
 
         Yields
@@ -149,7 +150,7 @@ class OrderPathFormatter(OrderFormatter):
         if not path:  # E.g. when null-moves are False.
             return
         move = path.generated
-        yield '# Cycle: {}, status: {}, move: {}'.format(step, status, move)
+        yield f'# Cycle: {step}, status: {status}, move: {move}'
         yield self.header
         for i, phasepoint in enumerate(path.phasepoints):
             yield self.format_data(i, phasepoint.order)

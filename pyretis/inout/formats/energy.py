@@ -26,6 +26,7 @@ from pyretis.inout.fileio import FileIO, read_some_lines
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
+np.set_printoptions(legacy='1.25')
 
 __all__ = [
     'EnergyFormatter',
@@ -154,7 +155,7 @@ class EnergyPathFormatter(EnergyFormatter):
         if not path:  # when nullmoves = False
             return
         move = path.generated
-        yield '# Cycle: {}, status: {}, move: {}'.format(step, status, move)
+        yield f'# Cycle: {step}, status: {status}, move: {move}'
         yield self.header
         for i, phasepoint in enumerate(path.phasepoints):
             energy = {}

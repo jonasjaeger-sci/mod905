@@ -28,6 +28,7 @@ from pyretis.core.random_gen import create_random_generator
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
+np.set_printoptions(legacy='1.25')
 
 __all__ = ['System']
 
@@ -386,7 +387,7 @@ class System:
         """Calculate the temperature of the system.
 
         It is included here for convenience since the degrees of freedom
-        are easily accessible and it's a very common calculation to
+        are easily accessible, and it's a very common calculation to
         perform, even though it might be cleaner to include it as a
         particle function.
 
@@ -550,10 +551,6 @@ class System:
 
     def __str__(self):
         """Just print some basic info about the system."""
-        msg = ['PyRETIS System',
-               f'Order parameter: {self.order}',
-               'Box:']
-        msg.append(f'{self.box}')
-        msg.append('Particles:')
-        msg.append(f'{self.particles}')
+        msg = ['PyRETIS System', f'Order parameter: {self.order}',
+               f'Box: {self.box}', f'Particles: {self.particles}']
         return '\n'.join(msg)

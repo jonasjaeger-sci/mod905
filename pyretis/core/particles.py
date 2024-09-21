@@ -24,6 +24,7 @@ from pyretis.core.common import compare_objects
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
+np.set_printoptions(legacy='1.25')
 
 __all__ = ['Particles', 'ParticlesExt']
 

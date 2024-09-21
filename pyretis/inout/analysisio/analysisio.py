@@ -49,6 +49,7 @@ from pyretis.inout.simulationio import OUTPUT_TASKS
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
+np.set_printoptions(legacy='1.25')
 
 __all__ = ['analyse_file', 'run_analysis_files',
            'run_analysis', 'read_first_block',

@@ -236,7 +236,7 @@ def generate_system_snapshots(ndim, length=10, npart=10):
 
 
 def compare_traj_fmt_file(test, formatter, correct_file, ndim):
-    """Comare formatted trajectory output with a file.
+    """Compare formatted trajectory output with a file.
 
     Parameters
     ----------
@@ -436,7 +436,7 @@ class TestPathExtFormatter(unittest.TestCase):
             if line.strip().startswith('#'):
                 continue
             data = formatter.parse(line)
-            self.assertListEqual(data, PATH_EXT_RAW[k])
+            self.assertListEqual(list(data), PATH_EXT_RAW[k])
             k += 1
 
 

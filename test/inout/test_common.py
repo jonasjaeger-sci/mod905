@@ -6,7 +6,6 @@ import os
 import logging
 import unittest
 from pyretis.inout.common import (
-    _remove_extension,
     make_dirs,
     simplify_ensemble_name,
     add_dirname,
@@ -79,17 +78,6 @@ class TestMethods(unittest.TestCase):
         # self.assertTrue(
         #     settings['simulation']['ensemble'][0]['tis']['ensemble_number'],
         #     'flux')
-
-    def test_remove_ext(self):
-        """Test that we can remove the extenstion from a file name."""
-        for case in ('filename', '.filename'):
-            filename = ''.join([case, os.extsep, 'txt'])
-            txt = _remove_extension(filename)
-            self.assertEqual(txt, case)
-        filename = ''.join(['test', os.extsep, 'txt'])
-        path = os.path.join('path', 'to', filename)
-        txt = _remove_extension(path)
-        self.assertEqual(txt, os.path.join('path', 'to', 'test'))
 
     def test_make_dirs(self):
         """Test that we can create directories."""

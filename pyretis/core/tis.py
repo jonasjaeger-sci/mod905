@@ -96,7 +96,7 @@ def make_tis(ensembles, rgen, settings, cycle):
     three different options can be given:
 
     1) If `relative_shoots` is given in the input settings as a list of
-       probability for each ensemble to be pick, then an ensemble
+       probability for each ensemble to be picked, then an ensemble
        will be ranomly picked and TIS performed on. For all the
        other ensembles we again have two options based on the given
        `settings['nullmoves']`:
@@ -740,7 +740,7 @@ def target_swap(ensemble, tis_settings):
         It contains:
 
         * `path_ensemble`: object like :py:class:`.PathEnsemble`
-            This is the pathe ensemble to perform the target swap move for.
+            This is the path ensemble to perform the target swap move for.
         * `order_function`: object like :py:class:`.OrderParameter`
             The class used for obtaining the order parameter(s).
 
@@ -1144,9 +1144,10 @@ def shoot(ensemble, tis_settings, start_cond, shooting_point=None):
           maximum length?
         * `maxlength`: integer, maximum allowed length of paths.
 
-    start_cond : string
+    start_cond : string or tuple of strings
         The starting condition for the current ensemble, 'L'eft or
-        'R'ight.
+        'R'ight. ('L', 'R'), the default option, implies no directional
+        difference.
     shooting_point: object like :py:class:`.System`, optional
         If given, it is the shooting point from which the path is generated.
 
@@ -1281,7 +1282,7 @@ def shoot(ensemble, tis_settings, start_cond, shooting_point=None):
 def wire_fencing(ensemble, tis_settings, start_cond):
     """Perform a wire_fencing move.
 
-    This function will perform the non famous wire fencing move
+    This function will perform the non-famous wire fencing move
     from an initial path.
 
     Parameters
@@ -1401,7 +1402,7 @@ def wire_fencing(ensemble, tis_settings, start_cond):
 
 def ss_wt_wf_acceptance(trial_path, ensemble, tis_settings,
                         start_cond='L'):
-    """Weights, possibly reverses and accept/rejects generated SS/WT/WFpaths.
+    """Weights, possibly reverses and accept/rejects generated SS/WT/WF paths.
 
     Parameters
     ----------
@@ -1517,6 +1518,7 @@ def stone_skipping(ensemble, tis_settings, start_cond):
     sub_ens = {'interfaces': [intf[1], intf[1], intf[2]],
                'order_function': ensemble['order_function']}
     osc_try = 0  # One step crossing attempt counter
+    success = False
     for i in range(tis_settings['n_jumps']):
         logger.debug('Trying a new stone skipping move, jump %i', i)
         # Here we choose between the two
@@ -1840,7 +1842,7 @@ def extender(source_seg, ensemble, tis_set, start_cond=('R', 'L')):
         * `maxlength`: integer, maximum allowed length of paths.
         * `high_accept`: boolean, the option for High Acceptance WF and SS.
 
-    start_cond : string, optional
+    start_cond : string or tuple of strings, optional
         The starting condition for the current ensemble, 'L'eft or
         'R'ight. ('L', 'R'), the default option, implies no directional
         difference.

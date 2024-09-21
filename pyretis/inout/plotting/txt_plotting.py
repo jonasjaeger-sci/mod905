@@ -23,6 +23,7 @@ from pyretis.inout.common import (ENERFILES, ENERTITLE, FLUXFILES,
                                   ORDERFILES, PATHFILES, PATH_MATCH)
 from pyretis.inout.formats.txt_table import txt_save_columns
 
+np.set_printoptions(legacy='1.25')
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())

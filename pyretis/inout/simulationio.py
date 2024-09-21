@@ -216,7 +216,7 @@ class Task:
 
     @when.setter
     def when(self, when):
-        """Update self.when to new value(s).
+        """Update self to new value(s).
 
         It will only update `self.when` for the keys given in the
         input `when`.

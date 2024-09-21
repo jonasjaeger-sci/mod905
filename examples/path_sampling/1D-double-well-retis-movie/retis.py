@@ -14,8 +14,8 @@ from tqdm import tqdm
 from pyretis.initiation import initiate_path_simulation
 from pyretis.core.properties import Property
 from pyretis.inout.settings import (fill_up_tis_and_retis_settings,
-                                    _add_default_settings,
-                                    _add_specific_default_settings)
+                                    add_default_settings,
+                                    add_specific_default_settings)
 from pyretis.setup import create_simulation
 from pyretis.analysis.path_analysis import _pcross_lambda_cumulative
 
@@ -87,8 +87,8 @@ SETTINGS['retis'] = {
 # For convenience:
 TIMESTEP = SETTINGS['engine']['timestep']
 ANALYSIS = {'ngrid': 100, 'nblock': 5}
-_add_default_settings(SETTINGS)
-_add_specific_default_settings(SETTINGS)
+add_default_settings(SETTINGS)
+add_specific_default_settings(SETTINGS)
 fill_up_tis_and_retis_settings(SETTINGS)
 
 
@@ -303,6 +303,13 @@ def main():
         print('Info about the initial path:')
         print(path_ensemble.last_path)
         print('')
+
+        print(path_ensemble.last_path.phasepoints[-1].order[0])
+        print(path_ensemble.last_path.phasepoints[-1].order[0])
+        print(path_ensemble.last_path.phasepoints[-1].order[0])
+        print(path_ensemble.last_path.phasepoints[-1].order[0])
+        print(path_ensemble.last_path.phasepoints[-1].order[0])
+
     # We make a dictionary of these variable for easier access:
     # Set up some variables for storing results:
     variables = {'length0': Property('Path length in [0^-]'),
