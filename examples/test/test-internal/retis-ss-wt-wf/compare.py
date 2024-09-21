@@ -42,7 +42,6 @@ def compare_files(fpath1, fpath2):
                 print(linef2.strip())
                 similar = False
 
-
         if similar:
             similar = next(file1, None) is None and next(file2, None) is None
 
