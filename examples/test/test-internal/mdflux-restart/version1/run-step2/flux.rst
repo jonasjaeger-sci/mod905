@@ -4,7 +4,7 @@ MD flux simulation
 Simulation settings
 -------------------
 task = md-flux
-steps = 2000
+steps = 200
 interfaces = [-0.9]
 restart = ../run-step1/pyretis.restart
 

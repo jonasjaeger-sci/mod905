@@ -4,7 +4,7 @@ MD flux simulation
 Simulation settings
 -------------------
 task = md-flux
-steps = 1235
+steps = 125
 interfaces = [-0.9]
 
 System settings
