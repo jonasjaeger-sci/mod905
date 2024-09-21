@@ -60,10 +60,6 @@ The |pyretis| team
 
 * `Wouter Vervust <https://www.ugent.be/ea/ibitech/en/about-us/biommeda-staff-1/ir-wouter-vervust.htm>`_
 
-* `Raffaela Cabriolu <https://www.linkedin.com/in/raffaela-cabriolu-41ba5488/?originalSubdomain=it>`_
-
-* `Ola Aarøen <https://www.ntnu.no/ansatte/ola.aaroen>`_
-
 * `Ola Aarøen <https://www.linkedin.com/in/ola-aar%C3%B8en-64023678>`_
 
 * `Sander Roet  <https://www.linkedin.com/in/sander-roet>`_
@@ -73,10 +69,6 @@ The |pyretis| team
 * `Henrik Kiær <https://www.linkedin.com/in/henrikkiaer/?originalSubdomain=no>`_
 
 * `Anastasia Maslechko <https://www.linkedin.com/in/anastasia-maslechko-87207b95/?originalSubdomain=ua>`_
-
-* `Sudi Jawahery <https://www.linkedin.com/in/sudi-jawahery-78559b37>`_
-
-* `Raffaela Cabriolu <https://www.linkedin.com/in/raffaela-cabriolu-41ba5488/?originalSubdomain=it>`_
 
 
 **Acknowledgments:**
@@ -92,6 +84,11 @@ The |pyretis| team
 * Jocelyne Vreede
 
 * Magnus Heskestad Waage
+
+* `Sudi Jawahery <https://www.linkedin.com/in/sudi-jawahery-78559b37>`_
+
+* `Raffaela Cabriolu <https://www.linkedin.com/in/raffaela-cabriolu-41ba5488/?originalSubdomain=it>`_
+
 
 |
 
