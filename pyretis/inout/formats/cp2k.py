@@ -21,6 +21,7 @@ logger.addHandler(logging.NullHandler())
 
 np.set_printoptions(legacy='1.25')
 
+
 class SectionNode:
     """A class representing a section in the CP2K input.
 

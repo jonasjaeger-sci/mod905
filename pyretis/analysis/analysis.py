@@ -25,6 +25,7 @@ __all__ = ['running_average', 'block_error', 'block_error_corr',
 np.seterr(divide='ignore', invalid='ignore')
 np.set_printoptions(legacy='1.25')
 
+
 def running_average(data):
     """Create a running average of the given data.
 

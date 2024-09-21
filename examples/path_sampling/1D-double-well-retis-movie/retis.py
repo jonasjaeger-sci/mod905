@@ -19,6 +19,8 @@ from pyretis.inout.settings import (fill_up_tis_and_retis_settings,
 from pyretis.setup import create_simulation
 from pyretis.analysis.path_analysis import _pcross_lambda_cumulative
 
+np.set_printoptions(legacy='1.25')
+
 INTERFACES = [-0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, 1.0]
 # Let us define the simulation:
 SETTINGS = {}
@@ -303,12 +305,6 @@ def main():
         print('Info about the initial path:')
         print(path_ensemble.last_path)
         print('')
-
-        print(path_ensemble.last_path.phasepoints[-1].order[0])
-        print(path_ensemble.last_path.phasepoints[-1].order[0])
-        print(path_ensemble.last_path.phasepoints[-1].order[0])
-        print(path_ensemble.last_path.phasepoints[-1].order[0])
-        print(path_ensemble.last_path.phasepoints[-1].order[0])
 
     # We make a dictionary of these variable for easier access:
     # Set up some variables for storing results:

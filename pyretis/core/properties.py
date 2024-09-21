@@ -8,6 +8,7 @@ __all__ = ['Property']
 
 np.set_printoptions(legacy='1.25')
 
+
 class Property:
     """A generic numerical value with standard deviation and average.
 
