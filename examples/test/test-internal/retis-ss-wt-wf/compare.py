@@ -34,6 +34,10 @@ def compare_files(fpath1, fpath2):
                 linef1_float = float(linef1.split()[7][:-1])
                 linef2_float = float(linef2.split()[7][:-1])
                 similar = abs(linef1_float - linef2_float) < 10**-7
+            elif len(linef1.split()) == 17:  # pathensemble instance
+                linef1_float = float(linef1.split()[9][:-1])
+                linef2_float = float(linef2.split()[9][:-1])
+                similar = abs(linef1_float - linef2_float) < 10**-7
             elif linef1 == linef2:
                 similar = True
             else:
