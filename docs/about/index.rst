@@ -49,17 +49,20 @@ The |pyretis| team
 
 * `Enrico Riccardi <https://www.uis.no/nb/profile/enrico-riccardi>`_
 
-**Core Developers:**
-
-* `Daniel Tianhou Zhang <https://www.linkedin.com/in/daniel-tianhou-zhang-857545192>`_
-
-* `Wouter Vervust <https://www.ugent.be/ea/ibitech/en/about-us/biommeda-staff-1/ir-wouter-vervust.htm>`_
 
 **Contributors:**
 
 * `An Ghysels <https://www.ugent.be/ea/ibitech/en/about-us/biommeda-staff-1/professor-an-ghysels.htm>`_
 
 **Former Developers:**
+
+* `Daniel Tianhou Zhang <https://www.linkedin.com/in/daniel-tianhou-zhang-857545192>`_
+
+* `Wouter Vervust <https://www.ugent.be/ea/ibitech/en/about-us/biommeda-staff-1/ir-wouter-vervust.htm>`_
+
+* `Raffaela Cabriolu <https://www.linkedin.com/in/raffaela-cabriolu-41ba5488/?originalSubdomain=it>`_
+
+* `Ola Aarøen <https://www.ntnu.no/ansatte/ola.aaroen>`_
 
 * `Ola Aarøen <https://www.linkedin.com/in/ola-aar%C3%B8en-64023678>`_
 
