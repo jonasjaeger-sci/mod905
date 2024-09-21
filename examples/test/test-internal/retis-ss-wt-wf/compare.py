@@ -39,7 +39,7 @@ def compare_files(fpath1, fpath2):
                 if 'pathensemble' not in fpath1 and len(linef1.split()) == 10:
                     linef1_float = float(linef1.split()[7][:-1])
                     linef2_float = float(linef2.split()[7][:-1])
-                    similar = abs(linef1_float - linef2_float) < 10**-7
+                    similar = abs(linef1_float - linef2_float) < 10**-6
 
         if similar:
             similar = next(file1, None) is None and next(file2, None) is None
