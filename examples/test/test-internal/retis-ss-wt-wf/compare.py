@@ -22,24 +22,26 @@ RESULTS = '../results/xxx'
 
 def compare_files(fpath1, fpath2):
     """Compare two files."""
-    print_to_screen('Comparing: {} {}'.format(fpath1, fpath2))
+    print_to_screen(f'Comparing: {fpath1} {fpath2}')
     similar = True
     with open(fpath1, 'r') as file1, open(fpath2, 'r') as file2:
         for linef1, linef2 in zip(file1, file2):
             linef1 = linef1.rstrip('\r\n')
             linef2 = linef2.rstrip('\r\n')
-            if linef1 != linef2:
+            # In the case of different numpy versions
+            # causing different results for energy and order files:
+            if len(linef1.split()) == 10:
+                linef1_float = float(linef1.split()[7][:-1])
+                linef2_float = float(linef2.split()[7][:-1])
+                similar = abs(linef1_float - linef2_float) < 10**-7
+            elif linef1 == linef2:
+                similar = True
+            else:
                 print('----------------------')
                 print(linef1.strip())
                 print(linef2.strip())
                 similar = False
 
-                # In the case of different numpy versions
-                # causing different results for energy and order files:
-                if 'pathensemble' not in fpath1 and len(linef1.split()) == 10:
-                    linef1_float = float(linef1.split()[7][:-1])
-                    linef2_float = float(linef2.split()[7][:-1])
-                    similar = abs(linef1_float - linef2_float) < 10**-6
 
         if similar:
             similar = next(file1, None) is None and next(file2, None) is None
@@ -165,18 +167,17 @@ def read_path_file(ens):
         for lines in inputfile:
             if lines.startswith('#'):
                 continue
-            else:
-                splitline = lines.strip().split()
-                step = int(splitline[0])
-                status = splitline[7]
-                move = splitline[8]
-                paths[step] = {'status': status,
-                               'move': move,
-                               'parent': current_acc,
-                               'swap-parent': (None, None)}
-                if status == 'ACC':
-                    current_acc = step
-                path_acc[step] = current_acc
+            splitline = lines.strip().split()
+            step = int(splitline[0])
+            status = splitline[7]
+            move = splitline[8]
+            paths[step] = {'status': status,
+                           'move': move,
+                           'parent': current_acc,
+                           'swap-parent': (None, None)}
+            if status == 'ACC':
+                current_acc = step
+            path_acc[step] = current_acc
     return paths, path_acc
 
 
