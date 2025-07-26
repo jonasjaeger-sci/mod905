@@ -43,6 +43,7 @@ pylint:
   - apt-get install git -y
   - git clone https://github.com/emacsorphanage/pylint.git pylint
   - pip install -r requirements.txt
+  - pip install pylint
   - python devtools/run_linting.py --input pyretis --white-list numpy PyQt5 mdtraj
   needs: []
 
