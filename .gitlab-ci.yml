@@ -8,7 +8,7 @@
       - .coverage*
     expire_in: 1 week
 
-image: python:3.11-buster
+image: python:3.12-buster
 
 .oldpy: &old_py
   image: python:3.8-buster
