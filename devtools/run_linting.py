@@ -5,14 +5,16 @@ The exit code of this script will be != 0 if one or more files
 have a score below a pre-set value or if the changes are "too big".
 """
 import argparse
-from operator import itemgetter
+import colorama
+import io
 import pathlib
 import re
 import sys
-import colorama
 from colorama import Fore
-from pylint.epylint import py_run
-
+from operator import itemgetter
+from pathlib import Path
+from pylint import lint
+from pylint.reporters.text import TextReporter
 
 SCORE_THRESHOLD = 9.2
 
@@ -32,25 +34,25 @@ def look_for_source_files(rootdir, skip=None):
 def lint_file(filename, reg_score, reg_warning, reg_error, white_list=None):
     """Run linting for a single file."""
     if white_list is None:
-        cmd = '{}'.format(filename)
+        cmd = str(Path(filename))
     else:
-        cmd = '{} --extension-pkg-whitelist={}'.format(
-            filename,
-            ','.join(white_list)
-        )
-    stdout, stderr = py_run(
-        cmd,
-        return_std=True
-    )
-    txt = stdout.read()
+        cmd = [str(Path(filename)), 
+               f"--ignored-modules={','.join(white_list)}"]
+    
+    buf = io.StringIO()
+
+    lint.Run(cmd, reporter=TextReporter(buf), exit=False)
+
+    txt = buf.getvalue()
+
     warnings = reg_warning.findall(txt)
     errors = reg_error.findall(txt)
     result = reg_score.findall(txt)
-    score, delta = process_result(result)
-    stdout.close()
-    stderr.close()
-    return score, delta, warnings, errors
 
+    score, delta = process_result(result)
+
+    return score, delta, warnings, errors
+ 
 
 def run_linting(files, white_list=None):
     """Run pylint for a set of files, individually."""
@@ -79,7 +81,6 @@ def run_linting(files, white_list=None):
         )
         if score is None:
             print(Fore.YELLOW + 'Skipping file: {}'.format(filei))
-            printed = True
             continue
 
         if delta is not None:
@@ -98,7 +99,6 @@ def run_linting(files, white_list=None):
 
         if not printed:
             print(filei, score, delta)
-            printed = True
 
         if warnings:
             results['warnings'].append((filei, score, delta))
@@ -125,7 +125,7 @@ def process_result(result):
 
 
 def print_list(list_to_print, txt='warnings', color=Fore.YELLOW):
-    """Print out the contents in a list with some color and text."""
+    """Print out the contents in a list with some colour and text."""
     if list_to_print:
         print(color + '    Found {}:'.format(txt))
         for i in list_to_print:
@@ -186,7 +186,7 @@ def print_all_errors(results):
 def evaluate_results(results):
     """Do a simple evaluation of the results."""
     fmt = '    {}: {} (delta: {})'
-    # First print out 10 (if possible) files with lowest scores:
+    # First print out 10 (if possible) files with lowerest scores:
     maxlen = min(10, len(results['all']))
     txt = []
     for i in sorted(results['all'], key=itemgetter(1))[:maxlen]:
