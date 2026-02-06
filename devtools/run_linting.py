@@ -36,9 +36,9 @@ def lint_file(filename, reg_score, reg_warning, reg_error, white_list=None):
     if white_list is None:
         cmd = str(Path(filename))
     else:
-        cmd = [str(Path(filename)), 
+        cmd = [str(Path(filename)),
                f"--ignored-modules={','.join(white_list)}"]
-    
+
     buf = io.StringIO()
 
     lint.Run(cmd, reporter=TextReporter(buf), exit=False)
@@ -52,7 +52,7 @@ def lint_file(filename, reg_score, reg_warning, reg_error, white_list=None):
     score, delta = process_result(result)
 
     return score, delta, warnings, errors
- 
+
 
 def run_linting(files, white_list=None):
     """Run pylint for a set of files, individually."""
