@@ -30,8 +30,8 @@ import graphviz
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from sklearn.cluster import AgglomerativeClustering, SpectralClustering, \
-    MiniBatchKMeans
+from sklearn.cluster import (AgglomerativeClustering, SpectralClustering,
+                             MiniBatchKMeans)
 from sklearn.decomposition import PCA
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.mixture import GaussianMixture
@@ -76,9 +76,7 @@ def pyvisa_pca(n_pca, settings, data, cmap):
     features = data.columns
     data = StandardScaler().fit_transform(data)
 
-    cols = []
-    for i in range(1, n_pca + 1):
-        cols.append(f'PC{i}')
+    cols = [f'PC{i}' for i in range(1, n_pca + 1)]
 
     # Perform PCA
     pca_model = PCA(n_components=n_pca)
@@ -88,14 +86,16 @@ def pyvisa_pca(n_pca, settings, data, cmap):
     explained.index += 1
     loadings = pd.DataFrame(pca_model.components_.T, columns=cols,
                             index=features)
-    load_corr = pca_model.components_.T * np.sqrt(
-        pca_model.explained_variance_)
-    load_corr_mat = pd.DataFrame(load_corr, columns=cols,
-                                 index=features)
+    load_corr = pca_model.components_.T * np.sqrt(pca_model.explained_variance_)
+    pd.DataFrame(load_corr,
+                 columns=cols,
+                 index=features).to_hdf(basename,
+                                        key='correlation_matrix',
+                                        mode='a')
+
     # save the pca data to a hdf-file
     principal_df.to_hdf(basename, key='PC', mode='a')
     loadings.to_hdf(basename, key='loadings', mode='a')
-    load_corr_mat.to_hdf(basename, key='correlation_matrix', mode='a')
     explained.to_hdf(basename, key='explained', mode='a')
 
     # Plot PC1 vs PC2
@@ -111,8 +111,7 @@ def pyvisa_pca(n_pca, settings, data, cmap):
     # Plot the loadings
     fig_2 = plt.figure()
     axis_2 = fig_2.add_subplot(111)
-    load = axis_2.matshow(loadings)
-    fig_2.colorbar(load)
+    fig_2.colorbar(axis_2.matshow(loadings))
     axis_2.set_xticks(np.arange(len(cols)))
     axis_2.set_yticks(np.arange(len(features)))
     axis_2.set_xticklabels(cols)
@@ -294,7 +293,7 @@ def random_forest(xdata, ydata, depth):
         frames in the simulation.
     ydata : dataframe
         Pandas dataframe containing True/False for each frame in the
-        selected ensemble/s. True if the frame is reactive, else False.
+        selected ensembles. True if the frame is reactive, else False.
     depth : int
         Depth of random forest model.
 
@@ -306,8 +305,7 @@ def random_forest(xdata, ydata, depth):
     rf_model.fit(xdata, ydata)
     important_features = np.argsort(rf_model.feature_importances_)
     feature_imp = pd.Series(rf_model.feature_importances_,
-                            index=xdata.columns) \
-        .sort_values(ascending=False)
+                            index=xdata.columns).sort_values(ascending=False)
     figure = plt.figure()
     axis = figure.add_subplot(111)
     x_ticks = [i + 0.5 for i in range(len(important_features))]
@@ -328,7 +326,7 @@ def decision_tree(xdata, ydata, depth):
         frames i the simulation.
     ydata : dataframe
         Pandas dataframe containing True/False for each frame in the
-        selected ensemble/s. True if the frame is reactive, else False.
+        selected ensembles. True if the frame is reactive, else False.
     depth : int
         Depth of the decision tree.
 

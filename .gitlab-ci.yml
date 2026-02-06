@@ -46,17 +46,12 @@ pylint:
   - python devtools/run_linting.py --input pyretis --white-list numpy PyQt5 mdtraj
   needs: []
 
-pycodestyle:
+pystyle:
   stage: style
   script:
   - pip install pycodestyle
-  - pycodestyle
-  needs: []
-
-pydocstyle:
-  stage: style
-  script:
   - pip install pydocstyle
+  - pycodestyle
   - pydocstyle --count pyretis
   needs: []
 
