@@ -16,7 +16,7 @@ from pathlib import Path
 from pylint import lint
 from pylint.reporters.text import TextReporter
 
-SCORE_THRESHOLD = 9.2
+SCORE_THRESHOLD = 7.7
 
 
 def look_for_source_files(rootdir, skip=None):

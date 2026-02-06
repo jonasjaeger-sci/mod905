@@ -6,7 +6,7 @@
 This package is intended for compiling data of a simulation into a compact file
 standard (hdf5), and displaying results
 from file in a custom GUI applet.
-Included are compiler of simulation data and a custom built PyQt5 GUI applet
+Included are compiler of simulation data and a custom-built PyQt5 GUI applet
 that loads pre-compiled data (or compiles when loading raw simulation data).
 The applet allows for user-friendly and interactive plotting of combinations of
 order parameter data of different interfaces and cycles of the simulation.
@@ -66,7 +66,7 @@ PathVisualize
     A class for loading data (compiled or not), and generating plots.
 
 VisualApp (:py:class:`pyretis.pyvisa.visualize.VisualApp`)
-    A QtWidget class that holds an user-defined figure.
+    A QtWidget class that holds a user-defined figure.
 
 VisualObject
     (:py:class:`pyretis.pyvisa.visualize.VisualObject`)

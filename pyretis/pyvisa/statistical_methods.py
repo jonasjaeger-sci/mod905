@@ -27,8 +27,8 @@ spectral (:py:func:`.spectral`)
 
 """
 import graphviz
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 from sklearn.cluster import AgglomerativeClustering, SpectralClustering, \
     MiniBatchKMeans
@@ -70,7 +70,7 @@ def pyvisa_pca(n_pca, settings, data, cmap):
     """
     # save the original to a hdf-file
     basename = f'PCA_data_{settings["fol"]}_{n_pca}.hdf'
-    data.to_hdf(basename, 'sim_data', mode='w')
+    data.to_hdf(basename, key='sim_data', mode='w')
 
     # Perform pca
     features = data.columns
@@ -93,10 +93,10 @@ def pyvisa_pca(n_pca, settings, data, cmap):
     load_corr_mat = pd.DataFrame(load_corr, columns=cols,
                                  index=features)
     # save the pca data to a hdf-file
-    principal_df.to_hdf(basename, 'PC', mode='a')
-    loadings.to_hdf(basename, 'loadings', mode='a')
-    load_corr_mat.to_hdf(basename, 'correlation_matrix', mode='a')
-    explained.to_hdf(basename, 'explained', mode='a')
+    principal_df.to_hdf(basename, key='PC', mode='a')
+    loadings.to_hdf(basename, key='loadings', mode='a')
+    load_corr_mat.to_hdf(basename, key='correlation_matrix', mode='a')
+    explained.to_hdf(basename, key='explained', mode='a')
 
     # Plot PC1 vs PC2
     if n_pca > 1:
@@ -139,7 +139,7 @@ def k_means(n_clusters, data, settings, cmap):
         Number of clusters.
     settings : dict
         Settings from GUI.
-    data : numpy colunmstack
+    data : numpy column stack
         Simulation data from chosen ensembles.
     cmap : string
         Matplotlib colormap.
@@ -171,7 +171,7 @@ def hierarchical(n_clusters, data, settings, cmap):
         Number of clusters.
     settings : dict
         Settings from GUI.
-    data : numpy columnstack
+    data : numpy column stack
         Simulation data from chosen ensembles.
     cmap : string
         Matplotlib colormap.
@@ -204,7 +204,7 @@ def spectral(n_clusters, data, settings, cmap):
         Number of clusters.
     settings : dict
         Settings from GUI.
-    data : numpy columnstack
+    data : numpy column stack
         Simulation data from chosen ensembles.
     cmap : string
         Matplotlib colormap.
@@ -240,7 +240,7 @@ def gaussian_mixture(n_clusters, data, settings, cmap):
         Number of clusters.
     settings : dict
         Settings from GUI.
-    data : numpy columnstack
+    data : numpy column stack
         Simulation data from chosen ensembles.
     cmap : string
         Matplotlib colormap.

@@ -55,7 +55,7 @@ def plot_regline(ax, x, y):
     return rline
 
 
-def plot_int_plane(ax, pos, ymin, ymax, zmin, zmax, visible=False):
+def plot_int_plane(ax, pos, yminmax, zminmax, visible=False):
     """Generate the interface planes for 3D visualization.
 
     Parameters
@@ -63,7 +63,7 @@ def plot_int_plane(ax, pos, ymin, ymax, zmin, zmax, visible=False):
     ax : The matplotlib.axes object where the planes will be plotted.
     pos : float
         The x-axis position of the interface plane.
-    ymin, ymax, zmin, zmax : float
+    yminmax, zminmax : list of float
         The limits of the plane in the 3D canvas.
     visible : boolean, optional
         If True, shows interface planes.
@@ -73,7 +73,7 @@ def plot_int_plane(ax, pos, ymin, ymax, zmin, zmax, visible=False):
     plane : A 3D surface at x=pos, perpendicular to the x-axis.
 
     """
-    y, z = np.linspace(ymin, ymax, 2), np.linspace(zmin, zmax, 2)
+    y, z = np.linspace(*yminmax, 2), np.linspace(*zminmax, 2)
     y, z = np.meshgrid(y, z)
     point = np.array([pos, 0.0, 0.0])
     normal = np.array([1.0, 0.0, 0.0])

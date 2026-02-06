@@ -39,13 +39,15 @@ pyvisa_compress (:py:func: `.pyvisa_compress`)
     Compress PyRETIS outputs to a .hdf5 file.
 
 """
-import warnings
 import os
 import timeit
+import warnings
 import zipfile
+
 import numpy as np
 import pandas as pd
 from scipy import stats
+
 from pyretis.inout import print_to_screen
 from pyretis.inout.settings import parse_settings_file
 from pyretis.pyvisa.common import where_from_to, get_cv_names
@@ -687,8 +689,6 @@ class PathVisualize:
         Essentially, it does almost nothing.
 
         """
-        clean = False
-
         assert os.path.isfile(self.pfile), f'{self.pfile} does not exist.'
 
         if self.pfile.endswith('.zip'):
@@ -700,14 +700,11 @@ class PathVisualize:
                                os.path.splitext(self.pfile)[1])
             self.pfile = tmp
             pyvisa_unzip(origin, tmp)
-            clean = True
+            os.remove(tmp)
         if self.pfile.endswith('.hdf5'):
             self.load_hdf5()
         else:
             raise ValueError(f'Format of {self.pfile} not recognised')
-        # If from zip, just keep the zip
-        if clean:
-            os.remove(tmp)
 
     def load_hdf5(self):
         """Load precompiled data from a hdf5 file.

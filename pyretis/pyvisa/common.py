@@ -44,13 +44,15 @@ find_data  (:py:func: `.find_data`)
 """
 import os
 import timeit
+
 import scipy
+
+from pyretis.initiation.initiate_load import write_order_parameters
 from pyretis.inout import print_to_screen, settings
 from pyretis.inout.common import create_backup, TRJ_FORMATS
 from pyretis.inout.formats.path import PathExtFile
 from pyretis.setup.common import create_orderparameter
 from pyretis.tools.recalculate_order import recalculate_order
-from pyretis.initiation.initiate_load import write_order_parameters
 
 __all__ = ['find_rst_file', 'read_traj_txt_file',
            'shift_data', 'try_data_shift', 'where_from_to',
