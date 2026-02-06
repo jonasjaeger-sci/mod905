@@ -176,7 +176,7 @@ the particles and the temperature:
 
 .. literalinclude:: /_static/examples/md.py
    :language: python
-   :lines: 28-36
+   :lines: 28-35
 
 In the last lines in the above code, we generated initial velocities,
 from a Maxwellian distribution such that the total
@@ -187,7 +187,7 @@ Now, we just have to set-up a force field:
 
 .. literalinclude:: /_static/examples/md.py
    :language: python
-   :lines: 38-44
+   :lines: 36-44
 
 select an engine and a simulation to run:
 
