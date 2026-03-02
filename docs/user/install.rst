@@ -36,28 +36,21 @@ with the following command:
 
     python -m pip install git+https://gitlab.com/pyretis/pyretis.git
 
-A direct installation of PyRETIS 2:
+A direct installation of PyRETIS 3:
 
 .. code-block:: pyretis
 
     python -m pip install pyretis
  
 |pyretis| offers an analysis tool, named |pyvisa|. Its GUI requires
-PyQt5 to be executed. To install PyQt5 via pip:
+PyQt5 to be executed and a package, `mdtraj <http://mdtraj.org>`_. To install them via pip:
 
 .. code-block:: pyretis
 
-    python -m pip install pyqt5 
-
-|pyvisa| also requires `mdtraj <http://mdtraj.org>`_ and this has to be
-installed **after** installing |pyretis|:
-
-.. code-block:: pyretis
-
-    python -m pip install git+https://github.com/mdtraj/mdtraj.git
+    python -m pip install pyqt5 mdtraj
 
 **Note:** Please make sure that you are using a Python environment
-of version 3.7 or newer. On some systems, **Python 2** may still be the default
+of version 3.9 or newer. On some systems, **Python 2** may still be the default
 version and ``pip`` might actually try to install for **Python 2**.
 In this case, use ``pip3`` in the command above.
 
@@ -73,112 +66,22 @@ with the following commands:
 
 .. code-block:: pyretis
 
-    conda create --name pyretis
+    conda create --name pyretis python=3.12
     conda activate pyretis
-    conda install pyretis -c conda-forge (working only with pyretis 2)
+    conda install pyretis -c conda-forge
 
 |pyretis| offers an analysis tool, named |pyvisa|. Its GUI requires
 PyQt5 and mdtraj to be executed. To install PyQt5 and mdtraj via conda:
 
 .. code-block:: pyretis
 
-    conda install pyqt -c conda-forge
+    conda install pyqt mdtraj -c conda-forge
     
-    conda install mdtraj -c conda-forge
-
-**Note:** Since |pyretis| will **only work with Python 3.7 or newer**,
+**Note:** Since |pyretis| will **only work with Python 3.9 or newer**,
 please make sure that you are using an environment with a recent version
 of Python.
 
 |
-
-.. _user-guide-install-virtual-environment:
-
-
-Optional: Setting up a virtual environment for pip
---------------------------------------------------
-
-You can also install |pyretis| in a `virtual environment <https://virtualenv.pypa.io>`_.
-Using a virtual environment makes it easier to maintain different
-versions of |pyretis| and it's dependencies. The following steps are needed to
-set up a virtual environment:
-
-1. Install the `virtualenv package <https://virtualenv.pypa.io/en/stable/installation/>`_.
-   This can be done using ``pip``:
-   
-   .. code-block:: pyretis
-
-      [sudo] python -m pip install virtualenv
-
-   or using a package manager for your operative system, for instance ``apt`` if you are
-   using a Debian-like Linux:
-
-   .. code-block:: pyretis
-
-      [sudo] apt-get install virtualenv
-
-2. Create a folder dedicated to your virtual environments, for instance in your home directory:
-
-   .. code-block:: pyretis
-
-      mkdir ~/name-of-environment-folder
-      cd ~/name-of-environment-folder
-
-3. Install the new environment with the desired Python3 interpreter,
-   using the path to the desired Python executable (usually found in ``/usr/bin/``),
-   and a name for the virtual environment folder (``pyretis-env``):
-
-   .. code-block:: pyretis
-
-      virtualenv -p /usr/bin/python3 ~/name-of-environment-folder/pyretis-env
-
-   Note, if you want more control over which version of Python to use, you can
-   use the ``-p`` option in the command above to specify this. For instance,
-   for version **3.8**:
-   
-   .. code-block:: pyretis
-
-      virtualenv -p /usr/bin/python3.8 ~/name-of-environment-folder/pyretis-env
-
-4. Activate the environment:
-
-   .. code-block:: pyretis
-
-      source ~/name-of-environment-folder/pyretis-env/bin/activate
-
-5. Install |pyretis|:
-
-   .. code-block:: pyretis
-
-      python -m pip install git+https://gitlab.com/pyretis/pyretis.git
-
-6. (Optional) |pyvisa|'s GUI requisite:
-
-   .. code-block:: pyretis
-
-      python -m pip install pyqt5
-
-7. (Optional) |pyvisa|'s also requisite `mdtraj <http://mdtraj.org>`_:
-
-   .. code-block:: pyretis
-
-      python -m pip install git+https://github.com/mdtraj/mdtraj.git
-
-
-
-The folder ``~/name-of-environment-folder/pyretis-env`` now contains a new Python environment
-where |pyretis| has been installed. Since you have sourced the
-virtual environment, ``python -m pip`` will now refer to the version of ``pip``
-installed in the environment and when you install packages, they will be
-installed inside the folder ``~/name-of-environment-folder/pyretis-env``.
-
-**Note:** that you will have to source the environment each time you want to make use of it
-using the ``source`` command given above.
-
-|
-
-.. _user-guide-install-git:
-
 
 Optional: Installing from the |pyretis| git repository
 ------------------------------------------------------
@@ -201,25 +104,17 @@ installed via ``pip`` (after navigating to the main source directory):
 
 .. code-block:: pyretis
 
-   python -m pip install .
+   pip install .
 
-or, alternatively:
+**Note:** If you want to be able to make modifications locally and to apply them, you can 
+install the package with the ``-e`` option. |pyretis| will be executed with the files present
+in the folder you created.
 
-.. code-block:: pyretis
-
-   python setup.py install
-
-and, to be able to run |pyvisa|'s GUI, add ``pyqt5``:
+To be able to run |pyvisa|'s GUI, you need to install ``pyqt5`` and ``mdtraj``:
 
 .. code-block:: pyretis
 
-   python -m pip install pyqt5
-
-Then, install ``mdtraj``:
-
-.. code-block:: pyretis
-
-   python -m pip install git+https://github.com/mdtraj/mdtraj.git
+   pip install pyqt5 mdtraj
 
 .. _user-guide-install-develop:
 
@@ -241,13 +136,13 @@ supported in some environments):
 
 .. code-block:: pyretis
 
-    python -m pip install -r requirements-dev.txt
+    pip install -r requirements-dev.txt
 
 Finally, install |pyretis| using:
 
 .. code-block:: pyretis
 
-    python -m pip install -e .
+    pip install -e .
 
 .. _user-guide-install-test:
 
