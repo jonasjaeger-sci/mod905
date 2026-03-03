@@ -13,23 +13,23 @@ create adequate variables in python (dictionaries, dataframes, arrays,...).
 **2. Module: Species Analysis**
 Here it should be analysed which species exist and have existed during the course of the simulation. The simulation file looks something like this:
 
-#  Timestep    No_Moles    No_Specs          Li           O           C           H
+  Timestep    No_Moles    No_Specs          Li           O           C           H
           0         640           4          40         180         180         240
-#  Timestep    No_Moles    No_Specs    C3H4O3Li          Li   C3H4O3Li2      C3H4O3
+  Timestep    No_Moles    No_Specs    C3H4O3Li          Li   C3H4O3Li2      C3H4O3
          20          89           4           7          29           2          51
-#  Timestep    No_Moles    No_Specs    C3H4O3Li          Li   C3H4O3Li2      C3H4O3
+  Timestep    No_Moles    No_Specs    C3H4O3Li          Li   C3H4O3Li2      C3H4O3
          40          89           4           7          29           2          51
-#  Timestep    No_Moles    No_Specs    C3H4O3Li          Li   C3H4O3Li2      C3H4O3
+  Timestep    No_Moles    No_Specs    C3H4O3Li          Li   C3H4O3Li2      C3H4O3
          60          89           4           7          29           2          51
-#  Timestep    No_Moles    No_Specs    C3H4O3Li          Li   C3H4O3Li2      C3H4O3
+  Timestep    No_Moles    No_Specs    C3H4O3Li          Li   C3H4O3Li2      C3H4O3
          80          89           4           7          29           2          51
-#  Timestep    No_Moles    No_Specs    C3H4O3Li          Li   C3H4O3Li2      C3H4O3
+  Timestep    No_Moles    No_Specs    C3H4O3Li          Li   C3H4O3Li2      C3H4O3
         100          89           4           7          29           2          51
-#  Timestep    No_Moles    No_Specs    C3H4O3Li          Li      CO3Li2   C3H4O3Li2      C3H4O3        C2H4
+  Timestep    No_Moles    No_Specs    C3H4O3Li          Li      CO3Li2   C3H4O3Li2      C3H4O3        C2H4
         120          90           6           7          29           1           1          51           1
-#  Timestep    No_Moles    No_Specs    C3H4O3Li          Li      CO3Li2   C3H4O3Li2      C3H4O3        C2H4
+  Timestep    No_Moles    No_Specs    C3H4O3Li          Li      CO3Li2   C3H4O3Li2      C3H4O3        C2H4
         140          90           6           7          29           1           1          51           1
-#  Timestep    No_Moles    No_Specs    C3H4O3Li          Li      CO3Li2   C3H4O3Li2       CO3Li      C3H4O3        C2H4
+  Timestep    No_Moles    No_Specs    C3H4O3Li          Li      CO3Li2   C3H4O3Li2       CO3Li      C3H4O3        C2H4
         160          91           7           6          29           1           1           1          51           2
 
 It would make sense to first obtain a list of all unique elements/reactants. Afterwards it makes sense to create a dictionary of how often every element/reactant was
@@ -39,13 +39,13 @@ of the respective element for each timestep in an array.
 **3. Module: Identifying reaction pathways**
 This module aims to capture the possible reaction pathways. For this, the discrete bond orders respectively bonds have to be extracted from the files: 
 
-# Timestep 0
-#
-# Number of particles 640
-#
-# Max number of bonds per atom 4 with coarse bond order cutoff 0.300
-# Particle connection table and bond orders
-# id type nb id_1...id_nb mol bo_1...bo_nb abo nlp q
+ Timestep 0
+
+ Number of particles 640
+
+ Max number of bonds per atom 4 with coarse bond order cutoff 0.300
+ Particle connection table and bond orders
+ id type nb id_1...id_nb mol bo_1...bo_nb abo nlp q
  2 3 0 0         0.088         0.001         0.453
  364 1 4 367 361 365 368 0         0.959         1.011         1.083         0.958         4.012         0.000         0.061
  101 4 2 104 106 0         1.011         1.191         2.217         1.750        -0.333
