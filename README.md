@@ -1,2 +1,92 @@
-# mod905
-Repository for the course mod905 project at UiS
+# MOD905 Python for Natural Sciences and Engineering
+
+This Repository belongs to Jonas Jäger and contains the project for the MOD905 PhD course at the University of Stavanger.
+
+## Workflow (#1): Chemical reaction analysis from Lammps reaxFF simulation files
+The purpose of this project is to develop a modular script that evaluates and analyses data from lammps reaxFF simulations to extract relevant 
+information about the chemical reactions happening. The architecture is envisioned as follows:
+
+**1. Module: Data Preparation**
+The first module serves to read the different simulation files containing the discrete elements, their charges, trajectories and the systems energies to subsequently 
+create adequate variables in python (dictionaries, dataframes, arrays,...). 
+
+**2. Module: Species Analysis**
+Here it should be analysed which species exist and have existed during the course of the simulation. The simulation file looks something like this:
+
+#  Timestep    No_Moles    No_Specs          Li           O           C           H
+          0         640           4          40         180         180         240
+#  Timestep    No_Moles    No_Specs    C3H4O3Li          Li   C3H4O3Li2      C3H4O3
+         20          89           4           7          29           2          51
+#  Timestep    No_Moles    No_Specs    C3H4O3Li          Li   C3H4O3Li2      C3H4O3
+         40          89           4           7          29           2          51
+#  Timestep    No_Moles    No_Specs    C3H4O3Li          Li   C3H4O3Li2      C3H4O3
+         60          89           4           7          29           2          51
+#  Timestep    No_Moles    No_Specs    C3H4O3Li          Li   C3H4O3Li2      C3H4O3
+         80          89           4           7          29           2          51
+#  Timestep    No_Moles    No_Specs    C3H4O3Li          Li   C3H4O3Li2      C3H4O3
+        100          89           4           7          29           2          51
+#  Timestep    No_Moles    No_Specs    C3H4O3Li          Li      CO3Li2   C3H4O3Li2      C3H4O3        C2H4
+        120          90           6           7          29           1           1          51           1
+#  Timestep    No_Moles    No_Specs    C3H4O3Li          Li      CO3Li2   C3H4O3Li2      C3H4O3        C2H4
+        140          90           6           7          29           1           1          51           1
+#  Timestep    No_Moles    No_Specs    C3H4O3Li          Li      CO3Li2   C3H4O3Li2       CO3Li      C3H4O3        C2H4
+        160          91           7           6          29           1           1           1          51           2
+
+It would make sense to first obtain a list of all unique elements/reactants. Afterwards it makes sense to create a dictionary of how often every element/reactant was
+present during the simulation (absolute & %). Additionally it would be interesting to extract the development for each species individually and capture the number
+of the respective element for each timestep in an array.
+
+**3. Module: Identifying reaction pathways**
+This module aims to capture the possible reaction pathways. For this, the discrete bond orders respectively bonds have to be extracted from the files: 
+
+# Timestep 0
+#
+# Number of particles 640
+#
+# Max number of bonds per atom 4 with coarse bond order cutoff 0.300
+# Particle connection table and bond orders
+# id type nb id_1...id_nb mol bo_1...bo_nb abo nlp q
+ 2 3 0 0         0.088         0.001         0.453
+ 364 1 4 367 361 365 368 0         0.959         1.011         1.083         0.958         4.012         0.000         0.061
+ 101 4 2 104 106 0         1.011         1.191         2.217         1.750        -0.333
+ 102 4 2 105 106 0         1.009         1.194         2.218         1.750        -0.322
+ 103 4 1 106 0         1.951         1.954         2.000        -0.327
+ 104 1 4 101 105 107 108 0         1.011         1.084         0.959         0.958         4.012         0.000         0.034
+ 105 1 4 102 104 110 109 0         1.009         1.084         0.958         0.959         4.010         0.000         0.009
+ 106 1 3 101 102 103 0         1.191         1.194         1.951         4.336         0.000         0.491
+ 107 2 1 104 0         0.959         0.966         0.000         0.007
+ 108 2 1 104 0         0.958         0.967         0.000         0.090
+ 109 2 1 105 0         0.959         0.967         0.000         0.149
+ 110 2 1 105 0         0.958         0.968         0.000         0.002
+ 6 3 0 0         0.000         0.002         0.418
+ 124 1 4 127 128 121 125 0         0.959         0.958         1.009         1.084         4.011         0.000         0.042 ....
+
+ Combined with the list of unique reactants it should be possible to check the existing reaction pathways. These could be stored in a dictionary.
+
+ **4. Module: Calculating flux/reaction rate of chemical reactions**
+Following up on module 3, this module can then trace how often each reaction occurs during the simulation to extract the reaction rates.
+
+ **5. Module: Generating output file**
+Subsequently, the key findings like number of times a species existed and chemical reaction rates should be exported in an output file
+
+ **56 Module: Visualization (optional)**
+Optionally, a function visualize different variables can be emplooyed e.g. plotting number of species and system energy can be added
+
+
+## Alternative Workflow (#2): Machine learning enhancement of existing pyretis-pyvisa library
+This project would aim to extend the existing pyretis-pyvisa library by adding machine learning further machine learning functionalities e.g SVM. 
+
+ **1. Module: Access files and information produced by pyretis**
+Initially it is important to read/access the relevant data of the pyretis simulation run, likely in the form of files and save them in 
+adequate variables and formats.
+
+ **2. Module: Implement function to perform ML method**
+COnstruct classes or just functions that perform machine learning methods to process the output. Currently methodologies like clustering,
+decision trees and principle component analysis already exist. Possible applications could be state vector machine (SVM).
+
+
+
+
+
+
+
