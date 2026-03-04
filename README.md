@@ -9,7 +9,7 @@ This Repository belongs to Jonas Jäger and contains the project for the MOD905 
 The purpose of this project is to develop a modular script that evaluates and analyses data from lammps reaxFF simulations to extract relevant 
 information about the chemical reactions happening. The architecture is envisioned as follows:
 
-**1. Module: Data Preparation**
+**1. Module: INput Layer and Data Preparation**
 
 The first module serves to read the different simulation files containing the discrete elements, their charges, trajectories and the systems energies to subsequently 
 create adequate variables in python (dictionaries, dataframes, arrays,...). 
