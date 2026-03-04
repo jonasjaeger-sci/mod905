@@ -82,7 +82,7 @@ It might also be interesting to visualize individual reactions as they happen.
 
 
 ## Alternative Workflow (#2): Machine learning enhancement of existing pyretis-pyvisa library
-This project would aim to extend the existing pyretis-pyvisa library by adding machine learning further machine learning functionalities e.g SVM. 
+This project would aim to extend the existing pyretis-pyvisa library by adding further machine learning functionalities e.g SVM. 
 
  **1. Module: Access files and information produced by pyretis**
  
