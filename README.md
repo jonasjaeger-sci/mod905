@@ -10,10 +10,12 @@ The purpose of this project is to develop a modular script that evaluates and an
 information about the chemical reactions happening. The architecture is envisioned as follows:
 
 **1. Module: Data Preparation**
+
 The first module serves to read the different simulation files containing the discrete elements, their charges, trajectories and the systems energies to subsequently 
 create adequate variables in python (dictionaries, dataframes, arrays,...). 
 
 **2. Module: Species Analysis**
+
 Here it should be analysed which species exist and have existed during the course of the simulation. The simulation file looks something like this:
 
   Timestep    No_Moles    No_Specs          Li           O           C           H
@@ -33,6 +35,7 @@ present during the simulation (absolute & %). Additionally it would be interesti
 of the respective element for each timestep in an array.
 
 **3. Module: Identifying reaction pathways**
+
 This module aims to capture the possible reaction pathways. For this, the discrete bond orders respectively bonds have to be extracted from the files: 
 
  Timestep 0
@@ -62,12 +65,15 @@ This module aims to capture the possible reaction pathways. For this, the discre
  Combined with the list of unique reactants it should be possible to check the existing reaction pathways. These could be stored in a dictionary.
 
  **4. Module: Calculating flux/reaction rate of chemical reactions**
+ 
 Following up on module 3, this module can then trace how often each reaction occurs during the simulation to extract the reaction rates.
 
  **5. Module: Generating output file**
+ 
 Subsequently, the key findings like number of times a species existed and chemical reaction rates should be exported in an output file
 
  **6. Module: Visualization (optional)**
+ 
 Optionally, a function visualize different variables can be emplooyed e.g. plotting number of species and system energy can be added. 
 It might also be interesting to visualize individual reactions as they happen.
 
@@ -76,14 +82,17 @@ It might also be interesting to visualize individual reactions as they happen.
 This project would aim to extend the existing pyretis-pyvisa library by adding machine learning further machine learning functionalities e.g SVM. 
 
  **1. Module: Access files and information produced by pyretis**
+ 
 Initially it is important to read/access the relevant data of the pyretis simulation run, likely in the form of files and save them in 
 adequate variables and formats.
 
  **2. Module: Implement function to perform ML method**
+ 
 Construct classes or just functions that perform machine learning methods to process the output. Currently methodologies like clustering,
 decision trees and principle component analysis already exist. Possible applications could be state vector machine (SVM).
 
  **3. Module: Embed functionality in GUI**
+ 
 The library has a GUI to perform plotting and analysis of the sampling. In this module, the ML functionalities would be embeded 
 and should be accessed via a button and coordinate parameter settings.
 
