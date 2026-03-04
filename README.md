@@ -79,8 +79,14 @@ Initially it is important to read/access the relevant data of the pyretis simula
 adequate variables and formats.
 
  **2. Module: Implement function to perform ML method**
-COnstruct classes or just functions that perform machine learning methods to process the output. Currently methodologies like clustering,
+Construct classes or just functions that perform machine learning methods to process the output. Currently methodologies like clustering,
 decision trees and principle component analysis already exist. Possible applications could be state vector machine (SVM).
+
+ **3. Module: Embed functionality in GUI**
+The library has a GUI to perform plotting and analysis of the sampling. In this module, the ML functionalities would be embeded 
+and should be accessed via a button and coordinate parameter settings.
+
+
 
 
 
