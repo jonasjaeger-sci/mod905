@@ -75,10 +75,9 @@ Subsequently, the key findings like number of times a species existed and chemic
 <img width="1236" height="295" alt="Screenshot from 2026-03-04 10-57-38" src="https://github.com/user-attachments/assets/0a83fe29-d00e-4505-88ea-a6ddfb00385d" />
 
 
-
  **6. Module: Visualization (optional)**
  
-Optionally, a function visualize different variables can be emplooyed e.g. plotting number of species and system energy can be added. 
+Optionally, a function to visualize different variables can be emplooyed e.g. plotting number of species and system energy can be added. 
 It might also be interesting to visualize individual reactions as they happen.
 
 
