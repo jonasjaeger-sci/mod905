@@ -64,7 +64,7 @@ Following up on module 3, this module can then trace how often each reaction occ
  **5. Module: Generating output file**
 Subsequently, the key findings like number of times a species existed and chemical reaction rates should be exported in an output file
 
- **56 Module: Visualization (optional)**
+ **6. Module: Visualization (optional)**
 Optionally, a function visualize different variables can be emplooyed e.g. plotting number of species and system energy can be added
 
 
