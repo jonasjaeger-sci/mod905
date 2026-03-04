@@ -30,9 +30,9 @@ Here it should be analysed which species exist and have existed during the cours
   
          40          89           4           7          29           2          51
 
-It would make sense to first obtain a list of all unique elements/reactants. Afterwards it makes sense to create a dictionary of how often every element/reactant was
-present during the simulation (absolute & %). Additionally it would be interesting to extract the development for each species individually and capture the number
-of the respective element for each timestep in an array.
+It would make sense to first obtain a list of all unique elements/reactants. Afterwards a dictionary of how often every element/reactant was
+present during the simulation (absolute & %) can be created. Additionally it would be interesting to extract the development for each species individually 
+and capture the number of the respective element for each timestep in an array.
 
 **3. Module: Identifying reaction pathways**
 
