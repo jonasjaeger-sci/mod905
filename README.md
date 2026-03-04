@@ -2,6 +2,9 @@
 
 This Repository belongs to Jonas Jäger and contains the project for the MOD905 PhD course at the University of Stavanger.
 
+<img width="815" height="734" alt="Screenshot from 2026-03-04 10-39-51" src="https://github.com/user-attachments/assets/2061bfef-eea1-4ee8-a192-9e914d430523" />
+
+
 ## Workflow (#1): Chemical reaction analysis from Lammps reaxFF simulation files
 The purpose of this project is to develop a modular script that evaluates and analyses data from lammps reaxFF simulations to extract relevant 
 information about the chemical reactions happening. The architecture is envisioned as follows:
