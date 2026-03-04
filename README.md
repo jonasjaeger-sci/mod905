@@ -16,10 +16,15 @@ Here it should be analysed which species exist and have existed during the cours
   Timestep    No_Moles    No_Specs          Li           O           C           H
   
           0         640           4          40         180         180         240
+          
   Timestep    No_Moles    No_Specs    C3H4O3Li          Li   C3H4O3Li2      C3H4O3
+  
          20          89           4           7          29           2          51
+         
   Timestep    No_Moles    No_Specs    C3H4O3Li          Li   C3H4O3Li2      C3H4O3
+  
          40          89           4           7          29           2          51
+         
   Timestep    No_Moles    No_Specs    C3H4O3Li          Li   C3H4O3Li2      C3H4O3
          60          89           4           7          29           2          51
   Timestep    No_Moles    No_Specs    C3H4O3Li          Li   C3H4O3Li2      C3H4O3
