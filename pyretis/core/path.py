@@ -33,7 +33,7 @@ from pyretis.core.system import System
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
-np.set_printoptions(legacy='1.25')
+np.set_printoptions(legacy='1.21')
 
 __all__ = ['PathBase', 'Path', 'paste_paths', 'check_crossing']
 

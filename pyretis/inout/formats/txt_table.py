@@ -31,7 +31,7 @@ from pyretis.core.path import _GENERATED_SHORT
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
-np.set_printoptions(legacy='1.25')
+np.set_printoptions(legacy='1.21')
 
 __all__ = [
     'TxtTableFormatter',

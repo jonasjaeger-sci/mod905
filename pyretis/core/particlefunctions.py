@@ -58,7 +58,7 @@ reset_momentum (:py:func:`reset_momentum`)
 """
 import numpy as np
 
-np.set_printoptions(legacy='1.25')
+np.set_printoptions(legacy='1.21')
 
 __all__ = [
     'atomic_kinetic_energy_tensor',

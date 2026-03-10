@@ -272,7 +272,7 @@ import numpy as np
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
-np.set_printoptions(legacy='1.25')
+np.set_printoptions(legacy='1.21')
 
 __all__ = ['generate_conversion_factors', 'generate_inverse',
            'bfs_convert', 'convert_bases', 'print_table',

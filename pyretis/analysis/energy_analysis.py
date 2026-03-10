@@ -14,7 +14,7 @@ from scipy.stats import gamma
 from pyretis.analysis.analysis import analyse_data
 from pyretis.core.units import CONSTANTS
 
-np.set_printoptions(legacy='1.25')
+np.set_printoptions(legacy='1.21')
 
 __all__ = ['analyse_energies']
 

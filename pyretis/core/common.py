@@ -74,7 +74,7 @@ from pyretis.inout import print_to_screen
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
-np.set_printoptions(legacy='1.25')
+np.set_printoptions(legacy='1.21')
 
 __all__ = ['import_from', 'inspect_function', 'initiate_instance',
            'generic_factory', 'crossing_counter', 'crossing_finder',

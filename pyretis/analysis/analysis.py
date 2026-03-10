@@ -23,7 +23,7 @@ __all__ = ['running_average', 'block_error', 'block_error_corr',
            'analyse_data', 'mean_square_displacement']
 
 np.seterr(divide='ignore', invalid='ignore')
-np.set_printoptions(legacy='1.25')
+np.set_printoptions(legacy='1.21')
 
 
 def running_average(data):

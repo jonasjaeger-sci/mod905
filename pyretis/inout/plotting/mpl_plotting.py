@@ -32,7 +32,7 @@ from pyretis.inout.common import create_backup, name_file
 from pyretis.inout.common import (ENERFILES, ENERTITLE, FLUXFILES,
                                   ORDERFILES, PATHFILES, PATH_MATCH)
 
-np.set_printoptions(legacy='1.25')
+np.set_printoptions(legacy='1.21')
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())

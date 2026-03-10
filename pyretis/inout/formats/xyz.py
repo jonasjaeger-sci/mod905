@@ -50,7 +50,7 @@ from pyretis.inout.formats.path import PathIntFormatter
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
-np.set_printoptions(legacy='1.25')
+np.set_printoptions(legacy='1.21')
 
 # define formats for the trajectory output:
 _XYZ_FMT = '{0:5s} {1:8.3f} {2:8.3f} {3:8.3f}'

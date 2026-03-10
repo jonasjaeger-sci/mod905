@@ -36,7 +36,7 @@ from pyretis.inout.formats import OrderPathFile
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
-np.set_printoptions(legacy='1.25')
+np.set_printoptions(legacy='1.21')
 
 __all__ = ['analyse_path_ensemble', 'analyse_repptis_ensemble',
            'match_probabilities', 'retis_flux', 'retis_rate',

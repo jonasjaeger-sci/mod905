@@ -121,7 +121,9 @@ def remove_nan(data):
             if type(data_point) in (list, np.ndarray):
                 remove_nan(data_point)
             else:
-                if np.isnan(data_point):
+                # Check if data_point is a numeric type before calling np.isnan
+                if (isinstance(data_point, (int, float, np.floating, np.integer))
+                        and np.isnan(data_point)):
                     nan = True
                     inan = idx
                     break

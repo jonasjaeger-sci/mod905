@@ -6,7 +6,7 @@ import numpy as np
 
 __all__ = ['Property']
 
-np.set_printoptions(legacy='1.25')
+np.set_printoptions(legacy='1.21')
 
 
 class Property:

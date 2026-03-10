@@ -161,14 +161,14 @@ to use one of the many styles, e.g.:
 
 .. literalinclude:: /_static/examples/md.py
    :language: python
-   :lines: 22
+   :lines: 21
 
 Next, we create the initial positions and use this to set up
 a simulation box:
 
 .. literalinclude:: /_static/examples/md.py
    :language: python
-   :lines: 25-30
+   :lines: 23-26
 
 We can use the lattice we generated to populate a system
 with particles. The system contains information about the box,
@@ -176,7 +176,7 @@ the particles and the temperature:
 
 .. literalinclude:: /_static/examples/md.py
    :language: python
-   :lines: 33-43
+   :lines: 28-36
 
 In the last lines in the above code, we generated initial velocities,
 from a Maxwellian distribution such that the total
@@ -187,20 +187,20 @@ Now, we just have to set-up a force field:
 
 .. literalinclude:: /_static/examples/md.py
    :language: python
-   :lines: 45-50
+   :lines: 38-44
 
 select an engine and a simulation to run:
 
 .. literalinclude:: /_static/examples/md.py
    :language: python
-   :lines: 58-62
+   :lines: 46-48
 
 Now, we are ready to run the simulation and plot the energies
 as a function of the simulation step:
 
 .. literalinclude:: /_static/examples/md.py
    :language: python
-   :lines: 68-78
+   :lines: 50-72
 
 This should result in a plot similar to:
 

@@ -19,7 +19,7 @@ from pyretis.core.box import box_matrix_to_list, box_vector_angles
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
-np.set_printoptions(legacy='1.25')
+np.set_printoptions(legacy='1.21')
 
 
 class SectionNode:

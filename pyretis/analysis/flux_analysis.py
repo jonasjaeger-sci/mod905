@@ -15,7 +15,7 @@ from numpy import divide  # pylint: disable=no-name-in-module
 from pyretis.analysis.analysis import running_average, block_error_corr
 from pyretis.core.path import check_crossing
 
-np.set_printoptions(legacy='1.25')
+np.set_printoptions(legacy='1.21')
 
 __all__ = ['analyse_flux', 'find_crossings']
 

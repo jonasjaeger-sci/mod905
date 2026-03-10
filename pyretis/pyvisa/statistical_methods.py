@@ -27,11 +27,11 @@ spectral (:py:func:`.spectral`)
 
 """
 import graphviz
-import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.pyplot as plt
 import pandas as pd
-from sklearn.cluster import (AgglomerativeClustering, SpectralClustering,
-                             MiniBatchKMeans)
+from sklearn.cluster import AgglomerativeClustering, SpectralClustering, \
+    MiniBatchKMeans
 from sklearn.decomposition import PCA
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.mixture import GaussianMixture
@@ -86,16 +86,14 @@ def pyvisa_pca(n_pca, settings, data, cmap):
     explained.index += 1
     loadings = pd.DataFrame(pca_model.components_.T, columns=cols,
                             index=features)
-    load_corr = pca_model.components_.T * np.sqrt(pca_model.explained_variance_)
-    pd.DataFrame(load_corr,
-                 columns=cols,
-                 index=features).to_hdf(basename,
-                                        key='correlation_matrix',
-                                        mode='a')
-
+    load_corr = pca_model.components_.T * np.sqrt(
+        pca_model.explained_variance_)
+    load_corr_mat = pd.DataFrame(load_corr, columns=cols,
+                                 index=features)
     # save the pca data to a hdf-file
     principal_df.to_hdf(basename, key='PC', mode='a')
     loadings.to_hdf(basename, key='loadings', mode='a')
+    load_corr_mat.to_hdf(basename, key='correlation_matrix', mode='a')
     explained.to_hdf(basename, key='explained', mode='a')
 
     # Plot PC1 vs PC2
