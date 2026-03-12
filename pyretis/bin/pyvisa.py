@@ -178,7 +178,8 @@ def main(basepath, input_file, pyvisa_dict=None):
         else:
             pyvisa_visual(basepath, input_file, pyvisa_dict)
 
-    except Exception as error:  # pylint: disable=broad-exception-caught # pragma: no cover
+    # pylint: disable=broad-exception-caught
+    except Exception as error:  # pragma: no cover
         errtxt = f'{type(error).__name__}: {error.args}'
         print_to_screen(errtxt, level='error')
         print_to_screen('Execution failed!', level='error')

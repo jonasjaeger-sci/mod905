@@ -484,8 +484,10 @@ class GromacsRunner:
 
         self.stdout_name = os.path.join(self.exe_dir, 'stdout.txt')
         self.stderr_name = os.path.join(self.exe_dir, 'stderr.txt')
-        self.stdout = open(self.stdout_name, 'wb')  # pylint: disable=consider-using-with
-        self.stderr = open(self.stderr_name, 'wb')  # pylint: disable=consider-using-with
+        # pylint: disable=consider-using-with
+        self.stdout = open(self.stdout_name, 'wb')
+        # pylint: disable=consider-using-with
+        self.stderr = open(self.stderr_name, 'wb')
 
         self.running = subprocess.Popen(
             self.cmd,
@@ -494,7 +496,8 @@ class GromacsRunner:
             stderr=self.stderr,
             shell=False,
             cwd=self.exe_dir,
-            preexec_fn=os.setsid,  # pylint: disable=subprocess-popen-preexec-fn
+            # pylint: disable=subprocess-popen-preexec-fn
+            preexec_fn=os.setsid,
         )
         present = []
         # Wait for the TRR/EDR files to appear:
@@ -513,7 +516,8 @@ class GromacsRunner:
         # Ok, so GROMACS might have crashed in between writing the
         # files. Check that both files are indeed here:
         if self.trr_file in present and self.edr_file in present:
-            self.fileh = open(self.trr_file, 'rb')  # pylint: disable=consider-using-with
+            # pylint: disable=consider-using-with
+            self.fileh = open(self.trr_file, 'rb')
             self.ino = os.fstat(self.fileh.fileno()).st_ino
             self.stop_read = False
         else:

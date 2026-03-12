@@ -118,7 +118,8 @@ def gen_surface(x, y, z, fig, ax, cbar_ax=None, dim=3, method='contour',
          The chosen color-bar.
 
     """
-    # pylint: disable=too-many-arguments, too-many-positional-arguments, too-many-locals
+    # pylint: disable=too-many-arguments, too-many-positional-arguments
+    # pylint: disable=too-many-locals
     xmin, xmax = min(x, default=0), max(x, default=0)
     ymin, ymax = min(y, default=0), max(y, default=0)
     zmin, zmax = min(z, default=0), max(z, default=0)
