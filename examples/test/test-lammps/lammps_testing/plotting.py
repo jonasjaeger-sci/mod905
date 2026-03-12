@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2023, PyRETIS Development Team.
+# Copyright (c) 2026, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Common plotting methods used by the LAMMPS engine tests."""
 from math import ceil

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright (c) 2023, PyRETIS Development Team.
+# Copyright (c) 2026, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Collection of statistical methods for PyVisA.
 
@@ -38,6 +38,55 @@ from sklearn.mixture import GaussianMixture
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.tree import DecisionTreeClassifier, export_graphviz
+
+
+def _plot_pca_results(n_pca, principal_df, loadings, pca_info, cmap):
+    """Plot the results of a PCA analysis.
+
+    Parameters
+    ----------
+    n_pca : int
+        Number of principal components.
+    principal_df : DataFrame
+        Principal components data.
+    loadings : DataFrame
+        PCA loadings.
+    pca_info : dict
+        Dict with keys 'model' (fitted PCA), 'cols' (column labels),
+        'features' (feature labels).
+    cmap : string
+        Matplotlib colormap.
+
+    """
+    pca_model = pca_info['model']
+    cols = pca_info['cols']
+    features = pca_info['features']
+    # Plot PC1 vs PC2
+    if n_pca > 1:
+        fig_1 = plt.figure()
+        axis_1 = fig_1.add_subplot(111)
+        axis_1.scatter(principal_df['PC1'], principal_df['PC2'],
+                       edgecolors=None, alpha=0.5,
+                       cmap=cmap)
+        axis_1.set_xlabel('PC1')
+        axis_1.set_ylabel('PC2')
+
+    # Plot the loadings
+    fig_2 = plt.figure()
+    axis_2 = fig_2.add_subplot(111)
+    fig_2.colorbar(axis_2.matshow(loadings))
+    axis_2.set_xticks(np.arange(len(cols)))
+    axis_2.set_yticks(np.arange(len(features)))
+    axis_2.set_xticklabels(cols)
+    axis_2.set_yticklabels(features)
+
+    # Plot Cumulative explained variance
+    fig_3 = plt.figure()
+    axis_3 = fig_3.add_subplot(111)
+    axis_3.plot(np.cumsum(pca_model.explained_variance_ratio_))
+    axis_3.set_xlabel('Principal components')
+    axis_3.set_ylabel('Cumulative explained variance')
+    plt.show()
 
 
 def pyvisa_pca(n_pca, settings, data, cmap):
@@ -96,32 +145,8 @@ def pyvisa_pca(n_pca, settings, data, cmap):
     load_corr_mat.to_hdf(basename, key='correlation_matrix', mode='a')
     explained.to_hdf(basename, key='explained', mode='a')
 
-    # Plot PC1 vs PC2
-    if n_pca > 1:
-        fig_1 = plt.figure()
-        axis_1 = fig_1.add_subplot(111)
-        axis_1.scatter(principal_df['PC1'], principal_df['PC2'],
-                       edgecolors=None, alpha=0.5,
-                       cmap=cmap)
-        axis_1.set_xlabel('PC1')
-        axis_1.set_ylabel('PC2')
-
-    # Plot the loadings
-    fig_2 = plt.figure()
-    axis_2 = fig_2.add_subplot(111)
-    fig_2.colorbar(axis_2.matshow(loadings))
-    axis_2.set_xticks(np.arange(len(cols)))
-    axis_2.set_yticks(np.arange(len(features)))
-    axis_2.set_xticklabels(cols)
-    axis_2.set_yticklabels(features)
-
-    # Plot Cumulative explained variance
-    fig_3 = plt.figure()
-    axis_3 = fig_3.add_subplot(111)
-    axis_3.plot(np.cumsum(pca_model.explained_variance_ratio_))
-    axis_3.set_xlabel('Principal components')
-    axis_3.set_ylabel('Cumulative explained variance')
-    plt.show()
+    pca_info = {'model': pca_model, 'cols': cols, 'features': features}
+    _plot_pca_results(n_pca, principal_df, loadings, pca_info, cmap)
 
 
 def k_means(n_clusters, data, settings, cmap):

@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2023, PyRETIS Development Team.
+# Copyright (c) 2026, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """PyRETIS - A simulation package for rare event simulations.
 
 PyRETIS - A simulation package for rare event simulations.
-Copyright (c) 2023, PyRETIS Development Team
+Copyright (c) 2026, PyRETIS Development Team
 
 This file is part of PyRETIS.
 
@@ -26,7 +26,7 @@ from codecs import open as openc
 import pathlib
 from setuptools import setup, find_namespace_packages
 
-FULL_VERSION = '3.0.0'  # Automatically set by setup_version.py
+FULL_VERSION = '3.0.1'  # Automatically set by setup_version.py
 
 
 def get_long_description():

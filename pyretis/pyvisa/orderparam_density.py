@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2023, PyRETIS Development Team.
+# Copyright (c) 2026, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Compiler of PyRETIS simulation data.
 
@@ -123,7 +123,7 @@ def remove_nan(data):
             else:
                 # Check if data_point is a numeric type before calling np.isnan
                 if (isinstance(data_point,
-                              (int, float, np.floating, np.integer))
+                               (int, float, np.floating, np.integer))
                         and np.isnan(data_point)):
                     nan = True
                     inan = idx

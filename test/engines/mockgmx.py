@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright (c) 2023, PyRETIS Development Team.
+# Copyright (c) 2026, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """This is a mock engine for testing of an external GROMACS engine.
 
@@ -108,8 +108,8 @@ def fake_gmx_converttpr(gmx_args):
     need_args = {'-extend': None, '-s': None, '-o': None}
     simple_parser(gmx_args, need_args)
     check_that_files_exist(('-s',), need_args)
-    with open(need_args['-o'], 'w') as outfile:
-        with open(need_args['-s'], 'r') as infile:
+    with open(need_args['-o'], 'w', encoding='utf-8') as outfile:
+        with open(need_args['-s'], 'r', encoding='utf-8') as infile:
             for lines in infile:
                 outfile.write(lines)
         outfile.write('Extend = {}\n'.format(need_args['-extend']))
