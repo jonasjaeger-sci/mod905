@@ -36,8 +36,11 @@ __all__ = ['parse_settings_file', 'write_settings_file', 'SECTIONS',
 
 SECTIONS = {}
 TITLE = f'{PROGRAM_NAME} input settings'
-HEADING = '{}\n{}\nFor more info, please see: {}\nHave Fun!'
-SECTIONS['heading'] = {'text': HEADING.format(TITLE, '=' * len(TITLE), URL)}
+SECTIONS['heading'] = {
+    'text': (f"{TITLE}\n{'=' * len(TITLE)}\n"
+             f"For more info, please see: {URL}\n"
+             f"Have Fun!")
+}
 HERE = os.path.abspath('.')
 
 SECTIONS['simulation'] = {
@@ -800,8 +803,8 @@ def look_for_input_files(input_path, required_files,
             if file_counter == 1:
                 input_files[file_type] = os.path.join(input_path,
                                                       selected_file)
-                logger.warning(f'using {input_files[file_type]} '
-                               + f'as "{file_type}" file')
+                logger.warning('using %s as "%s" file',
+                               input_files[file_type], file_type)
             else:
                 msg = f'Missing input file "{file_to_check}" '
                 if file_counter > 1:

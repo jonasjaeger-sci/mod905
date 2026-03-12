@@ -6,9 +6,7 @@
 Here we compare a RETIS simulation of 250 steps to known results.
 """
 from collections import OrderedDict
-import filecmp
 from math import isclose
-import difflib
 import os
 import sys
 import colorama

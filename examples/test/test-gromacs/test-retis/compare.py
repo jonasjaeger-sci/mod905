@@ -63,7 +63,7 @@ def find_traj_txt(rootdir):
             if i == 'traj.txt':
                 filename = os.path.join(root, i)
                 cycle = None
-                with open(filename, 'r') as infile:
+                with open(filename, 'r', encoding='utf-8') as infile:
                     line = infile.readline()
                     cycle = int(line.strip().split(':')[1].split(',')[0])
                 if cycle is None:
@@ -90,9 +90,9 @@ def make_traj_file(root, ensemble):
     traj_dir = os.path.join(root, ensemble_dir, 'traj')
     files = find_traj_txt(traj_dir)
     target_traj = os.path.join(root, ensemble_dir, 'traj.txt')
-    with open(target_traj, 'w') as outfile:
+    with open(target_traj, 'w', encoding='utf-8') as outfile:
         for (filename, _) in files:
-            with open(filename, 'r') as infile:
+            with open(filename, 'r', encoding='utf-8') as infile:
                 outfile.write(infile.read())
 
 
@@ -152,7 +152,7 @@ def main(args):
     correct = RESULTS_TGZ.get(gmx_version, None)
     if correct is None:
         print_to_screen(
-            f'GROMACS version {gmx_version} is not supported ' + /
+            f'GROMACS version {gmx_version} is not supported ' +
             'for result comparison.'
         )
         print_to_screen('The supported GROMACS versions are:')
