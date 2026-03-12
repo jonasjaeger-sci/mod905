@@ -212,9 +212,9 @@ class Trajectory:
               Generation move of the trajectory.
             * `MC-start`: string
               Generation starting point of the trajectory.
-            * `ordermax`: int
+            * `ordermax`: float
               Max value of OP.
-            * `ordermin`: int
+            * `ordermin`: float
               Min value of OP.
             * `stored`: boolean
               True if the trajectory has existing trajectory files.
@@ -258,7 +258,7 @@ class PathDensity:
               List of ensemble names.
             * `interfaces`: list
               List of interface positions.
-            * `num_op`: int
+            * `num_op`: integer
               Number of order parameters.
             * `op_labels`: list
               List of order parameter names.
@@ -522,7 +522,7 @@ class PathDensity:
             Information about the trajectory.
         ensemble_name : string
             The name of the ensemble.
-        cycle : int
+        cycle : integer
             Cycle number.
 
         Updates
