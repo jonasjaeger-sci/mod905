@@ -1513,7 +1513,7 @@ def stone_skipping(ensemble, tis_settings, start_cond):
     path_old = ensemble['path_ensemble'].last_path
     intf = ensemble['interfaces']
     ph_pt1, ph_pt2 = crossing_finder(path_old, intf[1])
-    if ph_pt1 == ph_pt2 is None:
+    if ph_pt1 is None and ph_pt2 is None:
         return False, path_old, 'NCR'
     sub_ens = {'interfaces': [intf[1], intf[1], intf[2]],
                'order_function': ensemble['order_function']}

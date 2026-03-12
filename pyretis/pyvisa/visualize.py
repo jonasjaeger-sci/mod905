@@ -1246,8 +1246,8 @@ class VisualApp(QtWidgets.QMainWindow, UI_VW):
                 if self.settings['dim'] == 3:
                     interf = plot_int_plane(
                         self.myfig.ax,
-                        i, self.ymin, self.ymax,
-                        self.zmin, self.zmax,
+                        i, (self.ymin, self.ymax),
+                        (self.zmin, self.zmax),
                         visible=self.settings['show_int'])
                 else:
                     interf = self.myfig.ax.axvline(

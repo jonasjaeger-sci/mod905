@@ -45,7 +45,7 @@ class TestMethods(unittest.TestCase):
         pos = 1.0
         ymin, ymax, zmin, zmax = 0.0, 1.0, 0.0, 1.0
         visible = False
-        _ = plot_int_plane(ax, pos, ymin, ymax, zmin, zmax,
+        _ = plot_int_plane(ax, pos, (ymin, ymax), (zmin, zmax),
                            visible=visible)
         # Nothing to check, only if any errors should arise from plotting
         fig.clear()

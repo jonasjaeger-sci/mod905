@@ -122,7 +122,8 @@ def remove_nan(data):
                 remove_nan(data_point)
             else:
                 # Check if data_point is a numeric type before calling np.isnan
-                if (isinstance(data_point, (int, float, np.floating, np.integer))
+                if (isinstance(data_point,
+                              (int, float, np.floating, np.integer))
                         and np.isnan(data_point)):
                     nan = True
                     inan = idx
@@ -692,7 +693,7 @@ class PathVisualize:
 
         """
         assert os.path.isfile(self.pfile), f'{self.pfile} does not exist.'
-
+        tmp = None
         if self.pfile.endswith('.zip'):
             origin = self.pfile
             self.pfile = self.pfile.rstrip('.zip')
@@ -702,9 +703,10 @@ class PathVisualize:
                                os.path.splitext(self.pfile)[1])
             self.pfile = tmp
             pyvisa_unzip(origin, tmp)
-            os.remove(tmp)
         if self.pfile.endswith('.hdf5'):
             self.load_hdf5()
+            if tmp:
+                os.remove(tmp)
         else:
             raise ValueError(f'Format of {self.pfile} not recognised')
 

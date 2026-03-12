@@ -11,10 +11,13 @@ if HAS_OPENMM:
         import openmm as mm
         from openmm import app
         from openmm import unit
+        from simtk import unit
     except ImportError:  # Openmm < 7.6
         from simtk.openmm import app
         import simtk.openmm as mm
         from simtk import unit
+else:
+    mm, app, unit = None, None, None
 
 PDB_STRING = (
     """CRYST1   68.478   68.478   68.472  60.00  60.00  90.00 P 1           1
@@ -99,7 +102,7 @@ def write_test_pdb(name):
     """
     This writes test.pdb with 2 waters into the current running directory.
     """
-    with open(name, 'w') as output:
+    with open(name, 'w', encoding='utf-8') as output:
         output.write(PDB_STRING)
 
 

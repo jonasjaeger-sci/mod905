@@ -9,10 +9,12 @@ for GROMACS.
 """
 import sys
 import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
-from time import sleep
-import numpy as np
-from pyretis.inout.formats.gromacs import (
+sys.path.insert(
+    0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+)
+from time import sleep  # noqa: E402
+import numpy as np  # noqa: E402
+from pyretis.inout.formats.gromacs import (  # noqa: E402
     read_gromos96_file,
     write_gromos96_file,
     write_trr_frame,
@@ -46,7 +48,7 @@ def read_mock_tpr(filename):
     steps = 0
     nstxout = 0
     gen = False
-    with open(filename, 'r') as inputfile:
+    with open(filename, 'r', encoding='utf-8') as inputfile:
         for lines in inputfile:
             if lines.startswith('-c'):
                 config = lines.split()[-1]
@@ -123,7 +125,7 @@ def write_mock_trr(filename, steps, nstxout, xyz, vel, pause=None):
 
 def write_mock_cpt(filename, steps, xyz):
     """Write a mock cpt file."""
-    with open(filename, 'w') as outfile:
+    with open(filename, 'w', encoding='utf-8') as outfile:
         outfile.write('Last step: {}\n'.format(steps))
         for j in xyz:
             outfile.write('{:12.7f} {:12.7f} {:12.7f}\n'.format(*j))
@@ -133,7 +135,7 @@ def read_mock_cpt(filename):
     """Read coordinates."""
     xyz = []
     steps = -1
-    with open(filename, 'r') as infile:
+    with open(filename, 'r', encoding='utf-8') as infile:
         for i, lines in enumerate(infile):
             if i == 0:
                 steps = int(lines.strip().split()[-1])
@@ -162,7 +164,7 @@ def write_mock_edr(filename, steps, nstxout, gen=False, start=0):
     ]
     fmt = '{:10.6f}  {:10.6f}  {:10.6f}  {:10.6f}\n'
     mode = 'a' if start > 0 else 'w'
-    with open(filename, mode) as output:
+    with open(filename, mode, encoding='utf-8') as output:
         if mode == 'w':
             for line in header:
                 output.write('{}\n'.format(line))

@@ -10,7 +10,10 @@ can have a script for testing the GROMACS engine.
 """
 import sys
 import os
-from pyretis.inout.formats.gromacs import (
+sys.path.insert(
+    0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+)
+from pyretis.inout.formats.gromacs import (  # noqa: E402
     write_gromacs_gro_file,
     read_gromacs_gro_file,
     write_gromos96_file,
@@ -45,8 +48,8 @@ def fake_gmx_energy(gmx_args):
     need_args = {'-f': None}
     simple_parser(gmx_args, need_args)
     check_that_files_exist(('-f',), need_args)
-    with open('energy.xvg', 'w') as outfile:
-        with open(need_args['-f'], 'r') as infile:
+    with open('energy.xvg', 'w', encoding='utf-8') as outfile:
+        with open(need_args['-f'], 'r', encoding='utf-8') as infile:
             for lines in infile:
                 outfile.write(lines)
 
@@ -57,12 +60,12 @@ def fake_gmx_grompp(gmx_args):
     need_args = {'-f': None, '-c': None, '-p': None, '-o': None}
     simple_parser(gmx_args, need_args)
     check_that_files_exist(('-f', '-c', '-p'), need_args)
-    with open(need_args['-o'], 'w') as fileh:
+    with open(need_args['-o'], 'w', encoding='utf-8') as fileh:
         fileh.write('Mock GROMACS .tpr file. Input files were:\n')
         for key in ('-f', '-c', '-p'):
             fileh.write('{} = {}\n'.format(key, need_args[key]))
         fileh.write('Input settings (.mdp) were:\n')
-        with open(need_args['-f'], 'r') as infile:
+        with open(need_args['-f'], 'r', encoding='utf-8') as infile:
             for lines in infile:
                 fileh.write(lines)
 
@@ -94,7 +97,7 @@ def read_write_gromacs(infile, outfile, gmx_args):
         snapshot, xyz, vel, _ = read_gromos96_file(infile)
         write_gromos96_file(outfile, snapshot, xyz, vel)
     else:
-        with open(outfile, 'w') as output:
+        with open(outfile, 'w', encoding='utf-8') as output:
             output.write('This is a GROMACS TRR file for sure.\n')
             output.write('Arguments given: {}'.format(gmx_args))
 

@@ -36,7 +36,7 @@ def get_arguments(lammps_args):
 
 def write_fake_log(logfile, steps, freq):
     """Create a fake log file for LAMMPS."""
-    with open(logfile, 'w') as output:
+    with open(logfile, 'w', encoding='utf-8') as output:
         output.write('This is not LAMMPS.\n')
         output.write('But we are pretending to be.\n\n')
         output.write('Please have some fake thermo data:\n')
@@ -58,14 +58,14 @@ def write_fake_screen(screenfile, settings):
     Here, we just repeat the input settings.
 
     """
-    with open(screenfile, 'w') as output:
+    with open(screenfile, 'w', encoding='utf-8') as output:
         for key, val in settings:
             output.write('{} {}\n'.format(key, val))
 
 
 def make_dump_file(filename, steps, freq):
     """Create a fake dump file."""
-    with open(filename, 'w') as output:
+    with open(filename, 'w', encoding='utf-8') as output:
         output.write('# Fake dump file.')
         for i in range(steps + 1):
             if i % freq == 0:
@@ -75,13 +75,13 @@ def make_dump_file(filename, steps, freq):
 
 def make_restart_file(filename):
     """Create a fake restart file."""
-    with open(filename, 'w') as output:
+    with open(filename, 'w', encoding='utf-8') as output:
         output.write('Fake restart file.')
 
 
 def make_order_file(filename, steps, freq):
     """Create a fake order parameter file."""
-    with open(filename, 'w') as output:
+    with open(filename, 'w', encoding='utf-8') as output:
         output.write('# Fake order parameter file.\n')
         for i in range(steps + 1):
             if i % freq == 0:

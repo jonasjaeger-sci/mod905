@@ -329,7 +329,7 @@ def decision_tree(xdata, ydata, depth):
         Depth of the decision tree.
 
     """
-    names = xdata.columns
+    names = xdata.columns.astype(str).tolist()
     x_train, _, y_train, _ = train_test_split(xdata, ydata,
                                               test_size=0.2,
                                               stratify=ydata,

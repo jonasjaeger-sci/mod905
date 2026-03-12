@@ -788,6 +788,7 @@ def look_for_input_files(input_path, required_files,
         else:
             # If not present, let's try to explore the folder by extension
             file_counter = 0
+            selected_file = None
             for file_input in files_in_input_path:
                 file_ext = os.path.splitext(file_input)[1][1:].lower()
                 if req_ext == file_ext:

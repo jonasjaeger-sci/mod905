@@ -729,6 +729,7 @@ def select_and_trim_a_segment(path, interface_l, interface_r,
     key = False
     segment = path.empty_path()
     segment_i = -1
+    isave = -1
     if segment_to_pick is None:
         segment_number = segments_counter(path, interface_l, interface_r)
         segment_to_pick = path.rgen.random_integers(0, segment_number)

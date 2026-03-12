@@ -156,9 +156,8 @@ class GromacsEngineTest(unittest.TestCase):
                 data = infile.readlines()
                 # Following assert should be 1, but is 2 while gromacs fixes
                 # their openmm imports (which raises an extra warning atm)
-                if len(data) > 2:
-                    with open(os.path.join(HERE, 'DEBUG_OUTPUT.txt'), 'w', encoding='utf8') as f:
-                        f.writelines(data)
+                # Following assert should be 1, but is 2 while gromacs fixes
+                # their openmm imports (which raises an extra warning atm)
                 self.assertLessEqual(len(data), 2)
                 self.assertEqual(data[-1].strip(), 'Crash error for testing.')
             eng.clean_up()

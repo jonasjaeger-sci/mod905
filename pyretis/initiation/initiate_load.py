@@ -292,6 +292,7 @@ def clean_path(path, path_ensemble, simtype='retis'):
              'right': float('inf')}
     ph_min = path.phasepoints[path.ordermin[1]]
     ph_max = path.phasepoints[path.ordermax[1]]
+    keep_ph = None
 
     # First, find the two nearest crossing points to the 0 interface.
     if path_ensemble.start_condition == "L":
@@ -671,21 +672,24 @@ def _check_path(path, path_ensemble, warning=True):
     start, end, _, cross = path.check_interfaces(path_ensemble.interfaces)
     accept = True
     status = 'ACC'
+    messages = []
 
     if start is None or start not in path_ensemble.start_condition:
-        msg = "Initial path for %s starts at the wrong interface!"
+        messages.append("Initial path for %s starts at the wrong interface!")
         status = 'SWI'
         accept = False
     if end not in ('R', 'L'):
-        msg = "Initial path for %s ends at the wrong interface!"
+        messages.append("Initial path for %s ends at the wrong interface!")
         status = 'EWI'
         accept = False
     if not cross[1]:
-        msg = "Initial path for %s does not cross the middle interface!"
+        messages.append(
+            "Initial path for %s does not cross the middle interface!")
         status = 'NCR'
         accept = False
 
     if not accept:
+        msg = ' '.join(messages)
         if warning:
             logger.critical(msg, path_ensemble.ensemble_name)
         else:

@@ -798,6 +798,8 @@ def repptis_swap(ensembles, idx, settings, cycle, inc_sh=True):
     # Then create empty path to be filled with propagated points:
     # + 1 because the shootpoint will not be used in the propagated path.
     # (Thus, one point of prop_path will be discarded)
+    path0_new = None
+    path1_new = None
     maxlen_prop0_new = maxlen0 - path_overlap0_new.length + 1
     path_prop0_new = path_ensemble0.last_path.empty_path(
         maxlen=maxlen_prop0_new)

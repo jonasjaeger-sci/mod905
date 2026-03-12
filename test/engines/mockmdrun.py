@@ -42,7 +42,7 @@ def read_mock_tpr(filename):
     config = None
     steps = 0
     gen = False
-    with open(filename, 'r') as inputfile:
+    with open(filename, 'r', encoding='utf-8') as inputfile:
         for lines in inputfile:
             if lines.startswith('-c'):
                 config = lines.split()[-1]
@@ -64,7 +64,8 @@ def mock_mdrun(args):
     check_that_files_exist(('-s',), need_args)
     config, steps, gen = read_mock_tpr(need_args['-s'])
     print('Writing log file...', file=sys.stdout)
-    with open('{}.log'.format(need_args['-deffnm']), 'w') as output:
+    logfile = '{}.log'.format(need_args['-deffnm'])
+    with open(logfile, 'w', encoding='utf-8') as output:
         output.write('Mock GROMACS log file\n')
     print('Writing energy file...', file=sys.stdout)
     write_mock_edr('{}.edr'.format(need_args['-deffnm']), steps, gen=gen)
@@ -89,7 +90,8 @@ def mock_mdrun_continue(args):
     config, steps, gen = read_mock_tpr(need_args['-s'])
     stepsp, xyz = read_mock_cpt(need_args['-cpi'])
     print('Writing log file...', file=sys.stdout)
-    with open('{}.log'.format(need_args['-deffnm']), 'a') as output:
+    logfile = '{}.log'.format(need_args['-deffnm'])
+    with open(logfile, 'a', encoding='utf-8') as output:
         output.write('Mock GROMACS log file\n')
     print('Writing edr file...', file=sys.stdout)
     write_mock_edr('{}.edr'.format(need_args['-deffnm']), steps, gen=gen,
@@ -105,7 +107,8 @@ def mock_mdrun_continue(args):
     write_gromacs_gro_file(need_args['-c'], config[0],
                            xyzf, config[2])
     print('Updating log...', file=sys.stdout)
-    with open('#{}.log'.format(need_args['-deffnm']), 'a') as output:
+    backuplog = '#{}.log'.format(need_args['-deffnm'])
+    with open(backuplog, 'a', encoding='utf-8') as output:
         output.write('Mock GROMACS log file. Backup!\n')
 
 
@@ -113,7 +116,7 @@ def write_mock_trr(filename, steps, xyz, start=0):
     """Write a mock TRR file."""
     xyzc = np.copy(xyz)
     mode = 'a' if start > 0 else 'w'
-    with open(filename, mode) as outfile:
+    with open(filename, mode, encoding='utf-8') as outfile:
         for i in range(start, start + steps + 1):
             write = True
             if steps != 0 and i % steps != 0:
@@ -129,7 +132,7 @@ def write_mock_trr(filename, steps, xyz, start=0):
 
 def write_mock_cpt(filename, steps, xyz):
     """Write a mock cpt file."""
-    with open(filename, 'w') as outfile:
+    with open(filename, 'w', encoding='utf-8') as outfile:
         outfile.write('Last step: {}\n'.format(steps))
         for j in xyz:
             outfile.write('{:12.7f} {:12.7f} {:12.7f}\n'.format(*j))
@@ -139,7 +142,7 @@ def read_mock_cpt(filename):
     """Read coordinates."""
     xyz = []
     steps = -1
-    with open(filename, 'r') as infile:
+    with open(filename, 'r', encoding='utf-8') as infile:
         for i, lines in enumerate(infile):
             if i == 0:
                 steps = int(lines.strip().split()[-1])
@@ -168,7 +171,7 @@ def write_mock_edr(filename, steps, gen=False, start=0):
     ]
     fmt = '{:10.6f}  {:10.6f}  {:10.6f}  {:10.6f}\n'
     mode = 'a' if start > 0 else 'w'
-    with open(filename, mode) as output:
+    with open(filename, mode, encoding='utf-8') as output:
         if mode == 'w':
             for line in header:
                 output.write('{}\n'.format(line))
