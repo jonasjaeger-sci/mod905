@@ -104,9 +104,9 @@ def remove_nan(data):
 
     Parameters
     ----------
-    data : list
-        Input list. If nan are present, they are replaced by the following
-        entry. The method accounts for multiple consecutive nan occurrence.
+    data : list or dict or object like pandas.DataFrame or object like pandas.Series
+        Input data structure. If `np.nan` are present, they are replaced by the following
+        entry. The method accounts for multiple consecutive `np.nan` occurrence.
 
     """
     nan = True

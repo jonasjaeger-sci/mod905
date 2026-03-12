@@ -45,11 +45,11 @@ def _plot_pca_results(n_pca, principal_df, loadings, pca_info, cmap):
 
     Parameters
     ----------
-    n_pca : int
+    n_pca : integer
         Number of principal components.
-    principal_df : DataFrame
+    principal_df : object like pandas.DataFrame
         Principal components data.
-    loadings : DataFrame
+    loadings : object like pandas.DataFrame
         PCA loadings.
     pca_info : dict
         Dict with keys 'model' (fitted PCA), 'cols' (column labels),
@@ -107,27 +107,24 @@ def pyvisa_pca(n_pca, settings, data, cmap):
 
     Parameters
     ----------
-    n_pca : int
+    n_pca : integer
         Number of clusters.
     settings : dict
         Settings from GUI.
-    data : Dataframe
+    data : object like pandas.DataFrame
         Simulation data from chosen ensembles.
     cmap : string
         Matplotlib colormap.
 
     """
-    # save the original to a hdf-file
     basename = f'PCA_data_{settings["fol"]}_{n_pca}.hdf'
     data.to_hdf(basename, key='sim_data', mode='w')
 
-    # Perform pca
     features = data.columns
     data = StandardScaler().fit_transform(data)
 
     cols = [f'PC{i}' for i in range(1, n_pca + 1)]
 
-    # Perform PCA
     pca_model = PCA(n_components=n_pca)
     principal_comps = pca_model.fit_transform(data)
     principal_df = pd.DataFrame(principal_comps, columns=cols)
@@ -139,7 +136,7 @@ def pyvisa_pca(n_pca, settings, data, cmap):
         pca_model.explained_variance_)
     load_corr_mat = pd.DataFrame(load_corr, columns=cols,
                                  index=features)
-    # save the pca data to a hdf-file
+
     principal_df.to_hdf(basename, key='PC', mode='a')
     loadings.to_hdf(basename, key='loadings', mode='a')
     load_corr_mat.to_hdf(basename, key='correlation_matrix', mode='a')
@@ -157,12 +154,12 @@ def k_means(n_clusters, data, settings, cmap):
 
     Parameters
     ----------
-    n_clusters : int
+    n_clusters : integer
         Number of clusters.
+    data : object like numpy.ndarray
+        Simulation data from chosen ensembles.
     settings : dict
         Settings from GUI.
-    data : numpy column stack
-        Simulation data from chosen ensembles.
     cmap : string
         Matplotlib colormap.
 
@@ -189,12 +186,12 @@ def hierarchical(n_clusters, data, settings, cmap):
 
     Parameters
     ----------
-    n_clusters : int
+    n_clusters : integer
         Number of clusters.
+    data : object like numpy.ndarray
+        Simulation data from chosen ensembles.
     settings : dict
         Settings from GUI.
-    data : numpy column stack
-        Simulation data from chosen ensembles.
     cmap : string
         Matplotlib colormap.
 
@@ -222,12 +219,12 @@ def spectral(n_clusters, data, settings, cmap):
 
     Parameters
     ----------
-    n_clusters : int
+    n_clusters : integer
         Number of clusters.
+    data : object like numpy.ndarray
+        Simulation data from chosen ensembles.
     settings : dict
         Settings from GUI.
-    data : numpy column stack
-        Simulation data from chosen ensembles.
     cmap : string
         Matplotlib colormap.
 
@@ -258,12 +255,12 @@ def gaussian_mixture(n_clusters, data, settings, cmap):
 
     Parameters
     ----------
-    n_clusters : int
+    n_clusters : integer
         Number of clusters.
+    data : object like numpy.ndarray
+        Simulation data from chosen ensembles.
     settings : dict
         Settings from GUI.
-    data : numpy column stack
-        Simulation data from chosen ensembles.
     cmap : string
         Matplotlib colormap.
 
@@ -290,7 +287,7 @@ def correlation_matrix(dataframe):
 
     Parameters
     ----------
-    dataframe: pandas Dataframe object
+    dataframe : object like pandas.DataFrame
         Dataframe containing simulation data.
 
     """
@@ -311,13 +308,13 @@ def random_forest(xdata, ydata, depth):
 
     Parameters
     ----------
-    xdata : dataframe
+    xdata : object like pandas.DataFrame
         Pandas dataframe containing the op and cv data from selected
         frames in the simulation.
-    ydata : dataframe
+    ydata : object like pandas.DataFrame
         Pandas dataframe containing True/False for each frame in the
         selected ensembles. True if the frame is reactive, else False.
-    depth : int
+    depth : integer
         Depth of random forest model.
 
     """
@@ -344,13 +341,13 @@ def decision_tree(xdata, ydata, depth):
 
     Parameters
     ----------
-    xdata : dataframe
+    xdata : object like pandas.DataFrame
         Pandas dataframe containing the op and cv data from selected
         frames i the simulation.
-    ydata : dataframe
+    ydata : object like pandas.DataFrame
         Pandas dataframe containing True/False for each frame in the
         selected ensembles. True if the frame is reactive, else False.
-    depth : int
+    depth : integer
         Depth of the decision tree.
 
     """
