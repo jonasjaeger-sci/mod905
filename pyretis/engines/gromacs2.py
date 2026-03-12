@@ -319,7 +319,7 @@ def get_data(fileh, header):
         The size of the data read.
 
     """
-    data_size = sum([header[key] for key in TRR_DATA_ITEMS])
+    data_size = sum(header[key] for key in TRR_DATA_ITEMS)
     data = read_trr_data(fileh, header)
     return data, data_size
 
@@ -347,7 +347,7 @@ def reopen_file(filename, fileh, inode, bytes_read):
 
     """
     if os.stat(filename).st_ino != inode:
-        new_fileh = open(filename, 'rb')
+        new_fileh = open(filename, 'rb')  # pylint: disable=consider-using-with
         fileh.close()
         new_inode = os.fstat(new_fileh.fileno()).st_ino
         new_fileh.seek(bytes_read)
@@ -484,8 +484,8 @@ class GromacsRunner:
 
         self.stdout_name = os.path.join(self.exe_dir, 'stdout.txt')
         self.stderr_name = os.path.join(self.exe_dir, 'stderr.txt')
-        self.stdout = open(self.stdout_name, 'wb')
-        self.stderr = open(self.stderr_name, 'wb')
+        self.stdout = open(self.stdout_name, 'wb')  # pylint: disable=consider-using-with
+        self.stderr = open(self.stderr_name, 'wb')  # pylint: disable=consider-using-with
 
         self.running = subprocess.Popen(
             self.cmd,
@@ -494,7 +494,7 @@ class GromacsRunner:
             stderr=self.stderr,
             shell=False,
             cwd=self.exe_dir,
-            preexec_fn=os.setsid,
+            preexec_fn=os.setsid,  # pylint: disable=subprocess-popen-preexec-fn
         )
         present = []
         # Wait for the TRR/EDR files to appear:
@@ -513,7 +513,7 @@ class GromacsRunner:
         # Ok, so GROMACS might have crashed in between writing the
         # files. Check that both files are indeed here:
         if self.trr_file in present and self.edr_file in present:
-            self.fileh = open(self.trr_file, 'rb')
+            self.fileh = open(self.trr_file, 'rb')  # pylint: disable=consider-using-with
             self.ino = os.fstat(self.fileh.fileno()).st_ino
             self.stop_read = False
         else:
@@ -565,8 +565,8 @@ class GromacsRunner:
                             logger.debug('TRR header was: %i', new_bytes)
                             first_header = False
                         # Calculate the size of the data:
-                        self.data_size = sum([header[key] for key in
-                                              TRR_DATA_ITEMS])
+                        self.data_size = sum(header[key] for key in
+                                             TRR_DATA_ITEMS)
                         data = None
                         while data is None:
                             size = os.path.getsize(self.trr_file)

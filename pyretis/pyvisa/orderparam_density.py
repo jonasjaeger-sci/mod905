@@ -115,7 +115,14 @@ def remove_nan(data):
         nan = False
         if type(data) in (dict, pd.DataFrame):
             for keys in data:
-                remove_nan(data[keys])
+                if isinstance(data, pd.DataFrame):
+                    # Pandas 2.0+ Copy-on-Write: data[keys] returns a copy,
+                    # so we must modify a copy and assign it back explicitly.
+                    col = data[keys].copy()
+                    remove_nan(col)
+                    data[keys] = col
+                else:
+                    remove_nan(data[keys])
             break
         for idx, data_point in reversed(list(enumerate(data))):
             if type(data_point) in (list, np.ndarray):

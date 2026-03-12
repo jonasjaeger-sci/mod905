@@ -25,7 +25,7 @@ import datetime
 import logging
 import os
 import sys
-import colorama
+import colorama  # pylint: disable=import-error
 from pyretis import __version__ as VERSION
 from pyretis.bin.pyretisanalyse import write_traceback
 from pyretis.pyvisa.info import PROGRAM_NAME, CITE, LOGO, URL
@@ -109,6 +109,7 @@ def pyvisa_visual(basepath, input_file, pyvisa_dict):  # pragma: no cover
         It determines the section of pyvisa to use, it contains:
 
     """
+    # pylint: disable=possibly-used-before-assignment
     if not HAS_PYVISA_REQ:
         msg = ('Requirements not installed. You can still generate the '
                'hdf5 by using the -cmp flag instead')
@@ -177,7 +178,7 @@ def main(basepath, input_file, pyvisa_dict=None):
         else:
             pyvisa_visual(basepath, input_file, pyvisa_dict)
 
-    except Exception as error:  # pragma: no cover
+    except Exception as error:  # pylint: disable=broad-exception-caught # pragma: no cover
         errtxt = f'{type(error).__name__}: {error.args}'
         print_to_screen(errtxt, level='error')
         print_to_screen('Execution failed!', level='error')

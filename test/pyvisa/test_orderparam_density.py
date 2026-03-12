@@ -7,6 +7,7 @@ import os
 import warnings
 import unittest
 from io import StringIO
+import numpy as np
 import pandas as pd
 from subprocess import DEVNULL, STDOUT, check_call
 from pyretis.pyvisa.orderparam_density import (PathDensity,
@@ -279,19 +280,20 @@ class TestMethods(unittest.TestCase):
             z_b.extend([1] * traj.info['length'])
 
         x2_a, y2_a, z2_a, _ = pe_w.load_traj(c_acc)
-        self.assertEqual(x_a, x2_a)
-        self.assertEqual(y_a, y2_a)
-        self.assertEqual(z_a, z2_a)
+        # Use assert_array_equal which correctly handles NaN == NaN
+        np.testing.assert_array_equal(x_a, x2_a)
+        np.testing.assert_array_equal(y_a, y2_a)
+        np.testing.assert_array_equal(z_a, z2_a)
 
         x2_r, y2_r, z2_r, _ = pe_w.load_traj(c_rej)
-        self.assertEqual(x_r, x2_r)
-        self.assertEqual(y_r, y2_r)
-        self.assertEqual(z_r, z2_r)
+        np.testing.assert_array_equal(x_r, x2_r)
+        np.testing.assert_array_equal(y_r, y2_r)
+        np.testing.assert_array_equal(z_r, z2_r)
 
         x2_b, y2_b, z2_b, _ = pe_w.load_traj(c_both)
-        self.assertEqual(x_b, x2_b)
-        self.assertEqual(y_b, y2_b)
-        self.assertEqual(z_b, z2_b)
+        np.testing.assert_array_equal(x_b, x2_b)
+        np.testing.assert_array_equal(y_b, y2_b)
+        np.testing.assert_array_equal(z_b, z2_b)
 
     def test_no_op(self):
         """Remove Trajectory with no OP values."""
