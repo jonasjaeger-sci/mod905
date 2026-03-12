@@ -29,6 +29,13 @@ def compare_files(file1, file2):
         print_to_screen('\t-> Files are equal!', level='success')
     else:
         print_to_screen('\t-> Files are NOT equal!', level='error')
+        import difflib
+        with open(file1, 'r') as f1, open(file2, 'r') as f2:
+            diff = difflib.unified_diff(
+                f1.readlines(), f2.readlines(),
+                fromfile=file1, tofile=file2, n=3
+            )
+            print_to_screen('\n'.join(list(diff)[:30]))
         sys.exit(1)
     return 0
 

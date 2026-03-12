@@ -691,9 +691,11 @@ def _check_path(path, path_ensemble, warning=True):
     if not accept:
         msg = ' '.join(messages)
         if warning:
-            logger.critical(msg, path_ensemble.ensemble_name)
+            logger.critical(msg, path_ensemble.ensemble_name,
+                            path_ensemble.ensemble_name)
         else:
-            logger.debug(msg, path_ensemble.ensemble_name)
+            logger.debug(msg, path_ensemble.ensemble_name,
+                         path_ensemble.ensemble_name)
 
     path.status = status
     return accept, status
