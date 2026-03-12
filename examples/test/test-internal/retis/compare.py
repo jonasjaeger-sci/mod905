@@ -8,6 +8,7 @@ Here we compare a RETIS simulation of 250 steps to known results.
 from collections import OrderedDict
 import filecmp
 from math import isclose
+import difflib
 import os
 import sys
 import colorama
@@ -24,19 +25,44 @@ RESULTS = 'results'
 def compare_files(file1, file2):
     """Compare two files."""
     print_to_screen('Comparing: {} {}'.format(file1, file2))
-    similar = filecmp.cmp(file1, file2)
-    if similar:
-        print_to_screen('\t-> Files are equal!', level='success')
-    else:
-        print_to_screen('\t-> Files are NOT equal!', level='error')
-        import difflib
-        with open(file1, 'r') as f1, open(file2, 'r') as f2:
-            diff = difflib.unified_diff(
-                f1.readlines(), f2.readlines(),
-                fromfile=file1, tofile=file2, n=3
-            )
-            print_to_screen('\n'.join(list(diff)[:30]))
-        sys.exit(1)
+
+    with open(file1, 'r', encoding='utf-8') as f1, \
+         open(file2, 'r', encoding='utf-8') as f2:
+        for i, (line1, line2) in enumerate(zip(f1, f2)):
+            if line1 == line2:
+                continue
+            if line1.startswith('#') or line2.startswith('#'):
+                print_to_screen('\t-> Files are NOT equal (header)!',
+                                level='error')
+                sys.exit(1)
+
+            p1 = line1.strip().split()
+            p2 = line2.strip().split()
+
+            if len(p1) != len(p2):
+                print_to_screen(
+                    f'\t-> Files NOT equal (length diff on line {i+1})!',
+                    level='error')
+                sys.exit(1)
+
+            for v1, v2 in zip(p1, p2):
+                if v1 == v2:
+                    continue
+                try:
+                    f_1 = float(v1)
+                    f_2 = float(v2)
+                    if not isclose(f_1, f_2, rel_tol=1e-5, abs_tol=1e-8):
+                        print_to_screen(
+                            f'\t-> Files NOT equal (num diff line {i+1}: '
+                            f'{v1} != {v2})!', level='error')
+                        sys.exit(1)
+                except ValueError:
+                    print_to_screen(
+                        f'\t-> Files NOT equal (str diff line {i+1}: '
+                        f'{v1} != {v2})!', level='error')
+                    sys.exit(1)
+
+    print_to_screen('\t-> Files are equal!', level='success')
     return 0
 
 
@@ -61,7 +87,7 @@ def check_path_file(ens):
     start = ens.start_condition
     end = ('R') if ens.ensemble_number == 0 else ('R', 'L')
     something_weird = False
-    with open(filename, 'r') as inputfile:
+    with open(filename, 'r', encoding='utf-8') as inputfile:
         for lines in inputfile:
             if lines.startswith('#'):
                 continue
@@ -149,7 +175,7 @@ def read_path_file(ens):
     paths = OrderedDict()
     path_acc = OrderedDict()
     current_acc = None
-    with open(filename, 'r') as inputfile:
+    with open(filename, 'r', encoding='utf-8') as inputfile:
         for lines in inputfile:
             if lines.startswith('#'):
                 continue
