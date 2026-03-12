@@ -18,7 +18,7 @@ RND = RandomGeneratorBorg()
 # loading it from a file, if that file is present:
 INPUTFILE = 'pyretis_gmx_rnd.state'
 if os.path.isfile(INPUTFILE):
-    print('Loading state: {}'.format(INPUTFILE))
+    print(f'Loading state: {INPUTFILE}')
     with open(INPUTFILE, 'rb') as inputf:
         STATE = pickle.load(inputf)
         RND.set_state(STATE)

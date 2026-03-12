@@ -137,7 +137,7 @@ def compare_file_contents(root, ensemble, file_name, results_tgz):
     file2 = os.path.join(RESULTS, ensemble_dir, file_name)
     data2 = read_tarfile(tgz_file, file2)
     file1 = os.path.join(root, ensemble_dir, file_name)
-    print_to_screen('Comparing for: {}'.format(file1))
+    print_to_screen(f'Comparing for: {file1}')
     return open(file1, 'rb').read() == data2
 
 
@@ -147,25 +147,25 @@ def main(args):
         gmx_version = args[1].split()[-1]
     except IndexError:
         gmx_version = '5.1.4'
-    print_to_screen('GROMACS version family: {}'.format(gmx_version),
+    print_to_screen(f'GROMACS version family: {gmx_version}',
                     level='info')
     correct = RESULTS_TGZ.get(gmx_version, None)
     if correct is None:
         print_to_screen(
-            'GROMACS version {} is not supported for '
-            'result comparison.'.format(gmx_version)
+            f'GROMACS version {gmx_version} is not supported ' + /
+            'for result comparison.'
         )
         print_to_screen('The supported GROMACS versions are:')
         for key in RESULTS_TGZ:
-            print_to_screen('- {}'.format(key))
+            print_to_screen(f'- {key}')
         sys.exit(0)
 
-    print_to_screen('Using results from: {}'.format(correct), level='info')
+    print_to_screen(f'Using results from: {correct}', level='info')
 
     for dirname in ('gromacs1', 'gromacs2'):
         sets = parse_settings_file(os.path.join(dirname, 'retis.rst'))
-        head = 'Comparing files for: {}'.format(dirname)
-        print_to_screen('\n{}'.format(head), level='message')
+        head = f'Comparing files for: {dirname}'
+        print_to_screen(f'\n{head}', level='message')
         print_to_screen('=' * len(head), level='message')
         compare_ok = compare_files(sets, dirname, correct)
         if not compare_ok:

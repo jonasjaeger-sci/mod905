@@ -471,7 +471,7 @@ def key_check(key, settings):
     """Check for the presence of a key in settings."""
     # todo These checks shall be done earlier, when cleaning the input.
     if key not in settings['simulation']:
-        msgtxt = 'Simulation setting "{}" is missing!'.format(key)
+        msgtxt = f'Simulation setting "{key}" is missing!'
         logger.critical(msgtxt)
         raise ValueError(msgtxt)
 
@@ -519,12 +519,12 @@ def create_simulation(settings):
         settings, info_restart = settings_from_restart(settings)
 
     if sim_type not in sim_map:  # TODO put in check_sim_type
-        msgtxt = 'Unknown simulation task {}'.format(sim_type)
+        msgtxt = f'Unknown simulation task {sim_type}'
         logger.error(msgtxt)
         raise ValueError(msgtxt)
 
     simulation = sim_map[sim_type](settings)
-    msgtxt = '{}'.format(simulation)
+    msgtxt = f'{simulation}'
     logger.info('Created simulation:\n%s', msgtxt)
 
     if settings['simulation'].get('restart', False):

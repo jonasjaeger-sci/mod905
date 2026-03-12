@@ -14,10 +14,10 @@ plt.style.use('seaborn-v0_8-poster')
 
 def main(cp2k_file1, cp2k_file2, plot=False):
     """Perform the test."""
-    print_to_screen('Reading energy file: {}'.format(cp2k_file1),
+    print_to_screen(f'Reading energy file: {cp2k_file1}',
                     level='info')
     energy_cp2k1 = np.loadtxt(cp2k_file1)
-    print_to_screen('Reading energy file: {}'.format(cp2k_file2),
+    print_to_screen(f'Reading energy file: {cp2k_file2}',
                     level='info')
     energy_cp2k2 = np.loadtxt(cp2k_file2)
 
@@ -47,7 +47,7 @@ def obtain_mses(energy_cp2k1, energy_cp2k2, tol=1.0e-5):
             tol_ok = abs(rse) < tol
             if not tol_ok:
                 level = 'error'
-        print_to_screen('RES {}: {}'.format(key, rse), level=level)
+        print_to_screen(f'RES {key}: {rse}', level=level)
         if not tol_ok:
             return False
     return True
@@ -60,8 +60,8 @@ def plot_comparison(energy_cp2k1, energy_cp2k2, cp2k_file1, cp2k_file2):
     ax12 = fig1.add_subplot(222)
     ax21 = fig1.add_subplot(223)
     ax22 = fig1.add_subplot(224)
-    plabel = 'CP2K ({})'.format(cp2k_file1)
-    glabel = 'cp2k ({})'.format(cp2k_file2)
+    plabel = f'CP2K ({cp2k_file1})'
+    glabel = f'cp2k ({cp2k_file2})'
 
     ax11.plot(energy_cp2k1[:, 1], energy_cp2k1[:, 4],
               lw=4, ls='-', marker='o', label=plabel)

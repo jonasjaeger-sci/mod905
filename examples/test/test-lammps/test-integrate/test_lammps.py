@@ -37,7 +37,7 @@ def run_forward():
     )
     engine = LAMMPSEngine('lmp_serial', 'lammps_input', SUBCYCLES)
     print_to_screen(
-        'Running forward for {} steps...'.format(2 * STEPS),
+        f'Running forward for {2 * STEPS} steps...',
         level='info',
     )
     # Create a dummy system:
@@ -47,7 +47,7 @@ def run_forward():
     # Run forward, for the initial state for 100 steps:
     print_to_screen('-> Forward done! Resetting system.')
     print_to_screen(
-        '\nRunning forward for {} steps...'.format(STEPS),
+        f'\nRunning forward for {STEPS} steps...',
         level='info',
     )
     system = create_system_ext(pos=('system.data', 0))
@@ -56,7 +56,7 @@ def run_forward():
     # Run for 50 more steps:
     print_to_screen('-> Forward done!')
     print_to_screen(
-        '\nContinuing run for {} steps...'.format(STEPS),
+        f'\nContinuing run for {STEPS} steps...',
         level='info',
     )
     config = system.particles.get_pos()
@@ -76,7 +76,7 @@ def run_forward():
             if i == 0:
                 lab = 'Full simulation'
             else:
-                lab = 'Simulation, part {}'.format(i)
+                lab = f'Simulation, part {i}'
             data_set.append(
                 (energy['Step'], energy[key], lab)
             )
@@ -94,8 +94,8 @@ def run_forward():
         data_sets_xy.append(
             (
                 energy_f1[key], energy_parts,
-                '{}, full simulation'.format(key),
-                '{}, part1 & part2'.format(key)
+                f'{key}, full simulation',
+                f'{key}, part1 & part2'
             )
         )
     plot_xy(data_sets_xy)
@@ -125,8 +125,8 @@ def run_forward():
         data_sets_xy.append(
             (
                 order_f1[:, i], order_parts,
-                'OP{}, full simulation'.format(i+1),
-                'OP{}, part1 & part2'.format(i+1)
+                f'OP{i + 1}, full simulation',
+                f'OP{i + 1}, part1 & part2'
             )
         )
     plot_xy(data_sets_xy)
@@ -139,7 +139,7 @@ def run_forward_backward():
     )
     # Set up for running forward:
     print_to_screen(
-        '-> Running forward for {} steps...'.format(STEPS),
+        f'-> Running forward for {STEPS} steps...',
         level='info',
     )
     engine = LAMMPSEngine('lmp_serial', 'lammps_input', SUBCYCLES)
@@ -155,7 +155,7 @@ def run_forward_backward():
     print_to_screen('-> Reversing velocities.')
     system.particles.set_vel(True)
 
-    print_to_screen('\n-> Starting backward run ({}) steps!'.format(STEPS),
+    print_to_screen(f'\n-> Starting backward run ({STEPS}) steps!',
                     level='info')
     exe_dir = os.path.join(HERE, 'run-backward')
     energy_b, order_b = run_in_folder(system, engine, exe_dir, STEPS)

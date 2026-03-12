@@ -40,8 +40,7 @@ class OrderParameterWCAJCP1(OrderParameter):
 
         """
         pbc = 'Periodic' if periodic else 'Non-periodic'
-        txt = '{} distance particles {} and {}'.format(pbc, index[0],
-                                                       index[1])
+        txt = f'{pbc} distance particles {index[0]} and {index[1]}'
         super().__init__(description=txt)
         self.periodic = periodic
         self.index = index

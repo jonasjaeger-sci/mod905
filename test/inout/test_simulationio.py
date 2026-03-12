@@ -152,7 +152,7 @@ class TestMethods(unittest.TestCase):
         """Test that we can create tasks from settings."""
         for engine in (None, DummyExternal('test', 0.1, 1), Verlet(0.1)):
             for key, val in OUTPUT_TASKS.items():
-                task_dict = {'type': key, 'name': 'test-{}'.format(key)}
+                task_dict = {'type': key, 'name': f'test-{key}'}
                 settings = {}
                 add_default_settings(settings)
                 directory = os.path.join('this', 'is', 'a', 'fake', 'path')

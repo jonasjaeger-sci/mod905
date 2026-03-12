@@ -22,10 +22,10 @@ def main(energy_file, cp2k_file, plot=False):
     timestep = settings['engine']['timestep']
     subcycles = settings['engine']['subcycles']
 
-    print_to_screen('Reading energy file: {}'.format(energy_file),
+    print_to_screen(f'Reading energy file: {energy_file}',
                     level='info')
     energy = np.loadtxt(energy_file)
-    print_to_screen('Reading CP2K energies from file: {}'.format(cp2k_file),
+    print_to_screen(f'Reading CP2K energies from file: {cp2k_file}',
                     level='info')
     energy_cp2k = read_cp2k_energy(cp2k_file)
 
@@ -58,7 +58,7 @@ def obtain_mses(energy, energy_cp2k, tol=1.0e-5):
             tol_ok = abs(mse) < tol
             if not tol_ok:
                 level = 'error'
-        print_to_screen('MSE {}: {}'.format(pair[1], mse), level=level)
+        print_to_screen(f'MSE {pair[1]}: {mse}', level=level)
         if not tol_ok:
             return False
     return True
@@ -71,8 +71,8 @@ def plot_comparison(energy, energy_cp2k, energy_file, cp2k_file, delta_t):
     ax12 = fig1.add_subplot(222)
     ax21 = fig1.add_subplot(223)
     ax22 = fig1.add_subplot(224)
-    plabel = 'PyRETIS ({})'.format(energy_file)
-    glabel = 'CP2K ({})'.format(cp2k_file)
+    plabel = f'PyRETIS ({energy_file})'
+    glabel = f'CP2K ({cp2k_file})'
     time = np.arange(len(energy[:, 1])) * delta_t
     ax11.plot(time, energy[:, 1], lw=4, ls='-', marker='o', label=plabel)
     ax11.plot(energy_cp2k['time'], energy_cp2k['vpot'],

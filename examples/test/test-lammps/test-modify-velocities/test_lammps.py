@@ -24,7 +24,7 @@ def backup_files(dirname, prefix='prev_'):
              'order_generate_vel.txt'}
     backup = {}
     for i in files:
-        new_name = os.path.join(dirname, '{}{}'.format(prefix, i))
+        new_name = os.path.join(dirname, f'{prefix}{i}')
         os.rename(os.path.join(dirname, i), new_name)
         backup[i] = new_name
     return backup

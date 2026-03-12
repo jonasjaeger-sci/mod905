@@ -254,8 +254,7 @@ def update(frame, sim):
         linetot.set_data(time, (np.array(e_tot) - v_pot[0]))
         patches.append(linetot)
         # also display current simulation time;
-        time_text.set_text('Time: {0:6.2f} fs (frame: {1})'.format(time[-1],
-                                                                   frame))
+        time_text.set_text(f'Time: {time[-1]:6.2f} fs (frame: {frame})')
         patches.append(time_text)
         return patches
     print('Simulation is done.')

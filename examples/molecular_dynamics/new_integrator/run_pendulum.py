@@ -198,7 +198,7 @@ def update(frame, sys, sim):
         ax2.set_xlim(0, frame + 1)
         ax3.set_xlim(0, frame + 1)
         ax4.set_xlim(0, frame + 1)
-        time_text.set_text('Step: {}'.format(result['cycle']['step']))
+        time_text.set_text(f"Step: {result['cycle']['step']}")
         patches.append(time_text)
         return patches
     print('Simulation is done')

@@ -141,7 +141,7 @@ class TestExternalEngine(unittest.TestCase):
         engine = DummyExternal('test', 1.0, 10)
         files = []
         for i in range(3):
-            basename = 'empty_file{}'.format(i)
+            basename = f'empty_file{i}'
             filename = os.path.join(HERE, basename)
             with open(filename, 'w', encoding="utf8") as temp:
                 temp.write('Hello!')
@@ -158,7 +158,7 @@ class TestExternalEngine(unittest.TestCase):
         make_dirs(dirname)
         files = []
         for i in range(3):
-            basename = 'empty_file{}'.format(i)
+            basename = f'empty_file{i}'
             filename = os.path.join(dirname, basename)
             with open(filename, 'w', encoding="utf8") as temp:
                 temp.write('Hello!')

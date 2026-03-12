@@ -32,11 +32,11 @@ def read_path_file(filename):
 
 def get_files_from_directory(source, target):
     """Investigate and copy an accepted path for the given ensemble."""
-    print_to_screen('Checking directory: {}'.format(source),
+    print_to_screen(f'Checking directory:\xa0{source}',
                     level='info')
     path_file = os.path.join(source, 'pathensemble.txt')
     last_one = read_path_file(path_file)
-    print_to_screen('Will use path no. {}'.format(last_one))
+    print_to_screen(f'Will use path no. {last_one}')
 
     # Copy the accepted last path from the traj archive.
     # This is the path where it is stored:

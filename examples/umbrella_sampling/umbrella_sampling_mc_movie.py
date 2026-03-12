@@ -78,7 +78,7 @@ def update_animation(frame, simulations, systems, scat, linec, axv, txt):
         if simulation.is_finished():
             finished += 1
     if finished == len(simulations):
-        print('Stopping animation at frame: {}'.format(frame))
+        print(f'Stopping animation at frame: {frame}')
         raise StopIteration
     simulation = simulations[finished]
     system = systems[finished]
@@ -101,7 +101,7 @@ def update_animation(frame, simulations, systems, scat, linec, axv, txt):
         patches.append(txt)
     else:
         txt.set_text(
-            'Window {}, step {}'.format(finished, simulation.cycle['step'])
+            f"Window {finished}, step {simulation.cycle['step']}"
         )
     patches.append(txt)
     ener = system.particles.vpot

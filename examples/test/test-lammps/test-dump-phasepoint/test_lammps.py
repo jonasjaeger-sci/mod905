@@ -80,16 +80,16 @@ def dump_phasepoint():
     dumped_files = []
     for i in (0, 2, 4, 6, 8, 10):
         newpos = (TRAJ, i)
-        print_to_screen('\t-> Dumping: {}'.format(newpos))
+        print_to_screen(f'\t-> Dumping: {newpos}')
         system.particles.set_pos(newpos)
-        engine.dump_phasepoint(system, 'dump-{:02d}'.format(i))
+        engine.dump_phasepoint(system, f'dump-{i:02d}')
         pos = system.particles.get_pos()
         assert pos[1] == 0
         dumped_files.append(pos[0])
     print_to_screen('\nRunning some comparisons:\n')
     for i, frame in enumerate(read_lammpstrj(TRAJ)):
         traj = dumped_files[i]
-        print_to_screen('\t-> Comparing for dumped frame: {}'.format(traj))
+        print_to_screen(f'\t-> Comparing for dumped frame: {traj}')
         frame_dump = [i for i in read_lammpstrj(traj)]
         assert len(frame_dump) == 1
         assert frame['number'] == frame_dump[0]['number']

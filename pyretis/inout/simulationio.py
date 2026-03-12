@@ -360,11 +360,11 @@ class OutputTask(Task):
 
     def __str__(self):
         """Print information about the output task."""
-        msg = ['Output task {}'.format(self.name)]
-        msg += ['- Output frequency: {}'.format(self.when)]
-        msg += ['- Acting on result(s): {}'.format(self.result)]
-        msg += ['- Target is: {}'.format(self.target)]
-        msg += ['- Writer is: {}'.format(self.writer)]
+        msg = [f'Output task {self.name}']
+        msg += [f'- Output frequency: {self.when}']
+        msg += [f'- Acting on result(s): {self.result}']
+        msg += [f'- Target is: {self.target}']
+        msg += [f'- Writer is:\xa0{self.writer}']
         return '\n'.join(msg)
 
     def task_dict(self):

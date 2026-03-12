@@ -86,7 +86,7 @@ def print_to_screen(txt=None, level=None):  # pragma: no cover
     if txt is None:
         print()
     else:
-        out = '{}'.format(txt)
+        out = f'{txt}'
         color = _PRINT_COLORS.get(level, None)
         if color is None:
             print(out)

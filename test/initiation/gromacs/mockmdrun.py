@@ -24,7 +24,7 @@ def simple_parser(args, need_args):
     # Check that all options are set:
     for key, val in need_args.items():
         if val is None:
-            print('Missing {}'.format(key), file=sys.stderr, end='\n')
+            print(f'Missing {key}', file=sys.stderr, end='\n')
             sys.exit(1)
 
 
@@ -32,7 +32,7 @@ def check_that_files_exist(keys, args):
     """Check that files in input arguments actually exist."""
     for key in keys:
         if not os.path.isfile(args[key]):
-            print('Missing file {}'.format(args[key]),
+            print(f'Missing file {args[key]}',
                   file=sys.stderr, end='\n')
             sys.exit(1)
 
@@ -68,13 +68,13 @@ def mock_mdrun(args):
               encoding="utf8") as output:
         output.write('Mock GROMACS log file\n')
     print('Writing energy file...', file=sys.stdout)
-    write_mock_edr('{}.edr'.format(need_args['-deffnm']), steps, gen=gen)
+    write_mock_edr(f"{need_args['-deffnm']}.edr", steps, gen=gen)
     print('Writing trr file...', file=sys.stdout)
-    write_mock_trr('{}.trr'.format(need_args['-deffnm']), steps, config[1],
+    write_mock_trr(f"{need_args['-deffnm']}.trr", steps, config[1],
                    start=0)
     xyz = config[1] + steps * np.ones_like(config[1])
     print('Writing cpt file...', file=sys.stdout)
-    write_mock_cpt('{}.cpt'.format(need_args['-deffnm']), steps, xyz)
+    write_mock_cpt(f"{need_args['-deffnm']}.cpt", steps, xyz)
     print('Writing final configuration file...', file=sys.stdout)
     write_gromacs_gro_file(need_args['-c'], config[0],
                            xyz, config[2])
@@ -94,14 +94,14 @@ def mock_mdrun_continue(args):
               encoding="utf8") as output:
         output.write('Mock GROMACS log file\n')
     print('Writing edr file...', file=sys.stdout)
-    write_mock_edr('{}.edr'.format(need_args['-deffnm']), steps, gen=gen,
+    write_mock_edr(f"{need_args['-deffnm']}.edr", steps, gen=gen,
                    start=stepsp)
     print('Writing trr file...', file=sys.stdout)
-    write_mock_trr('{}.trr'.format(need_args['-deffnm']), steps, xyz,
+    write_mock_trr(f"{need_args['-deffnm']}.trr", steps, xyz,
                    start=stepsp)
     xyzf = config[1] + (steps + stepsp) * np.ones_like(config[1])
     print('Writing cpt file...', file=sys.stdout)
-    write_mock_cpt('{}.cpt'.format(need_args['-deffnm']),
+    write_mock_cpt(f"{need_args['-deffnm']}.cpt",
                    steps + stepsp, xyzf)
     print('Writing final configuration file...', file=sys.stdout)
     write_gromacs_gro_file(need_args['-c'], config[0],
@@ -124,7 +124,7 @@ def write_mock_trr(filename, steps, xyz, start=0):
             if mode == 'a' and i == start:
                 write = False
             if write:
-                outfile.write('Step: {}\n'.format(i))
+                outfile.write(f'Step: {i}\n')
                 for j in xyzc:
                     outfile.write('{:12.7f} {:12.7f} {:12.7f}\n'.format(*j))
             xyzc += np.ones_like(xyz)
@@ -133,7 +133,7 @@ def write_mock_trr(filename, steps, xyz, start=0):
 def write_mock_cpt(filename, steps, xyz):
     """Write a mock cpt file."""
     with open(filename, 'w', encoding="utf8") as outfile:
-        outfile.write('Last step: {}\n'.format(steps))
+        outfile.write(f'Last step: {steps}\n')
         for j in xyz:
             outfile.write('{:12.7f} {:12.7f} {:12.7f}\n'.format(*j))
 
@@ -174,7 +174,7 @@ def write_mock_edr(filename, steps, gen=False, start=0):
     with open(filename, mode, encoding="utf8") as output:
         if mode == 'w':
             for line in header:
-                output.write('{}\n'.format(line))
+                output.write(f'{line}\n')
         for i in range(start, start + steps + 1):
             j = float(i)
             if not gen:

@@ -46,10 +46,10 @@ def generate_file_names(start, stop, dirname, paths):
     """Just generate some fake file names."""
     files = []
     for i in range(start, stop):
-        filename = os.path.join(dirname, 'file-{}.txt'.format(i))
+        filename = os.path.join(dirname, f'file-{i}.txt')
         pathlib.Path(filename).touch()
         files.append(
-            (filename, os.path.join(*paths, 'file-{}.txt'.format(i)))
+            (filename, os.path.join(*paths, f'file-{i}.txt'))
         )
     return files
 
@@ -152,7 +152,7 @@ class TestPathStorageTar(unittest.TestCase):
             storage.output(11, (path, 'ACC', path_ensemble))
             expected = [
                 storage.archive_name_from_status('ACC'),
-                '{}_000'.format(storage.archive_name_from_status('ACC'))
+                f"{storage.archive_name_from_status('ACC')}_000"
             ]
             files, _ = look_for_files_and_dirs(path_ensemble.directory['traj'])
             self.assertEqual(len(expected), len(files))

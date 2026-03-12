@@ -51,7 +51,7 @@ def run_simulation(simulation, outputfile):
     """Run the simulation and write output to screen/file."""
     print_to_screen(f'Running simulation: {simulation}')
     with open(outputfile, 'w') as output:
-        output.write('{}\n'.format(LAMMPS_HEAD))
+        output.write(f'{LAMMPS_HEAD}\n')
         print(LAMMPS_HEAD)
         try:
             for step in simulation.run():
@@ -106,7 +106,7 @@ def plot_energy(lammps, pyret):
         if mape > TOL_ENERGY:
             retval += 1
             print_to_screen(
-                'Too large MAPE for {:}: {:.3e}'.format(labi, mape),
+                f'Too large MAPE for {labi}: {mape:.3e}',
                 level='error'
             )
         rec = plt.Rectangle((0, 0), 1, 1, fill=False, edgecolor='none',
@@ -114,13 +114,13 @@ def plot_energy(lammps, pyret):
         if i < last:
             axi.legend(
                 (rec, rec),
-                ('MSE = {:.3e}'.format(mse), 'MAPE = {:.3e}'.format(mape)),
+                (f'MSE = {mse:.3e}', f'MAPE = {mape:.3e}'),
                 frameon=False
             )
         else:
             axi.legend((linel, linep, rec, rec),
-                       ('LAMMPS', 'PyRETIS', 'MSE = {:.3e}'.format(mse),
-                        'MAPE = {:.3e}'.format(mape),),
+                       ('LAMMPS', 'PyRETIS', f'MSE = {mse:.3e}',
+                        f'MAPE = {mape:.3e}',),
                        frameon=False, ncol=2, columnspacing=0.0)
     fig.tight_layout()
     return retval
@@ -144,7 +144,7 @@ def plot_pressure(lammps, pyret):
         if mape > TOL_PRESS:
             retval += 1
             print_to_screen(
-                'Too large MAPE for {:}: {:.3e}'.format(term, mape),
+                f'Too large MAPE for {term}: {mape:.3e}',
                 level='error'
             )
         rec = plt.Rectangle((0, 0), 1, 1, fill=False, edgecolor='none',
@@ -152,14 +152,14 @@ def plot_pressure(lammps, pyret):
         if i < last:
             axi.legend(
                 (rec, rec),
-                ('MSE = {:.3e}'.format(mse), 'MAPE = {:.3e}'.format(mape)),
+                (f'MSE = {mse:.3e}', f'MAPE = {mape:.3e}'),
                 frameon=False
             )
         else:
             axi.legend((linel, linep, rec, rec),
                        ('LAMMPS', 'PyRETIS',
-                        'MSE = {:.3e}'.format(mse),
-                        'MAPE = {:.3e}'.format(mape)),
+                        f'MSE = {mse:.3e}',
+                        f'MAPE = {mape:.3e}'),
                        frameon=False, ncol=1)
     fig.tight_layout()
     return retval
@@ -191,17 +191,17 @@ def plot_all_vs(lammps, pyret):
         # Since scatter don't influence the color cycler:
         axi.plot([], [], lw=3)
         linef, = axi.plot(newx, fit_line(newx), lw=3)
-        axi.legend((linef, ), ('Rsq = {:.3f}'.format(rval[0, 1]**2), ),
+        axi.legend((linef, ), (f'Rsq = {rval[0, 1] ** 2:.3f}', ),
                    frameon=False)
     fig.tight_layout()
 
 
 def plot_comparison(lammps_file, pyretis_file):
     """Plot comparison with LAMMPS."""
-    print_to_screen('Loading LAMMPS data: {}'.format(lammps_file),
+    print_to_screen(f'Loading LAMMPS data: {lammps_file}',
                     level='info')
     lammps = np.loadtxt(lammps_file)
-    print_to_screen('Loading PyRETIS data: {}'.format(pyretis_file),
+    print_to_screen(f'Loading PyRETIS data: {pyretis_file}',
                     level='info')
     pyret = np.loadtxt(pyretis_file)
     if lammps.shape != pyret.shape:
@@ -221,8 +221,7 @@ def plot_comparison(lammps_file, pyretis_file):
 
     if len(pyret) < len(lammps):
         print_to_screen(
-            'PyRETIS data too short: {} vs LAMMPS: {}'.format(len(pyret),
-                                                              len(lammps)),
+            f'PyRETIS data too short: {len(pyret)} vs LAMMPS: {len(lammps)}',
             level='error'
         )
         return 1

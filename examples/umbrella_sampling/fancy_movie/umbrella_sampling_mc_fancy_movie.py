@@ -121,7 +121,7 @@ def run_umbrella_simulation(window, overlap):
         success.append(result['displace_step'][3])
         ener.append(simulation.system.particles.vpot)
     nstep = simulation.cycle['step'] - simulation.cycle['startcycle']
-    print_to_screen('Done. Cycles: {}'.format(nstep), level='success')
+    print_to_screen(f'Done. Cycles: {nstep}', level='success')
     return np.array(pos), np.array(trial), success, np.array(ener)
 
 
@@ -325,7 +325,7 @@ def plot_trials(fig, axes, plot_obj, system, forcefield, trajectory, energy):
                 plot_obj['scatter_trial'].set_visible(False)
             if j % FIG_FREQ == 0:
                 plot_obj['figtxt'].set_text(
-                    'Total number of MC cycles: {}'.format(tot_step)
+                    f'Total number of MC cycles: {tot_step}'
                 )
                 plot_obj['scatter'].set_offsets([pos[j], ener[j]])
                 update_histogram(pos_so_far, axes['hist'],
@@ -334,7 +334,7 @@ def plot_trials(fig, axes, plot_obj, system, forcefield, trajectory, energy):
                                  plot_obj['prob'][i],
                                  store=all_normed_histograms, density=True)
                 update_figure(fig, axes['pot'], plot_obj['scatter'])
-                fig.savefig('frame-{0:03d}-{1:05d}.png'.format(i, j))
+                fig.savefig(f'frame-{i:03d}-{j:05d}.png')
         # Add final histograms:
         hist1 = update_histogram(pos_so_far, axes['hist'],
                                  plot_obj['counts'][i])
@@ -373,7 +373,7 @@ def plot_scalings(fig, axes, plot_obj, system, forcefield, all_histograms):
             scales = np.ones(SCALE_STEPS)
         else:
             scales = np.linspace(1, scale_factors[i], SCALE_STEPS)
-            plot_obj['figtxt'].set_text('Re-scaling histogram {}'.format(i))
+            plot_obj['figtxt'].set_text(f'Re-scaling histogram {i}')
 
         for j in trange(len(scales), bar_format=BAR_FMT['scale']):
             for rec, rec_log, histi in zip(rects, rects_log, hist):
@@ -382,7 +382,7 @@ def plot_scalings(fig, axes, plot_obj, system, forcefield, all_histograms):
                 rec.set_visible(True)
                 rec_log.set_visible(True)
             if j % 1 == 0:
-                fig.savefig('scale-{0:03d}-{1:05d}.png'.format(i, j))
+                fig.savefig(f'scale-{i:03d}-{j:05d}.png')
     plot_obj['figtxt'].set_text('Done with scaling: Calculating free energy')
     axes['hist'].plot(bin_mid, hist_avg, lw=6, color='orangered', alpha=0.65)
     axes['hist-log'].plot(bin_mid, hist_avg, lw=6, color='orangered',

@@ -87,7 +87,7 @@ def compare_traj(traj1, traj2, unit1, unit2, tol=1e-12):
     else:
         lev = 'error'
         return 1
-    print_to_screen('Mean error - positions: {}'.format(error),
+    print_to_screen(f'Mean error - positions: {error}',
                     level=lev)
     if abs(error_v) < tol:
         lev = 'success'
@@ -95,7 +95,7 @@ def compare_traj(traj1, traj2, unit1, unit2, tol=1e-12):
     else:
         lev = 'error'
         return 1
-    print_to_screen('Mean error - velocities: {}'.format(error_v),
+    print_to_screen(f'Mean error - velocities: {error_v}',
                     level=lev)
     return retval
 
@@ -122,8 +122,8 @@ def make_plot(unit1, unit2):
     fig1 = plt.figure(figsize=(12, 6))
     grid = gridspec.GridSpec(2, 2)
     ax1 = fig1.add_subplot(grid[:, 0])
-    ljlab = '"{}"'.format(unit2)
-    unilab = '"{}"'.format(unit1)
+    ljlab = f'"{unit2}"'
+    unilab = f'"{unit1}"'
     ax1.plot([], [], label='Potential', lw=0, alpha=0)
     ax1.plot([], [], label='Kinetic', lw=0, alpha=0)
     ax1.plot([], [], label='Total', lw=0, alpha=0)

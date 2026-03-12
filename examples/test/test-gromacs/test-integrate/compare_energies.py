@@ -17,10 +17,10 @@ plt.style.use('seaborn-v0_8-poster')
 
 def main(energy_file, xvg_file, plot=False):
     """Perform the test."""
-    print_to_screen('Reading energy file: {}'.format(energy_file),
+    print_to_screen(f'Reading energy file: {energy_file}',
                     level='info')
     energy = np.loadtxt(energy_file)
-    print_to_screen('Reading xvg file: {}'.format(xvg_file), level='info')
+    print_to_screen(f'Reading xvg file: {xvg_file}', level='info')
     energy_xvg = read_xvg_file(xvg_file)
 
     mse_ok = obtain_mses(energy, energy_xvg)
@@ -48,7 +48,7 @@ def obtain_mses(energy, energy_xvg, tol=1.0e-5):
             tol_ok = abs(mse) < tol
             if not tol_ok:
                 level = 'error'
-        print_to_screen('MSE {}: {}'.format(pair[1], mse), level=level)
+        print_to_screen(f'MSE {pair[1]}: {mse}', level=level)
         if not tol_ok:
             return False
     return True
@@ -61,8 +61,8 @@ def plot_comparison(energy, energy_xvg, energy_file, xvg_file):
     ax12 = fig1.add_subplot(222)
     ax21 = fig1.add_subplot(223)
     ax22 = fig1.add_subplot(224)
-    plabel = 'PyRETIS ({})'.format(energy_file)
-    glabel = 'gmx ({})'.format(xvg_file)
+    plabel = f'PyRETIS ({energy_file})'
+    glabel = f'gmx ({xvg_file})'
     ax11.plot(energy[:, 1], lw=4, ls='-', marker='o', label=plabel)
     ax11.plot(energy_xvg['potential'], lw=2, ls='--', marker='^',
               label=glabel)

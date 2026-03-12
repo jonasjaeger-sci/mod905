@@ -16,7 +16,7 @@ class PlaneDistanceX(OrderParameter):
     the distance from a plane for a given particle.
     """
 
-    def __init__(self, index, plane_position):
+    def __init__(self, index, plane_pos):
         """Initialise the order parameter.
 
         Parameters
@@ -24,16 +24,14 @@ class PlaneDistanceX(OrderParameter):
         index : integer
             Selects the particle to use.
 
-        plane_position : float
+        plane_pos : float
             The location of the plane, along the x-axis.
 
         """
-        txt = 'Distance from particle {} to the plane at {}'.format(
-            index,
-            plane_position)
+        txt = f'Distance from particle {index} to the plane at {plane_pos}'
         super().__init__(description=txt)
         self.index = index
-        self.plane_position = plane_position
+        self.plane_position = plane_pos
 
     def calculate(self, system):
         """Calculate the order parameter."""

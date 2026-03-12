@@ -176,13 +176,13 @@ class TestGromacsIO(unittest.TestCase):
             if key in ('xyz', 'vel'):
                 if not np.allclose(val, snapj[key]):
                     raise AssertionError(
-                        'Snapshots not equal. "{}" differ'.format(key)
+                        f'Snapshots not equal. "{key}" differ'
                     )
             else:
                 for i, j in zip(val, snapj[key]):
                     if not i == j:
                         raise AssertionError(
-                            'Snapshots not equal. "{}" differ'.format(key)
+                            f'Snapshots not equal. "{key}" differ'
                         )
 
     def test_read_gromacs_lines(self):
@@ -214,7 +214,7 @@ class TestGromacsIO(unittest.TestCase):
         # Test what we get if we read 1D and 2D files:
         for dim, correct in ((1, CORRECT_GRO_NOVEL1D),
                              (2, CORRECT_GRO_NOVEL2D)):
-            filename = os.path.join(HERE, 'config-{}D.gro'.format(dim))
+            filename = os.path.join(HERE, f'config-{dim}D.gro')
             frame, xyz, vel, box = read_gromacs_gro_file(filename)
             self.assertIsNotNone(xyz)
             self.assertIsNotNone(vel)
@@ -430,7 +430,7 @@ class TestGromacsTRR(unittest.TestCase):
     def test_read_wrong_header(self):
         """Test that we get an error when reading wrong version of TRR."""
         slen = (13, 12)
-        fmt = ['1i', '2i', '{}s'.format(slen[0] - 1), '13i']
+        fmt = ['1i', '2i', f'{slen[0] - 1}s', '13i']
         with tempfile.NamedTemporaryFile() as tmp:
             with open(tmp.name, 'wb') as outfile:
                 outfile.write(struct.pack(fmt[0], _GROMACS_MAGIC))
@@ -447,7 +447,7 @@ class TestGromacsTRR(unittest.TestCase):
     def test_read_size(self):
         """Test that we can get double/float when box is missing."""
         slen = (13, 12)
-        fmt = ['1i', '2i', '{}s'.format(slen[0] - 1), '13i']
+        fmt = ['1i', '2i', f'{slen[0] - 1}s', '13i']
         with tempfile.NamedTemporaryFile() as tmp:
             with open(tmp.name, 'wb') as outfile:
                 outfile.write(struct.pack(fmt[0], _GROMACS_MAGIC))
@@ -464,7 +464,7 @@ class TestGromacsTRR(unittest.TestCase):
     def test_read_size_fail(self):
         """Test that we fail when we can't find precision."""
         slen = (13, 12)
-        fmt = ['1i', '2i', '{}s'.format(slen[0] - 1), '13i']
+        fmt = ['1i', '2i', f'{slen[0] - 1}s', '13i']
         with tempfile.NamedTemporaryFile() as tmp:
             with open(tmp.name, 'wb') as outfile:
                 outfile.write(struct.pack(fmt[0], _GROMACS_MAGIC))

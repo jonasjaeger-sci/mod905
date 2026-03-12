@@ -11,7 +11,7 @@ filename = 'initial.xyz'
 density = 9.0 / 15.0
 xyz, size = generate_lattice('sq', [3, 3], density=density)
 names = ['A', 'A', 'A', 'A', 'A', 'A', 'A', 'B', 'B']
-print('Generating for density: {}'.format(density))
-print('Box size: {}'.format(size))
-print('Writing file: {}'.format(filename))
+print(f'Generating for density: {density}')
+print(f'Box size: {size}')
+print(f'Writing file: {filename}')
 write_xyz_file(filename, xyz, names=names, header='Initial config')

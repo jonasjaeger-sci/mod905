@@ -49,7 +49,7 @@ def compare_traj(traj1, traj2, tol=1e-12):
 
     """
     print_to_screen('Comparing trajectories', level='info')
-    print_to_screen('Loading files: {} & {}'.format(traj1, traj2))
+    print_to_screen(f'Loading files: {traj1} & {traj2}')
     print_to_screen('Checking mean squared error...')
     file1 = PathIntFile(traj1, 'r').load()
     file2 = PathIntFile(traj2, 'r').load()
@@ -76,7 +76,7 @@ def print_error_assessment(error, what, tol):
     else:
         lev = 'error'
         ret = 1
-    print_to_screen('Mean error - {}: {}'.format(what, error),
+    print_to_screen(f'Mean error - {what}: {error}',
                     level=lev)
     return ret
 
@@ -100,7 +100,7 @@ def compare_energy(traj1, traj2, tol=1e-12):
 
     """
     print_to_screen('Comparing energies', level='info')
-    print_to_screen('Loading files: {} & {}'.format(traj1, traj2))
+    print_to_screen(f'Loading files: {traj1} & {traj2}')
     print_to_screen('Checking mean squared error...')
     file1 = EnergyPathFile(traj1, 'r').load()
     file2 = EnergyPathFile(traj2, 'r').load()
@@ -146,7 +146,7 @@ def compare_order(traj1, traj2, tol=1e-12):
 
     """
     print_to_screen('Comparing order parameters', level='info')
-    print_to_screen('Loading files: {} & {}'.format(traj1, traj2))
+    print_to_screen(f'Loading files: {traj1} & {traj2}')
     print_to_screen('Checking mean squared error...')
     file1 = OrderPathFile(traj1, 'r').load()
     file2 = OrderPathFile(traj2, 'r').load()
@@ -172,14 +172,14 @@ def compare_order(traj1, traj2, tol=1e-12):
     retval = 0
     for key, err in errors.items():
         error = err / float(nsnap)
-        ret = print_error_assessment(error, 'orderp-{}'.format(key), tol)
+        ret = print_error_assessment(error, f'orderp-{key}', tol)
         retval += ret
     return retval
 
 
 def compare_ensemble(ensemble):
     """Run the comparison for an ensemble."""
-    print_to_screen('Comparing for "{}"'.format(ensemble), level='info')
+    print_to_screen(f'Comparing for "{ensemble}"', level='info')
     traj1 = os.path.join('run-10-20', ensemble, 'traj.txt')
     traj2 = os.path.join('run-full', ensemble, 'traj.txt')
     print_to_screen()

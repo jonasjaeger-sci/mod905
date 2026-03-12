@@ -87,12 +87,12 @@ def plot_xy(data_sets):
         axi.set_ylim([minxy, maxxy])
         if not np.allclose(data[0], data[1]):
             print_to_screen(
-                'Comparison: "{}" & "{}" failed.'.format(data[2], data[3]),
+                f'Comparison: "{data[2]}" & "{data[3]}" failed.',
                 level='error',
             )
         else:
             print_to_screen(
-                'Comparison: "{}" & "{}" is OK.'.format(data[2], data[3]),
+                f'Comparison: "{data[2]}" & "{data[3]}" is OK.',
                 level='success',
             )
     fig.tight_layout()

@@ -41,7 +41,7 @@ def initiate_restart(simulation, settings, cycle):
         name = path_ensemble.ensemble_name
         logger.info('Loading restart data for path ensemble %s:', name)
         print_to_screen(
-            'Loading restart data for path ensemble {}:'.format(name),
+            f'Loading restart data for path ensemble {name}:',
             level='warning'
         )
         restart_file = os.path.join(

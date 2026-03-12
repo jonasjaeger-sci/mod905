@@ -98,7 +98,7 @@ class UnitsTest(unittest.TestCase):
                     all_pairs.append((sys1, sys2))
         for key in CONVERT:
             msg = ['Could not find conversion "{}" -> "{}"',
-                   'for dimension "{}"'.format(key)]
+                   f'for dimension "{key}"']
             for pair in all_pairs:
                 msg[0] = msg[0].format(*pair)
                 msgtxt = ' '.join(msg)
@@ -132,7 +132,7 @@ class UnitsTest(unittest.TestCase):
         generate_system_conversions('test', 'real')
         # check if we indeed created all conversions
         for key in CONVERT:
-            dimtxt = 'for dimension "{}"'.format(key)
+            dimtxt = f'for dimension "{key}"'
             for unit in UNITS[key]:
                 pair = ('test', unit)
                 msg = 'Could not find conversion "{}" -> "{}"'.format(*pair)

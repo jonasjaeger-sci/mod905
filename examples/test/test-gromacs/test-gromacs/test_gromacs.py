@@ -63,9 +63,9 @@ def run_in_steps(engine, system, order_parameter, interfaces,
         Selects the time direction.
 
     """
-    print_to_screen('\nRunning {} steps in "{}"'.format(steps, exe_dir),
+    print_to_screen(f'\nRunning {steps} steps in "{exe_dir}"',
                     level='message')
-    print_to_screen('(Reverse = {})'.format(reverse))
+    print_to_screen(f'(Reverse = {reverse})')
     make_dirs(exe_dir)
     folder = os.path.abspath(exe_dir)
     clean_dir(folder)
@@ -102,7 +102,7 @@ def run_plain_gromacs(engine, system, order_parameter, input_conf,
 
     """
     print_to_screen(
-        '\nRunning {} plain GROMACS steps in "{}"'.format(steps, exe_dir),
+        f'\nRunning {steps} plain GROMACS steps in "{exe_dir}"',
         level='message'
     )
     make_dirs(exe_dir)
@@ -121,11 +121,11 @@ def run_plain_gromacs(engine, system, order_parameter, input_conf,
     tpr_file = os.path.join(folder, 'topol.tpr')
     grompp = [engine.gmx, 'grompp', '-c', input_file, '-f', mdp,
               '-p', engine.input_files['topology'], '-o', tpr_file]
-    print_to_screen('Running grompp in {}'.format(exe_dir))
+    print_to_screen(f'Running grompp in {exe_dir}')
     engine.execute_command(grompp, cwd=exe_dir)
-    conf_out = 'run.{}'.format(engine.ext)
+    conf_out = f'run.{engine.ext}'
     exe = engine.mdrun.format('topol.tpr', 'run', conf_out).split()
-    print_to_screen('Running "{}"'.format(' '.join(exe)))
+    print_to_screen(f"Running \"{' '.join(exe)}\"")
     engine.execute_command(exe, cwd=exe_dir)
     energy_file = os.path.join(folder, 'run.edr')
     energy = engine.get_energies(energy_file)
@@ -166,10 +166,10 @@ def main(select=1, plot=False):
                             maxwarn=0,
                             gmx_format=engine.get('gmx_format', 'g96'),
                             write_vel=True, write_force=True)
-    print_to_screen('Testing for: {}'.format(gro), level='info')
-    print_to_screen('Time step: {}'.format(gro.timestep))
-    print_to_screen('Subcycles: {}'.format(gro.subcycles))
-    print_to_screen('GMX format: {}'.format(gro.ext))
+    print_to_screen(f'Testing for: {gro}', level='info')
+    print_to_screen(f'Time step: {gro.timestep}')
+    print_to_screen(f'Subcycles: {gro.subcycles}')
+    print_to_screen(f'GMX format: {gro.ext}')
     # Create dummy variables for the test:
     system = System(units='gromacs',
                     box=create_box(cell=[100, 100, 100]),
@@ -183,10 +183,10 @@ def main(select=1, plot=False):
     start = time.perf_counter()
     pathf = run_in_steps(gro, system, order_parameter, interfaces,
                          steps=steps,
-                         exe_dir='{}-forward-step'.format(select),
+                         exe_dir=f'{select}-forward-step',
                          reverse=False)
     end = time.perf_counter()
-    print_to_screen('Time spent: {}'.format(end - start), level='info')
+    print_to_screen(f'Time spent: {end - start}', level='info')
 
     # Set state to last point in trajectory:
     phase_point = pathf.phasepoints[-1]
@@ -194,32 +194,32 @@ def main(select=1, plot=False):
     start = time.perf_counter()
     pathb = run_in_steps(gro, system, order_parameter, interfaces,
                          steps=steps,
-                         exe_dir='{}-backward-step'.format(select),
+                         exe_dir=f'{select}-backward-step',
                          reverse=True)
     end = time.perf_counter()
-    print_to_screen('Time spent: {}'.format(end - start), level='info')
+    print_to_screen(f'Time spent: {end - start}', level='info')
 
     # Run plain GROMACS:
     start = time.perf_counter()
     plainf = run_plain_gromacs(gro, system, order_parameter, initial_conf,
                                steps=steps,
-                               exe_dir='{}-forward-plain'.format(select),
+                               exe_dir=f'{select}-forward-plain',
                                reverse=False)
     end = time.perf_counter()
-    print_to_screen('Time spent: {}'.format(end - start), level='info')
+    print_to_screen(f'Time spent: {end - start}', level='info')
     last_c = plainf[-1]
     last_r = os.path.join(
         os.path.dirname(last_c),
-        'r_{}'.format(os.path.basename(last_c))
+        f'r_{os.path.basename(last_c)}'
     )
     gro._reverse_velocities(last_c, last_r)
     start = time.perf_counter()
     plainb = run_plain_gromacs(gro, system, order_parameter, last_r,
                                steps=steps,
-                               exe_dir='{}-backward-plain'.format(select),
+                               exe_dir=f'{select}-backward-plain',
                                reverse=True)
     end = time.perf_counter()
-    print_to_screen('Time spent: {}'.format(end - start), level='info')
+    print_to_screen(f'Time spent: {end - start}', level='info')
 
     mse_ok = obtain_mses(pathf, pathb, plainf, plainb)
 
@@ -246,8 +246,7 @@ def mse_combinations(text, var, tol=None):
             if not tol_ok:
                 level = 'error'
         print_to_screen(
-            'MSE {}: {} vs {} = {}'.format(text, comb[0][1],
-                                           comb[1][1], mse),
+            f'MSE {text}: {comb[0][1]} vs {comb[1][1]} = {mse}',
             level=level
         )
         if not tol_ok:

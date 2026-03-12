@@ -21,7 +21,7 @@ colormap = 'viridis'
 class TestMethods(unittest.TestCase):
     """Testing class of pyretis.pyvisa.statistical_methods."""
 
-    @mock.patch("%s.statistical_methods.plt" % __name__)
+    @mock.patch(f"{__name__}.statistical_methods.plt")
     def test_correlation_matrix(self, mock_plt):
         """Test if correlation matrix is generated."""
         statistical_methods.correlation_matrix(Dataframe)
@@ -30,7 +30,7 @@ class TestMethods(unittest.TestCase):
         # Assert plt.figure got called
         self.assertTrue(mock_plt.figure.called)
 
-    @mock.patch("%s.statistical_methods.plt" % __name__)
+    @mock.patch(f"{__name__}.statistical_methods.plt")
     def test_pyvisa_pca(self, mock_plt):
         """Test if PCA is performed."""
         statistical_methods.pyvisa_pca(2, settings, Dataframe, colormap)
@@ -39,7 +39,7 @@ class TestMethods(unittest.TestCase):
         # Assert plt.figure got called
         self.assertTrue(mock_plt.figure.called)
 
-    @mock.patch("%s.statistical_methods.plt" % __name__)
+    @mock.patch(f"{__name__}.statistical_methods.plt")
     def test_k_means(self, mock_plt):
         """Test if k-means cluster plot is generated."""
         statistical_methods.k_means(2, cluster_data, settings, colormap)
@@ -48,7 +48,7 @@ class TestMethods(unittest.TestCase):
         # Assert plt.figure got called
         self.assertTrue(mock_plt.figure.called)
 
-    @mock.patch("%s.statistical_methods.plt" % __name__)
+    @mock.patch(f"{__name__}.statistical_methods.plt")
     def test_hierarchical(self, mock_plt):
         """Test if hierarchical cluster plot is generated."""
         statistical_methods.hierarchical(2, cluster_data, settings, colormap)
@@ -57,7 +57,7 @@ class TestMethods(unittest.TestCase):
         # Assert plt.figure got called
         self.assertTrue(mock_plt.figure.called)
 
-    @mock.patch("%s.statistical_methods.plt" % __name__)
+    @mock.patch(f"{__name__}.statistical_methods.plt")
     def test_gaussian_mixture(self, mock_plt):
         """Test if Gaussian mixture cluster plot is generated."""
         statistical_methods.gaussian_mixture(2,
@@ -69,7 +69,7 @@ class TestMethods(unittest.TestCase):
         # Assert plt.figure got called
         self.assertTrue(mock_plt.figure.called)
 
-    @mock.patch("%s.statistical_methods.plt" % __name__)
+    @mock.patch(f"{__name__}.statistical_methods.plt")
     def test_spectral(self, mock_plt):
         """Test if spectral cluster plot is generated."""
         statistical_methods.spectral(2, cluster_data, settings, colormap)
@@ -78,7 +78,7 @@ class TestMethods(unittest.TestCase):
         # Assert plt.figure got called
         self.assertTrue(mock_plt.figure.called)
 
-    @mock.patch("%s.statistical_methods.plt" % __name__)
+    @mock.patch(f"{__name__}.statistical_methods.plt")
     def test_random_forest(self, mock_plt):
         """Test if random forest plot is generated."""
         statistical_methods.random_forest(Dataframe, TRUE_FALSE, 3)
@@ -87,7 +87,7 @@ class TestMethods(unittest.TestCase):
         # Assert plt.subplots got called
         self.assertTrue(mock_plt.figure.called)
 
-    @mock.patch("%s.statistical_methods.graphviz" % __name__)
+    @mock.patch(f"{__name__}.statistical_methods.graphviz")
     def test_decision_tree(self, mock_graphviz):
         """Test if decision tree plot is generated."""
         statistical_methods.decision_tree(Dataframe, TRUE_FALSE, 3)

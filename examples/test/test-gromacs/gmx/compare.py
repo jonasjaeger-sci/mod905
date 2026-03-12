@@ -78,9 +78,9 @@ def compare_ensemble(run1, run2, ensemble,
         corrections.
 
     """
-    print_to_screen('Comparing for "{}"'.format(ensemble), level='info')
+    print_to_screen(f'Comparing for "{ensemble}"', level='info')
     for filei in ('energy.txt', 'order.txt', 'pathensemble.txt'):
-        print_to_screen('\tComparing {} files...'.format(filei))
+        print_to_screen(f'\tComparing {filei} files...')
         file1 = os.path.join(run1, ensemble, filei)
         file2 = os.path.join(run2, ensemble, filei)
         if filei == 'pathensemble.txt':
@@ -96,7 +96,7 @@ def compare_ensemble(run1, run2, ensemble,
                 file1, file2, skip=None, mode='numerical'
             )
         lvl = 'success' if equal else 'error'
-        print_to_screen('\t\t-> {}'.format(msg), level=lvl)
+        print_to_screen(f'\t\t-> {msg}', level=lvl)
         if not equal:
             return False
         if not traj_skip:
@@ -151,7 +151,7 @@ def main():
         )
         if not result:
             print_to_screen(
-                'Comparison failed for {}. Aborting!'.format(ensemble_dir),
+                f'Comparison failed for {ensemble_dir}. Aborting!',
                 level='error',
             )
             return 1

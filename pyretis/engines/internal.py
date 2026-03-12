@@ -860,7 +860,7 @@ class Langevin(MDEngine):
                 c_2 = (1.0 - c_1) / gammadt
             else:
                 raise ValueError(
-                    'Langevin: Found gamma = {:6.2f} < 0.'.format(self.gamma)
+                    f'Langevin: Found gamma = {self.gamma:6.2f} < 0.'
                 )
 
             self.param_iner['c0'] = c_0

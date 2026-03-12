@@ -28,7 +28,7 @@ def get_arguments(lammps_args):
     for key in looking_for:
         if key not in found:
             errors = True
-            print('ERROR: Missing input argument "{}"'.format(key))
+            print(f'ERROR: Missing input argument "{key}"')
     if errors:
         sys.exit(1)
     return found
@@ -45,7 +45,7 @@ def write_fake_log(logfile, steps, freq):
             if i % freq == 0:
                 j = 5 * i * freq
                 output.write(
-                    '{} {} {} {} {} {}\n'.format(i, j+1, j+2, j+3, j+4, j+5)
+                    f'{i} {j + 1} {j + 2} {j + 3} {j + 4} {j + 5}\n'
                 )
         output.write('Loop time of 0 on 1 procs for 12 steps with 0 atoms\n')
         output.write('\n')
@@ -60,7 +60,7 @@ def write_fake_screen(screenfile, settings):
     """
     with open(screenfile, 'w', encoding='utf-8') as output:
         for key, val in settings:
-            output.write('{} {}\n'.format(key, val))
+            output.write(f'{key} {val}\n')
 
 
 def make_dump_file(filename, steps, freq):
@@ -70,7 +70,7 @@ def make_dump_file(filename, steps, freq):
         for i in range(steps + 1):
             if i % freq == 0:
                 output.write('ITEM: TIMESTEP\n')
-                output.write('{}\n'.format(i))
+                output.write(f'{i}\n')
 
 
 def make_restart_file(filename):
@@ -86,7 +86,7 @@ def make_order_file(filename, steps, freq):
         for i in range(steps + 1):
             if i % freq == 0:
                 output.write(
-                    '{} {} {}\n'.format(i, i+1, -(i+1))
+                    f'{i} {i + 1} {-(i + 1)}\n'
                 )
 
 
@@ -97,11 +97,11 @@ def make_fake_output_files(settings, steps):
             # Assume that the setting is: dump ID group-ID style N filename
             filename = val.split()[4].strip()
             freq = int(val.split()[3].strip())
-            print('Dumping to: "{}"'.format(filename))
+            print(f'Dumping to: "{filename}"')
             make_dump_file(filename, steps, freq)
         elif key == 'write_restart':
             filename = val.split()[0].strip()
-            print('Writing restart to: "{}"'.format(filename))
+            print(f'Writing restart to: "{filename}"')
             make_restart_file(filename)
         elif key == 'fix':
             # Check if we are to write order parameters.
@@ -111,7 +111,7 @@ def make_fake_output_files(settings, steps):
                 filename = val_split[idx+1]
                 idx = val_split.index('print')
                 freq = int(val_split[idx+1])
-                print('Writing order parameters to: "{}"'.format(filename))
+                print(f'Writing order parameters to: "{filename}"')
                 make_order_file(filename, steps, freq)
 
 

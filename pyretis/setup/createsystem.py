@@ -300,8 +300,7 @@ def _get_snapshot_from_file(pos_settings, units):
         logger.warning(msg)
         snapshot = snaps[-1]
     else:
-        msg = ('Could not find any configurations in '
-               'input file: {}').format(filename)
+        msg = f"Could not find any configurations in input file: {filename}"
         logger.error(msg)
         raise ValueError(msg)
     return snapshot, convert
@@ -341,7 +340,7 @@ def initial_positions_file(settings):
         vel = []
         for key in ['x', 'y', 'z'][:ndim]:
             pos.append(snapshot[key][i])
-            vel_key = 'v{}'.format(key)
+            vel_key = f'v{key}'
             if vel_key in snapshot:
                 vel.append(snapshot[vel_key][i])
         pos = np.array(pos) * convert['length']
@@ -460,7 +459,7 @@ def set_up_box(settings, boxs, dim=3):
         box = create_box(**settings['box'])
         msgtxt = msg.format('from settings', box)
         logger.info(msgtxt)
-        debugtxt = 'Settings used:\n{}'.format(settings['box'])
+        debugtxt = f"Settings used:\n{settings['box']}"
         logger.debug(debugtxt)
     else:
         if boxs is not None:
@@ -534,7 +533,7 @@ def create_velocities(system, settings, vel):
             'temperature': settings['system'].get('temperature', 1.0),
         }
         system.generate_velocities(**gen_settings)
-        msg = 'Scaling velocities to total energy {}'.format(target)
+        msg = f'Scaling velocities to total energy {target}'
         logger.debug(msg)
         system.post_setup.append(('rescale_velocities', (target,)))
         return True

@@ -166,7 +166,7 @@ class test_pyretis_main_runner(unittest.TestCase):
         inputfile = 'a_non_existent_input.rst'
         with self.assertRaises(ValueError) as err:
             set_up_simulation(inputfile, HERE)
-        self.assertEqual('Input file "{}" NOT found!'.format(inputfile),
+        self.assertEqual(f'Input file "{inputfile}" NOT found!',
                          str(err.exception))
 
         inputfile = os.path.join(HERE, 'dummy_input.rst')

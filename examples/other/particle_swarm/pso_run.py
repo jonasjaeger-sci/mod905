@@ -26,7 +26,7 @@ def set_up():
     print('Created a box:')
     print(box)
 
-    print('Creating system with {} particles'.format(NPART))
+    print(f'Creating system with {NPART} particles')
     system = System(units='reduced', box=box)
     system.particles = Particles(dim=2)
     for _ in range(NPART):
@@ -36,7 +36,7 @@ def set_up():
     ffield = ForceField('Single Ackley function',
                         potential=[Ackley()])
     system.forcefield = ffield
-    print('Force field is:\n{}'.format(system.forcefield))
+    print(f'Force field is:\n{system.forcefield}')
 
     print('Creating simulation:')
     engine = PSOEngine(0.7, 1.5, 1.5)

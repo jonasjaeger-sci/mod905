@@ -20,21 +20,21 @@ def write_energy(outfile, steps=10):
                        'UsedTime[s]'])
     fmt = '{:10d} {:8.6f} {:8.6f} {:8.6f} {:8.6f} {:8.6f} {:8.6f}'
     with open(outfile, 'w') as output:
-        output.write('{}\n'.format(header))
+        output.write(f'{header}\n')
         for i in range(steps):
             time = i * 0.5
             kin = i * 0.1
             temp = i * 100
             pot = -0.1 * i
             txt = fmt.format(i, time, kin, temp, pot, i, i)
-            output.write('{}\n'.format(txt))
+            output.write(f'{txt}\n')
 
 
 def write_wfn_file(outfile):
     """Write some gibberish data to represent a wfn file."""
     if os.path.isfile(outfile):
         # Just keep one backup file. This is useful for the testing.
-        backup = '{}.bak-1'.format(outfile)
+        backup = f'{outfile}.bak-1'
         os.rename(outfile, backup)
     with open(outfile, 'w') as output:
         output.write('Some gibberish')
@@ -68,7 +68,7 @@ def write_cp2k_restart(filename, factorx, factorv, steps=10):
     vel = (steps - 1) * factorv
     if os.path.isfile(filename):
         # Just keep one backup file. This is useful for the testing.
-        backup = '{}.bak-1'.format(filename)
+        backup = f'{filename}.bak-1'
         os.rename(filename, backup)
     with open(filename, 'w') as outfile:
         outfile.write('&FORCE_EVAL\n')
@@ -110,19 +110,19 @@ if __name__ == '__main__':
     if not name:
         sys.exit(1)
 
-    efile = '{}-1.ener'.format(name)
+    efile = f'{name}-1.ener'
     write_energy(efile, steps=10)
 
-    wfile = '{}-RESTART.wfn'.format(name)
+    wfile = f'{name}-RESTART.wfn'
     write_wfn_file(wfile)
 
-    xfile = '{}-pos-1.xyz'.format(name)
+    xfile = f'{name}-pos-1.xyz'
     xfac = np.array([0.1, 0.2, 0.3])
     write_xyz_file(xfile, xfac, steps=10)
 
-    vfile = '{}-vel-1.xyz'.format(name)
+    vfile = f'{name}-vel-1.xyz'
     vfac = np.array([1.1, 1.2, 1.3])
     write_xyz_file(vfile, vfac, steps=10)
 
-    rfile = '{}-1.restart'.format(name)
+    rfile = f'{name}-1.restart'
     write_cp2k_restart(rfile, xfac, vfac, steps=10)

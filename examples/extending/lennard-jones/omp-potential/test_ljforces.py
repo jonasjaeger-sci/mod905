@@ -49,7 +49,7 @@ def run_calculations(system, parameters):
                                 potential=[potential_ext],
                                 params=[parameters])
     system.forcefield = forceField_ext
-    print('Evaluating with: {}'.format(forceField_ext.print_potentials()))
+    print(f'Evaluating with: {forceField_ext.print_potentials()}')
     vpot_ext = system.potential()
     vpot_ext /= float(system.particles.npart)
     # Calculate with pure python implementation:
@@ -58,7 +58,7 @@ def run_calculations(system, parameters):
                             potential=[potential],
                             params=[parameters])
     system.forcefield = forcefield
-    print('Evaluating with: {}'.format(forcefield.print_potentials()))
+    print(f'Evaluating with: {forcefield.print_potentials()}')
     vpot = system.potential()
     vpot /= float(system.particles.npart)
     # Calculate with numpy python implementation:
@@ -67,7 +67,7 @@ def run_calculations(system, parameters):
                               potential=[potentialnp],
                               params=[parameters])
     system.forcefield = forcefieldnp
-    print('Evaluating with: {}'.format(forcefieldnp.print_potentials()))
+    print(f'Evaluating with: {forcefieldnp.print_potentials()}')
     vpotnp = system.potential()
     vpotnp /= float(system.particles.npart)
     return (vpot, vpotnp, vpot_ext)
@@ -89,10 +89,10 @@ class LennardJonesTest(unittest.TestCase):
         keys = ['python', 'python-numpy', 'fortran']
         for i, keyi in enumerate(keys[:-1]):
             for j, key2 in enumerate(keys[i+1:]):
-                print('\nCompare {} and {}'.format(keyi, key2))
+                print(f'\nCompare {keyi} and {key2}')
                 self.assertAlmostEqual(result[i], result[i+j+1], 7)
                 vdiff = np.abs(result[i] - result[i+j+1])
-                print(' -> Difference in pot. energy: {:.15e}'.format(vdiff))
+                print(f' -> Difference in pot. energy: {vdiff:.15e}')
 
     def test_lj_mix(self):
         """Test for mixture."""
@@ -107,7 +107,7 @@ class LennardJonesTest(unittest.TestCase):
         for key in param:
             if 'rcut' in param[key]:
                 self.assertGreaterEqual(maxcut, param[key]['rcut'])
-        print('Mutating {} particles'.format(len(idx2)))
+        print(f'Mutating {len(idx2)} particles')
         for i in idx2:
             system.particles.ptype[i] = 1
         result = run_calculations(system, param)
@@ -116,12 +116,12 @@ class LennardJonesTest(unittest.TestCase):
             for j, _ in enumerate(keys[i+1:]):
                 self.assertAlmostEqual(result[i], result[i+j+1], 7)
                 vdiff = np.abs(result[i] - result[i+j+1])
-                print(' -> Difference in pot. energy: {:.15e}'.format(vdiff))
+                print(f' -> Difference in pot. energy: {vdiff:.15e}')
 
     def test_lj_multi_mix(self):
         """Test for multi-mixture."""
         ncomp = np.random.randint(3, 11)
-        print('\nTesting for a {}-component mixture'.format(ncomp))
+        print(f'\nTesting for a {ncomp}-component mixture')
         system = set_up_initial_state()
         param = {0: {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5}}
         maxcut = 0.5 * min(system.box.length)
@@ -143,14 +143,14 @@ class LennardJonesTest(unittest.TestCase):
                 natoms[ptype] = 0
             natoms[ptype] += 1
         for i in natoms:
-            print('{} atoms of type {}'.format(natoms[i], i))
+            print(f'{natoms[i]} atoms of type {i}')
         result = run_calculations(system, param)
         keys = ['python', 'python-numpy', 'fortran']
         for i, _ in enumerate(keys[:-1]):
             for j, _ in enumerate(keys[i+1:]):
                 self.assertAlmostEqual(result[i], result[i+j+1], 7)
                 vdiff = np.abs(result[i] - result[i+j+1])
-                print(' -> Difference in pot. energy: {:.15e}'.format(vdiff))
+                print(f' -> Difference in pot. energy: {vdiff:.15e}')
 
 
 if __name__ == '__main__':

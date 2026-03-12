@@ -136,11 +136,11 @@ def compare_lists(list1, list2, cmps='equal'):
     if cmps == 'float':
         for i, j in zip(list1, list2):
             if not math.isclose(i, j, abs_tol=1e-8):
-                raise AssertionError('Different {} != {}'.format(i, j))
+                raise AssertionError(f'Different {i} != {j}')
     else:
         for i, j in zip(list1, list2):
             if not i == j:
-                raise AssertionError('Different {} != {}'.format(i, j))
+                raise AssertionError(f'Different {i} != {j}')
 
 
 def assert_equal_path_dict(dict1, dict2):
@@ -163,10 +163,10 @@ def assert_equal_path_dict(dict1, dict2):
             raise AssertionError('Different keys in dics!')
     for key, val in comp.items():
         if key not in dict1 or key not in dict2:
-            raise AssertionError('Missing key: {}'.format(key))
+            raise AssertionError(f'Missing key: {key}')
         if val in ('int', 'string', 'float'):
             if not dict1[key] == dict2[key]:
-                raise AssertionError('Different {}'.format(key))
+                raise AssertionError(f'Different {key}')
         elif val in ('tuple', 'tuple-float'):
             if val != 'tuple-float':
                 compare_lists(dict1[key], dict2[key])

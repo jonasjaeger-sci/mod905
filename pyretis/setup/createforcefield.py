@@ -90,7 +90,7 @@ def create_force_field(settings):
         desc = 'Generic force field'
     potentials, pot_param = create_potentials(settings)
     ffield = ForceField(desc, potential=potentials, params=pot_param)
-    msg = ['Created force field:', '{}'.format(ffield)]
+    msg = ['Created force field:', f'{ffield}']
     msgtxt = '\n'.join(msg)
     logger.info(msgtxt)
     return ffield

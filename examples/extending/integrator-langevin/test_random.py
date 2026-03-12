@@ -37,7 +37,7 @@ def test_rangaussian(sigma, numbers=10000, bins=100):
     mid = 0.5 * (edges[1:] + edges[:-1])
     ax1.plot(midf, histf, 'o-', label='FORTRAN', lw=2, alpha=0.7)
     ax1.plot(mid, hist, 's-', label='numpy', lw=2, alpha=0.7)
-    ax1.set_title('Numbers = {}, bins = {}'.format(numbers, bins))
+    ax1.set_title(f'Numbers = {numbers}, bins = {bins}')
     ax1.legend()
     plt.show()
 

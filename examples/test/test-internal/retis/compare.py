@@ -24,7 +24,7 @@ RESULTS = 'results'
 
 def compare_files(file1, file2):
     """Compare two files."""
-    print_to_screen('Comparing: {} {}'.format(file1, file2))
+    print_to_screen(f'Comparing: {file1} {file2}')
 
     with open(file1, 'r', encoding='utf-8') as f1, \
          open(file2, 'r', encoding='utf-8') as f2:
@@ -80,10 +80,10 @@ def check_path_file(ens):
         Information about the paths in the ensemble.
 
     """
-    print_to_screen('\nReading for {}'.format(ens.ensemble_name))
+    print_to_screen(f'\nReading for {ens.ensemble_name}')
     filename = os.path.join(generate_ensemble_name(ens.ensemble_number),
                             'pathensemble.txt')
-    print_to_screen('Reading: {}'.format(filename))
+    print_to_screen(f'Reading: {filename}')
     start = ens.start_condition
     end = ('R') if ens.ensemble_number == 0 else ('R', 'L')
     something_weird = False
@@ -104,25 +104,22 @@ def check_path_file(ens):
             maxo = float(splitline[10])
 
             if length < 3:
-                print_to_screen('Suspicious length for path {}'.format(step),
+                print_to_screen(f'Suspicious length for path {step}',
                                 level='error')
                 something_weird = True
             if start != left:
                 print_to_screen(
-                    'Inconsistent start: {} != {} (step {})'.format(start,
-                                                                    left,
-                                                                    step),
+                    f'Inconsistent start: {start} != {left} (step {step})',
                     level='error')
                 something_weird = True
             if middle != 'M':
                 print_to_screen(
-                    'Middle differ: M != {} (step {})'.format(middle,
-                                                              step),
+                    f'Middle differ: M != {middle} (step {step})',
                     level='error')
                 something_weird = True
             if right not in end:
                 print_to_screen(
-                    'Inconsistent end: {} (step {})'.format(right, step),
+                    f'Inconsistent end: {right} (step {step})',
                     level='error')
                 something_weird = True
             cross = [mino < interpos < maxo for interpos in ens.interfaces]
@@ -133,11 +130,8 @@ def check_path_file(ens):
             if not cross[idx1] or not cross[idx2]:
                 something_weird = True
                 print_to_screen(
-                    'Inconsistent crossings: {} {} (step {})'.format(
-                        cross[idx1],
-                        cross[idx2],
-                        step
-                    ),
+                    f'Inconsistent crossings: {cross[idx1]} {cross[idx2]} '
+                    f'(step {step})',
                     level='error'
                 )
     if not something_weird:
@@ -168,10 +162,10 @@ def read_path_file(ens):
         Information about the paths in the ensemble.
 
     """
-    print_to_screen('\nReading for {}'.format(ens.ensemble_name))
+    print_to_screen(f'\nReading for {ens.ensemble_name}')
     filename = os.path.join(generate_ensemble_name(ens.ensemble_number),
                             'pathensemble.txt')
-    print_to_screen('Reading: {}'.format(filename))
+    print_to_screen(f'Reading: {filename}')
     paths = OrderedDict()
     path_acc = OrderedDict()
     current_acc = None
@@ -295,14 +289,14 @@ def check_swaps(paths, accepted, ens, kind):
                                                    special=special)
                         break
             if not found:
-                print_to_screen('Could not find parent for {}'.format(idx0),
+                print_to_screen(f'Could not find parent for {idx0}',
                                 level='warning')
                 everything_is_ok = False
             else:
                 if swap_ok:
                     ok_ones.add(idx0)
                 else:
-                    print_to_screen('Comparison failed for {}'.format(idx0),
+                    print_to_screen(f'Comparison failed for {idx0}',
                                     level='error')
                     everything_is_ok = False
                     errors.add(idx0)
@@ -330,14 +324,14 @@ def check_ensemble_swaps(settings):
         if i == 0:
             get_swap_parent(path_info[i], None, i+1, None, path_acc[i+1])
             print_to_screen(
-                '\nChecking {} <- {} swaps...'.format(names[i], names[i+1]),
+                f'\nChecking {names[i]} <- {names[i+1]} swaps...',
                 level='info'
             )
             check_swaps(path_info[i], path_acc[i], i, kind='right')
         elif i == len(ensembles) - 1:
             get_swap_parent(path_info[i], i-1, None, path_acc[i-1], None)
             print_to_screen(
-                '\nChecking {} <- {} swaps...'.format(names[i], names[i-1]),
+                f'\nChecking {names[i]} <- {names[i-1]} swaps...',
                 level='info'
             )
             check_swaps(path_info[i], path_acc[i], i, kind='left')
@@ -345,12 +339,12 @@ def check_ensemble_swaps(settings):
             get_swap_parent(path_info[i], i-1, i+1,
                             path_acc[i-1], path_acc[i+1])
             print_to_screen(
-                '\nChecking {} -> {} swaps...'.format(names[i], names[i+1]),
+                f'\nChecking {names[i]} -> {names[i+1]} swaps...',
                 level='info'
             )
             check_swaps(path_info[i], path_acc[i], i, kind='right')
             print_to_screen(
-                'Checking {} <- {} swaps...'.format(names[i], names[i-1]),
+                f'Checking {names[i]} <- {names[i-1]} swaps...',
                 level='info'
             )
             check_swaps(path_info[i], path_acc[i], i, kind='left')

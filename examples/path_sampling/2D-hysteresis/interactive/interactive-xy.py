@@ -209,19 +209,17 @@ class PlotHelper:
                 # idxs = (idx,)
                 ensemble['path_ensemble'].add_path_data(trial, status)
                 print_to_screen(
-                    'In ensemble: {}'.format(
-                        ensemble['path_ensemble'].ensemble_name
-                    ),
+                    f"In ensemble: {ensemble['path_ensemble'].ensemble_name}",
                     level='message'
                 )
             if accept:
-                print_to_screen('\t{} was accepted!'.format(move),
+                print_to_screen(f'\t{move} was accepted!',
                                 level='success')
-                print_to_screen('\t{}'.format(status), level='success')
+                print_to_screen(f'\t{status}', level='success')
             else:
-                print_to_screen('\t{} was rejected!'.format(move),
+                print_to_screen(f'\t{move} was rejected!',
                                 level='error')
-                print_to_screen('\t{}'.format(status), level='error')
+                print_to_screen(f'\t{status}', level='error')
             self.axi.clear()
             self.axj.clear()
             self.plot_potential(self.axi, self.axj)
@@ -268,7 +266,7 @@ def set_up_simulation(settings):
     for i, _ in enumerate(initiate_path_simulation(simulation, settings)):
         ensemble = simulation.ensembles[i]['path_ensemble']
         name = ensemble.ensemble_name
-        print_to_screen('Info about ensemble {}:'.format(name),
+        print_to_screen(f'Info about ensemble {name}:',
                         level='success')
         print_to_screen(ensemble)
         print_to_screen('Info about the initial path:', level='success')
@@ -311,7 +309,7 @@ def main(inputfile='retis.rst'):
                        frameon=True)
     names = []
     for ensemble in simulation.ensembles:
-        names.append('${}$'.format(ensemble['path_ensemble'].ensemble_name))
+        names.append(f"${ensemble['path_ensemble'].ensemble_name}$")
     radio = RadioButtons(rax, names, activecolor='#262626')
     for circle in radio.circles:
         circle.set_radius(0.02)

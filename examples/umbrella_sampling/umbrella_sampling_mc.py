@@ -132,7 +132,7 @@ def run_umbrellas(windows):
         trajectories.append(traj)
         energies.append(ener)
         nstep = simulation.cycle['step'] - simulation.cycle['startcycle']
-        print_to_screen('Done. Cycles: {}'.format(nstep), level='success')
+        print_to_screen(f'Done. Cycles: {nstep}', level='success')
     return system, trajectories, energies
 
 

@@ -21,7 +21,7 @@ RESULTS = 'results'
 
 def print_message(msg):
     """Print a message to the screen with a text-underline."""
-    print_to_screen('\n{}'.format(msg), level='message')
+    print_to_screen(f'\n{msg}', level='message')
     print_to_screen('=' * len(msg), level='message')
 
 
@@ -83,17 +83,17 @@ def compare_files(settings):
     checkers = (compare_path_lines, compare_num_lines, compare_num_lines)
     for i in range(len(inter)):
         ensemble_dir = generate_ensemble_name(i)
-        msg = 'Comparing for ensemble: {}'.format(ensemble_dir)
+        msg = f'Comparing for ensemble: {ensemble_dir}'
         print_message(msg)
         for file_name, check in zip(files, checkers):
-            print_to_screen('* Comparing {} files...'.format(file_name))
+            print_to_screen(f'* Comparing {file_name} files...')
             result_old = os.path.join(RESULTS, ensemble_dir, file_name)
             result_new = os.path.join(ensemble_dir, file_name)
             result, a, b = compare_data_ensemble_files(result_new, result_old,
                                                        line_check=check)
             if not result:
                 print_to_screen(
-                    '\t-> *Files differ!*, \n{} \n{}'.format(a, b),
+                    f'\t-> *Files differ!*, \n{a} \n{b}',
                     level='error')
                 return False
             print_to_screen('\t-> Files are equal!', level='success')

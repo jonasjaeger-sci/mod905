@@ -27,7 +27,7 @@ def write_energy(outfile, steps=10):
             temp = i * 100
             pot = -0.1 * i
             txt = fmt.format(i, time, kin, temp, pot, i, i)
-            output.write('{}\n'.format(txt))
+            output.write(f'{txt}\n')
 
 
 def write_wfn_file(outfile):

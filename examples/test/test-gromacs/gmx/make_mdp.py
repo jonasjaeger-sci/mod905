@@ -18,7 +18,7 @@ def main(settings_file, mdp_file, output_file):
         with open(output_file, 'w') as output:
             for lines in infile:
                 if lines.strip().startswith('nsteps'):
-                    output.write('nsteps = {}\n'.format(gmx_steps))
+                    output.write(f'nsteps = {gmx_steps}\n')
                 else:
                     output.write(lines)
 

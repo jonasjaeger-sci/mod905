@@ -59,27 +59,24 @@ class ExtraAsserts:
             for i, j in zip(cri, crj):
                 if not i == j:
                     raise AssertionError(
-                        'Crossing data is not equal! {} != {}'.format(
-                            cri,
-                            crj
-                            )
+                        f'Crossing data is not equal! {cri} != {crj}'
                         )
 
     def assert_equal_result(self, result1, result2, skip=None):
         """Compare result dictionaries from a simulation."""
         for key1 in result1.keys():
             if key1 not in result2:
-                raise AssertionError('{} missing in result2'.format(key1))
+                raise AssertionError(f'{key1} missing in result2')
         for key2 in result2.keys():
             if key2 not in result1:
-                raise AssertionError('{} missing in result1'.format(key2))
+                raise AssertionError(f'{key2} missing in result1')
         for key1, val1 in result1.items():
             if skip and key1 in skip:
                 continue
             val2 = result2[key1]
             if len(val1) != len(val2):
                 raise AssertionError(
-                    'Different no. of items for {}'.format(key1)
+                    f'Different no. of items for {key1}'
                 )
             if key1 == 'thermo':
                 self.assert_equal_thermo(val1, result2[key1])
@@ -89,7 +86,7 @@ class ExtraAsserts:
                 self.assert_equal_list(val1, result2[key1])
             else:
                 raise AssertionError(
-                    'Comparison for {} not implemented'.format(key1)
+                    f'Comparison for {key1} not implemented'
                 )
 
     @staticmethod
@@ -97,34 +94,31 @@ class ExtraAsserts:
         """Compare two thermo dictionaries."""
         for key1 in thermo1.keys():
             if key1 not in thermo2:
-                raise AssertionError('{} missing in thermo2'.format(key1))
+                raise AssertionError(f'{key1} missing in thermo2')
         for key2 in thermo2.keys():
             if key2 not in thermo1:
-                raise AssertionError('{} missing in thermo1'.format(key2))
+                raise AssertionError(f'{key2} missing in thermo1')
         for key1, val1 in thermo1.items():
             if key1 in ('press-tens', 'mom'):
                 comp = np.allclose(val1, thermo2[key1])
             else:
                 comp = math.isclose(val1, thermo2[key1])
             if not comp:
-                raise AssertionError('Thermo {} differ!'.format(key1))
+                raise AssertionError(f'Thermo {key1} differ!')
 
     @staticmethod
     def assert_equal_dict(dict1, dict2):
         """Compare two plain dicts."""
         for key1 in dict1:
             if key1 not in dict2:
-                raise AssertionError('{} missing in dict2'.format(key1))
+                raise AssertionError(f'{key1} missing in dict2')
         for key2 in dict2:
             if key2 not in dict1:
-                raise AssertionError('{} missing in dict1'.format(key2))
+                raise AssertionError(f'{key2} missing in dict1')
         for key1, val1 in dict1.items():
             if not math.isclose(val1, dict2[key1]):
                 raise AssertionError(
-                    'Values for "{}" differ: {} != {}!'.format(
-                        key1,
-                        val1,
-                        dict2[key1])
+                    f'Values for "{key1}" differ: {val1} != {dict2[key1]}!'
                     )
 
     @staticmethod
@@ -134,7 +128,7 @@ class ExtraAsserts:
             raise AssertionError('Lists have different length')
         for i, j in zip(list1, list2):
             if not math.isclose(i, j):
-                raise AssertionError('Lists differ {} != {}'.format(i, j))
+                raise AssertionError(f'Lists differ {i} != {j}')
 
 
 def create_test_system():
@@ -234,7 +228,7 @@ class TestNVESimulation(unittest.TestCase, ExtraAsserts):
 
         def task1(simulation):
             """Dummy task for the simulation."""
-            return 'Hello there {:03d}'.format(simulation.cycle['step'])
+            return f"Hello there {simulation.cycle['step']:03d}"
 
         task = {'func': task1, 'result': 'hello', 'args': (simulation,)}
         add = simulation.add_task(task)

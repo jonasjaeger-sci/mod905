@@ -29,7 +29,7 @@ def simple_parser(args, need_args):
     # Check that all options are set:
     for key, val in need_args.items():
         if val is None:
-            print('Missing {}'.format(key), file=sys.stderr, end='\n')
+            print(f'Missing {key}', file=sys.stderr, end='\n')
             sys.exit(1)
 
 
@@ -37,7 +37,7 @@ def check_that_files_exist(keys, args):
     """Check that files in input arguments actually exist."""
     for key in keys:
         if not os.path.isfile(args[key]):
-            print('Missing file {}'.format(args[key]),
+            print(f'Missing file {args[key]}',
                   file=sys.stderr, end='\n')
             sys.exit(1)
 
@@ -73,7 +73,7 @@ def mock_mdrun(args, crash=False, sleep_time=None):
     config, steps, nstxout, gen = read_mock_tpr(need_args['-s'])
 
     print('Writing energy data...', file=sys.stdout)
-    write_mock_edr('{}.edr'.format(need_args['-deffnm']), steps,
+    write_mock_edr(f"{need_args['-deffnm']}.edr", steps,
                    nstxout, gen=gen)
 
     if crash:
@@ -83,7 +83,7 @@ def mock_mdrun(args, crash=False, sleep_time=None):
     print('Writing trajectory data...', file=sys.stdout)
     print(config[2][0][0], file=sys.stdout)
 
-    write_mock_trr('{}.trr'.format(need_args['-deffnm']), steps, nstxout,
+    write_mock_trr(f"{need_args['-deffnm']}.trr", steps, nstxout,
                    config[1], config[2], pause=sleep_time)
 
     if config[2][0][0] > 0:
@@ -92,7 +92,7 @@ def mock_mdrun(args, crash=False, sleep_time=None):
         xyz = config[1] - steps * np.ones_like(config[1])
 
     print('Writing cpt file...', file=sys.stdout)
-    write_mock_cpt('{}.cpt'.format(need_args['-deffnm']), steps, xyz)
+    write_mock_cpt(f"{need_args['-deffnm']}.cpt", steps, xyz)
 
     print('Writing final configuration...', file=sys.stdout)
     write_gromos96_file(need_args['-c'], config[0],
@@ -126,7 +126,7 @@ def write_mock_trr(filename, steps, nstxout, xyz, vel, pause=None):
 def write_mock_cpt(filename, steps, xyz):
     """Write a mock cpt file."""
     with open(filename, 'w', encoding='utf-8') as outfile:
-        outfile.write('Last step: {}\n'.format(steps))
+        outfile.write(f'Last step: {steps}\n')
         for j in xyz:
             outfile.write('{:12.7f} {:12.7f} {:12.7f}\n'.format(*j))
 
@@ -167,7 +167,7 @@ def write_mock_edr(filename, steps, nstxout, gen=False, start=0):
     with open(filename, mode, encoding='utf-8') as output:
         if mode == 'w':
             for line in header:
-                output.write('{}\n'.format(line))
+                output.write(f'{line}\n')
         for i in range(0, steps + 1):
             j = float(i)
             if not gen:

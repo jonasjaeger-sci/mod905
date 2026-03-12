@@ -20,7 +20,7 @@ RESULTS = 'results'
 
 def compare_files(fpath1, fpath2):
     """Compare two files."""
-    print_to_screen('Comparing: {} {}'.format(fpath1, fpath2))
+    print_to_screen(f'Comparing: {fpath1} {fpath2}')
     similar = True
     with open(fpath1, 'r') as file1, open(fpath2, 'r') as file2:
         for i, (linef1, linef2) in enumerate(zip(file1, file2)):
@@ -58,10 +58,10 @@ def check_path_file(ens):
         Information about the paths in the ensemble.
 
     """
-    print_to_screen('\nReading for {}'.format(ens.ensemble_name))
+    print_to_screen(f'\nReading for {ens.ensemble_name}')
     filename = os.path.join(generate_ensemble_name(ens.ensemble_number),
                             'pathensemble.txt')
-    print_to_screen('Reading: {}'.format(filename))
+    print_to_screen(f'Reading: {filename}')
     start = ens.start_condition
     end = ('R') if ens.ensemble_number == 0 else ('R', 'L')
     something_weird = False
@@ -82,25 +82,22 @@ def check_path_file(ens):
             maxo = float(splitline[10])
 
             if length < 3:
-                print_to_screen('Suspicious length for path {}'.format(step),
+                print_to_screen(f'Suspicious length for path {step}',
                                 level='error')
                 something_weird = True
             if start != left:
                 print_to_screen(
-                    'Inconsistent start: {} != {} (step {})'.format(start,
-                                                                    left,
-                                                                    step),
+                    f'Inconsistent start: {start} != {left} (step {step})',
                     level='error')
                 something_weird = True
             if middle != 'M':
                 print_to_screen(
-                    'Middle differ: M != {} (step {})'.format(middle,
-                                                              step),
+                    f'Middle differ: M != {middle} (step {step})',
                     level='error')
                 something_weird = True
             if right not in end:
                 print_to_screen(
-                    'Inconsistent end: {} (step {})'.format(right, step),
+                    f'Inconsistent end: {right} (step {step})',
                     level='error')
                 something_weird = True
             cross = [mino < interpos < maxo for interpos in ens.interfaces]
@@ -150,12 +147,12 @@ def compare_rst_files(settings):
     inter = settings['simulation']['interfaces']
     retval = 0
     for i in range(1, len(inter)):
-        fil1 = os.path.join(('tis-00{}.rst').format(i))
+        fil1 = os.path.join(f"tis-00{i}.rst")
         for line in fileinput.input(fil1, inplace=1):
             if 'exe_path' in line.split():
                 line = ''
             sys.stdout.write(line)
-        fil2 = os.path.join(RESULTS, ('tis-00{}.rst').format(i))
+        fil2 = os.path.join(RESULTS, f"tis-00{i}.rst")
         for line in fileinput.input(fil2, inplace=1):
             if 'exe_path' in line.split():
                 line = ''

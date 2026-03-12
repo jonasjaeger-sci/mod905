@@ -92,7 +92,7 @@ class ParticleTest(unittest.TestCase):
         particles = Particles(dim=3)
         for i in range(10):
             particles.add_particle(np.ones(3) * i, np.ones(3) * i,
-                                   np.ones(3) * i, name='H{}'.format(i))
+                                   np.ones(3) * i, name=f'H{i}')
         force = particles.get_selection(['force', 'name'], selection=None)[0]
         self.assertTrue(np.allclose(force, particles.force))
         force[0] = np.ones(3) * 101.
@@ -108,7 +108,7 @@ class ParticleTest(unittest.TestCase):
         particles = Particles(dim=3)
         for i in range(10):
             particles.add_particle(np.ones(3) * i, np.ones(3) * i,
-                                   np.ones(3) * i, name='A{}'.format(i))
+                                   np.ones(3) * i, name=f'A{i}')
         for i, part in enumerate(particles):
             self.assertTrue(np.allclose(part['pos'], particles.pos[i]))
 
@@ -118,7 +118,7 @@ class ParticleTest(unittest.TestCase):
         npart = 21
         for i in range(npart):
             particles.add_particle(np.ones(3) * i, np.ones(3) * i,
-                                   np.ones(3) * i, name='A{}'.format(i))
+                                   np.ones(3) * i, name=f'A{i}')
         pairs = set()
         for pair in particles.pairs():
             pairs.add((pair[0], pair[1]))

@@ -54,7 +54,7 @@ class TestSimulation(unittest.TestCase):
 
         def task1(simulation):
             """Dummy task for the simulation."""
-            return 'Hello there {:03d}'.format(simulation.cycle['step'])
+            return f"Hello there {simulation.cycle['step']:03d}"
 
         task = {'func': task1, 'result': 'hello', 'args': (simulation,)}
         add = simulation.add_task(task)
@@ -87,8 +87,8 @@ class TestSimulation(unittest.TestCase):
             if i == 0:
                 self.assertEqual('#    Step              Message', linei)
             else:
-                msg = 'Hello there {:03d}'.format(i)
-                correct = '{:>10d} {:>20s}'.format(i, msg)
+                msg = f'Hello there {i:03d}'
+                correct = f'{i:>10d} {msg:>20s}'
                 self.assertEqual(correct, linei)
 
     def test_restart_simple(self):

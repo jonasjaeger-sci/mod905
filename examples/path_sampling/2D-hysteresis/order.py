@@ -63,7 +63,7 @@ class OrderX(OrderParameter):
             applied to the position.
 
         """
-        txt = 'Position of particle {} (dim: {})'.format(index, dim)
+        txt = f'Position of particle {index} (dim: {dim})'
         super().__init__(description=txt)
         self.inter_a = inter_a
         self.inter_b = inter_b
@@ -75,7 +75,7 @@ class OrderX(OrderParameter):
         try:
             self.dim = dims[dim]
         except KeyError:
-            msg = 'Unknown dimension {} requested'.format(dim)
+            msg = f'Unknown dimension {dim} requested'
             logger.critical(msg)
             raise
 

@@ -878,7 +878,7 @@ class KeywordForcefield(unittest.TestCase):
             self.assertTrue(os.path.isfile(out_file))
             # Check that we can write a file and backup:
             write_settings_file(settings, out_file, backup=True)
-            out_file2 = '{}_000'.format(out_file)
+            out_file2 = f'{out_file}_000'
             with open(out_file, 'r', encoding='utf-8') as fileh:
                 raw_sections = _parse_sections(fileh)
             settings2 = _parse_all_raw_sections(raw_sections)

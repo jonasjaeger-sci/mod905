@@ -118,7 +118,7 @@ def compare_step_output(file11, file12, file2):
     for i, (data1, data2) in enumerate(zip(itertools.chain(file11_h, file12_h),
                                            file2_h)):
         if not data1 == data2:
-            print_to_screen('Error for line no: {}'.format(i), level='error')
+            print_to_screen(f'Error for line no: {i}', level='error')
             print_to_screen('Lines were:', level='error')
             print_to_screen(data1.strip(), level='error')
             print_to_screen(data2.strip(), level='error')
@@ -139,7 +139,7 @@ def compare_step_output(file11, file12, file2):
                 print_to_screen('Files are equal!', level='success')
                 return 0
             print_to_screen(('Number of lines are incorrect ',
-                             '{} != {}'.format(len11 + len12, len2 + 1)),
+                             f'{len11 + len12} != {len2 + 1}'),
                             level='error')
             return 1
         print_to_screen('First in {} != last in {}'.format(*names[:2]),
@@ -167,7 +167,7 @@ def print_error_assessment(error, what, tol):
     else:
         lev = 'error'
         val = 1
-    print_to_screen('Mean error - {}: {}'.format(what, error),
+    print_to_screen(f'Mean error - {what}: {error}',
                     level=lev)
     return val
 

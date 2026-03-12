@@ -106,7 +106,7 @@ class WCAPotential(PotentialFunction):
             if key in self.params:
                 self.params[key] = parameters[key]
             else:
-                msg = 'Unknown parameter {} - ignored!'.format(key)
+                msg = f'Unknown parameter {key} - ignored!'
                 logging.warning(msg)
         self.params['width2'] = self.params['width']**2
         self.params['rwidth'] = self.params['rzero'] + self.params['width']

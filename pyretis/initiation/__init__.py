@@ -70,7 +70,7 @@ def get_initiation_method(settings):
         logger.error('Unknown initiation method "%s" requested', method)
         logger.error('Known methods: %s', _methods.keys())
         raise ValueError('Unknown initiation method requested!')
-    print_to_screen('Will initiate paths using method "{}".'.format(method))
+    print_to_screen(f'Will initiate paths using method "{method}".')
     logger.info('Initiation method "%s" selected', method)
     return _methods[method]
 

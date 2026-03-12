@@ -183,28 +183,28 @@ def step_txt(ensembles, retis_result, prun):
         path_ensemble = ensemble['path_ensemble']
         name = path_ensemble.ensemble_name
         idx = path_ensemble.ensemble_number
-        name_of_move = retis_result['move-{}'.format(idx)]
-        accepted = retis_result['accept-{}'.format(idx)]
+        name_of_move = retis_result[f'move-{idx}']
+        accepted = retis_result[f'accept-{idx}']
         line = []
         if name_of_move == 'swap':
-            idx2 = retis_result['all-{}'.format(idx)]['swap-with']
+            idx2 = retis_result[f'all-{idx}']['swap-with']
             name2 = ensembles[idx2]['path_ensemble'].ensemble_name
-            move = '{} {},'.format(name_of_move, name2)
+            move = f'{name_of_move} {name2},'
             if idx == 0 or (idx == 1 and idx2 == 0):
                 # Evaluate forces when swapping [0^-] <-> [0^+]:
                 force += path_ensemble.paths[-1]['length'] - 2
         elif name_of_move == 'tis':
-            trial_path = retis_result['path-{}'.format(idx)]
+            trial_path = retis_result[f'path-{idx}']
             tis_move = trial_path.generated[0]
-            move = '{} ({}),'.format(name_of_move, tis_move)
+            move = f'{name_of_move} ({tis_move}),'
             if tis_move == 'sh':
                 force += path_ensemble.paths[-1]['length'] - 1
         else:
-            move = '{},'.format(name_of_move)
-        line.append('{}: {:11s}'.format(name, move))
-        line.append('{},'.format(accepted))
+            move = f'{name_of_move},'
+        line.append(f'{name}: {move:11s}')
+        line.append(f'{accepted},')
         if idx > 0:
-            line.append('p = {:<8.6g}'.format(prun[idx]))
+            line.append(f'p = {prun[idx]:<8.6g}')
         txt.append(' '.join(line))
     return txt, force
 
@@ -507,18 +507,18 @@ def update(frame, simulation, plot_patches, variables, axes):
         result = simulation.step()
         step = result['cycle']['step']
         ensembles = simulation.ensembles
-        print_to_screen('# Current cycle: {}'.format(step), level='info')
+        print_to_screen(f'# Current cycle: {step}', level='info')
         anr = analyse_path_ensembles(ensembles, step, variables)
         retis_txt, force = step_txt(ensembles, result, variables['prun'])
         global FTOT
         FTOT += force
         for line in retis_txt:
-            print_to_screen('# {}'.format(line))
+            print_to_screen(f'# {line}')
         print_to_screen('# Flux: {flux:<8.6g} +- {fluxe:<8.6g}'.format(**anr))
         print_to_screen(('# Crossing probability: {pcross:<8.6g} +-'
                          '{pcrosse:<8.6g}').format(**anr))
         print_to_screen('# K_AB: {kab:<8.6g} +- {kabe:<8.6g}'.format(**anr))
-        print_to_screen('# No. of force evaluations: {:g}'.format(force))
+        print_to_screen(f'# No. of force evaluations: {force:g}')
         print_to_screen('')
 
         for i, ensemble in enumerate(ensembles):
@@ -548,14 +548,14 @@ def update(frame, simulation, plot_patches, variables, axes):
             if key.startswith('move'):
                 i = int(key.split('-')[1])
                 if result[key] == 'tis':
-                    trial = result['path-{}'.format(i)]
+                    trial = result[f'path-{i}']
                     txtmove = trial.generated[0].upper()
                 else:
                     txtmove = result[key][:2].upper()
                 plot_patches['txtmove'][i].set_text(txtmove)
                 plot_patches['txtmove'][i].set_color(TXTCOLOR[txtmove])
                 patches.append(plot_patches['txtmove'][i])
-        plot_patches['txtcycle'].set_text('Cycle: {}'.format(step))
+        plot_patches['txtcycle'].set_text(f'Cycle: {step}')
         patches.append(plot_patches['txtcycle'])
 
         # match probabilities:
@@ -571,8 +571,8 @@ def update(frame, simulation, plot_patches, variables, axes):
         patches.append(plot_patches['matched'])
         return patches
     # Just return without updating:
-    print_to_screen('# Simulation is done (frame = {})'.format(frame))
-    print_to_screen('# Total number of force evaluations: {}'.format(FTOT))
+    print_to_screen(f'# Simulation is done (frame = {frame})')
+    print_to_screen(f'# Total number of force evaluations: {FTOT}')
     patches = []
     for key in ('paths', 'prob', 'prob2', 'txtmove', 'start', 'end'):
         patches.extend(plot_patches[key])
@@ -592,7 +592,7 @@ def main():
     for i, _ in enumerate(initiate_path_simulation(simulation, SETTINGS)):
         path_ensemble = simulation.ensembles[i]['path_ensemble']
         name = path_ensemble.ensemble_name
-        print_to_screen('Info about ensemble {}:'.format(name),
+        print_to_screen(f'Info about ensemble {name}:',
                         level='success')
         print_to_screen(path_ensemble)
         print_to_screen('Info about the initial path:', level='success')

@@ -34,7 +34,7 @@ def run_step(engine, system, exe_dir='forward-single-step'):
     exe_dir : string
         The folder to use for the execution.
     """
-    print_to_screen('\nRunning a single CP2K step in "{}"'.format(exe_dir),
+    print_to_screen(f'\nRunning a single CP2K step in "{exe_dir}"',
                     level='message')
     make_dirs(exe_dir)
     folder = os.path.abspath(exe_dir)
@@ -56,7 +56,7 @@ def test_genvel(engine, input_file, exe_dir='genvel'):
     exe_dir : string, optional
         The directory where we will be running CP2K.
     """
-    print_to_screen('\nRunning CP2K genvel step in "{}"'.format(exe_dir),
+    print_to_screen(f'\nRunning CP2K genvel step in "{exe_dir}"',
                     level='message')
     make_dirs(exe_dir)
     folder = os.path.abspath(exe_dir)
@@ -77,9 +77,9 @@ def main():
         engine_settings['subcycles'],
         engine_settings.get('extra_files', [])
     )
-    print_to_screen('Testing engine: {}'.format(engine), level='info')
-    print_to_screen('Time step: {}'.format(engine.timestep))
-    print_to_screen('Subcycles: {}'.format(engine.subcycles))
+    print_to_screen(f'Testing engine: {engine}', level='info')
+    print_to_screen(f'Time step: {engine.timestep}')
+    print_to_screen(f'Subcycles: {engine.subcycles}')
     system = System(units='gromacs',
                     box=create_box(cell=[100, 100, 100]),
                     temperature=500)
@@ -91,12 +91,12 @@ def main():
     start = time.perf_counter()
     run_step(engine, system, exe_dir='forward-single-step')
     end = time.perf_counter()
-    print_to_screen('Time spent: {}'.format(end - start), level='info')
+    print_to_screen(f'Time spent: {end - start}', level='info')
 
     start = time.perf_counter()
     test_genvel(engine, 'cp2k_input/initial.xyz', exe_dir='genvel')
     end = time.perf_counter()
-    print_to_screen('Time spent: {}'.format(end - start), level='info')
+    print_to_screen(f'Time spent: {end - start}', level='info')
 
 
 if __name__ == '__main__':

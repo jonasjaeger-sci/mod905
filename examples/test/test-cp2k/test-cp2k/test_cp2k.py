@@ -67,9 +67,9 @@ def run_in_steps(engine, system, order_parameter, interfaces,
         Selects the time direction.
 
     """
-    print_to_screen('\nRunning {} steps in "{}"'.format(steps, exe_dir),
+    print_to_screen(f'\nRunning {steps} steps in "{exe_dir}"',
                     level='message')
-    print_to_screen('(Reverse = {})'.format(reverse))
+    print_to_screen(f'(Reverse = {reverse})')
     make_dirs(exe_dir)
     folder = os.path.abspath(exe_dir)
     clean_dir(folder)
@@ -82,7 +82,7 @@ def run_in_steps(engine, system, order_parameter, interfaces,
                      reverse=reverse)
     end = time.perf_counter()
     print_to_screen('Propagation done!')
-    print_to_screen('Time spent: {}'.format(end - start), level='info')
+    print_to_screen(f'Time spent: {end - start}', level='info')
     return path
 
 
@@ -109,10 +109,10 @@ def run_plain_cp2k(engine, system, order_parameter, input_conf,
 
     """
     print_to_screen(
-        '\nRunning {} plain CP2K steps in "{}"'.format(steps, exe_dir),
+        f'\nRunning {steps} plain CP2K steps in "{exe_dir}"',
         level='message'
     )
-    print_to_screen('(Reverse = {})'.format(reverse))
+    print_to_screen(f'(Reverse = {reverse})')
     make_dirs(exe_dir)
     folder = os.path.abspath(exe_dir)
     clean_dir(folder)
@@ -136,7 +136,7 @@ def run_plain_cp2k(engine, system, order_parameter, input_conf,
     engine.run_cp2k('md.inp', 'md')
     end = time.perf_counter()
     print_to_screen('Done!')
-    print_to_screen('Time spent: {}'.format(end - start), level='info')
+    print_to_screen(f'Time spent: {end - start}', level='info')
     energy_file = os.path.join(exe_dir, 'md-1.ener')
     energy = np.loadtxt(energy_file)
     pos_file = os.path.join(exe_dir, 'md-pos-1.xyz')
@@ -182,7 +182,7 @@ def test_genvel(engine, input_file, exe_dir='genvel'):
         velocities.
 
     """
-    print_to_screen('\nRunning CP2K genvel step in "{}"'.format(exe_dir),
+    print_to_screen(f'\nRunning CP2K genvel step in "{exe_dir}"',
                     level='message')
     make_dirs(exe_dir)
     folder = os.path.abspath(exe_dir)
@@ -192,7 +192,7 @@ def test_genvel(engine, input_file, exe_dir='genvel'):
     out_conf, _ = engine._prepare_shooting_point(input_file)
     end = time.perf_counter()
     print_to_screen('Generation of velocity done!')
-    print_to_screen('Time spent: {}'.format(end - start), level='info')
+    print_to_screen(f'Time spent: {end - start}', level='info')
     return out_conf
 
 
@@ -208,9 +208,9 @@ def main(plot=False):
         engine_settings['subcycles'],
         extra_files=engine_settings.get('extra_files', [])
     )
-    print_to_screen('Testing engine: {}'.format(engine), level='info')
-    print_to_screen('Time step: {}'.format(engine.timestep))
-    print_to_screen('Subcycles: {}'.format(engine.subcycles))
+    print_to_screen(f'Testing engine: {engine}', level='info')
+    print_to_screen(f'Time step: {engine.timestep}')
+    print_to_screen(f'Subcycles: {engine.subcycles}')
     system = System(units='gromacs',
                     box=create_box(cell=[100, 100, 100]),
                     temperature=500)
@@ -262,7 +262,7 @@ def mse_combinations(text, var, tol=None):
             if not tol_ok:
                 level = 'error'
         print_to_screen(
-            'MSE {}: {} vs {} = {}'.format(text, comb[0][1], comb[1][1], mse),
+            f'MSE {text}: {comb[0][1]} vs {comb[1][1]} = {mse}',
             level=level
         )
         if not tol_ok:

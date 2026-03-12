@@ -86,7 +86,7 @@ class CrossFormatter(OutputFormatter):
         are numbered 1, 2, ... rather than 0, 1, ... .
 
         """
-        msgtxt = 'Generating crossing data at step: {}'.format(step)
+        msgtxt = f'Generating crossing data at step: {step}'
         logger.debug(msgtxt)
         for cro in data:
             if cro:

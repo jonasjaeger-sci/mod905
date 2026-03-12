@@ -54,7 +54,7 @@ class TestSearchForFiles(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tempdir:
             # Make some files in the root directory:
             for i in range(11):
-                filename = pathlib.Path().joinpath(tempdir, 'file{}'.format(i))
+                filename = pathlib.Path().joinpath(tempdir, f'file{i}')
                 pathlib.Path(filename).touch()
                 created_files.append(filename)
             files = [i for i in os.scandir(tempdir) if i.is_file]

@@ -115,24 +115,24 @@ def print_step_results(ensembles, retis_result):
         path_ensemble = ensemble['path_ensemble']
         name = path_ensemble.ensemble_name
         idx = path_ensemble.ensemble_number
-        print('Move in {}'.format(name))
-        accepted = retis_result['accept-{}'.format(idx)]
-        name_of_move = retis_result['move-{}'.format(idx)]
-        print('\tType: {}'.format(name_of_move))
+        print(f'Move in {name}')
+        accepted = retis_result[f'accept-{idx}']
+        name_of_move = retis_result[f'move-{idx}']
+        print(f'\tType: {name_of_move}')
         if name_of_move == 'swap':
-            idx2 = retis_result['all-{}'.format(idx)]['swap-with']
+            idx2 = retis_result[f'all-{idx}']['swap-with']
             name2 = ensembles[idx2]['path_ensemble'].ensemble_name
-            print('\tSwapping: {} -> {}'.format(name2, name))
+            print(f'\tSwapping: {name2} -> {name}')
         elif name_of_move == 'tis':
-            trial_path = retis_result['path-{}'.format(idx)]
+            trial_path = retis_result[f'path-{idx}']
             if trial_path.generated[0] == 'sh':
                 tis_move = 'shooting'
             elif trial_path.generated[0] == 'tr':
                 tis_move = 'time-reversal'
             else:
                 tis_move = 'unknown'
-            print('\tTIS move: {}'.format(tis_move))
-        print('\tResult: {}'.format(accepted))
+            print(f'\tTIS move: {tis_move}')
+        print(f'\tResult: {accepted}')
 
 
 def main():
@@ -150,7 +150,7 @@ def main():
     for i, _ in enumerate(initiate_path_simulation(simulation, SETTINGS)):
         path_ensemble = ensembles[i]['path_ensemble']
         name = path_ensemble.ensemble_name
-        print('Info about ensemble {}:'.format(name))
+        print(f'Info about ensemble {name}:')
         print(path_ensemble)
         print('Info about the initial path:')
         print(path_ensemble.last_path)
@@ -165,9 +165,9 @@ def main():
         vel = point.particles.vel
         if order > -0.8 and first:
             print('First crossing of -0.8 for [1^+]:')
-            print('\tStep: {}'.format(i))
-            print('\tlambda: {}'.format(order))
-            print('\tPosition and velocity: {}  {}'.format(pos, vel))
+            print(f'\tStep: {i}')
+            print(f'\tlambda: {order}')
+            print(f'\tPosition and velocity: {pos}  {vel}')
             first = False
 
     # Let us do one more step:
@@ -177,10 +177,10 @@ def main():
         path_ensemble = ensemble['path_ensemble']
         name = path_ensemble.ensemble_name
         idx = path_ensemble.ensemble_number
-        print('Move in {}'.format(name))
-        status = result['status-{}'.format(idx)]
-        accepted = result['accept-{}'.format(idx)]
-        name_of_move = result['move-{}'.format(idx)]
+        print(f'Move in {name}')
+        status = result[f'status-{idx}']
+        accepted = result[f'accept-{idx}']
+        name_of_move = result[f'move-{idx}']
         # `status` is equal to "ACC" if the move is accepted
         # otherwise it will be one of:
         # 'MCR': 'Momenta change rejection',
@@ -191,30 +191,30 @@ def main():
         # 'FTL': 'Forward trajectory too long (detailed balance condition)',
         # 'FTX': 'Forward trajectory too long (max-path exceeded)',
         # 'NCR': 'No crossing with middle interface'
-        print('\tType: {}'.format(name_of_move))
+        print(f'\tType: {name_of_move}')
         if name_of_move == 'swap':
             print(status, accepted)
             # If this is the case, the result is on the form
             # [move, accepted, .., swap-with] where swap-with is the
             # ensemble we are trying to swap with.
-            idx2 = result['all-{}'.format(idx)]['swap-with']
+            idx2 = result[f'all-{idx}']['swap-with']
             name2 = ensembles[idx2]['path_ensemble'].ensemble_name
-            print('\tSwapping: {} -> {}'.format(name2, name))
+            print(f'\tSwapping: {name2} -> {name}')
         elif name_of_move == 'tis':
-            trial_path = result['path-{}'.format(idx)]
+            trial_path = result[f'path-{idx}']
             if trial_path.generated[0] == 'sh':
                 tis_move = 'shooting'
             elif trial_path.generated[0] == 'tr':
                 tis_move = 'time-reversal'
             else:
                 tis_move = 'unknown'
-            print('\tTIS move: {}'.format(tis_move))
-        print('\tResult: {}'.format(status))
+            print(f'\tTIS move: {tis_move}')
+        print(f'\tResult: {status}')
 
     # Run the rest of the simulation:
     while not simulation.is_finished():
         result = simulation.step()
-        print('Simulation step: {}'.format(result['cycle']['step']))
+        print(f"Simulation step: {result['cycle']['step']}")
         print_step_results(ensembles, result)
         print('')
 

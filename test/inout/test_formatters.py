@@ -384,7 +384,7 @@ class TestPathIntFormatter(unittest.TestCase):
                 j = i - 1
                 if j % 10 == 0:
                     k += 1
-                    self.assertEqual('Snapshot: {}'.format(k), line)
+                    self.assertEqual(f'Snapshot: {k}', line)
                 else:
                     # Assume 3D:
                     k_float = float(k)

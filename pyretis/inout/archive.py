@@ -180,7 +180,7 @@ class PathStorage(OutputBase):
             files.append((full_path, relative_path))
             with open(full_path, 'w', encoding="utf8") as output:
                 for line in fmt.format(step, (path, status)):
-                    output.write('{}\n'.format(line))
+                    output.write(f'{line}\n')
         return files
 
     def output(self, step, data):
@@ -253,7 +253,7 @@ class PathStorage(OutputBase):
 
     def __str__(self):
         """Return basic info."""
-        return '{} - archive writer.'.format(self.__class__.__name__)
+        return f'{self.__class__.__name__} - archive writer.'
 
 
 class PathStorageTar(PathStorage):
@@ -345,4 +345,4 @@ class PathStorageTar(PathStorage):
 
     def __str__(self):
         """Return basic info."""
-        return '{} - TAR archive writer.'.format(self.__class__.__name__)
+        return f'{self.__class__.__name__} - TAR archive writer.'

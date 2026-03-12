@@ -16,7 +16,7 @@ def main(settings_file, inp_file, output_file):
         with open(output_file, 'w') as output:
             for lines in infile:
                 if lines.strip().startswith('STEPS'):
-                    output.write('STEPS = {}\n'.format(gmx_steps))
+                    output.write(f'STEPS = {gmx_steps}\n')
                 else:
                     output.write(lines)
 

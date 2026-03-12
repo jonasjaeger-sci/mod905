@@ -154,7 +154,7 @@ class MethodsTest(unittest.TestCase):
         for i, point in enumerate(new_pos2):
             self.assertEqual(
                 os.path.basename(point[0]),
-                'prefix-{}'.format(FILE_NAME.format(i)),
+                f'prefix-{FILE_NAME.format(i)}',
             )
 
     def test_get_class(self):

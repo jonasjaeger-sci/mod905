@@ -29,7 +29,7 @@ def simple_parser(gmx_args, need_args):
     # Check that all options are set:
     for key, val in need_args.items():
         if val is None:
-            print('Missing {}'.format(key), file=sys.stderr, end='\n')
+            print(f'Missing {key}', file=sys.stderr, end='\n')
             sys.exit(1)
 
 
@@ -37,7 +37,7 @@ def check_that_files_exist(keys, gmx_args):
     """Check that files in input arguments actually exist."""
     for key in keys:
         if not os.path.isfile(gmx_args[key]):
-            print('Missing file {}'.format(gmx_args[key]),
+            print(f'Missing file {gmx_args[key]}',
                   file=sys.stderr, end='\n')
             sys.exit(1)
 
@@ -63,7 +63,7 @@ def fake_gmx_grompp(gmx_args):
     with open(need_args['-o'], 'w', encoding='utf-8') as fileh:
         fileh.write('Mock GROMACS .tpr file. Input files were:\n')
         for key in ('-f', '-c', '-p'):
-            fileh.write('{} = {}\n'.format(key, need_args[key]))
+            fileh.write(f'{key} = {need_args[key]}\n')
         fileh.write('Input settings (.mdp) were:\n')
         with open(need_args['-f'], 'r', encoding='utf-8') as infile:
             for lines in infile:
@@ -99,7 +99,7 @@ def read_write_gromacs(infile, outfile, gmx_args):
     else:
         with open(outfile, 'w', encoding='utf-8') as output:
             output.write('This is a GROMACS TRR file for sure.\n')
-            output.write('Arguments given: {}'.format(gmx_args))
+            output.write(f'Arguments given: {gmx_args}')
 
 
 def fake_gmx_converttpr(gmx_args):
@@ -112,7 +112,7 @@ def fake_gmx_converttpr(gmx_args):
         with open(need_args['-s'], 'r', encoding='utf-8') as infile:
             for lines in infile:
                 outfile.write(lines)
-        outfile.write('Extend = {}\n'.format(need_args['-extend']))
+        outfile.write(f"Extend = {need_args['-extend']}\n")
 
 
 if __name__ == '__main__':

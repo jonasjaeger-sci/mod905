@@ -82,7 +82,7 @@ class TrajTest(unittest.TestCase):
         with tempfile.NamedTemporaryFile() as tmp:
             for step, snapshot in enumerate(path.phasepoints):
                 for line in writer.format_snapshot(step, snapshot):
-                    string = '{}\n'.format(line)
+                    string = f'{line}\n'
                     tmp.write(string.encode('utf-8'))
             tmp.flush()
             del writer
@@ -101,7 +101,7 @@ class TrajTest(unittest.TestCase):
         with tempfile.NamedTemporaryFile() as tmp:
             for step, snapshot in enumerate(path.phasepoints):
                 for line in writer.format_snapshot(step, snapshot):
-                    string = '{}\n'.format(line)
+                    string = f'{line}\n'
                     tmp.write(string.encode('utf-8'))
             tmp.flush()
             del writer
@@ -129,7 +129,7 @@ class TrajTest(unittest.TestCase):
                 self.assertEqual('# Cycle: 0, status: ACC', lines)
             else:
                 if lines.startswith('Snapshot'):
-                    self.assertEqual('Snapshot: {}'.format(idxs), lines)
+                    self.assertEqual(f'Snapshot: {idxs}', lines)
                     idxs += 1
                     idx = 0
                 else:
@@ -150,7 +150,7 @@ class TrajTest(unittest.TestCase):
                 phasepoints, path = create_path()
                 path_phasepoints.append(phasepoints)
                 for line in writer.format(i, (path, status)):
-                    tmp.write('{}\n'.format(line).encode('utf-8'))
+                    tmp.write(f'{line}\n'.encode('utf-8'))
             tmp.flush()
             del writer
             reader = PathIntFile(tmp.name, 'r')
@@ -197,7 +197,7 @@ class TrajTest(unittest.TestCase):
                 path, data = create_external_path(random_length=True)
                 all_path_data.append(data)
                 for line in writer.format(i, (path, status)):
-                    string = '{}\n'.format(line)
+                    string = f'{line}\n'
                     tmp.write(string.encode('utf-8'))
             tmp.flush()
             del writer

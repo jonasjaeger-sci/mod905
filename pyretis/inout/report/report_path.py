@@ -401,7 +401,7 @@ def _table_interface_repptis(results, fmt='rst'):
             interf0 = interf[0]
         detect = result['out']['detect']
         row = [
-            '{:^8s}'.format(result['out']['ensemble']),
+            f"{result['out']['ensemble']:^8s}",
             apply_format(interf0, '{:^8.4f}'),
             apply_format(interf[1], '{:^8.4f}'),
         ]
@@ -447,7 +447,7 @@ def _table_interface(results, fmt='rst'):
     for result in results:
         interf = result['out']['interfaces']
         row = [
-            '{:^8s}'.format(result['out']['ensemble']),
+            f"{result['out']['ensemble']:^8s}",
             apply_format(interf[0], '{:^8.4f}'),
             apply_format(interf[1], '{:^8.4f}'),
         ]
@@ -494,7 +494,7 @@ def _table_interface0(results, fmt='rst'):
     """
     table = []
     for result in results:
-        row = ['{:^8s}'.format(result['out']['ensemble'])]
+        row = [f"{result['out']['ensemble']:^8s}"]
         interf = result['out']['interfaces']
         row.append(apply_format(interf[0], '{:^8.4f}'))
         row.append(apply_format(interf[1], '{:^8.4f}'))
@@ -539,7 +539,7 @@ def _table_probability(results, fmt='rst'):
     table = []
     for result in results:
         row = [
-            '{:^8s}'.format(result['out']['ensemble']),
+            f"{result['out']['ensemble']:^8s}",
             apply_format(result['out']['prun'][-1], '{:^10.6f}'),
             apply_format(result['out']['blockerror'][2], '{:^10.6f}'),
             apply_format(result['out']['blockerror'][4] * 100, '{:^10.6f}'),
@@ -584,7 +584,7 @@ def _table_probability_repptis(results, fmt='rst'):
     table = []
     for result in results:
         row = [
-            '{:^8s}'.format(result['out']['ensemble']),
+            f"{result['out']['ensemble']:^8s}",
             apply_format(result['out']['prun_sl'][-1], '{:^10.6f}'),
             apply_format(result['out']['prun_sr'][-1], '{:^10.6f}'),
             apply_format(result['out']['blockerror_sl'][2], '{:^10.6f}'),
@@ -635,7 +635,7 @@ def _table_efficiencies(results, fmt='rst'):
     for result in results:
         hist1 = result['out']['pathlength'][0]
         row = [
-            '{:^8s}'.format(result['out']['ensemble']),
+            f"{result['out']['ensemble']:^8s}",
             apply_format(result['out']['tis-cycles'], '{:^10.0f}'),
             apply_format(result['out']['efficiency'][0], '{:^10.6f}'),
             apply_format(result['out']['efficiency'][1], '{:^10.6f}'),
@@ -686,9 +686,9 @@ def _table_summary(report, fmt='rst'):
     numbers = report['numbers']
     text = report['text']
     table = [['Crossing probability', numbers['pcross'], numbers['perr']],
-             ['Flux (1/{})'.format(text['flux-unit']), numbers['flux'],
+             [f"Flux (1/{text['flux-unit']})", numbers['flux'],
               numbers['flux-err']],
-             ['Rate constant (1/{})'.format(text['flux-unit']),
+             [f"Rate constant (1/{text['flux-unit']})",
               numbers['rate'], numbers['rate-err']]]
     if fmt in ['tex', 'latex']:
         table_str = generate_latex_table(table, 'Summary of main results',
